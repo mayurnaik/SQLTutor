@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{userBean.loginRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/samples/template-menubar-login.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body>
+	<h:form id="mainform">
+		<p:panel id="panel" header="Login">
+			<p:focus context="panel" />
+			<h:panelGrid columns="3">
+				<h:outputLabel for="username" value="Username: " />
+				<p:inputText id="username" required="true" label="Username"
+					value="#{userBean.username}">
+					<f:validateLength minimum="3" maximum="12" />
+				</p:inputText>
+				<p/>
+				<h:outputLabel for="password" value="Password: " />
+				<p:password id="password" required="true" label="Password"
+					value="#{userBean.password}">
+					<f:validateLength minimum="3" maximum="12" />
+				</p:password>
+				<p/>
+				<h:outputText value="Database: " />
+				<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+					required="true" requiredMessage="Please select a database."
+					effect="fade">
+					<f:selectItem itemLabel="Select One" itemValue="" />
+					<f:selectItems value="#{userBean.databases}"
+						itemValue="#{userBean.databases}"
+						itemLabel="#{userBean.databases}" />
+				</p:selectOneMenu>
+			</h:panelGrid>
+			<!--  
+			<p:captcha label="Captcha"/>    
+			-->
+			<p:commandButton value="Submit" ajax="false" update="mainform" action="#{userBean.login}" />
+		</p:panel>
+		<p:messages />
+	</h:form>
+</h:body>
+</html>

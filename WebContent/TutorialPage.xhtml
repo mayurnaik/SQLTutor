@@ -1,0 +1,69 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{tutorialBean.loginRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/samples/template-menubar.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body>
+	<h:form>
+		<div style="float: left; width: 50%;">
+			<h2>Question:</h2>
+			<p:outputLabel id="question" value="#{tutorialBean.question}" />
+			<br />
+			<h2>Database:</h2>
+			<h:form>
+				<p:dataTable var="databaseTable"
+					value="#{tutorialBean.databaseSchema.databaseTables}">
+					<p:column headerText="Table Names">
+						<h:outputText value="#{databaseTable.tableName}" />
+					</p:column>
+					<p:column headerText="Column Names" style="width=200px; white-space: normal;">
+						<h:outputText value="#{databaseTable.columnNames}" />
+					</p:column>
+				</p:dataTable>
+			</h:form>
+
+			<h2>Query input:</h2>
+			<p:inputTextarea rows="6" cols="33" id="query" reRender="results"
+				autoResize="false" value="#{tutorialBean.query}" />
+			<br />
+			<p:commandButton id="try" value="Try Query"
+				action="#{tutorialBean.processSQL}" 
+				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')}" />
+			<p:commandButton id="next" value="Next Question"
+				action="#{tutorialBean.nextQuestion}"
+				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')},question" />
+
+			<h2>Query Result:</h2>
+			<h:form>
+				<p:dataTable id="resultsTable" var="row"
+					value="#{tutorialBean.queryResult.data}">
+					<p:columns value="#{tutorialBean.queryResult.columnNames}"
+						var="column" columnIndexVar="columnIndex">
+						<f:facet name="header">
+								#{column}
+							</f:facet>
+							#{row[columnIndex]}
+						</p:columns>
+				</p:dataTable>
+			</h:form>
+		</div>
+
+		<div style="float: right; width: 49%;">
+
+			<h2>Result Set Feedback:</h2>
+			<p:outputLabel id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
+				style="white-space: pre;" escape="false" />
+			<h2>NLP Feedback:</h2>
+			<p:outputLabel id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
+				style="white-space: pre;" escape="false" />
+		</div>
+	</h:form>
+</h:body>
+</html>

@@ -1,0 +1,156 @@
+package beans;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import javax.faces.model.SelectItemGroup;
+import utilities.JDBC_PostgreSQL_Connection;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * UserBean is a class attended to handle user login status, registration, 
+ * and database selection.
+ * @author		William J. Holton
+ * @version		0.0
+ */
+@ManagedBean
+@SessionScoped
+public class UserBean {
+
+	/** CONNECTION will be used to connect to the 'Users' PostgreSQL database for user name and password verification. */
+	private final JDBC_PostgreSQL_Connection CONNECTION = new JDBC_PostgreSQL_Connection();
+	/** REGISTRATION_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
+	private final String REGISTRATION_ERROR = "The username you entered is registered. The password you entered is incorrect.";
+	private String username;
+	private String password;
+	private boolean loggedIn = false;
+	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
+	private List<SelectItem> databases;
+	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Database Name}". */
+	private String selectedDatabase;
+
+	/** 
+	 * On initialization, the UserBean class will populate the selection list of databases.
+	 */
+	public UserBean() {
+		databases = new ArrayList<SelectItem>();
+		SelectItemGroup groupOne = new SelectItemGroup("MySQL");
+		SelectItem[] mysqlDatabases = new SelectItem[] {new SelectItem("", "")};
+		groupOne.setSelectItems(mysqlDatabases);
+		SelectItemGroup groupTwo = new SelectItemGroup("PostgreSQL");
+		SelectItem[] postgresqlDatabases = new SelectItem[] {new SelectItem("PostgreSQL company", "Company")};
+		// new SelectItem("PostgreSQL World", "World"), new SelectItem("PostgreSQL Booktown", "Booktown")
+		groupTwo.setSelectItems(postgresqlDatabases);
+		databases.add(groupOne);
+		databases.add(groupTwo);
+	}
+	
+	/** 
+	 * When the user submits his or her username, password, and database selection, this method will
+	 * verify the given credentials. These attributes are passed such that the username is not case-sensitive.
+	 * If the username is registered and the password does not match, an error message will display above the input
+	 * boxes. Otherwise, if the password did match, the 'loggedIn' attribute will be set to true and the user will be
+	 * allowed through to the tutorial page. If the username did not exist, the user will be registered and the method
+	 * will move on as if the credentials were correct.
+	 */
+	public String login() { 
+		if(CONNECTION.isUsernameRegistered(username.toLowerCase())) {
+			if(!CONNECTION.isPasswordCorrect(username.toLowerCase(), password)) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(REGISTRATION_ERROR));
+				return null;
+			}
+		} else {
+			CONNECTION.registerUser(username.toLowerCase(), password);
+		}
+		loggedIn = true;
+		return("success");  
+	}
+	
+	/** 
+	 * Should the user end up on the login page after he has already logged in, this method will redirect
+	 * him or her to the Tutorial Page.
+	 * 
+	 * @throws IOException		The IOException will be thrown by the redirect method if the URI is not valid.
+	 */
+	public void loginRedirect() throws IOException {
+        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+	    if (loggedIn) {
+	        externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialPage.jsf");
+	    } 
+	}
+	
+	/** 
+	 * @return		The current user's login status (whether the user is logged in or not).
+	 */
+	public boolean isLoggedIn() {
+		return loggedIn;
+	}
+
+	/** 
+	 * @param loggedIn	Sets the current user's login status (whether the user is logged in or not).
+	 */
+	public void setLoggedIn(boolean loggedIn) {
+		this.loggedIn = loggedIn;
+	}
+
+	/** 
+	 * @return		The database to be used by the tutorial.
+	 */
+	public String getSelectedDatabase() {
+		return selectedDatabase;
+	}
+
+	/** 
+	 * @param selectedDatabase		Sets the database to be used by the tutorial.
+	 */
+	public void setSelectedDatabase(String selectedDatabase) {
+		this.selectedDatabase = selectedDatabase;
+	}
+	
+	/** 
+	 * @return		The user's identification token. If the user is not logged in, this value may not represent a valid user.
+	 */
+	public String getUsername() {
+		return username;
+	}
+	
+	/** 
+	 * @param username		Sets the user's identification token. This does not verify that the user's credentials are valid.
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	
+	/** 
+	 * @return		The user's validation code. If the user is not logged in, this code may not be valid.
+	 */
+	public String getPassword() {
+		return password;
+	}
+	
+	/** 
+	 * @param password		Sets the user's validation code. This does not verify that the user's credentials are valid.
+	 */
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	/** 
+	 * @return 		The list of SelectItems which will populate the database selection menu.
+	 */
+	public List<SelectItem> getDatabases() {
+		return databases;
+	}
+
+	/** 
+	 * @param databases		Sets the list of databases which will populate the database selection menu.
+	 */
+	public void setDatabases(List<SelectItem> databases) {
+		this.databases = databases;
+	}
+}

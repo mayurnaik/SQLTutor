@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:form>
+	<p:menubar>
+		<p:menuitem>
+			<p:outputLabel value="Welcome to SQL Tutor" style="margin-right:40px" />
+		</p:menuitem>
+		<p:menuitem value="Home" url="http://localhost:8080/SQLTutor"
+			icon="ui-icon-home" style="margin-right:20px" />
+		<p:menuitem value="Help"
+			url="http://www.postgresql.org/docs/9.2/static/tutorial-sql.html"
+			icon="ui-icon-help" style="margin-right:20px" />
+		<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w"
+			style="margin-right:20px" action="#{userBean.setLoggedIn(false)}" />
+	</p:menubar>
+</h:form>
+</html>
