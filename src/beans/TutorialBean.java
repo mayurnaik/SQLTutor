@@ -27,6 +27,7 @@ public class TutorialBean {
 	private int questionIndex;
 	private String query;
 	private QueryResult queryResult;
+	private QueryResult queryDifference;
 	private String resultSetFeedback;
 	private String feedbackNLP;
 
@@ -36,7 +37,7 @@ public class TutorialBean {
 		if(getUserBean().getSelectedDatabase() != null) {
 			databaseAttributes = getUserBean().getSelectedDatabase().split(" ");
 		} else {
-			return; //redirect to session expired page.
+			return; //eventually redirect to session expired page.
 		}
 		final String databaseConnector = databaseAttributes[0];
 		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {		// this may be replaced for a switch statement in Java 1.7
@@ -44,7 +45,7 @@ public class TutorialBean {
 		} else if (databaseConnector.equalsIgnoreCase("MySQL")) {
 			connection = new JDBC_MySQL_Connection();
 		} else {
-			return; //redirect to message about connector not being supported
+			return; //eventually redirect to message about connector not being supported
 		}
 		selectedDatabase += databaseAttributes[1];
 		databaseSchema = new DatabaseSchema(connection, selectedDatabase);
@@ -59,7 +60,16 @@ public class TutorialBean {
 	}
 	
 	public void processSQL() {
-		resultSetFeedback = connection.getQueryFeedback(selectedDatabase, query, answers.get(questionIndex));
+		// Retrieve the difference of the two queries. If there isn't a difference, answer is "correct" (on this instance)
+		String queryDiff = "(" + query + " EXCEPT " + answers.get(questionIndex) +") UNION ALL (" + answers.get(questionIndex) + " EXCEPT " + query + "));";
+		queryDifference = new QueryResult(selectedDatabase,
+				connection.getQueryColumns(selectedDatabase, queryDiff),
+				connection.getQueryData(selectedDatabase, queryDiff));
+		if(queryDifference.getData() == null) {
+			resultSetFeedback = "Incorrect. Keep trying!";
+		} else {
+			resultSetFeedback = "Correct! Good job!";
+		}
 		// if the feedback contains an SQL exception, we do not render the table (we empty it).
 		if(!resultSetFeedback.substring(0,16).equalsIgnoreCase("Query malformed.")) {
 			// produce NLP feedback for the user.
@@ -68,6 +78,7 @@ public class TutorialBean {
 			queryResult = new QueryResult(selectedDatabase, 
 					connection.getQueryColumns(selectedDatabase, query), 
 					connection.getQueryData(selectedDatabase, query));
+
 		} else {
 			feedbackNLP = "Your query was malformed. Please try again. \n";	// perhaps add better exception handling here
 			queryResult = null;
