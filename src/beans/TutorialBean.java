@@ -63,7 +63,7 @@ public class TutorialBean {
 		// if the feedback contains an SQL exception, we do not render the table (we empty it).
 		if(!resultSetFeedback.substring(0,16).equalsIgnoreCase("Query malformed.")) {
 			// produce NLP feedback for the user.
-			feedbackNLP = "The question you answered was: \n" + (new Question(query)).getQuestion();
+			feedbackNLP = "The question you answered was: \n" + (new Question(query, databaseSchema)).getQuestion();
 			// fill the query's resulting table
 			queryResult = new QueryResult(selectedDatabase, 
 					connection.getQueryColumns(selectedDatabase, query), 
@@ -79,12 +79,12 @@ public class TutorialBean {
 		if (selectedDatabase.equalsIgnoreCase("company")) {
 			answers.clear();
 			questions.clear();
-			answers.add("SELECT * FROM department");
+			answers.add("SELECT id, first_name FROM employee, department");
 			answers.add("SELECT first_name, last_name FROM employee");
 			answers.add("SELECT salary FROM employee WHERE first_name = 'Ahmad'");
 			Question question;
 			for(int i = 0; i < answers.size(); i++ ) {
-				question = new Question(answers.get(i));
+				question = new Question(answers.get(i), databaseSchema);
 				questions.add(question.getQuestion());
 			}
 		} else {	// just a place holder for every other database.

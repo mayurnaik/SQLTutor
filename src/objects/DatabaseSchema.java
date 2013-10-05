@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import utilities.JDBC_Abstract_Connection;
 
 public class DatabaseSchema {
-	ArrayList<DatabaseTable> databaseTables = new ArrayList<DatabaseTable>();
+	private ArrayList<DatabaseTable> databaseTables = new ArrayList<DatabaseTable>();
 
 	public DatabaseSchema(JDBC_Abstract_Connection connection, String selectedDatabase) {
 		ArrayList<String> tables = connection.getTables(selectedDatabase); 

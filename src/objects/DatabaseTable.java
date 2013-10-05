@@ -6,7 +6,7 @@ import utilities.JDBC_Abstract_Connection;
 public class DatabaseTable {
 	private String tableName;	
 	private ArrayList<String> columnNameList;	// list of column names
-	private String columnNames;	//column name
+	private String columnNames;	//column names as a single string
 	
 	public DatabaseTable(String tableName, JDBC_Abstract_Connection connection, String selectedDatabase) {
 		this.tableName = tableName;
