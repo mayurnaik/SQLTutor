@@ -38,7 +38,7 @@
 				</p:selectOneMenu>
 			</h:panelGrid>
 			  
-			<p:captcha label="Captcha"/>    
+			<p:captcha label="Captcha" required="true" secure="true"/>    
 			
 			<p:commandButton value="Submit" ajax="false" update="mainform" action="#{userBean.login}" />
 		</p:panel>
