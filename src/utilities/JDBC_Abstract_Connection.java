@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+
 public abstract class JDBC_Abstract_Connection {
 	protected final String DB_MANAGER_USERNAME = "DB_Manager";
 	protected final String DB_READONLY_USERNAME = "readonly_user";
@@ -352,4 +353,6 @@ public abstract class JDBC_Abstract_Connection {
 		}
 		return null;
 	}
+	
+
 }
