@@ -27,7 +27,6 @@ public class TutorialBean {
 	private int questionIndex;
 	private String query;
 	private QueryResult queryResult;
-	private QueryResult queryDifference;
 	private String resultSetFeedback;
 	private String feedbackNLP;
 

@@ -271,46 +271,6 @@ public abstract class JDBC_Abstract_Connection {
 		return null;
 	}
 	
-	public ArrayList<String> getQueryColumns(String databaseName, String query) {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-		
-		try {
-			
-			connection = getConnection(databaseName, DB_READONLY_USERNAME);
-			
-			statement = connection.createStatement();
-			resultSet = statement.executeQuery(query);
-			log(query);
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-			// Put each of the column names into an array list.
-			int columnCount = resultSetMetaData.getColumnCount();
-			ArrayList<String> columnNames = new ArrayList<String>();
-
-			for(int i = 1; i <=  columnCount; i++) {
-				columnNames.add(resultSetMetaData.getColumnName(i));
-			}
-			
-			return columnNames;
-			
-		} catch (Exception e) {
-			
-			System.err.println("Exception: " + e.getMessage());
-			
-		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(resultSet != null) {
-					resultSet.close();
-				}
-			} catch (SQLException e) {}
-		}
-		return null;
-	}
-	
 	public QueryResult getQueryResult(String databaseName, String query) {
 		Connection connection = null;
 		Statement statement = null;
@@ -321,10 +281,15 @@ public abstract class JDBC_Abstract_Connection {
 			connection = getConnection(databaseName, DB_READONLY_USERNAME);
 			statement = connection.createStatement();
 			resultSet = statement.executeQuery(query);
+			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 			log(query);
-			// Put each of the column names into an array list.
-			int columnCount = resultSet.getMetaData().getColumnCount();
+			
+			int columnCount = resultSetMetaData.getColumnCount();
 			ArrayList<ArrayList<String>> queryData = new ArrayList<ArrayList<String>>();
+			ArrayList<String> columnNames = new ArrayList<String>();
+			for(int i = 1; i <=  columnCount; i++) {
+				columnNames.add(resultSetMetaData.getColumnName(i));
+			}
 			while(resultSet.next()) {
 				ArrayList<String> rowData = new ArrayList<String>();
 				for (int i = 1; i <= columnCount; i++) {
@@ -334,7 +299,7 @@ public abstract class JDBC_Abstract_Connection {
 			}
 			// return the query result object
 			queryResult = new QueryResult(databaseName, 
-					getQueryColumns(databaseName, query), 
+					columnNames, 
 					queryData);
 			return queryResult;
 			 

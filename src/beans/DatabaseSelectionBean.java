@@ -24,7 +24,6 @@ public class DatabaseSelectionBean {
 		*/
 		SelectItemGroup groupTwo = new SelectItemGroup("PostgreSQL");
 		SelectItem[] postgresqlDatabases = new SelectItem[] {new SelectItem("PostgreSQL company", "Company")};
-		// new SelectItem("PostgreSQL World", "World"), new SelectItem("PostgreSQL Booktown", "Booktown")
 		groupTwo.setSelectItems(postgresqlDatabases);
 		//databases.add(groupOne);
 		databases.add(groupTwo);
