@@ -26,7 +26,9 @@ public class Question {
 	/** 
 	 * A blank initializer that is used for testing reasons (provides a blank question).
 	 */
-	public Question() {}
+	public Question(String query) {
+		this(query, null);
+	}
 	
 	/** 
 	 * An initializer for questions formed by answer queries. It splits the query into an array of words and symbols that
@@ -53,7 +55,6 @@ public class Question {
 		phraseCheckDictionary.put("first name and last name", "first and last name");
 		questionSpellCheck();
 		questionPhraseCheck();
-		
 	}
 	
 	
@@ -122,16 +123,26 @@ public class Question {
 		index++;
 		for( ; index < tokenizedQuery.length && !tokenizedQuery[index].equalsIgnoreCase("WHERE") ; index++) {
 				entities += " " + tokenizedQuery[index];
-	}
-		Iterator<DatabaseTable> databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
-		DatabaseTable databaseTable;
-		while(databaseTableIterator.hasNext()) {
-			databaseTable = databaseTableIterator.next();
-			if(entities.contains(databaseTable.getTableName())) {
-				if(!mainListKey.contains(databaseTable.getTableName())) {
-					mainListKey.add(databaseTable.getTableName());
-					LinkedList<String> subList = new LinkedList<String>();
-					mainList.add(subList);
+		}
+		if( databaseSchema == null ) {
+			if( entities.contains(",") == false && entities.contains(" JOIN ") == false) {
+				mainListKey.add(entities);
+				LinkedList<String> subList = new LinkedList<String>();
+				mainList.add(subList);
+			} else {
+				throw new IllegalStateException("No schema info, and there is more than one entity.");
+			}
+		} else {
+			Iterator<DatabaseTable> databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
+			DatabaseTable databaseTable;
+			while(databaseTableIterator.hasNext()) {
+				databaseTable = databaseTableIterator.next();
+				if(entities.contains(databaseTable.getTableName())) {
+					if(!mainListKey.contains(databaseTable.getTableName())) {
+						mainListKey.add(databaseTable.getTableName());
+						LinkedList<String> subList = new LinkedList<String>();
+						mainList.add(subList);
+					}
 				}
 			}
 		}
@@ -155,18 +166,23 @@ public class Question {
 					mainList.get(mainListKey.indexOf(match[0])).add(attributeArray[i]);
 				}
 			} else {
-				// Any of which that aren't explicit need to be pulled from the schema.
-				// This pattern does not handle something like "5id". Maybe "[0-9]*[A-Za-z]\\w+"
-				Pattern pattern = Pattern.compile("[a-zA-Z][\\w_]+");
-				Matcher matcher = pattern.matcher(attributeArray[i]);
-				attributeArray[i] = convertArithmetic(attributeArray[i]);
-				while(matcher.find()) {
-					databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
-					while(databaseTableIterator.hasNext()) {
-						databaseTable = databaseTableIterator.next();
-						if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumnNames().contains(matcher.group())) {
-							mainList.get(mainListKey.indexOf(databaseTable.getTableName())).add(attributeArray[i]);
-							break;
+				if(mainListKey.size() == 1) {
+						mainList.get(0).add(attributeArray[i]);
+				} else {
+					// Any of which that aren't explicit need to be pulled from the schema.
+					// This pattern does not handle something like "5id". Maybe "[0-9]*[A-Za-z]\\w+"
+					Pattern pattern = Pattern.compile("[a-zA-Z][\\w_]+");
+					Matcher matcher = pattern.matcher(attributeArray[i]);
+					attributeArray[i] = convertArithmetic(attributeArray[i]);
+					while(matcher.find()) {
+						Iterator<DatabaseTable> databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
+						DatabaseTable databaseTable;
+						while(databaseTableIterator.hasNext()) {
+							databaseTable = databaseTableIterator.next();
+							if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumnNames().contains(matcher.group())) {
+								mainList.get(mainListKey.indexOf(databaseTable.getTableName())).add(attributeArray[i]);
+								break;
+							}
 						}
 					}
 				}
