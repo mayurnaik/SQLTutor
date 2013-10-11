@@ -16,7 +16,9 @@ import objects.DatabaseTable;
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.BinaryOperatorNode;
+import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.CursorNode;
 import com.akiban.sql.parser.FromList;
 import com.akiban.sql.parser.FromTable;
@@ -44,17 +46,19 @@ public class Question {
 	private static final Map<String, String> operatorTranslations;
 	static {
 		HashMap<String, String> ops = new HashMap<String, String>();
-		ops.put("=",  "is");
-		ops.put("<",  "is less than");
-		ops.put("<=", "is no more than");
-		ops.put(">",  "is greater than");
-		ops.put(">=", "is no less than");
-		ops.put("<>", "is not");
-		ops.put("!=", "is not");
-		ops.put("+",  "plus");
-		ops.put("-",  "minus");
-		ops.put("*",  "times");
-		ops.put("/",  "divided by");
+		ops.put("and", "and");
+		ops.put("or",  "or");
+		ops.put("=",   "is");
+		ops.put("<",   "is less than");
+		ops.put("<=",  "is no more than");
+		ops.put(">",   "is greater than");
+		ops.put(">=",  "is no less than");
+		ops.put("<>",  "is not");
+		ops.put("!=",  "is not");
+		ops.put("+",   "plus");
+		ops.put("-",   "minus");
+		ops.put("*",   "times");
+		ops.put("/",   "divided by");
 		operatorTranslations = ops;
 	}
 	
@@ -246,20 +250,7 @@ public class Question {
 		for( Entry<String, List<String>> entry: tableToColumns.entrySet() ) {
 			String tableName = entry.getKey();
 			List<String> cols = entry.getValue();
-			
-			// 1: <attr>
-			// 2: <attr1> and <attr2>
-			// 3+: <attr1>, <attr2>, ..., and <attrN> 
-			for( int i = 0, ilen = cols.size(); i < ilen; ++i ) {
-				String col = cols.get(i);
-				if( i != 0 ) {
-					if( i == ilen - 1 )
-						result.append(", and");
-					else
-						result.append(',');
-				}
-				result.append(' ').append(col);
-			}
+			conjunctTerms(result, cols);
 			
 			result.append(" of all ").append(aliases.get(tableName)).append("s and ");
 		}
@@ -288,6 +279,36 @@ public class Question {
 		result.setLength(result.length() - " and ".length()); // delete trailing " and "
 	}
 	
+	/**
+	 * Append the English conjunction of a list of terms to <code>result</code>.
+	 * <p>Produces:<br />
+	 * 1: &lt;attr&gt; <br />
+	 *	2: &lt;attr1&gt; and &lt;attr2&gt;<br />
+	 *	3+: &lt;attr1&gt;, &lt;attr2&gt;, ..., and &lt;attrN&gt;<br />
+	 * </p>
+	 * 
+	 * @param result
+	 * @param terms
+	 */
+	private void conjunctTerms(StringBuilder result, List<String> terms) {
+		// 1: <attr>
+		// 2: <attr1> and <attr2>
+		// 3+: <attr1>, <attr2>, ..., and <attrN> 
+		for( int i = 0, ilen = terms.size(); i < ilen; ++i ) {
+			String term = terms.get(i);
+			if( i != 0 ) {
+				if( i != ilen - 1 ) {
+					result.append(',');
+				} else {
+					if( i != 1 )
+						result.append(',');
+					result.append(" and");
+				}
+			}
+			result.append(' ').append(term);
+		}
+	}
+	
 	private void processFromList(StringBuilder result, FromList fromList) {
 		// result column processing outputs the from info
 	}
@@ -296,7 +317,43 @@ public class Question {
 		ValueNode whereClause = select.getWhereClause();
 		if( whereClause == null ) return;
 		
-		System.out.println("whereClause: " + whereClause);
+		result.append(" such that");
+		
+		processWhereExpression(result, whereClause);
+	}
+	
+	private void processWhereExpression(StringBuilder result, ValueNode expression) {
+		if( expression.isConstantExpression() ) {
+			ConstantNode node = (ConstantNode)expression;
+			Object value = node.getValue();
+			result.append(' ');
+			if( value instanceof String ) {
+				// FIXME does escaping value make sense here?
+				result.append('"').append(value).append('"');
+			} else {
+				result.append(value);
+			}
+		} else if( expression instanceof BinaryOperatorNode ) {
+			BinaryOperatorNode node = (BinaryOperatorNode)expression;
+			ValueNode left = node.getLeftOperand(), right = node.getRightOperand();
+			
+			processWhereExpression(result, left);
+			
+			String opEnglish = operatorTranslations.get(node.getOperator());
+			if( opEnglish == null ) {
+				System.err.println("No translation for operator: " + node.getOperator());
+				result.append(' ').append(node.getOperator());
+			} else {
+				result.append(' ').append(opEnglish);
+			}
+			
+			processWhereExpression(result, right);
+		} else if( expression instanceof ColumnReference ) {
+			ColumnReference ref = (ColumnReference)expression;
+			result.append(" the ").append(ref.getColumnName());
+		} else {
+			System.err.println("WARN: Unhandled expression: " + expression);
+		}
 	}
 	
 	public String getNaturalLanguage() {

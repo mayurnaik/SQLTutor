@@ -47,7 +47,7 @@ public class ParseTest {
 			// p104
 			{"(SELECT DISTINCT project.id FROM project, department, employee " + 
 				"WHERE department.id = project.department_id AND department.manager_ssn = employee.ssn " +
-				"AND employee.last_name = ‘Smith’) UNION " +
+				"AND employee.last_name = 'Smith') UNION " +
 				"(SELECT DISTINCT project.id FROM project, works_on, employee " +
 				"WHERE project.id = works_on.project_id AND works_on.employee_ssn = employee.ssn AND employee.last_name = 'Smith')"
 			},
@@ -101,16 +101,10 @@ public class ParseTest {
 		});
 	}
 	
-	private static final Pattern sanitizer = 
-		Pattern.compile("[;\\s]+$");
-	private static String sanitize(String query) {
-		return sanitizer.matcher(query).replaceAll("");
-	}
-	
 	private String query;
 	
 	public ParseTest(String query) {
-		this.query = sanitize(query);
+		this.query = QueryUtils.sanitize(query);
 	}
 	
 	@Test
@@ -126,5 +120,4 @@ public class ParseTest {
 			throw e;
 		}
 	}
-
 }
