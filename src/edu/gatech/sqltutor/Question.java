@@ -16,7 +16,6 @@ import objects.DatabaseTable;
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.BinaryOperatorNode;
-import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.CursorNode;
@@ -29,8 +28,6 @@ import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.TableName;
 import com.akiban.sql.parser.ValueNode;
-import com.akiban.sql.parser.Visitable;
-import com.akiban.sql.parser.Visitor;
 
 public class Question {
 	/** Alternate verb phrases for the act of selecting. */
@@ -59,6 +56,7 @@ public class Question {
 		ops.put("-",   "minus");
 		ops.put("*",   "times");
 		ops.put("/",   "divided by");
+		ops.put("%",   "modulo");
 		operatorTranslations = ops;
 	}
 	
@@ -143,7 +141,14 @@ public class Question {
 		
 		result.append('.');
 		
-		naturalLang = result.toString();
+		String nlp = result.toString();
+		
+		// Removal of underscores; does not touch anything bounded by apostrophes.
+		nlp = nlp.replaceAll("(?x)_(?=(?:[^']*'[^']*')*[^']*$)", " ");
+		
+		// FIXME use Wordnet stemmer or similar to produce valid plurals
+		
+		naturalLang = nlp;
 	}
 	
 	private Map<String, String> getTableAliases(FromList fromList) throws StandardException {
