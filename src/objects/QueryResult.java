@@ -3,8 +3,12 @@ package objects;
 import java.util.ArrayList;
 
 public class QueryResult {
+	private boolean malformed = false;
+	private String exceptionMessage;
     private ArrayList<String> columnNames = new ArrayList<String>();
     private ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
+    
+    public QueryResult() {}
     
     public QueryResult(String databaseName, ArrayList<String> columnNames, ArrayList<ArrayList<String>> data) {
     	this.columnNames = columnNames;
@@ -25,6 +29,22 @@ public class QueryResult {
 
 	public ArrayList<String> getColumnNames() {
 		return columnNames;
+	}
+
+	public void setMalformed(boolean malformed) {
+		this.malformed = malformed;
+	}
+
+	public boolean isMalformed() {
+		return malformed;
+	}
+
+	public void setExceptionMessage(String exceptionMessage) {
+		this.exceptionMessage = exceptionMessage;
+	}
+
+	public String getExceptionMessage() {
+		return exceptionMessage;
 	}
 
 	

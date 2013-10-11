@@ -60,28 +60,13 @@ public class TutorialBean {
 	}
 	
 	public void processSQL() {
-		// Retrieve the difference of the two queries. If there isn't a difference, answer is "correct" (on this instance)
-		String queryDiff = "(" + query + " EXCEPT " + answers.get(questionIndex) +") UNION ALL (" + answers.get(questionIndex) + " EXCEPT " + query + "));";
-		queryDifference = new QueryResult(selectedDatabase,
-				connection.getQueryColumns(selectedDatabase, queryDiff),
-				connection.getQueryData(selectedDatabase, queryDiff));
-		if(queryDifference.getData() == null) {
-			resultSetFeedback = "Incorrect. Keep trying!";
+		queryResult = connection.getQueryResult(selectedDatabase, query);
+		if(queryResult.isMalformed()) {
+			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
 		} else {
-			resultSetFeedback = "Correct! Good job!";
-		}
-		// if the feedback contains an SQL exception, we do not render the table (we empty it).
-		if(!resultSetFeedback.substring(0,16).equalsIgnoreCase("Query malformed.")) {
-			// produce NLP feedback for the user.
 			feedbackNLP = "The question you answered was: \n" + (new Question(query, databaseSchema)).getQuestion();
-			// fill the query's resulting table
-			queryResult = new QueryResult(selectedDatabase, 
-					connection.getQueryColumns(selectedDatabase, query), 
-					connection.getQueryData(selectedDatabase, query));
-
-		} else {
-			feedbackNLP = "Your query was malformed. Please try again. \n";	// perhaps add better exception handling here
-			queryResult = null;
+			// Retrieve the difference of the two queries. If there isn't a difference, answer is "correct" (on this instance)
+			// INSERT FUNCTION FOR GETTING QUERY DIFFERENCE.
 		}
 	} 
 	

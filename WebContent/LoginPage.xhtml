@@ -31,10 +31,12 @@
 				<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
 					required="true" requiredMessage="Please select a database."
 					effect="fade">
+					<!--
 					<f:selectItem itemLabel="Select One" itemValue="" />
-					<f:selectItems value="#{userBean.databases}"
-						itemValue="#{userBean.databases}"
-						itemLabel="#{userBean.databases}" />
+					-->
+					<f:selectItems value="#{databaseSelectionBean.databases}"
+						itemValue="#{databaseSelectionBean.databases}"
+						itemLabel="#{databaseSelectionBean.databases}" />
 				</p:selectOneMenu>
 			</h:panelGrid>
 			  

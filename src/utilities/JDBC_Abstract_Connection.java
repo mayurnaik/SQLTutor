@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import objects.QueryResult;
+
 
 public abstract class JDBC_Abstract_Connection {
 	protected final String DB_MANAGER_USERNAME = "DB_Manager";
@@ -309,15 +311,14 @@ public abstract class JDBC_Abstract_Connection {
 		return null;
 	}
 	
-	public ArrayList<ArrayList<String>> getQueryData(String databaseName, String query) {
+	public QueryResult getQueryResult(String databaseName, String query) {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+		QueryResult queryResult;
 		try {
 
 			connection = getConnection(databaseName, DB_READONLY_USERNAME);
-
 			statement = connection.createStatement();
 			resultSet = statement.executeQuery(query);
 			log(query);
@@ -331,11 +332,16 @@ public abstract class JDBC_Abstract_Connection {
 				}
 				queryData.add(rowData);
 			}
-
-			return queryData;
+			// return the query result object
+			queryResult = new QueryResult(databaseName, 
+					getQueryColumns(databaseName, query), 
+					queryData);
+			return queryResult;
 			 
 		} catch (Exception e) {
-			
+			queryResult = new QueryResult();
+			queryResult.setMalformed(true);
+			queryResult.setExceptionMessage(e.getMessage());
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
@@ -351,7 +357,7 @@ public abstract class JDBC_Abstract_Connection {
 				}
 			} catch (SQLException e) {}
 		}
-		return null;
+		return queryResult;
 	}
 	
 

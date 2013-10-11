@@ -5,12 +5,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.faces.model.SelectItemGroup;
 import utilities.JDBC_PostgreSQL_Connection;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * UserBean is a class attended to handle user login status, registration, 
@@ -28,9 +24,7 @@ public class UserBean {
 	private final String REGISTRATION_ERROR = "The username you entered is registered. The password you entered is incorrect.";
 	private String username;
 	private String password;
-	private boolean loggedIn = false;
-	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
-	private List<SelectItem> databases;
+	private boolean loggedIn;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Database Name}". */
 	private String selectedDatabase;
 
@@ -38,16 +32,7 @@ public class UserBean {
 	 * On initialization, the UserBean class will populate the selection list of databases.
 	 */
 	public UserBean() {
-		databases = new ArrayList<SelectItem>();
-		SelectItemGroup groupOne = new SelectItemGroup("MySQL");
-		SelectItem[] mysqlDatabases = new SelectItem[] {new SelectItem("", "")};
-		groupOne.setSelectItems(mysqlDatabases);
-		SelectItemGroup groupTwo = new SelectItemGroup("PostgreSQL");
-		SelectItem[] postgresqlDatabases = new SelectItem[] {new SelectItem("PostgreSQL company", "Company")};
-		// new SelectItem("PostgreSQL World", "World"), new SelectItem("PostgreSQL Booktown", "Booktown")
-		groupTwo.setSelectItems(postgresqlDatabases);
-		databases.add(groupOne);
-		databases.add(groupTwo);
+		loggedIn = false;
 	}
 	
 	/** 
@@ -138,19 +123,5 @@ public class UserBean {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
-	}
-	
-	/** 
-	 * @return 		The list of SelectItems which will populate the database selection menu.
-	 */
-	public List<SelectItem> getDatabases() {
-		return databases;
-	}
-
-	/** 
-	 * @param databases		Sets the list of databases which will populate the database selection menu.
-	 */
-	public void setDatabases(List<SelectItem> databases) {
-		this.databases = databases;
 	}
 }
