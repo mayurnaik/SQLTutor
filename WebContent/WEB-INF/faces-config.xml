@@ -9,8 +9,12 @@
 		<from-view-id>/LoginPage.xhtml</from-view-id>
 		<navigation-case>
 			<from-outcome>success</from-outcome>
-			<to-view-id>/TutorialPage.xhtml</to-view-id>
+			<to-view-id>/TutorialPage.xhtml?faces-redirect=true</to-view-id>
 			<redirect />
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>dev</from-outcome>
+			<to-view-id>/DevTutorialPage.xhtml?faces-redirect=true</to-view-id>
 		</navigation-case>
 	</navigation-rule>
 

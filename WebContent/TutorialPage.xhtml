@@ -17,17 +17,15 @@
 			<p:outputLabel id="question" value="#{tutorialBean.question}" />
 			<br />
 			<h2>Database:</h2>
-			<h:form>
-				<p:dataTable var="databaseTable"
-					value="#{tutorialBean.databaseSchema.databaseTables}">
-					<p:column headerText="Table Names">
-						<h:outputText value="#{databaseTable.tableName}" />
-					</p:column>
-					<p:column headerText="Column Names" style="width=200px; white-space: normal;">
-						<h:outputText value="#{databaseTable.columnNames}" />
-					</p:column>
-				</p:dataTable>
-			</h:form>
+			<p:dataTable var="databaseTable"
+				value="#{tutorialBean.databaseSchema.databaseTables}">
+				<p:column headerText="Table Names">
+					<h:outputText value="#{databaseTable.tableName}" />
+				</p:column>
+				<p:column headerText="Column Names" style="width=200px; white-space: normal;">
+					<h:outputText value="#{databaseTable.columnNames}" />
+				</p:column>
+			</p:dataTable>
 
 			<h2>Query input:</h2>
 			<p:inputTextarea rows="6" cols="33" id="query" reRender="results"
@@ -41,18 +39,16 @@
 				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')},question" />
 
 			<h2>Query Result:</h2>
-			<h:form>
-				<p:dataTable id="resultsTable" var="row"
-					value="#{tutorialBean.queryResult.data}">
-					<p:columns value="#{tutorialBean.queryResult.columnNames}"
-						var="column" columnIndexVar="columnIndex">
-						<f:facet name="header">
-								#{column}
-							</f:facet>
-							#{row[columnIndex]}
-						</p:columns>
-				</p:dataTable>
-			</h:form>
+			<p:dataTable id="resultsTable" var="row"
+				value="#{tutorialBean.queryResult.data}">
+				<p:columns value="#{tutorialBean.queryResult.columnNames}"
+					var="column" columnIndexVar="columnIndex">
+					<f:facet name="header">
+							#{column}
+						</f:facet>
+						#{row[columnIndex]}
+					</p:columns>
+			</p:dataTable>
 		</div>
 
 		<div style="float: right; width: 49%;">

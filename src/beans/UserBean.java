@@ -53,6 +53,9 @@ public class UserBean {
 			CONNECTION.registerUser(username.toLowerCase(), password);
 		}
 		loggedIn = true;
+		if(username.equalsIgnoreCase("dev")) {
+			return("dev");
+		}
 		return("success");  
 	}
 	
@@ -65,7 +68,11 @@ public class UserBean {
 	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 	    if (loggedIn) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialPage.jsf");
+	    	if(username.equalsIgnoreCase("dev")) {
+	    		externalContext.redirect(externalContext.getRequestContextPath() + "/DevTutorialPage.jsf");
+	    	} else {
+	    		externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialPage.jsf");
+	    	}
 	    } 
 	}
 	

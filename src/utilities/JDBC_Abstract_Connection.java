@@ -308,7 +308,6 @@ public abstract class JDBC_Abstract_Connection {
 			queryResult.setMalformed(true);
 			queryResult.setExceptionMessage(e.getMessage());
 			System.err.println("Exception: " + e.getMessage());
-			
 		} finally {
 			try {
 				if(connection != null) {

@@ -20,15 +20,19 @@ public class TutorialBean {
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
-	private String selectedDatabase = "";
+	private String selectedDatabase;
 	private DatabaseSchema databaseSchema;
 	private ArrayList<String> questions = new ArrayList<String>();
 	private ArrayList<String> answers = new ArrayList<String>();
 	private int questionIndex;
 	private String query;
-	private QueryResult queryResult;
-	private String resultSetFeedback;
 	private String feedbackNLP;
+	private String resultSetFeedback;
+	private QueryResult queryResult;
+	private QueryResult answerResult;
+	private QueryResult queryDiffResult;
+	private QueryResult answerDiffResult;
+
 
 	@PostConstruct
 	public void init() {
@@ -39,14 +43,14 @@ public class TutorialBean {
 			return; //eventually redirect to session expired page.
 		}
 		final String databaseConnector = databaseAttributes[0];
-		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {		// this may be replaced for a switch statement in Java 1.7
+		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
 			connection = new JDBC_PostgreSQL_Connection();
 		} else if (databaseConnector.equalsIgnoreCase("MySQL")) {
 			connection = new JDBC_MySQL_Connection();
 		} else {
 			return; //eventually redirect to message about connector not being supported
 		}
-		selectedDatabase += databaseAttributes[1];
+		selectedDatabase = databaseAttributes[1];
 		databaseSchema = new DatabaseSchema(connection, selectedDatabase);
 		setQuestionsAndAnswers();
 	}
@@ -62,10 +66,37 @@ public class TutorialBean {
 		queryResult = connection.getQueryResult(selectedDatabase, query);
 		if(queryResult.isMalformed()) {
 			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
+			resultSetFeedback = "Incorrect.";
 		} else {
 			feedbackNLP = "The question you answered was: \n" + (new Question(query, databaseSchema)).getQuestion();
-			// Retrieve the difference of the two queries. If there isn't a difference, answer is "correct" (on this instance)
-			// INSERT FUNCTION FOR GETTING QUERY DIFFERENCE.
+			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
+				answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
+				if(queryResult.getData().equals(answerResult.getData())) {
+					resultSetFeedback = "Correct.";
+				} else {
+					resultSetFeedback = "Incorrect. The result's data differed.";
+					// find a way to mark where the queryResult did not equal the answerResult
+				}
+			} else {
+				// Columns must be ordered correctly by the user.
+				String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
+				String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
+				// The result set of all ADDITIONAL data gathered by the user's query.
+				queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
+				if(queryDiffResult.isMalformed()) {
+					resultSetFeedback = "Incorrect. Either the number of columns did not match, or their types differed.";
+					return;
+				}
+				// The result set of all MISSED data, not gathered by the user's query.
+				answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
+				if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
+					resultSetFeedback = "Correct.";
+				} else {
+					resultSetFeedback = "Incorrect. The result's data differed.";
+					// find queryDiffResult in queryResult and mark green
+					// append answerDiffResult to the bottom in red
+				}
+			}
 		}
 	} 
 	
@@ -77,6 +108,7 @@ public class TutorialBean {
 			answers.add("SELECT id, first_name FROM employee, department");
 			answers.add("SELECT first_name, last_name FROM employee");
 			answers.add("SELECT salary FROM employee WHERE first_name = 'Ahmad'");
+			answers.add("SELECT first_name FROM employee ORDER BY first_name DESC");
 			Question question;
 			for(int i = 0; i < answers.size(); i++ ) {
 				question = new Question(answers.get(i), databaseSchema);
@@ -93,41 +125,28 @@ public class TutorialBean {
 		if(questionIndex >= questions.size()) {
 			questionIndex = 0;
 		}
-		queryResult=null;
-		resultSetFeedback = "";
+		queryResult = null;
+		answerResult = null;
+		queryDiffResult = null;
+		answerDiffResult = null;
 		feedbackNLP = "";
-	}
-
-	public String getQuestion() {
-		return questions.get(questionIndex);
+		resultSetFeedback = "";
 	}
 	
-	public String getResultSetFeedback() {
-		return resultSetFeedback;
-	}
-
-	public void setResultSetFeedback(String resultSetFeedback) {
-		this.resultSetFeedback = resultSetFeedback;
+	public String getQuestion() {
+		return questions.get(questionIndex);
 	}
 
 	public String getQuery() {
 		return query;
 	}
-
+	
 	public void setQuery(String query) {
 		this.query = query;
 	}
 
-	public void setQueryResult(QueryResult queryResult) {
-		this.queryResult = queryResult;
-	}
-
 	public QueryResult getQueryResult() {
 		return queryResult;
-	}
-
-	public void setAnswers(ArrayList<String> answers) {
-		this.answers = answers;
 	}
 
 	public ArrayList<String> getAnswers() {
@@ -142,10 +161,6 @@ public class TutorialBean {
 		this.userBean = userBean;
 	}
 
-	public void setFeedbackNLP(String feedbackNLP) {
-		this.feedbackNLP = feedbackNLP;
-	}
-
 	public String getFeedbackNLP() {
 		return feedbackNLP;
 	}
@@ -154,15 +169,19 @@ public class TutorialBean {
 		return selectedDatabase;
 	}
 
-	public void setSelectedDatabase(String selectedDatabase) {
-		this.selectedDatabase = selectedDatabase;
-	}
-
-	public void setDatabaseSchema(DatabaseSchema databaseSchema) {
-		this.databaseSchema = databaseSchema;
-	}
-
 	public DatabaseSchema getDatabaseSchema() {
 		return databaseSchema;
+	}
+
+	public QueryResult getQueryDiffAnswer() {
+		return queryDiffResult;
+	}
+
+	public QueryResult getAnswerDiffQuery() {
+		return answerDiffResult;
+	}
+
+	public String getResultSetFeedback() {
+		return resultSetFeedback;
 	}
 }
