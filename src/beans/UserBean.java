@@ -7,6 +7,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import utilities.JDBC_PostgreSQL_Connection;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.regex.Pattern;
 
 /**
  * UserBean is a class attended to handle user login status, registration, 
@@ -16,8 +18,9 @@ import java.io.IOException;
  */
 @ManagedBean
 @SessionScoped
-public class UserBean {
-
+public class UserBean implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	/** CONNECTION will be used to connect to the 'Users' PostgreSQL database for user name and password verification. */
 	private final JDBC_PostgreSQL_Connection CONNECTION = new JDBC_PostgreSQL_Connection();
 	/** REGISTRATION_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
@@ -68,12 +71,24 @@ public class UserBean {
 	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 	    if (loggedIn) {
-	    	if(username.equalsIgnoreCase("dev")) {
+	    	if(isDevUser()) {
 	    		externalContext.redirect(externalContext.getRequestContextPath() + "/DevTutorialPage.jsf");
 	    	} else {
 	    		externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialPage.jsf");
 	    	}
 	    } 
+	}
+	
+	/**
+	 * Temporary method for special development users.
+	 * 
+	 * @deprecated
+	 * @return if this is a development user
+	 */
+	public boolean isDevUser() {
+		Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will$", 
+			Pattern.CASE_INSENSITIVE);
+		return devNames.matcher(username).matches();
 	}
 	
 	/** 

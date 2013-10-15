@@ -10,6 +10,8 @@
 		</p:menuitem>
 		<p:menuitem value="Home" action="LoginPage.xhtml?faces-redirect=true"
 			icon="ui-icon-home" style="margin-right:20px" />
+		<p:menuitem value="Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
+			style="margin-right: 20px" rendered="#{userBean.isDevUser()}" />
 		<p:menuitem value="Contact Us" onclick="PF('contact_dlg').show();" type="button"
 			icon="ui-icon-mail-closed" style="margin-right:20px"/>
 		<p:menuitem value="Help"

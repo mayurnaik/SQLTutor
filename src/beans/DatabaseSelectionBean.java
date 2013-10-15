@@ -1,14 +1,18 @@
 package beans;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
-import java.util.ArrayList;
-import java.util.List;
 
 @ManagedBean
 @ViewScoped
-public class DatabaseSelectionBean {
+public class DatabaseSelectionBean implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
 	private List<SelectItem> databases;
 
