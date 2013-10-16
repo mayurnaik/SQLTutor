@@ -48,7 +48,7 @@ public class DevTutorialBean {
 	
 	public void devRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		if (!userBean.isLoggedIn() || !userBean.getUsername().equalsIgnoreCase("dev")) {
+		if (!userBean.isLoggedIn() || !userBean.isDevUser()) {
 	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    }
 	}
@@ -88,6 +88,10 @@ public class DevTutorialBean {
 	
 	public String getSelectedDatabase() {
 		return selectedDatabase;
+	}
+	
+	public ArrayList<DatabaseTable> getTables() {
+		return tables;
 	}
 
 }

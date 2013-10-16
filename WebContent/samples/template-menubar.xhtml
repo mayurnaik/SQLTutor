@@ -56,7 +56,7 @@
 				<p:messages/>
 			</p:panel>
 			<p:captcha label="Captcha" theme="white" required="true" 
-				requiredMessage="Captcha is required." validatorMessage="Captcha text does not match." secure="true"/>    
+				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>    
 			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
 				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
 		</h:form>
