@@ -7,7 +7,7 @@ import javax.faces.context.FacesContext;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import objects.DatabaseSchema;
+import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
 import utilities.JDBC_Abstract_Connection;
@@ -21,7 +21,7 @@ public class TutorialBean {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private DatabaseSchema databaseSchema;
+	private ArrayList<DatabaseTable> tables;
 	private ArrayList<String> questions = new ArrayList<String>();
 	private ArrayList<String> answers = new ArrayList<String>();
 	private int questionIndex;
@@ -51,14 +51,14 @@ public class TutorialBean {
 			return; //eventually redirect to message about connector not being supported
 		}
 		selectedDatabase = databaseAttributes[1];
-		databaseSchema = new DatabaseSchema(connection, selectedDatabase);
+		tables = connection.getTables(selectedDatabase);
 		setQuestionsAndAnswers();
 	}
 	
 	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 	    if (!userBean.isLoggedIn()) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/LoginPage.jsf");
+	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    } 
 	}
 	
@@ -68,7 +68,7 @@ public class TutorialBean {
 			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
 			resultSetFeedback = "Incorrect.";
 		} else {
-			feedbackNLP = "The question you answered was: \n" + (new Question(query, databaseSchema)).getQuestion();
+			feedbackNLP = "The question you answered was: \n" + (new Question(query, tables)).getQuestion();
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
 				answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
 				if(queryResult.getData().equals(answerResult.getData())) {
@@ -111,7 +111,7 @@ public class TutorialBean {
 			answers.add("SELECT first_name FROM employee ORDER BY first_name DESC");
 			Question question;
 			for(int i = 0; i < answers.size(); i++ ) {
-				question = new Question(answers.get(i), databaseSchema);
+				question = new Question(answers.get(i), tables);
 				questions.add(question.getQuestion());
 			}
 		} else {	// just a place holder for every other database.
@@ -169,8 +169,8 @@ public class TutorialBean {
 		return selectedDatabase;
 	}
 
-	public DatabaseSchema getDatabaseSchema() {
-		return databaseSchema;
+	public ArrayList<DatabaseTable> getTables() {
+		return tables;
 	}
 
 	public QueryResult getQueryDiffAnswer() {

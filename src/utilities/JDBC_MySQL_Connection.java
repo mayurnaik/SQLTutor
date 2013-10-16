@@ -12,7 +12,7 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 	/*
 	 * 
 	 */
-	protected Connection getConnection(String DB_NAME) {
+	protected Connection getConnection(String databaseName) {
 		
 		Connection connection = null;
 		 
@@ -29,7 +29,7 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 		try {
  
 			connection = DriverManager.getConnection(
-                            DB_CONNECTION_STRING + DB_NAME, DB_MANAGER_USERNAME ,DB_PASSWORD);
+                            DB_CONNECTION_STRING + databaseName, DB_MANAGER_USERNAME ,DB_PASSWORD);
  
 		} catch (SQLException e) {
  
@@ -43,7 +43,7 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 	/*
 	 * 
 	 */
-	protected Connection getConnection(String dbName, String dbUsername) {
+	protected Connection getConnection(String databaseName, String databaseUsername) {
 		
 		Connection connection = null;
 		 
@@ -60,7 +60,7 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 		try {
  
 			connection = DriverManager.getConnection(
-                            DB_CONNECTION_STRING + dbName, dbUsername, DB_PASSWORD);
+                            DB_CONNECTION_STRING + databaseName, databaseUsername, DB_PASSWORD);
  
 		} catch (SQLException e) {
  

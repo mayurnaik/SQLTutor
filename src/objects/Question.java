@@ -34,11 +34,11 @@ public class Question {
 	 * An initializer for questions formed by answer queries. It splits the query into an array of words and symbols that
 	 * were separated by spaces. From here we send the query to a specific template to be processed into English.
 	 */
-	public Question(String query, DatabaseSchema databaseSchema) {
+	public Question(String query, ArrayList<DatabaseTable> tables) {
 		// Setup the query for being converted to English.
 		String[] tokenizedQuery = setupQuery(query);
 		if(tokenizedQuery[0].equalsIgnoreCase("SELECT")) {
-			convertSelectStatement(tokenizedQuery, databaseSchema);
+			convertSelectStatement(tokenizedQuery, tables);
 		} else {
 			question = "Sorry. We were unable to adequately convert this query to English.";
 		}
@@ -69,11 +69,11 @@ public class Question {
 	 * @param tokenizedQuery	The split version of the query. Each token represents a table name, column name, SQL syntax, or
 	 * a symbol (such as parenthesis) that is used to quantify bounds.
 	 */
-	public void convertSelectStatement(String[] tokenizedQuery, DatabaseSchema databaseSchema) {
+	public void convertSelectStatement(String[] tokenizedQuery, ArrayList<DatabaseTable> tables) {
 		int index = 0;
 		index = convertSelect(tokenizedQuery, index);
-		index = convertAttributesAndEntities(tokenizedQuery, index, databaseSchema);
-		index = convertConstraints(tokenizedQuery, index, databaseSchema);
+		index = convertAttributesAndEntities(tokenizedQuery, index, tables);
+		index = convertConstraints(tokenizedQuery, index, tables);
 		question += ".";
 		// Removal of underscores; does not touch anything bounded by apostrophes.
 		question = question.replaceAll("(?x)_(?=(?:[^']*'[^']*')*[^']*$)", " ");
@@ -105,7 +105,7 @@ public class Question {
 		return index;
 	}
 	
-	public int convertAttributesAndEntities(String[] tokenizedQuery, int index, DatabaseSchema databaseSchema) {
+	public int convertAttributesAndEntities(String[] tokenizedQuery, int index, ArrayList<DatabaseTable> tables) {
 		// We're going to format a linked list of linked lists, such that:
 		// {entity1} -> {attribute1} -> {attribute2}
 		// {entity2} -> {attribute1}
@@ -124,7 +124,7 @@ public class Question {
 		for( ; index < tokenizedQuery.length && !tokenizedQuery[index].equalsIgnoreCase("WHERE") ; index++) {
 				entities += " " + tokenizedQuery[index];
 		}
-		if( databaseSchema == null ) {
+		if( tables == null ) {
 			if( entities.contains(",") == false && entities.contains(" JOIN ") == false) {
 				mainListKey.add(entities);
 				LinkedList<String> subList = new LinkedList<String>();
@@ -133,7 +133,7 @@ public class Question {
 				throw new IllegalStateException("No schema info, and there is more than one entity.");
 			}
 		} else {
-			Iterator<DatabaseTable> databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
+			Iterator<DatabaseTable> databaseTableIterator = tables.iterator();
 			DatabaseTable databaseTable;
 			while(databaseTableIterator.hasNext()) {
 				databaseTable = databaseTableIterator.next();
@@ -175,11 +175,11 @@ public class Question {
 					Matcher matcher = pattern.matcher(attributeArray[i]);
 					attributeArray[i] = convertArithmetic(attributeArray[i]);
 					while(matcher.find()) {
-						Iterator<DatabaseTable> databaseTableIterator = databaseSchema.getDatabaseTables().iterator();
+						Iterator<DatabaseTable> databaseTableIterator = tables.iterator();
 						DatabaseTable databaseTable;
 						while(databaseTableIterator.hasNext()) {
 							databaseTable = databaseTableIterator.next();
-							if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumnNames().contains(matcher.group())) {
+							if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumnNameList().contains(matcher.group())) {
 								mainList.get(mainListKey.indexOf(databaseTable.getTableName())).add(attributeArray[i]);
 								break;
 							}
@@ -253,7 +253,7 @@ public class Question {
 		return index;
 	}
 	
-	public int convertConstraints(String[] tokenizedQuery, int index, DatabaseSchema databaseSchema) {
+	public int convertConstraints(String[] tokenizedQuery, int index, ArrayList<DatabaseTable> tables) {
 		/*
 		 * 
 		 * HANDLES "WHERE"
@@ -327,8 +327,8 @@ public class Question {
 					for ( ; index < tokenizedQuery.length && !tokenizedQuery[index].equals(")"); index++) {
 						subQuery += " " + tokenizedQuery[index];
 					}	
-					//Question subQuestion = new Question(subQuery);
-					//question += " " + subQuestion.getQuestion();
+					Question subQuestion = new Question(subQuery);
+					question += " " + subQuestion.getQuestion();
 					question = question.substring(0, question.length()-1);	// get rid of the extra period, it will be added after the loop
 				}
 			} while (index < tokenizedQuery.length && tokenizedQuery[index].equalsIgnoreCase("AND"));

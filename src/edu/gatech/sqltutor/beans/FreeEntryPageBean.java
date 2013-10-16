@@ -59,7 +59,7 @@ public class FreeEntryPageBean implements Serializable {
 	public void devRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		if (!userBean.isLoggedIn() || !userBean.isDevUser()) {
-	    	externalContext.redirect(externalContext.getRequestContextPath() + "/LoginPage.jsf");
+	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    }
 	}
 	

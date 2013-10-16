@@ -5,7 +5,9 @@ import javax.faces.bean.*;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import java.io.IOException;
-import objects.DatabaseSchema;
+import java.util.ArrayList;
+
+import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
 import utilities.JDBC_Abstract_Connection;
@@ -19,7 +21,7 @@ public class DevTutorialBean {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private DatabaseSchema databaseSchema;
+	private ArrayList<DatabaseTable> tables;
 	private String query;
 	private String feedbackNLP;
 	private QueryResult queryResult;
@@ -41,13 +43,13 @@ public class DevTutorialBean {
 			return; //eventually redirect to message about connector not being supported
 		}
 		selectedDatabase = databaseAttributes[1];
-		databaseSchema = new DatabaseSchema(connection, selectedDatabase);
+		tables = connection.getTables(selectedDatabase);
 	}
 	
 	public void devRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		if (!userBean.isLoggedIn() || !userBean.getUsername().equalsIgnoreCase("dev")) {
-	    	externalContext.redirect(externalContext.getRequestContextPath() + "/LoginPage.jsf");
+	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    }
 	}
 	
@@ -56,7 +58,7 @@ public class DevTutorialBean {
 		if(queryResult.isMalformed()) {
 			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
 		} else {
-			feedbackNLP = "The question you answered was: \n" + (new Question(query, databaseSchema)).getQuestion();
+			feedbackNLP = "The question you answered was: \n" + (new Question(query, tables)).getQuestion();
 		}
 	} 
 

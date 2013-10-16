@@ -5,13 +5,13 @@ import java.util.ArrayList;
 public class QueryResult {
 	private boolean malformed = false;
 	private String exceptionMessage;
-    private ArrayList<String> columnNames = new ArrayList<String>();
+    private ArrayList<String> columnNameList = new ArrayList<String>();
     private ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
     
     public QueryResult() {}
     
-    public QueryResult(String databaseName, ArrayList<String> columnNames, ArrayList<ArrayList<String>> data) {
-    	this.columnNames = columnNames;
+    public QueryResult(String databaseName, ArrayList<String> columnNameList, ArrayList<ArrayList<String>> data) {
+    	this.columnNameList = columnNameList;
     	this.data = data;
     }
 
@@ -23,12 +23,12 @@ public class QueryResult {
 		return data;
 	}
 
-	public void setColumnNames(ArrayList<String> columnNames) {
-		this.columnNames = columnNames;
+	public void setColumnNameList(ArrayList<String> columnNameList) {
+		this.columnNameList = columnNameList;
 	}
 
-	public ArrayList<String> getColumnNames() {
-		return columnNames;
+	public ArrayList<String> getColumnNameList() {
+		return columnNameList;
 	}
 
 	public void setMalformed(boolean malformed) {

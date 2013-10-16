@@ -5,6 +5,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+
 import utilities.JDBC_PostgreSQL_Connection;
 import java.io.IOException;
 import java.io.Serializable;
@@ -46,20 +48,19 @@ public class UserBean implements Serializable {
 	 * allowed through to the tutorial page. If the username did not exist, the user will be registered and the method
 	 * will move on as if the credentials were correct.
 	 */
-	public String login() { 
+	public void login() throws IOException { 
 		if(CONNECTION.isUsernameRegistered(username.toLowerCase())) {
 			if(!CONNECTION.isPasswordCorrect(username.toLowerCase(), password)) {
 				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(REGISTRATION_ERROR));
-				return null;
+				return;
 			}
 		} else {
 			CONNECTION.registerUser(username.toLowerCase(), password);
 		}
 		loggedIn = true;
-		if(username.equalsIgnoreCase("dev")) {
-			return("dev");
-		}
-		return("success");  
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Success."));
+		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
 	}
 	
 	/** 
@@ -70,12 +71,8 @@ public class UserBean implements Serializable {
 	 */
 	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-	    if (loggedIn) {
-	    	if(isDevUser()) {
-	    		externalContext.redirect(externalContext.getRequestContextPath() + "/DevTutorialPage.jsf");
-	    	} else {
-	    		externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialPage.jsf");
-	    	}
+	    if (!loggedIn) {
+	    	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    } 
 	}
 	
@@ -86,9 +83,12 @@ public class UserBean implements Serializable {
 	 * @return if this is a development user
 	 */
 	public boolean isDevUser() {
-		Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will$", 
-			Pattern.CASE_INSENSITIVE);
-		return devNames.matcher(username).matches();
+		if(isLoggedIn()) {
+			Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will$", 
+				Pattern.CASE_INSENSITIVE);
+			return devNames.matcher(username).matches();
+		}
+		return false;
 	}
 	
 	/** 

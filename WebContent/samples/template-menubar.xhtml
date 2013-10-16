@@ -3,39 +3,62 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<h:form>
-	<p:menubar>
-		<p:menuitem>
-			<p:outputLabel value="Welcome to SQL Tutor" style="margin-right:40px" />
-		</p:menuitem>
-		<p:menuitem value="Home" action="LoginPage.xhtml?faces-redirect=true"
-			icon="ui-icon-home" style="margin-right:20px" />
-		<p:menuitem value="Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
-			style="margin-right: 20px" rendered="#{userBean.isDevUser()}" />
-		<p:menuitem value="Contact Us" onclick="PF('contact_dlg').show();" type="button"
-			icon="ui-icon-mail-closed" style="margin-right:20px"/>
-		<p:menuitem value="Help"
-			url="http://www.postgresql.org/docs/9.2/static/tutorial-sql.html"
-			icon="ui-icon-help" style="margin-right:20px" />
-		<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w"
-			style="margin-right:20px" action="#{userBean.setLoggedIn(false)}" />
-	</p:menubar>
-	<p:dialog id="contactDialog" header="Contact Us" widgetVar="contact_dlg" modal="true" width="400" resizable="false">  
-		<h:outputLink value="mailto:sumitg@microsoft.com">
-			<p:commandButton value="Sumit Gulwani" type="button" icon="ui-icon-mail-closed" />
-		</h:outputLink>
-		<br/>
-		<h:outputLink value="mailto:naik@cc.gatech.edu">
-		    <p:commandButton value="Mayur Naik" type="button" icon="ui-icon-mail-closed" />
-		</h:outputLink>
-		<br/>
-   		<h:outputLink value="mailto:jake.cobb@gatech.edu">
-    		<p:commandButton value="Jake Cobb" type="button" icon="ui-icon-mail-closed" />
-		</h:outputLink>
-		<br/>
-   		<h:outputLink value="mailto:wholton@gatech.edu">
-   			<p:commandButton value="Will Holton" type="button" icon="ui-icon-mail-closed" />
-		</h:outputLink>
+	<h:form>
+		<p:menubar autoDisplay="false">
+			<p:menuitem>
+				<p:outputLabel value="SQL Tutor" style="margin-right:40px; margin-left:20px" />
+			</p:menuitem>
+			<p:submenu label="Navigation" icon="ui-icon-folder-open" style="margin-right:10px;"> 
+				<p:menuitem value="Home" icon="ui-icon-arrow-1-e" action="HomePage.xhtml?faces-redirect=true"/>
+				<p:menuitem value="Tutorial" action="TutorialPage.xhtml?faces-redirect=true"
+					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
+				<p:menuitem value="Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
+					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
+			</p:submenu>
+			<p:submenu label="Contact Us" icon="ui-icon-contact" style="margin-right:10px;">
+				<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
+				<p:menuitem value="Mayur Naik" icon="ui-icon-mail-closed" onclick="location.href='mailto:naik@cc.gatech.edu'"/>
+				<p:menuitem value="Jake Cobb" icon="ui-icon-mail-closed" onclick="location.href='mailto:jake.cobb@gatech.edu'"/>
+				<p:menuitem value="Will Holton" icon="ui-icon-mail-closed" onclick="location.href='mailto:wholton@gatech.edu'"/>
+			</p:submenu>
+			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
+				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
+			<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
+				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
+		</p:menubar>
+	</h:form>
+	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg" 
+		modal="true" width="400" resizable="false" appendTo="@(body)">  
+		<h:form id="dlg_form">
+			<p:panel id="loginPanel">
+				<h:panelGrid id="loginGrid" columns="3">
+					<h:outputLabel for="username" value="Username: " />
+					<p:inputText id="username" required="true" requiredMessage="Please input your username."
+						label="Username" value="#{userBean.username}">
+						<f:validateLength minimum="3" maximum="12" />
+					</p:inputText>
+					<br/>
+					<h:outputLabel for="password" value="Password: " />
+					<p:password id="password" required="true" label="Password"
+						requiredMessage="Please input your password." value="#{userBean.password}">
+						<f:validateLength minimum="3" maximum="12" />
+					</p:password>
+					<br/>
+					<h:outputText value="Database: " />
+					<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+						required="true" requiredMessage="Please select a database."
+						effect="fade">
+						<f:selectItems value="#{databaseSelectionBean.databases}"
+							itemValue="#{databaseSelectionBean.databases}"
+							itemLabel="#{databaseSelectionBean.databases}" />
+					</p:selectOneMenu>
+				</h:panelGrid>
+				<p:messages/>
+			</p:panel>
+			<p:captcha label="Captcha" theme="white" required="true" 
+				requiredMessage="Captcha is required." validatorMessage="Captcha text does not match." secure="true"/>    
+			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
+				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
+		</h:form>
 	</p:dialog>
-</h:form>
 </html>

@@ -15,33 +15,43 @@
 		<div style="float: left; width: 50%;">
 			<h2>Question:</h2>
 			<p:outputLabel id="question" value="#{tutorialBean.question}" />
-			<br />
+			<br/>
 			<h2>Database:</h2>
-			<p:dataTable var="databaseTable"
+			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
 				value="#{tutorialBean.databaseSchema.databaseTables}">
 				<p:column headerText="Table Names">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
 				<p:column headerText="Column Names" style="width=200px; white-space: normal;">
-					<h:outputText value="#{databaseTable.columnNames}" />
+					<h:outputText value="#{databaseTable.columnNameList}" />
 				</p:column>
 			</p:dataTable>
 
 			<h2>Query input:</h2>
 			<p:inputTextarea rows="6" cols="33" id="query" reRender="results"
 				autoResize="false" value="#{tutorialBean.query}" />
-			<br />
+			<br/>
 			<p:commandButton id="try" value="Try Query"
 				action="#{tutorialBean.processSQL}" 
 				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')}" />
 			<p:commandButton id="next" value="Next Question"
 				action="#{tutorialBean.nextQuestion}"
 				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')},question" />
+		</div>
+
+		<div style="float: right; width: 49%;">
+			<h2>Result Set Feedback:</h2>
+			<p:outputLabel id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
+				style="white-space: pre;" escape="false" />
+			
+			<h2>NLP Feedback:</h2>
+			<p:outputLabel id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
+				style="white-space: pre;" escape="false" />
 
 			<h2>Query Result:</h2>
-			<p:dataTable id="resultsTable" var="row"
+			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
 				value="#{tutorialBean.queryResult.data}">
-				<p:columns value="#{tutorialBean.queryResult.columnNames}"
+				<p:columns value="#{tutorialBean.queryResult.columnNameList}"
 					var="column" columnIndexVar="columnIndex">
 					<f:facet name="header">
 							#{column}
@@ -49,16 +59,6 @@
 						#{row[columnIndex]}
 					</p:columns>
 			</p:dataTable>
-		</div>
-
-		<div style="float: right; width: 49%;">
-
-			<h2>Result Set Feedback:</h2>
-			<p:outputLabel id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
-				style="white-space: pre;" escape="false" />
-			<h2>NLP Feedback:</h2>
-			<p:outputLabel id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
-				style="white-space: pre;" escape="false" />
 		</div>
 	</h:form>
 </h:body>

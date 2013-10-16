@@ -15,21 +15,21 @@
 	<h:form>
 		<div style="float: right; width: 70%;">
 			<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
-					<p:dataTable var="databaseTable"
+					<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
 						value="#{devTutorialBean.databaseSchema.databaseTables}">
 						<p:column headerText="Table Names">
 							<h:outputText value="#{databaseTable.tableName}" />
 						</p:column>
 						<p:column headerText="Column Names" style="width=200px; white-space: normal;">
-							<h:outputText value="#{databaseTable.columnNames}" />
+							<h:outputText value="#{databaseTable.columnNameList}" />
 						</p:column>
 					</p:dataTable>
 			</p:overlayPanel> 
 			
 			<p:overlayPanel id="resultSetPanel" for="resultSetButton" hideEffect="fade"> 
-					<p:dataTable id="resultsTable" var="row"
+					<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
 						value="#{devTutorialBean.queryResult.data}">
-						<p:columns value="#{devTutorialBean.queryResult.columnNames}"
+						<p:columns value="#{devTutorialBean.queryResult.columnNameList}"
 							var="column" columnIndexVar="columnIndex">
 							<f:facet name="header">
 									#{column}

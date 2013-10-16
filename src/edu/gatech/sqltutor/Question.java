@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-import objects.DatabaseSchema;
 import objects.DatabaseTable;
 
 import com.akiban.sql.StandardException;
@@ -89,7 +88,7 @@ public class Question {
 	private String naturalLang;
 	
 	/** Optional database schema. */
-	private DatabaseSchema schema;
+	private ArrayList<DatabaseTable> tables;
 	
 	private SQLParser parser;
 	
@@ -97,10 +96,10 @@ public class Question {
 		this(query, null);
 	}
 	
-	public Question(String query, DatabaseSchema schema) {
+	public Question(String query, ArrayList<DatabaseTable> tables) {
 		System.out.println("Query: " + query); // FIXME testing
 		
-		this.schema = schema;
+		this.tables = tables;
 		
 		query = sanitize(query);
 		parser = new SQLParser();
@@ -186,7 +185,7 @@ public class Question {
 	 * @throws IllegalStateException if the name cannot be resolved
 	 */
 	private String findTableForColumn(String name) {
-		if( schema == null ) {
+		if( tables == null ) {
 			// if no schema info and only one table, assume column belongs to it
 			FromList fromList = selectNode.getFromList();
 			if( fromList.size() == 1 )
@@ -194,7 +193,7 @@ public class Question {
 			throw new IllegalStateException("No schema info, could not resolve column: " + name);
 		} else {
 			DatabaseTable colTable = null;
-			for( DatabaseTable table: schema.getDatabaseTables() ) {
+			for( DatabaseTable table: tables ) {
 				if( !table.getColumnNameList().contains(name) )
 					continue;
 				
