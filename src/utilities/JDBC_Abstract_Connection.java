@@ -8,6 +8,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
@@ -260,7 +261,7 @@ public abstract class JDBC_Abstract_Connection {
 
 			
 			int columnCount = resultSetMetaData.getColumnCount();
-			ArrayList<ArrayList<String>> queryData = new ArrayList<ArrayList<String>>();
+			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
 			ArrayList<String> columnNames = new ArrayList<String>();
 			for(int i = 1; i <=  columnCount; i++) {
 				columnNames.add(resultSetMetaData.getColumnName(i));

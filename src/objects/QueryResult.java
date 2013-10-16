@@ -1,33 +1,45 @@
 package objects;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class QueryResult {
 	private boolean malformed = false;
 	private String exceptionMessage;
-    private ArrayList<String> columnNameList = new ArrayList<String>();
-    private ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
+    private List<String> columnNameList = new ArrayList<String>();
+    private List<List<String>> data = new ArrayList<List<String>>();
     
     public QueryResult() {}
     
-    public QueryResult(String databaseName, ArrayList<String> columnNameList, ArrayList<ArrayList<String>> data) {
+    public QueryResult(String databaseName, List<String> columnNameList, List<List<String>> data) {
     	this.columnNameList = columnNameList;
     	this.data = data;
     }
 
-	public void setData(ArrayList<ArrayList<String>> data) {
+	public void setData(List<List<String>> data) {
 		this.data = data;
 	}
 
-	public ArrayList<ArrayList<String>> getData() {
+	public List<List<String>> getData() {
 		return data;
 	}
+	
 
-	public void setColumnNameList(ArrayList<String> columnNameList) {
+	public void setColumnNames(List<String> columnNameList) {
 		this.columnNameList = columnNameList;
 	}
 
-	public ArrayList<String> getColumnNameList() {
+	public List<String> getColumnNames() {
+		return columnNameList;
+	}
+	
+	@Deprecated
+	public void setColumnNameList(List<String> columnNameList) {
+		this.columnNameList = columnNameList;
+	}
+
+	@Deprecated
+	public List<String> getColumnNameList() {
 		return columnNameList;
 	}
 

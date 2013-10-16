@@ -1,16 +1,16 @@
 package objects;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseTable {
 	private String tableName;	
-	private ArrayList<String> columnNameList;
+	private List<String> columnNameList;
 	
 	public DatabaseTable(String tableName) {
 		this.tableName = tableName;
 	}
 	
-	public DatabaseTable(String tableName, ArrayList<String> columnNameList) {
+	public DatabaseTable(String tableName, List<String> columnNameList) {
 		this.tableName = tableName;
 		this.columnNameList = columnNameList;
 	}
@@ -22,12 +22,23 @@ public class DatabaseTable {
 	public String getTableName() {
 		return tableName;
 	}
+	
 
-	public ArrayList<String> getColumnNameList() {
+	public List<String> getColumnNames() {
 		return columnNameList;
 	}
 
-	public void setColumnNameList(ArrayList<String> columnNameList) {
+	public void setColumnNames(List<String> columnNameList) {
+		this.columnNameList = columnNameList;
+	}	
+
+	@Deprecated
+	public List<String> getColumnNameList() {
+		return columnNameList;
+	}
+
+	@Deprecated
+	public void setColumnNameList(List<String> columnNameList) {
 		this.columnNameList = columnNameList;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -19,6 +20,7 @@ import utilities.JDBC_Abstract_Connection;
 import utilities.JDBC_MySQL_Connection;
 import utilities.JDBC_PostgreSQL_Connection;
 import beans.UserBean;
+import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.entities.UserQuery;
 
 @ManagedBean
@@ -69,8 +71,8 @@ public class FreeEntryPageBean implements Serializable {
 		if(queryResult.isMalformed()) {
 			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
 		} else {
-			Question question = new Question(query, tables);
-			String nlp = question.getQuestion();
+			IQueryTranslator question = new Question(query, tables);
+			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
 			userQuery.setUser(userBean);
 			userQuery.setTime(new Date());
@@ -117,7 +119,7 @@ public class FreeEntryPageBean implements Serializable {
 		return selectedDatabase;
 	}
 
-	public ArrayList<DatabaseTable> getTables() {
+	public List<DatabaseTable> getTables() {
 		return tables;
 	}
 }

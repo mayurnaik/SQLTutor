@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import edu.gatech.sqltutor.IQueryTranslator;
 
 /**
  * The Question class has been implemented as a way to construct English questions from SQL queries which represent answers.
@@ -15,13 +18,16 @@ import java.util.regex.Pattern;
  * @author		William J. Holton
  * @version		0.0
  */
-public class Question {
+public class Question implements IQueryTranslator {
 	/** The question string will hold the final value of the question after it has been converted  */
-	String question = "";
+	String question;
 	/** This represents the database which will hold custom NLP for particular words commonly used to form questions for 
 	 * a particular schema.  */
 	HashMap<String, String> spellCheckDictionary = new HashMap<String, String>();
 	HashMap<String, String> phraseCheckDictionary = new HashMap<String, String>();
+	
+	String query;
+	List<DatabaseTable> schemaMetaData;
 	
 	/** 
 	 * A blank initializer that is used for testing reasons (provides a blank question).
@@ -34,11 +40,19 @@ public class Question {
 	 * An initializer for questions formed by answer queries. It splits the query into an array of words and symbols that
 	 * were separated by spaces. From here we send the query to a specific template to be processed into English.
 	 */
-	public Question(String query, ArrayList<DatabaseTable> tables) {
+	public Question(String query, List<DatabaseTable> tables) {
+		setQuery(query);
+		setSchemaMetaData(tables);
+		produceQuestion();
+	}
+	
+	private void produceQuestion() {
+		this.question = "";
+		
 		// Setup the query for being converted to English.
 		String[] tokenizedQuery = setupQuery(query);
 		if(tokenizedQuery[0].equalsIgnoreCase("SELECT")) {
-			convertSelectStatement(tokenizedQuery, tables);
+			convertSelectStatement(tokenizedQuery, schemaMetaData);
 		} else {
 			question = "Sorry. We were unable to adequately convert this query to English.";
 		}
@@ -69,7 +83,7 @@ public class Question {
 	 * @param tokenizedQuery	The split version of the query. Each token represents a table name, column name, SQL syntax, or
 	 * a symbol (such as parenthesis) that is used to quantify bounds.
 	 */
-	public void convertSelectStatement(String[] tokenizedQuery, ArrayList<DatabaseTable> tables) {
+	public void convertSelectStatement(String[] tokenizedQuery, List<DatabaseTable> tables) {
 		int index = 0;
 		index = convertSelect(tokenizedQuery, index);
 		index = convertAttributesAndEntities(tokenizedQuery, index, tables);
@@ -105,7 +119,7 @@ public class Question {
 		return index;
 	}
 	
-	public int convertAttributesAndEntities(String[] tokenizedQuery, int index, ArrayList<DatabaseTable> tables) {
+	public int convertAttributesAndEntities(String[] tokenizedQuery, int index, List<DatabaseTable> tables) {
 		// We're going to format a linked list of linked lists, such that:
 		// {entity1} -> {attribute1} -> {attribute2}
 		// {entity2} -> {attribute1}
@@ -253,7 +267,7 @@ public class Question {
 		return index;
 	}
 	
-	public int convertConstraints(String[] tokenizedQuery, int index, ArrayList<DatabaseTable> tables) {
+	public int convertConstraints(String[] tokenizedQuery, int index, List<DatabaseTable> tables) {
 		/*
 		 * 
 		 * HANDLES "WHERE"
@@ -395,5 +409,39 @@ public class Question {
 	
 	public void setQuestion(String question) {
 		this.question = question;
+	}
+	
+	@Override
+	public String getQuery() {
+		return query;
+	}
+	
+	@Override
+	public void setQuery(String sql) {
+		this.query = sql;
+		this.question = null;
+	}
+	
+	@Override
+	public List<DatabaseTable> getSchemaMetaData() {
+		return schemaMetaData;
+	}
+	
+	@Override
+	public void setSchemaMetaData(List<DatabaseTable> tables) {
+		this.schemaMetaData = tables;
+	}
+	
+	@Override
+	public Object getTranslatorType() {
+		return "Manual Splitter";
+	}
+	
+	@Override
+	public String getTranslation() {
+		if( question == null || "".equals(question) ) {
+			produceQuestion();
+		}
+		return question;
 	}
 }
