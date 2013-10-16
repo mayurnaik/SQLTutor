@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{freeEntryPageBean.devRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/samples/template-menubar.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body>
+
+	<h:form>
+		<div>
+			<p:outputLabel for="database" value="Database: " />
+			<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+				required="true" requiredMessage="Please select a database."
+				effect="fade">
+				<f:selectItems value="#{databaseSelectionBean.databases}"
+					itemValue="#{databaseSelectionBean.databases}"
+					itemLabel="#{databaseSelectionBean.databases}" />
+			</p:selectOneMenu>
+			
+			<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+					<p:dataTable var="databaseTable"
+						value="#{freeEntryPageBean.tables}">
+						<p:column headerText="Table Names">
+							<h:outputText value="#{databaseTable.tableName}" />
+						</p:column>
+						<p:column headerText="Column Names" style="width=200px; white-space: normal;">
+							<h:outputText value="#{databaseTable.columnNames}" />
+						</p:column>
+					</p:dataTable>
+			</p:overlayPanel> 
+			
+			<p:overlayPanel id="resultSetPanel" for="resultSetButton" hideEffect="fade"> 
+					<p:dataTable id="resultsTable" var="row"
+						value="#{freeEntryPageBean.queryResult.data}">
+						<p:columns value="#{freeEntryPageBean.queryResult.columnNames}"
+							var="column" columnIndexVar="columnIndex">
+							<f:facet name="header">
+									#{column}
+								</f:facet>
+								#{row[columnIndex]}
+							</p:columns>
+					</p:dataTable>
+			</p:overlayPanel> 
+	
+			<p:commandButton id="databaseButton" value="Show Schema" />
+			<p:commandButton id="resultSetButton" value="Show Result Set" />
+		</div><div>
+			<p:outputLabel value="Enter Query: " />
+			<br/>
+			<p:inputTextarea rows="3" cols="35" id="query" reRender="results"
+				styleClass="unresizable" value="#{freeEntryPageBean.query}" />
+			<br/>
+			<p:commandButton id="Process" value="Process"
+				action="#{freeEntryPageBean.processSQL}" 
+				update="feedbackNLP,ratingGroup,:#{p:component('resultsTable')}" />
+			<br />
+			
+			<h:panelGroup id="ratingGroup">
+			<h:panelGroup rendered="#{freeEntryPageBean.userQuery != null}">
+				<h:outputLabel for="feedbackNLP" value="Natural language: " /><br />
+				<h:outputText id="feedbackNLP" value="#{freeEntryPageBean.userQuery.naturalLanguage}" /><br />
+				<h:outputLabel for="nlpRating" value="Rating: " />
+				<p:rating id="nlpRating" value="#{freeEntryPageBean.userQuery.rating}" /><br />
+				<h:outputLabel for="userDescription" value="Enter your own description: " /><br />
+				<p:inputTextarea rows="6" id="userDescription" 
+						value="#{freeEntryPageBean.userQuery.userDescription}" /><br />
+				<p:commandButton id="feedbackButton" value="Save Feedback" />
+			</h:panelGroup>
+			</h:panelGroup>
+			<!-- 
+			<br/><br/>
+			
+			<p:outputLabel value="Pregenerated:" />
+			<br/>
+			<p:selectOneListbox id="pregeneratedQueries" style="height:200px">  
+	        </p:selectOneListbox> 
+	        -->
+      	</div>
+	</h:form>
+</h:body>
+</html>
