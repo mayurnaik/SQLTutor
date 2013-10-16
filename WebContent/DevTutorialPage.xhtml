@@ -16,7 +16,7 @@
 		<div style="float: right; width: 70%;">
 			<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
 					<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
-						value="#{devTutorialBean.databaseSchema.databaseTables}">
+						value="#{devTutorialBean.tables}">
 						<p:column headerText="Table Names">
 							<h:outputText value="#{databaseTable.tableName}" />
 						</p:column>

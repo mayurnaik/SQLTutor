@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import objects.DatabaseTable;
 import objects.QueryResult;
 
 
@@ -20,12 +21,12 @@ public abstract class JDBC_Abstract_Connection {
 	/*
 	 * This method gets passed to the child, where it must be implemented with their connection string/driver.
 	 */
-	protected abstract Connection getConnection(String DB_NAME);
+	protected abstract Connection getConnection(String databaseName);
 	
 	/*
 	 * This method gets passed to the child, where it must be implemented with their connection string/driver.
 	 */
-	protected abstract Connection getConnection(String dbName, String dbUsername);
+	protected abstract Connection getConnection(String databaseName, String databaseUsername);
 	
 	/*
 	 * 
@@ -79,7 +80,6 @@ public abstract class JDBC_Abstract_Connection {
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, username);
 			resultSet = preparedStatement.executeQuery();
-			log(query);
 			
 			if (resultSet.next()) {
 				byte[] salt = resultSet.getBytes(1);
@@ -132,7 +132,7 @@ public abstract class JDBC_Abstract_Connection {
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, username);
 			resultSet = preparedStatement.executeQuery();
-			log(query);
+
 			if (resultSet.next()) {
 				return true;
 			}
@@ -184,7 +184,7 @@ public abstract class JDBC_Abstract_Connection {
 			preparedStatement.setBytes(3, salt);
 			
 			preparedStatement.executeUpdate();
-			log(update);
+
 			 
 		} catch (Exception e) {
 			
@@ -202,7 +202,7 @@ public abstract class JDBC_Abstract_Connection {
 		}
 	}
 	
-	public ArrayList<String> getTables(String databaseName) {
+	public ArrayList<DatabaseTable> getTables(String databaseName) {
 		Connection connection = null;
 		ResultSet resultSet = null;
 		
@@ -212,47 +212,22 @@ public abstract class JDBC_Abstract_Connection {
 			
 			DatabaseMetaData metadata = connection.getMetaData();
 			resultSet = metadata.getTables(null, null, "%", new String[] {"TABLE"});
-			ArrayList<String> tables = new ArrayList<String>();
+			ArrayList<DatabaseTable> tables = new ArrayList<DatabaseTable>();
 			while(resultSet.next()) {
 				// the API tells us the third element is the TABLE_NAME string.
-				tables.add(resultSet.getString(3));
+				tables.add(new DatabaseTable(resultSet.getString(3)));
+			}
+			for(int i=0; i < tables.size(); i++) {
+				resultSet = metadata.getColumns(null, null, tables.get(i).getTableName(), null);
+				ArrayList<String> columns = new ArrayList<String>();
+				while(resultSet.next()) {
+					columns.add(resultSet.getString(4));
+				}
+				tables.get(i).setColumnNameList(columns);
 			}
 			
 			return tables;
 
-			 
-		} catch (Exception e) {
-			
-			System.err.println("Exception: " + e.getMessage());
-			
-		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(resultSet != null) {
-					resultSet.close();
-				}
-			} catch (SQLException e) {}
-		}
-		return null;
-	}
-	
-	public ArrayList<String> getTableColumns(String databaseName, String table) {
-		Connection connection = null;
-		ResultSet resultSet = null;
-		
-		try {
-			
-			connection = getConnection(databaseName, DB_READONLY_USERNAME);
-			
-			DatabaseMetaData metadata = connection.getMetaData();
-			resultSet = metadata.getColumns(null, null, table, null);
-			ArrayList<String> columns = new ArrayList<String>();
-			while(resultSet.next()) {
-				columns.add(resultSet.getString(4));
-			}
-			return columns;
 			 
 		} catch (Exception e) {
 			
@@ -282,7 +257,7 @@ public abstract class JDBC_Abstract_Connection {
 			statement = connection.createStatement();
 			resultSet = statement.executeQuery(query);
 			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-			log(query);
+
 			
 			int columnCount = resultSetMetaData.getColumnCount();
 			ArrayList<ArrayList<String>> queryData = new ArrayList<ArrayList<String>>();

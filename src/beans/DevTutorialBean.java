@@ -90,7 +90,4 @@ public class DevTutorialBean {
 		return selectedDatabase;
 	}
 
-	public DatabaseSchema getDatabaseSchema() {
-		return databaseSchema;
-	}
 }

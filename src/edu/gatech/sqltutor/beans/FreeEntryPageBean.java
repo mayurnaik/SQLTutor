@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.annotation.PostConstruct;
@@ -11,7 +12,7 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
-import objects.DatabaseSchema;
+import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
 import utilities.JDBC_Abstract_Connection;
@@ -29,7 +30,7 @@ public class FreeEntryPageBean implements Serializable {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private DatabaseSchema databaseSchema;
+	private ArrayList<DatabaseTable> tables;
 	private String query;
 	private String feedbackNLP;
 	private QueryResult queryResult;
@@ -53,7 +54,7 @@ public class FreeEntryPageBean implements Serializable {
 			return; //eventually redirect to message about connector not being supported
 		}
 		selectedDatabase = databaseAttributes[1];
-		databaseSchema = new DatabaseSchema(connection, selectedDatabase);
+		tables = connection.getTables(selectedDatabase);
 	}
 	
 	public void devRedirect() throws IOException {
@@ -68,7 +69,7 @@ public class FreeEntryPageBean implements Serializable {
 		if(queryResult.isMalformed()) {
 			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
 		} else {
-			Question question = new Question(query, databaseSchema);
+			Question question = new Question(query, tables);
 			String nlp = question.getQuestion();
 			userQuery = new UserQuery();
 			userQuery.setUser(userBean);
@@ -116,7 +117,7 @@ public class FreeEntryPageBean implements Serializable {
 		return selectedDatabase;
 	}
 
-	public DatabaseSchema getDatabaseSchema() {
-		return databaseSchema;
+	public ArrayList<DatabaseTable> getTables() {
+		return tables;
 	}
 }

@@ -18,7 +18,7 @@
 			<br/>
 			<h2>Database:</h2>
 			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
-				value="#{tutorialBean.databaseSchema.databaseTables}">
+				value="#{tutorialBean.tables}">
 				<p:column headerText="Table Names">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
