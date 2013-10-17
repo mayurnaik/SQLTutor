@@ -2,6 +2,7 @@ package edu.gatech.sqltutor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.TableName;
 import com.akiban.sql.parser.ValueNode;
 
-public class Question {
+public class Question implements IQueryTranslator {
 	/** Alternate verb phrases for the act of selecting. */
 	private static final List<String> selectVerbs = 
 		Arrays.asList("List the", "Retrieve the", "Output the", "Fetch the");
@@ -71,12 +72,17 @@ public class Question {
 		for( String arg: args ) {
 			try {
 				Question q = new Question(arg);
-			} catch( IllegalArgumentException e ) {
+				String nlp = q.getTranslation();
+				System.out.println("Query:\n" + arg);
+				System.out.println("Translation:\n" + nlp);
+			} catch( RuntimeException e ) {
 				System.err.println("Failed to parse: " + arg);
 				e.printStackTrace();
 			}
 		}
 	}
+	
+	private String query;
 	
 	// TODO probably don't need the statement and it's select node
 	/** The parsed SQL statement / query. */
@@ -96,36 +102,11 @@ public class Question {
 		this(query, null);
 	}
 	
-	public Question(String query, ArrayList<DatabaseTable> tables) {
+	public Question(String query, List<DatabaseTable> tables) {
 		System.out.println("Query: " + query); // FIXME testing
 		
-		this.tables = tables;
-		
-		query = sanitize(query);
-		parser = new SQLParser();
-		try {
-			statement = parser.parseStatement(query);
-		} catch (StandardException e) {
-			throw new IllegalArgumentException("Failed to parse: " + query, e);
-		}
-		
-		if( !(statement instanceof CursorNode) )
-			throw new IllegalArgumentException("Expecting a SELECT statement, got: " + query);
-		CursorNode c = (CursorNode)statement;
-		if( c.getName() != null )
-			throw new IllegalArgumentException("Expecting a SELECT statement, got named cursor: " + query);
-		
-		SelectNode select = (SelectNode)c.getResultSetNode();
-		
-		selectNode = select;
-		try {
-			produceEnglish(select);
-		} catch( StandardException e ) {
-			throw new IllegalArgumentException("Could not handle query: " + query, e);
-		}
-		
-		// FIXME testing
-		System.out.println("English: " + naturalLang);
+		setQuery(query);
+		setSchemaMetaData(tables);
 	}
 
 	public void produceEnglish(SelectNode select) throws StandardException {
@@ -360,7 +341,70 @@ public class Question {
 		}
 	}
 	
-	public String getNaturalLanguage() {
-		return naturalLang;
+	@Override
+	public void setQuery(String sql) {
+		if( this.query == null || !this.query.equals(sql) ) {
+			this.statement = null;
+			this.selectNode = null;
+			this.naturalLang = null;
+		}
+		this.query = sql;
+
+		if( this.query != null ) {
+			query = sanitize(query);
+			parser = new SQLParser();
+			try {
+				statement = parser.parseStatement(query);
+			} catch (StandardException e) {
+				throw new IllegalArgumentException("Failed to parse: " + query, e);
+			}
+			
+			if( !(statement instanceof CursorNode) )
+				throw new IllegalArgumentException("Expecting a SELECT statement, got: " + query);
+			CursorNode c = (CursorNode)statement;
+			if( c.getName() != null )
+				throw new IllegalArgumentException("Expecting a SELECT statement, got named cursor: " + query);
+			
+			SelectNode select = (SelectNode)c.getResultSetNode();
+			
+			selectNode = select;
+		}
+	}
+	
+	@Override
+	public String getQuery() {
+		return query;
+	}
+	
+	@Override
+	public void setSchemaMetaData(List<DatabaseTable> tables) {
+		if( tables == null )
+			this.tables = null;
+		else
+			this.tables = new ArrayList<DatabaseTable>(tables);
+	}
+	
+	@Override
+	public List<DatabaseTable> getSchemaMetaData() {
+		if( tables == null )
+			return null;
+		return Collections.unmodifiableList(this.tables);
+	}
+	
+	@Override
+	public Object getTranslatorType() {
+		return "Parsing Fixed";
+	}
+	
+	@Override
+	public String getTranslation() {
+		if( this.naturalLang == null ) {
+			try {
+				this.produceEnglish(selectNode);
+			} catch( StandardException e ) {
+				throw new IllegalStateException(e);
+			}
+		}
+		return this.naturalLang;
 	}
 }

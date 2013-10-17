@@ -1,11 +1,14 @@
 package beans;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
-import javax.faces.bean.*;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import java.io.IOException;
-import java.util.ArrayList;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
@@ -21,7 +24,7 @@ public class DevTutorialBean {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private ArrayList<DatabaseTable> tables;
+	private List<DatabaseTable> tables;
 	private String query;
 	private String feedbackNLP;
 	private QueryResult queryResult;
@@ -90,7 +93,7 @@ public class DevTutorialBean {
 		return selectedDatabase;
 	}
 	
-	public ArrayList<DatabaseTable> getTables() {
+	public List<DatabaseTable> getTables() {
 		return tables;
 	}
 

@@ -55,8 +55,11 @@
 				</h:panelGrid>
 				<p:messages/>
 			</p:panel>
+			<!-- Temporarily disabling catcha -->
+			<!--  
 			<p:captcha label="Captcha" theme="white" required="true" 
-				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>    
+				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
+			-->    
 			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
 				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
 		</h:form>

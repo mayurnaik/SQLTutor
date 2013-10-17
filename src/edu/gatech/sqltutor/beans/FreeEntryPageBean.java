@@ -2,11 +2,11 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -20,7 +20,14 @@ import utilities.JDBC_Abstract_Connection;
 import utilities.JDBC_MySQL_Connection;
 import utilities.JDBC_PostgreSQL_Connection;
 import beans.UserBean;
+
+import com.akiban.sql.StandardException;
+import com.akiban.sql.parser.SQLParser;
+import com.akiban.sql.parser.SelectNode;
+import com.akiban.sql.parser.StatementNode;
+
 import edu.gatech.sqltutor.IQueryTranslator;
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.entities.UserQuery;
 
 @ManagedBean
@@ -32,10 +39,11 @@ public class FreeEntryPageBean implements Serializable {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private ArrayList<DatabaseTable> tables;
+	private List<DatabaseTable> tables;
 	private String query;
 	private String feedbackNLP;
 	private QueryResult queryResult;
+	private String userDescription;
 	
 	private UserQuery userQuery;
 
@@ -66,6 +74,48 @@ public class FreeEntryPageBean implements Serializable {
 	    }
 	}
 	
+	public void addQuery() {
+		SQLParser parser = new SQLParser();
+		FacesContext context = FacesContext.getCurrentInstance();
+		try {
+			// make sure it parses and is a SELECT
+			query = QueryUtils.sanitize(query);
+			StatementNode statement = parser.parseStatement(query);
+			try {
+				SelectNode selectNode = QueryUtils.extractSelectNode(statement);
+			} catch( IllegalArgumentException e ) {
+				FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Query must be a SELECT query.", null);
+				context.addMessage(null, message);
+				return;
+			}
+			
+			UserQuery userQuery = new UserQuery();
+			userQuery = new UserQuery();
+			userQuery.setUsername(userBean.getUsername());
+			userQuery.setTime(new Date());
+			userQuery.setQuery(query);
+			userQuery.setSchema(selectedDatabase);
+			userQuery.setUserDescription(userDescription);
+			
+			connection.saveUserQuery(userQuery);
+			
+			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
+				"Query saved successfully.", null);
+			context.addMessage(null, message);
+			
+		} catch( StandardException e ) {
+			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+				"The query could not be parsed: " + e.getMessage(), null);
+			context.addMessage(null, message);
+		} catch( RuntimeException e ) {
+			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+				"Internal error saving the query.", null);
+			context.addMessage(null, message);
+			e.printStackTrace();
+		}
+	}
+	
 	public void processSQL() {
 		queryResult = connection.getQueryResult(selectedDatabase, query);
 		if(queryResult.isMalformed()) {
@@ -74,7 +124,7 @@ public class FreeEntryPageBean implements Serializable {
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
-			userQuery.setUser(userBean);
+			userQuery.setUsername(userBean.getUsername());
 			userQuery.setTime(new Date());
 			userQuery.setQuery(query);
 			userQuery.setNaturalLanguage(nlp);
@@ -83,6 +133,14 @@ public class FreeEntryPageBean implements Serializable {
 		}
 	} 
 
+	public String getUserDescription() {
+		return userDescription;
+	}
+	
+	public void setUserDescription(String userDescription) {
+		this.userDescription = userDescription;
+	}
+	
 	public UserQuery getUserQuery() {
 		return userQuery;
 	}

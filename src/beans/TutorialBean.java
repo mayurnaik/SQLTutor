@@ -1,11 +1,15 @@
 package beans;
 
-import javax.annotation.PostConstruct;
-import javax.faces.bean.*;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
@@ -21,9 +25,9 @@ public class TutorialBean {
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
 	private String selectedDatabase;
-	private ArrayList<DatabaseTable> tables;
-	private ArrayList<String> questions = new ArrayList<String>();
-	private ArrayList<String> answers = new ArrayList<String>();
+	private List<DatabaseTable> tables;
+	private List<String> questions = new ArrayList<String>();
+	private List<String> answers = new ArrayList<String>();
 	private int questionIndex;
 	private String query;
 	private String feedbackNLP;
@@ -149,7 +153,7 @@ public class TutorialBean {
 		return queryResult;
 	}
 
-	public ArrayList<String> getAnswers() {
+	public List<String> getAnswers() {
 		return answers;
 	}
 
@@ -169,7 +173,7 @@ public class TutorialBean {
 		return selectedDatabase;
 	}
 
-	public ArrayList<DatabaseTable> getTables() {
+	public List<DatabaseTable> getTables() {
 		return tables;
 	}
 

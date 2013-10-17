@@ -12,7 +12,7 @@
 </h:head>
 <h:body>
 
-	<h:form>
+	<h:form id="freeEntryForm">
 		<div>
 			<p:outputLabel for="database" value="Database: " />
 			<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
@@ -51,36 +51,27 @@
 			<p:commandButton id="databaseButton" value="Show Schema" />
 			<p:commandButton id="resultSetButton" value="Show Result Set" />
 		</div><div>
-			<p:outputLabel value="Enter Query: " />
-			<br/>
-			<p:inputTextarea rows="3" cols="35" id="query" reRender="results"
-				styleClass="unresizable" value="#{freeEntryPageBean.query}" />
-			<br/>
-			<p:commandButton id="Process" value="Process"
-				action="#{freeEntryPageBean.processSQL}" 
-				update="feedbackNLP,ratingGroup,:#{p:component('resultsTable')}" />
-			<br />
-			
-			<h:panelGroup id="ratingGroup">
-			<h:panelGroup rendered="#{freeEntryPageBean.userQuery != null}">
-				<h:outputLabel for="feedbackNLP" value="Natural language: " /><br />
-				<h:outputText id="feedbackNLP" value="#{freeEntryPageBean.userQuery.naturalLanguage}" /><br />
-				<h:outputLabel for="nlpRating" value="Rating: " />
-				<p:rating id="nlpRating" value="#{freeEntryPageBean.userQuery.rating}" /><br />
-				<h:outputLabel for="userDescription" value="Enter your own description: " /><br />
-				<p:inputTextarea rows="6" id="userDescription" 
-						value="#{freeEntryPageBean.userQuery.userDescription}" /><br />
-				<p:commandButton id="feedbackButton" value="Save Feedback" />
-			</h:panelGroup>
-			</h:panelGroup>
-			<!-- 
-			<br/><br/>
-			
-			<p:outputLabel value="Pregenerated:" />
-			<br/>
-			<p:selectOneListbox id="pregeneratedQueries" style="height:200px">  
-	        </p:selectOneListbox> 
-	        -->
+			<p:messages />
+			<p:panelGrid columns="2">
+				<f:facet name="header">  
+				    Add Query
+				</f:facet>
+				
+				<p:outputLabel for="query" value="Enter Query: " />
+				<p:inputTextarea rows="3" cols="35" id="query" reRender="results"
+					styleClass="unresizable" value="#{freeEntryPageBean.query}" />
+					
+				<h:outputLabel for="userDescription" value="English description: " />
+				<p:inputTextarea rows="6" id="userDescription" required="true" 
+						value="#{freeEntryPageBean.userDescription}" />
+				
+				<f:facet name="footer">
+					<p:commandButton id="addQueryButton"
+						action="#{freeEntryPageBean.addQuery}"
+						update="freeEntryForm" 
+						value="Add" icon="ui-icon-check" style="margin:0"/>
+				</f:facet> 
+			</p:panelGrid>
       	</div>
 	</h:form>
 </h:body>
