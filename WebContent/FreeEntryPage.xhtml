@@ -72,6 +72,18 @@
 						value="Add" icon="ui-icon-check" style="margin:0"/>
 				</f:facet> 
 			</p:panelGrid>
+			<p:dataTable id="userQueriesTable" var="query" 
+					value="#{freeEntryPageBean.userQueries}">
+				<p:column headerText="Schema">
+					<h:outputText value="#{query.schema}" />
+				</p:column>
+				<p:column headerText="Query">
+					<h:outputText value="#{query.query}" />
+				</p:column>
+				<p:column headerText="English">
+					<h:outputText value="#{query.userDescription}" />
+				</p:column>
+			</p:dataTable>
       	</div>
 	</h:form>
 </h:body>

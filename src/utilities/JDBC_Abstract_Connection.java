@@ -2,6 +2,7 @@ package utilities;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -41,19 +42,20 @@ public abstract class JDBC_Abstract_Connection {
 			
 			Long id = query.getId();
 			if( id == null ) {
-				final String INSERT = 
-						"INSERT INTO query (username, schema, sql, user_description) VALUES (?, ?, ?, ?)";
+				final String INSERT = "INSERT INTO query " + 
+					"(username, schema, sql, user_description, created) VALUES (?, ?, ?, ?, ?)";
 				statement = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
 			} else {
 				final String UPDATE = 
-						"UPDATE query SET username=?, schema=?, sql=?, user_description=? WHERE id=?";
+						"UPDATE query SET username=?, schema=?, sql=?, user_description=?, created=? WHERE id=?";
 				statement = conn.prepareStatement(UPDATE);
-				statement.setLong(5, id);
+				statement.setLong(6, id);
 			}
 			statement.setString(1, query.getUsername());
 			statement.setString(2, query.getSchema());
 			statement.setString(3, query.getQuery());
 			statement.setString(4, query.getUserDescription());
+			statement.setDate(5, new Date(query.getTime().getTime()));
 			
 			statement.executeUpdate();
 			
@@ -91,10 +93,11 @@ public abstract class JDBC_Abstract_Connection {
 				UserQuery query = new UserQuery();
 				query.setId(result.getLong("id"));
 				// FIXME the bean?
-				query.setUsername(result.getString("user"));
+				query.setUsername(result.getString("username"));
 				query.setSchema(result.getString("schema"));
 				query.setQuery(result.getString("sql"));
 				query.setUserDescription(result.getString("user_description"));
+				query.setTime(result.getDate("created"));
 				
 				userQueries.add(query);
 			}

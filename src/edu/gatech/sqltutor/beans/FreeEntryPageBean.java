@@ -46,6 +46,8 @@ public class FreeEntryPageBean implements Serializable {
 	private String userDescription;
 	
 	private UserQuery userQuery;
+	
+	private List<UserQuery> userQueries;
 
 	@PostConstruct
 	public void init() {
@@ -65,6 +67,8 @@ public class FreeEntryPageBean implements Serializable {
 		}
 		selectedDatabase = databaseAttributes[1];
 		tables = connection.getTables(selectedDatabase);
+		
+		userQueries = connection.getUserQueries();
 	}
 	
 	public void devRedirect() throws IOException {
@@ -99,6 +103,7 @@ public class FreeEntryPageBean implements Serializable {
 			userQuery.setUserDescription(userDescription);
 			
 			connection.saveUserQuery(userQuery);
+			userQueries.add(userQuery);
 			
 			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Query saved successfully.", null);
@@ -131,7 +136,15 @@ public class FreeEntryPageBean implements Serializable {
 			
 			feedbackNLP = "The question you answered was: \n" + nlp;
 		}
-	} 
+	}
+	
+	public List<UserQuery> getUserQueries() {
+		return userQueries;
+	}
+	
+	public void setUserQueries(List<UserQuery> userQueries) {
+		this.userQueries = userQueries;
+	}
 
 	public String getUserDescription() {
 		return userDescription;
