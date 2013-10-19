@@ -4,15 +4,15 @@ import java.util.List;
 
 public class DatabaseTable {
 	private String tableName;	
-	private List<String> columnNameList;
+	private List<String> columns;
 	
 	public DatabaseTable(String tableName) {
 		this.tableName = tableName;
 	}
 	
-	public DatabaseTable(String tableName, List<String> columnNameList) {
+	public DatabaseTable(String tableName, List<String> columns) {
 		this.tableName = tableName;
-		this.columnNameList = columnNameList;
+		this.columns = columns;
 	}
 	
 	public void setTableName(String tableName) {
@@ -24,21 +24,11 @@ public class DatabaseTable {
 	}
 	
 
-	public List<String> getColumnNames() {
-		return columnNameList;
+	public List<String> getColumns() {
+		return columns;
 	}
 
-	public void setColumnNames(List<String> columnNameList) {
-		this.columnNameList = columnNameList;
+	public void setColumns(List<String> columns) {
+		this.columns = columns;
 	}	
-
-	@Deprecated
-	public List<String> getColumnNameList() {
-		return columnNameList;
-	}
-
-	@Deprecated
-	public void setColumnNameList(List<String> columnNameList) {
-		this.columnNameList = columnNameList;
-	}
 }

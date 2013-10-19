@@ -175,7 +175,7 @@ public class Question implements IQueryTranslator {
 		} else {
 			DatabaseTable colTable = null;
 			for( DatabaseTable table: tables ) {
-				if( !table.getColumnNameList().contains(name) )
+				if( !table.getColumns().contains(name) )
 					continue;
 				
 				// check for ambiguity

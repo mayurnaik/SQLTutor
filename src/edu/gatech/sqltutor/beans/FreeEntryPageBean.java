@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -93,9 +94,15 @@ public class FreeEntryPageBean implements Serializable {
 				context.addMessage(null, message);
 				return;
 			}
-			
+			try {
+				connection.verifyQuery(selectedDatabase, query);
+			} catch(SQLException e) {
+				FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Query is malformed.\n" + e.getMessage(), null);
+					context.addMessage(null, message);
+				return;
+			}
 			UserQuery userQuery = new UserQuery();
-			userQuery = new UserQuery();
 			userQuery.setUsername(userBean.getUsername());
 			userQuery.setTime(new Date());
 			userQuery.setQuery(query);
@@ -114,18 +121,20 @@ public class FreeEntryPageBean implements Serializable {
 				"The query could not be parsed: " + e.getMessage(), null);
 			context.addMessage(null, message);
 		} catch( RuntimeException e ) {
-			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-				"Internal error saving the query.", null);
-			context.addMessage(null, message);
+			String message = "Internal error saving the query.";
+			if(e.getMessage().contains("duplicate key")) {
+				message = "A matching combination of query and description has already been recorded.";
+			}
+			FacesMessage faceMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+				message, null);
+			context.addMessage(null, faceMessage);
 			e.printStackTrace();
 		}
 	}
 	
 	public void processSQL() {
-		queryResult = connection.getQueryResult(selectedDatabase, query);
-		if(queryResult.isMalformed()) {
-			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
-		} else {
+		try {
+			queryResult = connection.getQueryResult(selectedDatabase, query);
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
@@ -135,6 +144,8 @@ public class FreeEntryPageBean implements Serializable {
 			userQuery.setNaturalLanguage(nlp);
 			
 			feedbackNLP = "The question you answered was: \n" + nlp;
+		} catch(Exception e) {
+			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 		}
 	}
 	

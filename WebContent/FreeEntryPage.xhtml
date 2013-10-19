@@ -10,60 +10,22 @@
 		<ui:include src="/samples/template-menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body>
-
+<h:body style="height:1000px;width:1200px">
 	<h:form id="freeEntryForm">
-		<div>
-			<p:outputLabel for="database" value="Database: " />
-			<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
-				required="true" requiredMessage="Please select a database."
-				effect="fade">
-				<f:selectItems value="#{databaseSelectionBean.databases}"
-					itemValue="#{databaseSelectionBean.databases}"
-					itemLabel="#{databaseSelectionBean.databases}" />
-			</p:selectOneMenu>
-			
-			<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
-					<p:dataTable var="databaseTable"
-						value="#{freeEntryPageBean.tables}">
-						<p:column headerText="Table Names">
-							<h:outputText value="#{databaseTable.tableName}" />
-						</p:column>
-						<p:column headerText="Column Names" style="width=200px; white-space: normal;">
-							<h:outputText value="#{databaseTable.columnNames}" />
-						</p:column>
-					</p:dataTable>
-			</p:overlayPanel> 
-			
-			<p:overlayPanel id="resultSetPanel" for="resultSetButton" hideEffect="fade"> 
-					<p:dataTable id="resultsTable" var="row"
-						value="#{freeEntryPageBean.queryResult.data}">
-						<p:columns value="#{freeEntryPageBean.queryResult.columnNames}"
-							var="column" columnIndexVar="columnIndex">
-							<f:facet name="header">
-									#{column}
-								</f:facet>
-								#{row[columnIndex]}
-							</p:columns>
-					</p:dataTable>
-			</p:overlayPanel> 
-	
-			<p:commandButton id="databaseButton" value="Show Schema" />
-			<p:commandButton id="resultSetButton" value="Show Result Set" />
-		</div><div>
-			<p:messages />
+		<div style="position:absolute;width:400;height:400;top:auto;left:0">
 			<p:panelGrid columns="2">
 				<f:facet name="header">  
 				    Add Query
 				</f:facet>
-				
 				<p:outputLabel for="query" value="Enter Query: " />
 				<p:inputTextarea rows="3" cols="35" id="query" reRender="results"
-					styleClass="unresizable" value="#{freeEntryPageBean.query}" />
+					autoResize="false" style="resize:none" value="#{freeEntryPageBean.query}" 
+					validatorMessage="Query entry is required." />
 					
 				<h:outputLabel for="userDescription" value="English description: " />
-				<p:inputTextarea rows="6" id="userDescription" required="true" 
-						value="#{freeEntryPageBean.userDescription}" />
+				<p:inputTextarea rows="6" id="userDescription" required="true" style="resize:none"
+						value="#{freeEntryPageBean.userDescription}" autoResize="false"
+						validatorMessage="English description is required." />
 				
 				<f:facet name="footer">
 					<p:commandButton id="addQueryButton"
@@ -72,19 +34,62 @@
 						value="Add" icon="ui-icon-check" style="margin:0"/>
 				</f:facet> 
 			</p:panelGrid>
-			<p:dataTable id="userQueriesTable" var="query" 
+		</div>
+		<div style="position:absolute;width:600;height:400;top:auto;left:475">
+			<h:panelGrid columns="2">
+				<h:outputText value="Database: " />
+				<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+					required="true" requiredMessage="Please select a database."
+					effect="fade">
+					<f:selectItems value="#{databaseSelectionBean.databases}"
+						itemValue="#{databaseSelectionBean.databases}"
+						itemLabel="#{databaseSelectionBean.databases}" />
+				</p:selectOneMenu>
+			</h:panelGrid>
+			<p:commandButton id="databaseButton" value="Show Schema" />
+			<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+					<p:dataTable var="databaseTable"
+						value="#{freeEntryPageBean.tables}">
+						<p:column headerText="Table Names">
+							<h:outputText value="#{databaseTable.tableName}" />
+						</p:column>
+						<p:column headerText="Column Names" width="400" style="white-space: normal;">
+							<h:outputText value="#{databaseTable.columns}" />
+						</p:column>
+					</p:dataTable>
+			</p:overlayPanel> 
+			<ui:remove>
+			<p:commandButton id="resultSetButton" value="Show Result Set" />
+			<p:overlayPanel id="resultSetPanel" for="resultSetButton" hideEffect="fade"> 
+					<p:dataTable id="resultsTable" var="row"
+						value="#{freeEntryPageBean.queryResult.data}">
+						<p:columns value="#{freeEntryPageBean.queryResult.columns}"
+							var="column" columnIndexVar="columnIndex">
+							<f:facet name="header">
+									#{column}
+								</f:facet>
+								#{row[columnIndex]}
+							</p:columns>
+					</p:dataTable>
+			</p:overlayPanel> 
+			</ui:remove>
+			<p:messages />
+		</div>
+		<div style="position:absolute;height:500;top:400;left:0">
+		<br/>
+			<p:dataTable id="userQueriesTable" var="query" scrollable="true" scrollHeight="300" scrollWidth="1300"
 					value="#{freeEntryPageBean.userQueries}">
-				<p:column headerText="Schema">
+				<p:column headerText="Schema" width="100">
 					<h:outputText value="#{query.schema}" />
 				</p:column>
-				<p:column headerText="Query">
+				<p:column headerText="Query" width="400">
 					<h:outputText value="#{query.query}" />
 				</p:column>
-				<p:column headerText="English">
+				<p:column headerText="English" width="400">
 					<h:outputText value="#{query.userDescription}" />
 				</p:column>
 			</p:dataTable>
-      	</div>
+		</div>
 	</h:form>
 </h:body>
 </html>

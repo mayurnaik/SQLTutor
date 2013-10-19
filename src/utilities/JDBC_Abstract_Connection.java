@@ -132,14 +132,8 @@ public abstract class JDBC_Abstract_Connection {
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(preparedStatement != null) {
-					preparedStatement.close();
-				}
-			} catch (SQLException e) {}
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
 		}
 	}
 	
@@ -178,18 +172,9 @@ public abstract class JDBC_Abstract_Connection {
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
-			
-			try {
-				if(resultSet != null) {
-					resultSet.close();
-				}
-				if(preparedStatement != null) {
-					preparedStatement.close();
-				}
-				if(connection != null) {
-					connection.close();
-				}
-			} catch (SQLException e) {}
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+			Utils.tryClose(resultSet);
 		}
 		
 		return false;
@@ -206,7 +191,7 @@ public abstract class JDBC_Abstract_Connection {
 
 		try {
 			connection = getConnection(DB_NAME);
-			final String query = "SELECT * FROM \"user\" WHERE \"username\" = ?";
+			final String query = "SELECT 1 FROM \"user\" WHERE \"username\" = ?";
 			
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, username);
@@ -221,18 +206,9 @@ public abstract class JDBC_Abstract_Connection {
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
-			
-			try {
-				if(resultSet != null) {
-					resultSet.close();
-				}
-				if(preparedStatement != null) {
-					preparedStatement.close();
-				}
-				if(connection != null) {
-					connection.close();
-				}
-			} catch (SQLException e) {}
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+			Utils.tryClose(resultSet);
 		}
 		return false;
 	}
@@ -269,14 +245,8 @@ public abstract class JDBC_Abstract_Connection {
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(preparedStatement != null) {
-					preparedStatement.close();
-				}
-			} catch (SQLException e) {}
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
 		}
 	}
 	
@@ -305,7 +275,7 @@ public abstract class JDBC_Abstract_Connection {
 				while(resultSet.next()) {
 					columns.add(resultSet.getString(4));
 				}
-				tables.get(i).setColumnNames(columns);
+				tables.get(i).setColumns(columns);
 			}
 			
 			return tables;
@@ -316,70 +286,47 @@ public abstract class JDBC_Abstract_Connection {
 			System.err.println("Exception: " + e.getMessage());
 			
 		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(resultSet != null) {
-					resultSet.close();
-				}
-			} catch (SQLException e) {}
+			Utils.tryClose(resultSet);
+			Utils.tryClose(connection);
 		}
 		return null;
 	}
 	
-	public QueryResult getQueryResult(String databaseName, String query) {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
+	public QueryResult getQueryResult(String databaseName, String query) throws SQLException {
+		Connection connection = getConnection(databaseName, DB_READONLY_USERNAME);
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(query);
+		ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 		QueryResult queryResult;
-		try {
-
-			connection = getConnection(databaseName, DB_READONLY_USERNAME);
-			statement = connection.createStatement();
-			resultSet = statement.executeQuery(query);
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-
-			
-			int columnCount = resultSetMetaData.getColumnCount();
-			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-			ArrayList<String> columnNames = new ArrayList<String>();
-			for(int i = 1; i <=  columnCount; i++) {
-				columnNames.add(resultSetMetaData.getColumnName(i));
-			}
-			while(resultSet.next()) {
-				ArrayList<String> rowData = new ArrayList<String>();
-				for (int i = 1; i <= columnCount; i++) {
-					rowData.add(resultSet.getString(i));
-				}
-				queryData.add(rowData);
-			}
-			// return the query result object
-			queryResult = new QueryResult(databaseName, 
-					columnNames, 
-					queryData);
-			return queryResult;
-			 
-		} catch (Exception e) {
-			queryResult = new QueryResult();
-			queryResult.setMalformed(true);
-			queryResult.setExceptionMessage(e.getMessage());
-			System.err.println("Exception: " + e.getMessage());
-		} finally {
-			try {
-				if(connection != null) {
-					connection.close();
-				}
-				if(statement != null) {
-					statement.close();
-				}
-				if(resultSet != null) {
-					resultSet.close();
-				}
-			} catch (SQLException e) {}
+	
+		int columnCount = resultSetMetaData.getColumnCount();
+		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
+		ArrayList<String> columnNames = new ArrayList<String>();
+		for(int i = 1; i <=  columnCount; i++) {
+			columnNames.add(resultSetMetaData.getColumnName(i));
 		}
+		while(resultSet.next()) {
+			ArrayList<String> rowData = new ArrayList<String>();
+			for (int i = 1; i <= columnCount; i++) {
+				rowData.add(resultSet.getString(i));
+			}
+			queryData.add(rowData);
+		}
+		// return the query result object
+		queryResult = new QueryResult(databaseName, 
+				columnNames, 
+				queryData);
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+		Utils.tryClose(statement);
 		return queryResult;
 	}
 	
-
+	public void verifyQuery(String databaseName, String query) throws SQLException {
+		Connection connection = getConnection(databaseName, DB_READONLY_USERNAME);
+		Statement statement = connection.createStatement();
+		statement.executeQuery(query);
+		Utils.tryClose(connection);
+		Utils.tryClose(statement);
+	}
 }

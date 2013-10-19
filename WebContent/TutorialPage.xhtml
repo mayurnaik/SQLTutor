@@ -10,11 +10,11 @@
 		<ui:include src="/samples/template-menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body>
+<h:body style="height:1000px;width:1600px">
 	<h:form>
 		<div style="float: left; width: 50%;">
 			<h2>Question:</h2>
-			<p:outputLabel id="question" value="#{tutorialBean.question}" />
+			<h:outputText id="question" value="#{tutorialBean.question}" />
 			<br/>
 			<h2>Database:</h2>
 			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
@@ -22,8 +22,8 @@
 				<p:column headerText="Table Names">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
-				<p:column headerText="Column Names" style="width=200px; white-space: normal;">
-					<h:outputText value="#{databaseTable.columnNameList}" />
+				<p:column headerText="Column Names" style="width:200px; white-space: normal;">
+					<h:outputText value="#{databaseTable.columns}" />
 				</p:column>
 			</p:dataTable>
 
@@ -41,17 +41,17 @@
 
 		<div style="float: right; width: 49%;">
 			<h2>Result Set Feedback:</h2>
-			<p:outputLabel id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
+			<h:outputText id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
 				style="white-space: pre;" escape="false" />
 			
 			<h2>NLP Feedback:</h2>
-			<p:outputLabel id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
+			<h:outputText id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
 				style="white-space: pre;" escape="false" />
 
 			<h2>Query Result:</h2>
 			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
 				value="#{tutorialBean.queryResult.data}">
-				<p:columns value="#{tutorialBean.queryResult.columnNameList}"
+				<p:columns value="#{tutorialBean.queryResult.columns}"
 					var="column" columnIndexVar="columnIndex">
 					<f:facet name="header">
 							#{column}

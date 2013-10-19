@@ -193,7 +193,7 @@ public class Question implements IQueryTranslator {
 						DatabaseTable databaseTable;
 						while(databaseTableIterator.hasNext()) {
 							databaseTable = databaseTableIterator.next();
-							if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumnNameList().contains(matcher.group())) {
+							if(mainListKey.contains(databaseTable.getTableName()) && databaseTable.getColumns().contains(matcher.group())) {
 								mainList.get(mainListKey.indexOf(databaseTable.getTableName())).add(attributeArray[i]);
 								break;
 							}

@@ -4,15 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QueryResult {
-	private boolean malformed = false;
-	private String exceptionMessage;
-    private List<String> columnNameList = new ArrayList<String>();
+    private List<String> columns = new ArrayList<String>();
     private List<List<String>> data = new ArrayList<List<String>>();
     
     public QueryResult() {}
     
-    public QueryResult(String databaseName, List<String> columnNameList, List<List<String>> data) {
-    	this.columnNameList = columnNameList;
+    public QueryResult(String databaseName, List<String> columns, List<List<String>> data) {
+    	this.columns = columns;
     	this.data = data;
     }
 
@@ -25,39 +23,11 @@ public class QueryResult {
 	}
 	
 
-	public void setColumnNames(List<String> columnNameList) {
-		this.columnNameList = columnNameList;
+	public void setColumns(List<String> columns) {
+		this.columns = columns;
 	}
 
-	public List<String> getColumnNames() {
-		return columnNameList;
+	public List<String> getColumns() {
+		return columns;
 	}
-	
-	@Deprecated
-	public void setColumnNameList(List<String> columnNameList) {
-		this.columnNameList = columnNameList;
-	}
-
-	@Deprecated
-	public List<String> getColumnNameList() {
-		return columnNameList;
-	}
-
-	public void setMalformed(boolean malformed) {
-		this.malformed = malformed;
-	}
-
-	public boolean isMalformed() {
-		return malformed;
-	}
-
-	public void setExceptionMessage(String exceptionMessage) {
-		this.exceptionMessage = exceptionMessage;
-	}
-
-	public String getExceptionMessage() {
-		return exceptionMessage;
-	}
-
-	
 }

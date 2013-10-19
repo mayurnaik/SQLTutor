@@ -1,6 +1,7 @@
 package beans;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,42 +68,60 @@ public class TutorialBean {
 	}
 	
 	public void processSQL() {
-		queryResult = connection.getQueryResult(selectedDatabase, query);
-		if(queryResult.isMalformed()) {
-			feedbackNLP = "Your query was malformed. Please try again. Exception: \n" + queryResult.getExceptionMessage();
-			resultSetFeedback = "Incorrect.";
-		} else {
+		try {
+			queryResult = connection.getQueryResult(selectedDatabase, query);
 			feedbackNLP = "The question you answered was: \n" + (new Question(query, tables)).getQuestion();
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
-				answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
-				if(queryResult.getData().equals(answerResult.getData())) {
-					resultSetFeedback = "Correct.";
-				} else {
-					resultSetFeedback = "Incorrect. The result's data differed.";
-					// find a way to mark where the queryResult did not equal the answerResult
-				}
+				queryEquivalenceCheck();
 			} else {
-				// Columns must be ordered correctly by the user.
-				String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
-				String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
-				// The result set of all ADDITIONAL data gathered by the user's query.
-				queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
-				if(queryDiffResult.isMalformed()) {
-					resultSetFeedback = "Incorrect. Either the number of columns did not match, or their types differed.";
-					return;
-				}
-				// The result set of all MISSED data, not gathered by the user's query.
-				answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
-				if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
-					resultSetFeedback = "Correct.";
-				} else {
-					resultSetFeedback = "Incorrect. The result's data differed.";
-					// find queryDiffResult in queryResult and mark green
-					// append answerDiffResult to the bottom in red
-				}
-			}
+				queryDifferenceCheck();
+			} 
+		} catch(Exception e) {
+			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
+			resultSetFeedback = "Incorrect.";
 		}
 	} 
+	
+	public void queryEquivalenceCheck() {
+		try {
+			answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
+			if(queryResult.getData().equals(answerResult.getData())) {
+				resultSetFeedback = "Correct.";
+			} else {
+				resultSetFeedback = "Incorrect. The result's data differed.";
+				// FIXME find a way to mark where the queryResult did not equal the answerResult
+			}
+		} catch(SQLException e) {
+			resultSetFeedback = "The stored answer was malformed.";
+		}
+	}
+	
+	public void queryDifferenceCheck() {
+		// Columns must be ordered correctly by the user.
+		String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
+		String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
+		try {
+			// The result set of all ADDITIONAL data gathered by the user's query.
+			queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
+			answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			if(e.getMessage().contains("columns")) {
+				resultSetFeedback = "Incorrect. The number of columns of your result did not match the answer.";
+			} else if(e.getMessage().contains("type")){
+				resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
+			}
+			return;
+		}
+		// The result set of all MISSED data, not gathered by the user's query.
+		if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
+			resultSetFeedback = "Correct.";
+		} else {
+			resultSetFeedback = "Incorrect. The result's data differed.";
+			// FIXME find queryDiffResult in queryResult and mark green
+			// append answerDiffResult to the bottom in red
+		}
+	}
 	
 	public void setQuestionsAndAnswers() {
 		// currently hard coded answers (which get converted to questions). This will be phased out.

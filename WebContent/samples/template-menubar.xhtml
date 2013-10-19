@@ -55,13 +55,15 @@
 				</h:panelGrid>
 				<p:messages/>
 			</p:panel>
-			<!-- Temporarily disabling catcha -->
-			<!--  
+			<!-- Temporarily disabling catcha. When re-enabled, disable 'alternativeButton'. -->
+			<ui:remove>
 			<p:captcha label="Captcha" theme="white" required="true" 
 				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
-			-->    
+			   
 			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
 				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
+			</ui:remove>
+			<p:commandButton id="alternativeButton" value="Submit" update="loginPanel" action="#{userBean.login()}"/>
 		</h:form>
 	</p:dialog>
 </html>
