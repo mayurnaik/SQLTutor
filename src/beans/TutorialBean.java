@@ -38,7 +38,6 @@ public class TutorialBean {
 	private QueryResult queryDiffResult;
 	private QueryResult answerDiffResult;
 
-
 	@PostConstruct
 	public void init() {
 		String[] databaseAttributes;
@@ -70,7 +69,7 @@ public class TutorialBean {
 	public void processSQL() {
 		try {
 			queryResult = connection.getQueryResult(selectedDatabase, query);
-			feedbackNLP = "The question you answered was: \n" + (new Question(query, tables)).getQuestion();
+			feedbackNLP = "We determined the question you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
 				queryEquivalenceCheck();
 			} else {
@@ -88,7 +87,7 @@ public class TutorialBean {
 			if(queryResult.getData().equals(answerResult.getData())) {
 				resultSetFeedback = "Correct.";
 			} else {
-				resultSetFeedback = "Incorrect. The result's data differed.";
+				resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 				// FIXME find a way to mark where the queryResult did not equal the answerResult
 			}
 		} catch(SQLException e) {
@@ -97,6 +96,11 @@ public class TutorialBean {
 	}
 	
 	public void queryDifferenceCheck() {
+		try {
+			answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
+		} catch(SQLException e) {
+			resultSetFeedback = "The stored answer was malformed.";
+		}
 		// Columns must be ordered correctly by the user.
 		String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
 		String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
@@ -104,10 +108,10 @@ public class TutorialBean {
 			// The result set of all ADDITIONAL data gathered by the user's query.
 			queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
 			answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
-		} catch(Exception e) {
+		} catch(SQLException e) {
 			System.out.println(e.getMessage());
 			if(e.getMessage().contains("columns")) {
-				resultSetFeedback = "Incorrect. The number of columns of your result did not match the answer.";
+				resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
 			} else if(e.getMessage().contains("type")){
 				resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
 			}
@@ -117,7 +121,7 @@ public class TutorialBean {
 		if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
 			resultSetFeedback = "Correct.";
 		} else {
-			resultSetFeedback = "Incorrect. The result's data differed.";
+			resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 			// FIXME find queryDiffResult in queryResult and mark green
 			// append answerDiffResult to the bottom in red
 		}
@@ -199,6 +203,10 @@ public class TutorialBean {
 	public QueryResult getQueryDiffAnswer() {
 		return queryDiffResult;
 	}
+	
+	public QueryResult getAnswerResult() {
+		return answerResult;
+	}
 
 	public QueryResult getAnswerDiffQuery() {
 		return answerDiffResult;
@@ -206,5 +214,12 @@ public class TutorialBean {
 
 	public String getResultSetFeedback() {
 		return resultSetFeedback;
+	}
+	
+	public boolean getQueryIsCorrect() {
+		if(resultSetFeedback == null || !resultSetFeedback.toLowerCase().contains("incorrect")) {
+			return true;
+		}
+		return false;
 	}
 }

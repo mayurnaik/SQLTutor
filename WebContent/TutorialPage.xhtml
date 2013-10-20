@@ -10,55 +10,67 @@
 		<ui:include src="/samples/template-menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body style="height:1000px;width:1600px">
-	<h:form>
-		<div style="float: left; width: 50%;">
+<h:body style="height:1000px;width:1400px">
+	<h:form id="form">
+		<div style="position:absolute;width:700;height:500;top:auto;left:0">
 			<h2>Question:</h2>
 			<h:outputText id="question" value="#{tutorialBean.question}" />
 			<br/>
 			<h2>Database:</h2>
-			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200"
+			<p:dataTable var="databaseTable"
 				value="#{tutorialBean.tables}">
-				<p:column headerText="Table Names">
+				<p:column headerText="Table Names" width="100">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
-				<p:column headerText="Column Names" style="width:200px; white-space: normal;">
+				<p:column headerText="Column Names" width="400" style="white-space: normal;">
 					<h:outputText value="#{databaseTable.columns}" />
 				</p:column>
 			</p:dataTable>
 
 			<h2>Query input:</h2>
-			<p:inputTextarea rows="6" cols="33" id="query" reRender="results"
+			<p:inputTextarea rows="5" cols="30" id="query" reRender="results" style="resize:none"
 				autoResize="false" value="#{tutorialBean.query}" />
 			<br/>
 			<p:commandButton id="try" value="Try Query"
 				action="#{tutorialBean.processSQL}" 
-				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')}" />
+				update="form" />
 			<p:commandButton id="next" value="Next Question"
 				action="#{tutorialBean.nextQuestion}"
-				update="resultSetFeedback,feedbackNLP,:#{p:component('resultsTable')},question" />
+				update="form"/>
 		</div>
 
-		<div style="float: right; width: 49%;">
-			<h2>Result Set Feedback:</h2>
-			<h:outputText id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
-				style="white-space: pre;" escape="false" />
-			
-			<h2>NLP Feedback:</h2>
-			<h:outputText id="feedbackNLP" value="#{tutorialBean.feedbackNLP}"
-				style="white-space: pre;" escape="false" />
-
+		<div style="position:absolute;width:700;height:500;top:auto;left:710">
 			<h2>Query Result:</h2>
 			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
-				value="#{tutorialBean.queryResult.data}">
-				<p:columns value="#{tutorialBean.queryResult.columns}"
+				value="#{tutorialBean.queryResult.data}" >
+				<p:columns value="#{tutorialBean.queryResult.columns}" style="white-space: normal;"
 					var="column" columnIndexVar="columnIndex">
 					<f:facet name="header">
+						#{column}
+					</f:facet>
+					#{row[columnIndex]}
+				</p:columns>
+			</p:dataTable>
+			<h2>Feedback:</h2>
+			<ui:param name="queryIsCorrectFeedback" value="#{tutorialBean.resultSetFeedback}"/>
+			<ui:param name="queryisIncorrectFeedback" value="#{tutorialBean.resultSetFeedback} #{tutorialBean.feedbackNLP}"/>
+			<h:outputText id="resultSetFeedback" value="#{tutorialBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryisIncorrectFeedback}"
+				style="width: 700px;white-space: pre;" escape="false"/>
+			<br/>
+			<h:outputText value="Your result should resemble this example:" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
+			<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
+			<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
+				<p:dataTable id="answerTable" var="row" scrollable="true" scrollHeight="200"
+					value="#{tutorialBean.answerResult.data}" >
+					<p:columns value="#{tutorialBean.answerResult.columns}" style="white-space: normal;"
+						var="column" columnIndexVar="columnIndex">
+						<f:facet name="header">
 							#{column}
 						</f:facet>
 						#{row[columnIndex]}
 					</p:columns>
-			</p:dataTable>
+				</p:dataTable>
+			</p:overlayPanel>
 		</div>
 	</h:form>
 </h:body>
