@@ -20,12 +20,17 @@
 				<p:outputLabel for="query" value="Enter Query: " />
 				<p:inputTextarea rows="3" cols="35" id="query" reRender="results"
 					autoResize="false" style="resize:none" value="#{freeEntryPageBean.query}" 
-					validatorMessage="Query entry is required." />
+					requiredMessage="Query entry is required." />
 					
 				<h:outputLabel for="userDescription" value="English description: " />
-				<p:inputTextarea rows="6" id="userDescription" required="true" style="resize:none"
+				<p:inputTextarea rows="3" cols="35" id="userDescription" required="true" style="resize:none"
 						value="#{freeEntryPageBean.userDescription}" autoResize="false"
-						validatorMessage="English description is required." />
+						requiredMessage="English description is required." />
+						
+				<h:outputLabel for="source" value="Query source: " />
+				<p:inputTextarea rows="2" cols="35" id="source" required="true" style="resize:none"
+						value="#{freeEntryPageBean.source}" autoResize="false"
+						requiredMessage="Query source is required." />
 				
 				<f:facet name="footer">
 					<p:commandButton id="addQueryButton"
@@ -77,15 +82,18 @@
 		</div>
 		<div style="position:absolute;height:500;top:400;left:0">
 		<br/>
-			<p:dataTable id="userQueriesTable" var="query" scrollable="true" scrollHeight="300" scrollWidth="1300"
-					value="#{freeEntryPageBean.userQueries}">
-				<p:column headerText="Schema" width="100">
+			<p:dataTable id="userQueriesTable" var="query" scrollable="true" scrollHeight="300" 
+					value="#{freeEntryPageBean.userQueries}" style="width:1000">
+				<p:column headerText="Schema" style="width:75">
 					<h:outputText value="#{query.schema}" />
 				</p:column>
-				<p:column headerText="Query" width="400">
+				<p:column headerText="Source" style="width:125">
+					<h:outputText value="#{query.source}" />
+				</p:column>
+				<p:column headerText="Query" style="width:300">
 					<h:outputText value="#{query.query}" />
 				</p:column>
-				<p:column headerText="English" width="400">
+				<p:column headerText="English" style="width:300">
 					<h:outputText value="#{query.userDescription}" />
 				</p:column>
 			</p:dataTable>

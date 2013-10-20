@@ -45,6 +45,7 @@ public class FreeEntryPageBean implements Serializable {
 	private String feedbackNLP;
 	private QueryResult queryResult;
 	private String userDescription;
+	private String source;
 	
 	private UserQuery userQuery;
 	
@@ -98,7 +99,7 @@ public class FreeEntryPageBean implements Serializable {
 				connection.verifyQuery(selectedDatabase, query);
 			} catch(SQLException e) {
 				FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Query is malformed.\n" + e.getMessage(), null);
+						"Query was malformed.\n" + e.getMessage(), null);
 					context.addMessage(null, message);
 				return;
 			}
@@ -108,6 +109,7 @@ public class FreeEntryPageBean implements Serializable {
 			userQuery.setQuery(query);
 			userQuery.setSchema(selectedDatabase);
 			userQuery.setUserDescription(userDescription);
+			userQuery.setSource(source);
 			
 			connection.saveUserQuery(userQuery);
 			userQueries.add(userQuery);
@@ -203,5 +205,13 @@ public class FreeEntryPageBean implements Serializable {
 
 	public List<DatabaseTable> getTables() {
 		return tables;
+	}
+	
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getSource() {
+		return source;
 	}
 }

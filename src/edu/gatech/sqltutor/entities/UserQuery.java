@@ -47,6 +47,7 @@ public class UserQuery implements Serializable {
 	
 	private Integer nlpRating;
 
+	private String source;
 	
 	public Long getId() {
 		return id;
@@ -113,6 +114,14 @@ public class UserQuery implements Serializable {
 	public Integer getRating() { return nlpRating; }
 	
 	public void setRating(Integer rating) { nlpRating = rating; }
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getSource() {
+		return source;
+	}
 	
 	
 }

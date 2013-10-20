@@ -43,19 +43,21 @@ public abstract class JDBC_Abstract_Connection {
 			Long id = query.getId();
 			if( id == null ) {
 				final String INSERT = "INSERT INTO query " + 
-					"(username, schema, sql, user_description, created) VALUES (?, ?, ?, ?, ?)";
+					"(username, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
 				statement = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
 			} else {
 				final String UPDATE = 
-						"UPDATE query SET username=?, schema=?, sql=?, user_description=?, created=? WHERE id=?";
+						"UPDATE query SET username=?, schema=?, sql=?, user_description=?, source=?, created=? WHERE id=?";
 				statement = conn.prepareStatement(UPDATE);
-				statement.setLong(6, id);
+				statement.setLong(7, id);
 			}
 			statement.setString(1, query.getUsername());
 			statement.setString(2, query.getSchema());
 			statement.setString(3, query.getQuery());
 			statement.setString(4, query.getUserDescription());
-			statement.setDate(5, new Date(query.getTime().getTime()));
+			statement.setString(5, query.getSource());
+			statement.setDate(6, new Date(query.getTime().getTime()));
+
 			
 			statement.executeUpdate();
 			
@@ -98,6 +100,7 @@ public abstract class JDBC_Abstract_Connection {
 				query.setQuery(result.getString("sql"));
 				query.setUserDescription(result.getString("user_description"));
 				query.setTime(result.getDate("created"));
+				query.setSource(result.getString("source"));
 				
 				userQueries.add(query);
 			}
