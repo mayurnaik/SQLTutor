@@ -14,6 +14,8 @@
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
 				<p:menuitem value="Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
+				<p:menuitem value="Schema Upload" action="SchemaUploadPage.xhtml?faces-redirect=true" 
+					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
 			</p:submenu>
 			<p:submenu label="Contact Us" icon="ui-icon-contact" style="margin-right:10px;">
 				<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>

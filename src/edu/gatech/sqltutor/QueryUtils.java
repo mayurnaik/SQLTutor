@@ -3,6 +3,7 @@ package edu.gatech.sqltutor;
 import java.util.regex.Pattern;
 
 import com.akiban.sql.parser.CursorNode;
+import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
@@ -38,17 +39,14 @@ public class QueryUtils {
 	public static SelectNode extractSelectNode(StatementNode statement) {
 		if( statement == null )
 			throw new IllegalArgumentException("statement is null");
-		if( !(statement instanceof CursorNode) )
+		
+		if( NodeTypes.CURSOR_NODE != statement.getNodeType() )
 			throw new IllegalArgumentException("statement is not a cursor node");
 		
-
-		CursorNode c = (CursorNode)statement;
-		if( c.getName() != null )
-			throw new IllegalArgumentException("statement is an un-named cursor");
-		ResultSetNode resultSet = c.getResultSetNode();
-		if( !(resultSet instanceof SelectNode) )
+		ResultSetNode select = ((CursorNode)statement).getResultSetNode();
+		if( NodeTypes.SELECT_NODE != select.getNodeType() )
 			throw new IllegalArgumentException("statement is not a select node");
 		
-		return (SelectNode)resultSet;
+		return (SelectNode)select;
 	}
 }

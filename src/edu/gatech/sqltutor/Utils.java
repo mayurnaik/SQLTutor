@@ -3,6 +3,8 @@ package edu.gatech.sqltutor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /** Static utility functions. */
 public class Utils {
@@ -23,6 +25,22 @@ public class Utils {
 	}
 	
 	/**
+	 * Try to close a database connection, suppressing any exception.
+	 * 
+	 * @param conn the connection or <code>null</code>
+	 * @return the exception thrown or <code>null</code>
+	 */
+	public static SQLException tryClose(Connection conn) {
+		try {
+			if( conn != null )
+				conn.close();
+			return null;
+		} catch( SQLException e ) {
+			return e;
+		}
+	}
+	
+	/**
 	 * Try to close a resource, suppressing any exception.
 	 * <p>This is done by reflection. The object must have a 
 	 * <code>close()</code> method.</p>
@@ -31,8 +49,6 @@ public class Utils {
 	 * @return any exception
 	 */
 	public static Throwable tryClose(Object obj) {
-		if( obj instanceof Closeable )
-			return tryClose((Closeable)obj);
 		if( obj == null )
 			return null;
 		

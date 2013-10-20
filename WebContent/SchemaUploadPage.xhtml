@@ -1,0 +1,38 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{schemaUploadPageBean.devRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/samples/template-menubar.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body style="height:1000px;width:1200px">
+	<h:form id="schemaUploadForm">  
+  
+    	<p:messages id="messages" showDetail="true"/>
+		<div style="position:absolute;width:400;height:400;top:auto;left:0">
+			<p:panelGrid columns="2">
+				<f:facet name="header">  
+				    Upload Schema
+				</f:facet>
+				<p:outputLabel for="schemaName" value="Schema name: " />
+				<p:inputText id="schemaName" value="#{schemaUploadPageBean.schemaName}" />
+				
+				<p:outputLabel for="schemaFile" value="Schema file: " />
+				<p:fileUpload id="schemaFile" fileUploadListener="#{schemaUploadPageBean.handleFileUpload}" mode="advanced"  
+            	update="messages" auto="true" sizeLimit="100000" allowTypes="/(\.|\/)(sql)$/"/>  
+				<f:facet name="footer">
+					<p:commandButton id="schemaUploadButton"
+						action="#{schemaUploadPageBean.addQuery}"
+						update="schemaUploadForm" 
+						value="Add" icon="ui-icon-check" style="margin:0"/>
+				</f:facet> 
+			</p:panelGrid>
+		</div>
+	</h:form>
+</h:body>
+</html>
