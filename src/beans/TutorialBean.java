@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -33,6 +34,7 @@ public class TutorialBean {
 	private String query;
 	private String feedbackNLP;
 	private String resultSetFeedback;
+	private String userFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
 	private QueryResult queryDiffResult;
@@ -69,7 +71,7 @@ public class TutorialBean {
 	public void processSQL() {
 		try {
 			queryResult = connection.getQueryResult(selectedDatabase, query);
-			feedbackNLP = "We determined the question you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
+			feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
 				queryEquivalenceCheck();
 			} else {
@@ -108,8 +110,7 @@ public class TutorialBean {
 			// The result set of all ADDITIONAL data gathered by the user's query.
 			queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
 			answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
-		} catch(SQLException e) {
-			System.out.println(e.getMessage());
+		} catch(SQLException e) {;
 			if(e.getMessage().contains("columns")) {
 				resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
 			} else if(e.getMessage().contains("type")){
@@ -125,6 +126,11 @@ public class TutorialBean {
 			// FIXME find queryDiffResult in queryResult and mark green
 			// append answerDiffResult to the bottom in red
 		}
+	}
+	
+	public void submitFeedback() {
+		// FIXME We'll need to decide how we're going to store this.
+		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("We appreciate your submission."));
 	}
 	
 	public void setQuestionsAndAnswers() {
@@ -221,5 +227,13 @@ public class TutorialBean {
 			return true;
 		}
 		return false;
+	}
+
+	public void setUserFeedback(String userFeedback) {
+		this.userFeedback = userFeedback;
+	}
+
+	public String getUserFeedback() {
+		return userFeedback;
 	}
 }

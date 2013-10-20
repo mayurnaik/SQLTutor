@@ -146,7 +146,7 @@ public class FreeEntryPageBean implements Serializable {
 			userQuery.setNaturalLanguage(nlp);
 			
 			feedbackNLP = "The question you answered was: \n" + nlp;
-		} catch(Exception e) {
+		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 		}
 	}
