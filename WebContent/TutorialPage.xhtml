@@ -76,19 +76,30 @@
 			<br/>
 			<h:outputText style="width: 700px!important; display:block!important;" escape="false" rendered="#{!tutorialBean.getQueryIsCorrect()}"
 				value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"/>
-			<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
+			<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
+				rendered="#{!tutorialBean.getQueryIsCorrect()}" update=":feedbackForm:feedbackPanel"/>
 		</div>
 	</h:form>
 	<p:dialog id="feedbackDialog" header="Anonymous Feedback" widgetVar="feedback_dlg" 
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
-		<h:form>
+		<h:form id="feedbackForm">
 			<p:panel id="feedbackPanel">
-				<p:inputTextarea rows="3" cols="35" id="source" style="resize:none" 
+				<h:outputText value="Please rate our English generation:"/>
+				<br/>
+				<h:outputText value="#{tutorialBean.feedbackNLP}"/>
+				<br/>
+				<p:rating/>
+				<br/>
+				<h:outputText value="Please describe how we might improve our feedback generation:"/>
+				<p:inputTextarea rows="3" cols="44" id="source" style="resize:none" 
 					value="#{tutorialBean.userFeedback}" autoResize="false"/>
 				<p:messages id="messages"/>
 			</p:panel>
-			<p:captcha label="Captcha" theme="white" required="true" 
-				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
+			<p:panel>
+				<p:captcha label="Captcha" theme="white" required="true" 
+					requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
+			</p:panel>
+			<br/>
 			<p:commandButton id="submitFeedback" value="Submit Feedback" icon="ui-icon-check" style="margin:0"
 				action="#{tutorialBean.submitFeedback}" 
 				update="feedbackPanel" oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()"/>	
