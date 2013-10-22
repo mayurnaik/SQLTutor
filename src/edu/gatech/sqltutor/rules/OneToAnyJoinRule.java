@@ -2,11 +2,15 @@ package edu.gatech.sqltutor.rules;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
+import com.akiban.sql.parser.AndNode;
 import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
@@ -54,6 +58,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 			try {
 				arg = QueryUtils.sanitize(arg);
 				StatementNode node = p.parseStatement(arg);
+				log.info("Query: {}", arg);
 				
 //				System.out.println("Before types:");
 //				node.treePrint();
@@ -101,6 +106,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	protected String leftAlias;
 	protected String rightAlias;
+	protected SelectNode select;
 	
 	public OneToAnyJoinRule() { }	
 	
@@ -119,13 +125,13 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	}
 	
 	protected void reset() {
+		this.select = null;
 		this.leftAlias = null;
 		this.rightAlias = null;
 	}
 	
 	private boolean isBaseTable(String tableName, ResultSetNode node) 
 			throws StandardException {
-		log.trace("Checking tableName={} against node={}", tableName, node);
 		if( node instanceof FromBaseTable ) {
 			FromBaseTable fromBaseTable = (FromBaseTable)node;
 			TableName fromName = fromBaseTable.getOrigTableName();
@@ -133,13 +139,6 @@ public class OneToAnyJoinRule implements ITranslationRule {
 				log.trace("No orig table name, using exposed table name.");
 				fromName = fromBaseTable.getExposedTableName();
 			}
-			TableName fromBaseTableName = fromBaseTable.getTableName(),
-					origTableName = fromBaseTable.getOrigTableName();
-			log.trace("fromBaseTableName is {} (getTableName={})", 
-				fromBaseTableName, fromBaseTableName.getTableName());
-			log.trace("origTableName is {} (getTableName={})", 
-				origTableName, origTableName.getTableName());
-			
 			if( tableName.equals(fromName.getTableName()) )
 				return true;
 		}
@@ -174,7 +173,72 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		}
 		
 		BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)on;
-		ValueNode leftOp = binop.getLeftOperand(), rightOp = binop.getRightOperand();
+		if( !checkBinaryEquality(binop) ) {
+			log.debug("Rejected join based on columns used");
+			return false;
+		}
+		
+		RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightResult);
+		rightMeta.setLabel(this.label);
+		rightMeta.setOfAlias(leftAlias);
+		rightMeta.addContributor(this);
+		
+		log.debug("Labeled based on explicit INNER JOIN");
+		
+		return true;
+	}
+	
+	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
+			String rightTable, String rightAttr) {
+		return (leftTable.equals(this.leftAlias) && leftAttr.equals(this.leftAttribute)
+				&& rightTable.equals(this.rightAlias) && rightAttr.equals(this.rightAttribute)) 
+				|| // side of equality doesn't matter
+				(rightTable.equals(this.leftAlias) &&  rightAttr.equals(this.leftAttribute)
+				&& leftTable.equals(this.rightAlias) && leftAttr.equals(this.rightAttribute));
+	}
+	
+	private boolean checkImplicitJoin(FromBaseTable leftRef, FromBaseTable rightRef) 
+			throws StandardException {
+		leftAlias = leftRef.getExposedName();
+		rightAlias = rightRef.getExposedName();
+		
+		ValueNode where = select.getWhereClause();
+		
+		if( where != null ) {
+			Stack<ValueNode> nodesToCheck = new Stack<ValueNode>();
+			nodesToCheck.push(where);
+			
+			while( !nodesToCheck.isEmpty() ) {
+				ValueNode toCheck = nodesToCheck.pop();
+				switch(toCheck.getNodeType()) {
+					case NodeTypes.BINARY_EQUALS_OPERATOR_NODE:
+						if( checkBinaryEquality((BinaryRelationalOperatorNode)toCheck)) {
+							RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightRef);
+							rightMeta.setLabel(this.label);
+							rightMeta.setOfAlias(leftAlias);
+							rightMeta.addContributor(this);
+							
+							log.debug("Label based on implicit join and WHERE clause");
+							return true;
+						}
+						break;
+					case NodeTypes.AND_NODE: {
+						AndNode and = (AndNode)where;
+						nodesToCheck.push(and.getLeftOperand());
+						nodesToCheck.push(and.getRightOperand());
+						break;
+					}
+				}
+			}
+		}
+		
+		log.debug("Rejecting due to missing key condition in WHERE clause.");
+		
+		return false;
+	}
+	
+	private boolean checkBinaryEquality(BinaryRelationalOperatorNode eq) {
+		ValueNode leftOp = eq.getLeftOperand(), rightOp = eq.getRightOperand();
 		if( NodeTypes.COLUMN_REFERENCE != leftOp.getNodeType() || 
 				NodeTypes.COLUMN_REFERENCE != rightOp.getNodeType() ) {
 			log.debug("Rejected join based on '=' operator types.");
@@ -193,28 +257,14 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		}
 		
 		// consume join condition and label right-hand join table
-		RuleMetaData onMeta = QueryUtils.getOrInitMetaData(on);
+		RuleMetaData onMeta = QueryUtils.getOrInitMetaData(eq);
 		onMeta.setHandled(true);
 		onMeta.addContributor(this);
 		
-		RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightResult);
-		rightMeta.setLabel(this.label);
-		rightMeta.setOfAlias(leftAlias);
-		rightMeta.addContributor(this);
-		
-		log.debug("Labeled right-table {} ({}) as \"{}\" of {} ({}) based on explicit INNER JOIN", 
+		log.debug("Labeled right-table {} ({}) as \"{}\" of {} ({})", 
 			this.rightTable, this.rightAlias, this.label, this.leftTable, this.leftAlias);
 		
 		return true;
-	}
-	
-	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
-			String rightTable, String rightAttr) {
-		return (leftTable.equals(this.leftAlias) && leftAttr.equals(this.leftAttribute)
-				&& rightTable.equals(this.rightAlias) && rightAttr.equals(this.rightAttribute)) 
-				|| // side of equality doesn't matter
-				(rightTable.equals(this.leftAlias) &&  rightAttr.equals(this.leftAttribute)
-				&& leftTable.equals(this.rightAlias) && leftAttr.equals(this.rightAttribute));
 	}
 
 	@Override
@@ -222,8 +272,10 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		reset();
 		
 		try {
-			SelectNode select = QueryUtils.extractSelectNode(statement);
+			select = QueryUtils.extractSelectNode(statement);
 			
+			List<FromBaseTable> potentialLefts = new ArrayList<FromBaseTable>(1);
+			List<FromBaseTable> potentialRights = new ArrayList<FromBaseTable>(1);
 			FromList fromList = select.getFromList();
 			for( FromTable fromTable: fromList ) {
 				switch( fromTable.getNodeType() ) {
@@ -231,6 +283,26 @@ public class OneToAnyJoinRule implements ITranslationRule {
 						if( checkInnerJoin((JoinNode)fromTable) )
 							return true;
 						break;
+					case NodeTypes.FROM_BASE_TABLE:
+						if( isBaseTable(leftTable, fromTable) )
+							potentialLefts.add((FromBaseTable)fromTable);
+						if( isBaseTable(rightTable, fromTable) )
+							potentialRights.add((FromBaseTable)fromTable);
+						break;
+				}
+			}
+			
+			// saw some implicit inner joins that might match
+			if( potentialLefts.size() > 0 && potentialRights.size() > 0 ) {
+				for( FromBaseTable leftTable: potentialLefts ) {
+					for( FromBaseTable rightTable: potentialRights ) {
+						// not a real join
+						if( leftTable == rightTable )
+							continue;
+						
+						if( checkImplicitJoin(leftTable, rightTable) )
+							return true;
+					}
 				}
 			}
 		} catch( StandardException e ) {
