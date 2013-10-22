@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor;
+package edu.gatech.sqltutor.rules;
 
 import com.akiban.sql.parser.StatementNode;
 

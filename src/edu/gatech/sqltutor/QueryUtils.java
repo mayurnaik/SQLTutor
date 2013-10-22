@@ -4,9 +4,12 @@ import java.util.regex.Pattern;
 
 import com.akiban.sql.parser.CursorNode;
 import com.akiban.sql.parser.NodeTypes;
+import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+
+import edu.gatech.sqltutor.rules.RuleMetaData;
 
 /**
  * Static utility functions related to SQL queries.
@@ -48,5 +51,29 @@ public class QueryUtils {
 			throw new IllegalArgumentException("statement is not a select node");
 		
 		return (SelectNode)select;
+	}
+	
+	/**
+	 * Checks if a node has already been handled.
+	 * 
+	 * @param node the node to check, must not be <code>null</code>
+	 * @return if the node is handled already
+	 */
+	public static boolean isHandled(QueryTreeNode node) {
+		RuleMetaData meta = (RuleMetaData)node.getUserData();
+		return meta != null && meta.isHandled();
+	}
+	
+	/**
+	 * Get a node's metadata, creating and attaching it if necessary.
+	 * 
+	 * @param node
+	 * @return the new or existing metadata
+	 */
+	public static RuleMetaData getOrInitMetaData(QueryTreeNode node) {
+		RuleMetaData meta = (RuleMetaData)node.getUserData();
+		if( meta == null )
+			node.setUserData(meta = new RuleMetaData());
+		return meta;
 	}
 }

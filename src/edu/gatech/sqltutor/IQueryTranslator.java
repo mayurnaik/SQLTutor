@@ -35,6 +35,9 @@ public interface IQueryTranslator {
 	/**
 	 * Returns the resulting translation.
 	 * @return the translation
+	 * 
+	 * @throws IllegalStateException if required information (e.g. the query) has not been provided 
+	 * @throws SQLTutorException if any other problem occurs generating the translation
 	 */
-	public String getTranslation();
+	public String getTranslation() throws SQLTutorException;
 }
