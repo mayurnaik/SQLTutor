@@ -1,8 +1,12 @@
 package edu.gatech.sqltutor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.CursorNode;
+import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
@@ -75,5 +79,30 @@ public class QueryUtils {
 		if( meta == null )
 			node.setUserData(meta = new RuleMetaData());
 		return meta;
+	}
+	
+	/**
+	 * Build a map from exposed table names to the from-list elements they reference.
+	 * 
+	 * <p>
+	 * Given:<br/>
+	 * <code>SELECT ... FROM foo f, bar, (SELECT ...) AS baz</code><br />
+	 * The map would be:<br />
+	 * "f" =&gt; foo (FromBaseTable instance)<br />
+	 * "bar" =&gt; bar (FromBaseTable instance)<br />
+	 * "baz" =&gt; FromSubquery instance for the subquery<br />
+	 * </p>
+	 * 
+	 * @param select the select node to build a map for
+	 * @return the alias map
+	 * @throws StandardException
+	 */
+	public static Map<String, FromTable> buildTableAliasMap(SelectNode select) 
+			throws StandardException {
+		Map<String, FromTable> aliasMap = new HashMap<String, FromTable>();
+		for( FromTable fromTable: select.getFromList() ) {
+			aliasMap.put(fromTable.getExposedName(), fromTable);
+		}
+		return aliasMap;
 	}
 }

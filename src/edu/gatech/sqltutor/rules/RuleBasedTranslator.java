@@ -4,23 +4,68 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Stack;
+
+import objects.DatabaseTable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.SQLParser;
+import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 
-import objects.DatabaseTable;
 import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 
 public class RuleBasedTranslator implements IQueryTranslator {
+	private static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
+	
 	private String query;
 	private List<DatabaseTable> tables;
 	private String result;
 	private List<ITranslationRule> translationRules;
-
+	private SelectNode select;
+	
+	/** Counter for applications of a rule. */
+	private static class RuleCount {
+		private ITranslationRule rule;
+		private int count;
+		public RuleCount(ITranslationRule rule) {
+			this.rule = rule;
+		}
+		
+		public void increment() { ++count; }
+		public ITranslationRule getRule() { return rule; }
+		public int getCount() { return count; }
+		
+		@Override
+		public String toString() {
+			return String.format("({}x) {}", count, rule);
+		}
+	}
+	
+	private static class RuleCounter {
+		private List<RuleCount> counts = new ArrayList<RuleCount>();
+		public RuleCounter() { }
+		public void ruleApplied(ITranslationRule rule) {
+			RuleCount count = null;
+			if( counts.size() > 0 )
+				count = counts.get(counts.size()-1);
+			if( count == null || !count.getRule().equals(rule) ) {
+				count = new RuleCount(rule);
+				counts.add(count);
+			}
+			count.increment();
+		}
+		
+		@Override
+		public String toString() {
+			return "RuleCounter{" + counts + "}";
+		}
+	}
+	
 	public RuleBasedTranslator() { }
 	
 	public RuleBasedTranslator(String query) {
@@ -41,14 +86,25 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		SQLParser parser = new SQLParser();
 		try {
 			StatementNode statement = parser.parseStatement(query);
+			try {
+				select = QueryUtils.extractSelectNode(statement);
+			} catch( IllegalArgumentException e ) {
+				throw new SQLTutorException("Wrong query type for: " + query, e);
+			}
+			
+			
+			RuleCounter counter = new RuleCounter();
 			
 			sortRules();
 			for( ITranslationRule rule: translationRules ) {
 				while( rule.apply(statement) ) {
 					// apply each rule as many times as possible
+					counter.ruleApplied(rule);
 					// FIXME non-determinism when precedences match?
 				}
 			}
+			
+			log.info("{}", counter);
 			
 			// TODO now lower into natural language
 			

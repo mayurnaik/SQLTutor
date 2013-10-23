@@ -6,6 +6,7 @@ import java.util.List;
 
 
 public class RuleMetaData {
+	private boolean isInOutput = true;
 	private boolean isHandled;
 	private String label;
 	
@@ -56,6 +57,14 @@ public class RuleMetaData {
 		return ofAlias;
 	}
 	
+	public boolean isInOutput() {
+		return isInOutput;
+	}
+
+	public void setInOutput(boolean isInOutput) {
+		this.isInOutput = isInOutput;
+	}
+
 	@Override
 	public String toString() {
 		return String.format(
