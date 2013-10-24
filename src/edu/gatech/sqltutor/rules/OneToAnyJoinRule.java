@@ -97,26 +97,26 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	
 	protected String label;
-	protected String leftTable;
-	protected String rightTable;
+	protected String oneTable;
+	protected String anyTable;
 	
 	// FIXME multiple column keys?
-	protected String leftAttribute;
-	protected String rightAttribute;
+	protected String oneAttribute;
+	protected String anyAttribute;
 	
-	protected String leftAlias;
-	protected String rightAlias;
+	protected String oneAlias;
+	protected String anyAlias;
 	protected SelectNode select;
 	
 	public OneToAnyJoinRule() { }	
 	
-	public OneToAnyJoinRule(String label, String leftTable, String rightTable, 
-			String leftAttribute, String rightAttribute) {
+	public OneToAnyJoinRule(String label, String oneTable, String anyTable, 
+			String oneAttribute, String anyAttribute) {
 		this.label = label;
-		this.leftTable = leftTable;
-		this.rightTable = rightTable;
-		this.leftAttribute = leftAttribute;
-		this.rightAttribute = rightAttribute;
+		this.oneTable = oneTable;
+		this.anyTable = anyTable;
+		this.oneAttribute = oneAttribute;
+		this.anyAttribute = anyAttribute;
 	}
 
 	@Override
@@ -126,8 +126,8 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	protected void reset() {
 		this.select = null;
-		this.leftAlias = null;
-		this.rightAlias = null;
+		this.oneAlias = null;
+		this.anyAlias = null;
 	}
 	
 	private boolean isBaseTable(String tableName, ResultSetNode node) 
@@ -150,21 +150,30 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		ResultSetNode leftResult = join.getLogicalLeftResultSet(),
 				rightResult = join.getLogicalRightResultSet();
 		
-		if( !isBaseTable(leftTable, leftResult) || !isBaseTable(rightTable, rightResult) ) {
+		if( !isBaseTable(oneTable, leftResult) || !isBaseTable(anyTable, rightResult) ) {
 			log.debug("Rejected join node based on table operands.");
 			return false;
 		}
-		
-		leftAlias  = ((FromBaseTable)leftResult).getExposedName();
-		rightAlias = ((FromBaseTable)rightResult).getExposedName();
-		
-		log.debug("leftAlias={}, rightAlias={}", leftAlias, rightAlias);
 		
 		ValueNode on = join.getJoinClause();
 		
 		// don't check if it's already been handled
 		if( QueryUtils.isHandled(on) )
 			return false;
+		
+		if( checkInnerJoin(leftResult, rightResult, on) )
+			return true;
+		if( checkInnerJoin(rightResult, leftResult, on) )
+			return true;
+		
+		return false;
+	}
+		
+	private boolean checkInnerJoin(ResultSetNode leftResult, ResultSetNode rightResult, ValueNode on) {
+		oneAlias  = ((FromBaseTable)leftResult).getExposedName();
+		anyAlias = ((FromBaseTable)rightResult).getExposedName();
+		
+		log.debug("Trying oneAlias={}, anyAlias={}", oneAlias, anyAlias);
 		
 		// TODO for now only match simple equality
 		if( NodeTypes.BINARY_EQUALS_OPERATOR_NODE != on.getNodeType() ) {
@@ -180,7 +189,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		
 		RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightResult);
 		rightMeta.setLabel(this.label);
-		rightMeta.setOfAlias(leftAlias);
+		rightMeta.setOfAlias(oneAlias);
 		rightMeta.addContributor(this);
 		
 		log.debug("Labeled based on explicit INNER JOIN");
@@ -190,17 +199,17 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
 			String rightTable, String rightAttr) {
-		return (leftTable.equals(this.leftAlias) && leftAttr.equals(this.leftAttribute)
-				&& rightTable.equals(this.rightAlias) && rightAttr.equals(this.rightAttribute)) 
+		return (leftTable.equals(this.oneAlias) && leftAttr.equals(this.oneAttribute)
+				&& rightTable.equals(this.anyAlias) && rightAttr.equals(this.anyAttribute)) 
 				|| // side of equality doesn't matter
-				(rightTable.equals(this.leftAlias) &&  rightAttr.equals(this.leftAttribute)
-				&& leftTable.equals(this.rightAlias) && leftAttr.equals(this.rightAttribute));
+				(rightTable.equals(this.oneAlias) &&  rightAttr.equals(this.oneAttribute)
+				&& leftTable.equals(this.anyAlias) && leftAttr.equals(this.anyAttribute));
 	}
 	
 	private boolean checkImplicitJoin(FromBaseTable leftRef, FromBaseTable rightRef) 
 			throws StandardException {
-		leftAlias = leftRef.getExposedName();
-		rightAlias = rightRef.getExposedName();
+		oneAlias = leftRef.getExposedName();
+		anyAlias = rightRef.getExposedName();
 		
 		ValueNode where = select.getWhereClause();
 		
@@ -215,7 +224,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 						if( checkBinaryEquality((BinaryRelationalOperatorNode)toCheck)) {
 							RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightRef);
 							rightMeta.setLabel(this.label);
-							rightMeta.setOfAlias(leftAlias);
+							rightMeta.setOfAlias(oneAlias);
 							rightMeta.addContributor(this);
 							
 							log.debug("Label based on implicit join and WHERE clause");
@@ -262,7 +271,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		onMeta.addContributor(this);
 		
 		log.debug("Labeled right-table {} ({}) as \"{}\" of {} ({})", 
-			this.rightTable, this.rightAlias, this.label, this.leftTable, this.leftAlias);
+			this.anyTable, this.anyAlias, this.label, this.oneTable, this.oneAlias);
 		
 		return true;
 	}
@@ -284,9 +293,9 @@ public class OneToAnyJoinRule implements ITranslationRule {
 							return true;
 						break;
 					case NodeTypes.FROM_BASE_TABLE:
-						if( isBaseTable(leftTable, fromTable) )
+						if( isBaseTable(oneTable, fromTable) )
 							potentialLefts.add((FromBaseTable)fromTable);
-						if( isBaseTable(rightTable, fromTable) )
+						if( isBaseTable(anyTable, fromTable) )
 							potentialRights.add((FromBaseTable)fromTable);
 						break;
 				}
@@ -320,35 +329,35 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	}
 
 	public String getLeftTable() {
-		return leftTable;
+		return oneTable;
 	}
 
 	public void setLeftTable(String leftTable) {
-		this.leftTable = leftTable;
+		this.oneTable = leftTable;
 	}
 
 	public String getRightTable() {
-		return rightTable;
+		return anyTable;
 	}
 
 	public void setRightTable(String rightTable) {
-		this.rightTable = rightTable;
+		this.anyTable = rightTable;
 	}
 
 	public String getLeftAttribute() {
-		return leftAttribute;
+		return oneAttribute;
 	}
 
 	public void setLeftAttribute(String leftAttribute) {
-		this.leftAttribute = leftAttribute;
+		this.oneAttribute = leftAttribute;
 	}
 
 	public String getRightAttribute() {
-		return rightAttribute;
+		return anyAttribute;
 	}
 
 	public void setRightAttribute(String rightAttribute) {
-		this.rightAttribute = rightAttribute;
+		this.anyAttribute = rightAttribute;
 	}
 	
 }
