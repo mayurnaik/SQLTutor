@@ -46,7 +46,10 @@ public class TutorialBean {
 		if(getUserBean().getSelectedSchema() != null) {
 			schemaAttributes = getUserBean().getSelectedSchema().split(" ");
 		} else {
-			return; //eventually redirect to session expired page.
+			//default to company
+			schemaAttributes = new String[2];
+			schemaAttributes[0] = "PostgreSQL";
+			schemaAttributes[1] = "company";
 		}
 		final String databaseConnector = schemaAttributes[0];
 		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
@@ -157,6 +160,8 @@ public class TutorialBean {
 				questions.add(question.getQuestion());
 			}
 		} else {	// just a place holder for every other schema.
+			answers.clear();
+			questions.clear();
 			answers.add("");
 			questions.add("");
 		}

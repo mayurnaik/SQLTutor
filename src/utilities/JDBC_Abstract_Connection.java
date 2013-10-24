@@ -123,7 +123,7 @@ public abstract class JDBC_Abstract_Connection {
 			conn = getConnection(DB_NAME_SYSTEM);
 			
 			final String SELECT = 
-					"SELECT * FROM query WHERE schema=" + schemaName;
+					"SELECT * FROM query WHERE schema='" + schemaName + "'";
 			statement = conn.createStatement();
 			ResultSet result = statement.executeQuery(SELECT);
 			
