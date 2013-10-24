@@ -43,12 +43,12 @@
 		<div style="position:absolute;width:600;height:400;top:auto;left:475">
 			<h:panelGrid columns="2">
 				<h:outputText value="Database: " />
-				<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+				<p:selectOneMenu id="database" value="#{userBean.selectedSchema}"
 					required="true" requiredMessage="Please select a database."
 					effect="fade">
-					<f:selectItems value="#{databaseSelectionBean.databases}"
-						itemValue="#{databaseSelectionBean.databases}"
-						itemLabel="#{databaseSelectionBean.databases}" />
+					<f:selectItems value="#{schemaSelectionBean.schemas}"
+						itemValue="#{schemaSelectionBean.schemas}"
+						itemLabel="#{schemaSelectionBean.schemas}" />
 				</p:selectOneMenu>
 			</h:panelGrid>
 			<p:commandButton id="databaseButton" value="Show Schema" />

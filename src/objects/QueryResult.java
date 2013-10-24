@@ -9,7 +9,7 @@ public class QueryResult {
     
     public QueryResult() {}
     
-    public QueryResult(String databaseName, List<String> columns, List<List<String>> data) {
+    public QueryResult(List<String> columns, List<List<String>> data) {
     	this.columns = columns;
     	this.data = data;
     }

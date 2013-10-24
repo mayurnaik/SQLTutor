@@ -28,7 +28,7 @@
 				</p:password>
 				<p/>
 				<h:outputText value="Database: " />
-				<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
+				<p:selectOneMenu id="database" value="#{userBean.selectedSchema}"
 					required="true" requiredMessage="Please select a database."
 					effect="fade">
 					<f:selectItems value="#{databaseSelectionBean.databases}"

@@ -26,7 +26,7 @@ public class TutorialBean {
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
 	private JDBC_Abstract_Connection connection;
-	private String selectedDatabase;
+	private String selectedSchema;
 	private List<DatabaseTable> tables;
 	private List<String> questions = new ArrayList<String>();
 	private List<String> answers = new ArrayList<String>();
@@ -42,13 +42,13 @@ public class TutorialBean {
 
 	@PostConstruct
 	public void init() {
-		String[] databaseAttributes;
-		if(getUserBean().getSelectedDatabase() != null) {
-			databaseAttributes = getUserBean().getSelectedDatabase().split(" ");
+		String[] schemaAttributes;
+		if(getUserBean().getSelectedSchema() != null) {
+			schemaAttributes = getUserBean().getSelectedSchema().split(" ");
 		} else {
 			return; //eventually redirect to session expired page.
 		}
-		final String databaseConnector = databaseAttributes[0];
+		final String databaseConnector = schemaAttributes[0];
 		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
 			connection = new JDBC_PostgreSQL_Connection();
 		} else if (databaseConnector.equalsIgnoreCase("MySQL")) {
@@ -56,8 +56,8 @@ public class TutorialBean {
 		} else {
 			return; //eventually redirect to message about connector not being supported
 		}
-		selectedDatabase = databaseAttributes[1];
-		tables = connection.getTables(selectedDatabase);
+		selectedSchema = schemaAttributes[1];
+		tables = connection.getTables(selectedSchema);
 		setQuestionsAndAnswers();
 	}
 	
@@ -70,7 +70,7 @@ public class TutorialBean {
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query);
+			queryResult = connection.getQueryResult(selectedSchema, query);
 			feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
 				queryEquivalenceCheck();
@@ -85,7 +85,7 @@ public class TutorialBean {
 	
 	public void queryEquivalenceCheck() {
 		try {
-			answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
+			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
 			if(queryResult.getData().equals(answerResult.getData())) {
 				resultSetFeedback = "Correct.";
 			} else {
@@ -99,7 +99,7 @@ public class TutorialBean {
 	
 	public void queryDifferenceCheck() {
 		try {
-			answerResult = connection.getQueryResult(selectedDatabase, answers.get(questionIndex));
+			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
 		} catch(SQLException e) {
 			resultSetFeedback = "The stored answer was malformed.";
 		}
@@ -108,8 +108,8 @@ public class TutorialBean {
 		String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
 		try {
 			// The result set of all ADDITIONAL data gathered by the user's query.
-			queryDiffResult = connection.getQueryResult(selectedDatabase, queryDiffAnswer);
-			answerDiffResult = connection.getQueryResult(selectedDatabase, answerDiffQuery);
+			queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
+			answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
 		} catch(SQLException e) {;
 			if(e.getMessage().contains("columns")) {
 				resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
@@ -135,7 +135,7 @@ public class TutorialBean {
 	
 	public void setQuestionsAndAnswers() {
 		// currently hard coded answers (which get converted to questions). This will be phased out.
-		if (selectedDatabase.equalsIgnoreCase("company")) {
+		if (selectedSchema.equalsIgnoreCase("company")) {
 			answers.clear();
 			questions.clear();
 			answers.add("SELECT id, first_name FROM employee, department");
@@ -147,7 +147,16 @@ public class TutorialBean {
 				question = new Question(answers.get(i), tables);
 				questions.add(question.getQuestion());
 			}
-		} else {	// just a place holder for every other database.
+		} else if (selectedSchema.equalsIgnoreCase("sales")) {
+			answers.clear();
+			questions.clear();
+			answers.add("SELECT NAME, REP_OFFICE FROM salesreps");
+			Question question;
+			for(int i = 0; i < answers.size(); i++ ) {
+				question = new Question(answers.get(i), tables);
+				questions.add(question.getQuestion());
+			}
+		} else {	// just a place holder for every other schema.
 			answers.add("");
 			questions.add("");
 		}
@@ -198,8 +207,8 @@ public class TutorialBean {
 		return feedbackNLP;
 	}
 	
-	public String getSelectedDatabase() {
-		return selectedDatabase;
+	public String getSelectedSchema() {
+		return selectedSchema;
 	}
 
 	public List<DatabaseTable> getTables() {

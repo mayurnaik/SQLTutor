@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 /**
  * UserBean is a class attended to handle user login status, registration, 
- * and database selection.
+ * and Schema selection.
  * @author		William J. Holton
  * @version		0.0
  */
@@ -30,18 +30,15 @@ public class UserBean implements Serializable {
 	private String username;
 	private String password;
 	private boolean loggedIn;
-	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Database Name}". */
-	private String selectedDatabase;
+	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
+	private String selectedSchema;
 
-	/** 
-	 * On initialization, the UserBean class will populate the selection list of databases.
-	 */
 	public UserBean() {
 		loggedIn = false;
 	}
 	
 	/** 
-	 * When the user submits his or her username, password, and database selection, this method will
+	 * When the user submits his or her username, password, and Schema selection, this method will
 	 * verify the given credentials. These attributes are passed such that the username is not case-sensitive.
 	 * If the username is registered and the password does not match, an error message will display above the input
 	 * boxes. Otherwise, if the password did match, the 'loggedIn' attribute will be set to true and the user will be
@@ -108,15 +105,15 @@ public class UserBean implements Serializable {
 	/** 
 	 * @return		The database to be used by the tutorial.
 	 */
-	public String getSelectedDatabase() {
-		return selectedDatabase;
+	public String getSelectedSchema() {
+		return selectedSchema;
 	}
 
 	/** 
 	 * @param selectedDatabase		Sets the database to be used by the tutorial.
 	 */
-	public void setSelectedDatabase(String selectedDatabase) {
-		this.selectedDatabase = selectedDatabase;
+	public void setSelectedSchema(String selectedSchema) {
+		this.selectedSchema = selectedSchema;
 	}
 	
 	/** 

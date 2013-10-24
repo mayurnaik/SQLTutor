@@ -1,14 +1,11 @@
 package beans;
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.faces.application.FacesMessage;
-import javax.faces.application.FacesMessage.Severity;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -20,52 +17,48 @@ import edu.gatech.sqltutor.DatabaseManager;
 
 @ManagedBean
 @ViewScoped
-public class DatabaseSelectionBean implements Serializable {
+public class SchemaSelectionBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
-	private List<SelectItem> databases;
+	private List<SelectItem> schemas;
 
 	/** 
 	 * On initialization, the UserBean class will populate the selection list of databases.
 	 */
-	public DatabaseSelectionBean() {
-		databases = new ArrayList<SelectItem>();
-		/*
-		SelectItemGroup groupOne = new SelectItemGroup("MySQL");
-		SelectItem[] mysqlDatabases = new SelectItem[] {new SelectItem("", "")};
-		groupOne.setSelectItems(mysqlDatabases);
-		*/
-		SelectItemGroup groupTwo = new SelectItemGroup("PostgreSQL");
-		SelectItem[] postgresqlDatabases = new SelectItem[] {new SelectItem("PostgreSQL company", "Company")};
-		groupTwo.setSelectItems(postgresqlDatabases);
-		//databases.add(groupOne);
-		databases.add(groupTwo);
+	public SchemaSelectionBean() {
+		schemas = new ArrayList<SelectItem>();
 	}
 	
 	@PostConstruct
 	public void refreshList() {
 		try {
-			List<String> schemas = databaseManager.getUserSchemas();
+			List<String> userSchemas = databaseManager.getUserSchemas();
 			
 			SelectItemGroup postgres = new SelectItemGroup("PostgreSQL");
-			SelectItem[] schemaItems = new SelectItem[schemas.size()];
+			SelectItem[] schemaItems = new SelectItem[userSchemas.size()];
 			for( int i = 0; i < schemaItems.length; ++i ) {
-				String schema = schemas.get(i);
+				String schema = userSchemas.get(i);
 				schemaItems[i] = new SelectItem("PostgreSQL " + schema, schema);
 			}
 			postgres.setSelectItems(schemaItems);
-			databases.clear();
-			databases.add(postgres);
+			schemas.clear();
+			schemas.add(postgres);
 		} catch( SQLException e ) {
 			e.printStackTrace();
 			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
 				"Internal error retrieving the schema list.", null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		}
+	}
+	
+	public void handleChange() {
+		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, 
+				"Your schema selection has been changed.", null);
+		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 	
 	public DatabaseManager getDatabaseManager() {
@@ -80,14 +73,14 @@ public class DatabaseSelectionBean implements Serializable {
 	/** 
 	 * @return 		The list of SelectItems which will populate the database selection menu.
 	 */
-	public List<SelectItem> getDatabases() {
-		return databases;
+	public List<SelectItem> getSchemas() {
+		return schemas;
 	}
 
 	/** 
 	 * @param databases		Sets the list of databases which will populate the database selection menu.
 	 */
-	public void setDatabases(List<SelectItem> databases) {
-		this.databases = databases;
+	public void setSchemas(List<SelectItem> schemas) {
+		this.schemas = schemas;
 	}
 }

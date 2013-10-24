@@ -54,8 +54,8 @@ public class FreeEntryPageBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		String[] databaseAttributes;
-		if(getUserBean().getSelectedDatabase() != null) {
-			databaseAttributes = getUserBean().getSelectedDatabase().split(" ");
+		if(getUserBean().getSelectedSchema() != null) {
+			databaseAttributes = getUserBean().getSelectedSchema().split(" ");
 		} else {
 			return; //eventually redirect to session expired page.
 		}
@@ -70,7 +70,7 @@ public class FreeEntryPageBean implements Serializable {
 		selectedDatabase = databaseAttributes[1];
 		tables = connection.getTables(selectedDatabase);
 		
-		userQueries = connection.getUserQueries();
+		userQueries = connection.getUserQueries(selectedDatabase);
 	}
 	
 	public void devRedirect() throws IOException {

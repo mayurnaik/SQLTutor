@@ -17,18 +17,34 @@
 				<p:menuitem value="Schema Upload" action="SchemaUploadPage.xhtml?faces-redirect=true" 
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
 			</p:submenu>
+			<p:menuitem value="Schema Options" icon="ui-icon-disk" type="button" style="margin-right:20px"
+				onclick="PF('schema_dlg').show();" rendered="#{userBean.isLoggedIn()}"/>
+			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
+				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
+			<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
+				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
 			<p:submenu label="Contact Us" icon="ui-icon-contact" style="margin-right:10px;">
 				<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
 				<p:menuitem value="Mayur Naik" icon="ui-icon-mail-closed" onclick="location.href='mailto:naik@cc.gatech.edu'"/>
 				<p:menuitem value="Jake Cobb" icon="ui-icon-mail-closed" onclick="location.href='mailto:jake.cobb@gatech.edu'"/>
 				<p:menuitem value="Will Holton" icon="ui-icon-mail-closed" onclick="location.href='mailto:wholton@gatech.edu'"/>
 			</p:submenu>
-			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
-				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
-			<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
-				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
 		</p:menubar>
 	</h:form>
+	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
+		modal="true" width="400" height="150" resizable="false" appentTo="@(body)">
+		<h:form id="schemaForm">
+			<h:panelGrid id="schemaGrid" columns="2">
+				<p:outputLabel value="Please select a schema:" />
+				<p:selectOneMenu id="schema" value="#{userBean.selectedSchema}" effect="fade">
+					<f:selectItems value="#{schemaSelectionBean.schemas}" itemValue="#{schemaSelectionBean.schemas}"
+						itemLabel="#{schemaSelectionBean.schemas}" />
+					<p:ajax update="messages" listener="#{schemaSelectionBean.handleChange()}"/> 
+				</p:selectOneMenu>	
+			</h:panelGrid>
+			<p:messages id="messages"/>
+		</h:form>
+	</p:dialog>
 	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg" 
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
 		<h:form id="dlg_form">
@@ -46,14 +62,6 @@
 						<f:validateLength minimum="3" maximum="12" />
 					</p:password>
 					<br/>
-					<h:outputText value="Database: " />
-					<p:selectOneMenu id="database" value="#{userBean.selectedDatabase}"
-						required="true" requiredMessage="Please select a database."
-						effect="fade">
-						<f:selectItems value="#{databaseSelectionBean.databases}"
-							itemValue="#{databaseSelectionBean.databases}"
-							itemLabel="#{databaseSelectionBean.databases}" />
-					</p:selectOneMenu>
 				</h:panelGrid>
 				<p:messages/>
 			</p:panel>

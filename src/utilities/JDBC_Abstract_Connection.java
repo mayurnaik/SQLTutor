@@ -18,7 +18,8 @@ import edu.gatech.sqltutor.entities.UserQuery;
 
 
 public abstract class JDBC_Abstract_Connection {
-	protected final String DB_NAME = "sqltutor";
+	protected final String DB_NAME_SYSTEM = "sqltutor";
+	protected final String DB_NAME_SCHEMAS = "sqltutorschemas";
 	protected final String DB_MANAGER_USERNAME = "DB_Manager";
 	protected final String DB_READONLY_USERNAME = "readonly_user";
 	protected final String DB_PASSWORD = "SQLTutor!!!";
@@ -38,7 +39,7 @@ public abstract class JDBC_Abstract_Connection {
 		PreparedStatement statement = null;
 		
 		try {
-			conn = getConnection(DB_NAME);
+			conn = getConnection(DB_NAME_SYSTEM);
 			
 			Long id = query.getId();
 			if( id == null ) {
@@ -83,7 +84,7 @@ public abstract class JDBC_Abstract_Connection {
 		Statement statement = null;
 		
 		try {
-			conn = getConnection(DB_NAME);
+			conn = getConnection(DB_NAME_SYSTEM);
 			
 			final String SELECT = 
 					"SELECT * FROM query";
@@ -114,20 +115,58 @@ public abstract class JDBC_Abstract_Connection {
 		}
 	}
 	
+	public List<UserQuery> getUserQueries(String schemaName) {
+		Connection conn = null;
+		Statement statement = null;
+		
+		try {
+			conn = getConnection(DB_NAME_SYSTEM);
+			
+			final String SELECT = 
+					"SELECT * FROM query WHERE schema=" + schemaName;
+			statement = conn.createStatement();
+			ResultSet result = statement.executeQuery(SELECT);
+			
+			List<UserQuery> userQueries = new ArrayList<UserQuery>();
+			while( result.next() ) {
+				UserQuery query = new UserQuery();
+				query.setId(result.getLong("id"));
+				// FIXME the bean?
+				query.setUsername(result.getString("username"));
+				query.setSchema(result.getString("schema"));
+				query.setQuery(result.getString("sql"));
+				query.setUserDescription(result.getString("user_description"));
+				query.setTime(result.getDate("created"));
+				query.setSource(result.getString("source"));
+				
+				userQueries.add(query);
+			}
+			return userQueries;
+			
+		} catch( Exception e ) {
+			throw new RuntimeException(e); // FIXME exception type
+		} finally {
+			Utils.tryClose(statement);
+			Utils.tryClose(conn);
+		}
+	}
+	
 	/*
 	 * 
 	 */
-	public void log(String userQuery) {
+	public void log(String userQuery, String schemaName, String username) {
 		
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
 		try {
 			
-			connection = getConnection(DB_NAME);
-			final String update = "INSERT INTO \"log\" (\"query\") VALUES (?)";
+			connection = getConnection(DB_NAME_SYSTEM);
+			final String update = "INSERT INTO \"log\" (\"query\", \"schema\", \"user\") VALUES (?, ?, ?)";
 			preparedStatement = connection.prepareStatement(update);
 			preparedStatement.setString(1, userQuery);
+			preparedStatement.setString(2, schemaName);
+			preparedStatement.setString(3, username);
 			preparedStatement.executeUpdate();
 			 
 		} catch (Exception e) {
@@ -150,7 +189,7 @@ public abstract class JDBC_Abstract_Connection {
 		ResultSet resultSet = null;
 		
 		try {
-			connection = getConnection(DB_NAME);
+			connection = getConnection(DB_NAME_SYSTEM);
 			
 			// get the user's encryption salt
 			String query = "SELECT \"salt\", \"password\" FROM \"user\" WHERE \"username\" = ?";
@@ -165,10 +204,7 @@ public abstract class JDBC_Abstract_Connection {
 				
 				// use the password hasher to authenticate
 				return PasswordHasher.authenticate(attemptedPassword, encryptedPassword, salt);
-
-			} else {
-				System.out.println("Result set for query: "+query+" returned null");
-			}
+			} 
 			 
 		} catch (Exception e) {
 			
@@ -179,7 +215,6 @@ public abstract class JDBC_Abstract_Connection {
 			Utils.tryClose(connection);
 			Utils.tryClose(resultSet);
 		}
-		
 		return false;
 	}
 	
@@ -193,7 +228,7 @@ public abstract class JDBC_Abstract_Connection {
 		ResultSet resultSet = null;
 
 		try {
-			connection = getConnection(DB_NAME);
+			connection = getConnection(DB_NAME_SYSTEM);
 			final String query = "SELECT 1 FROM \"user\" WHERE \"username\" = ?";
 			
 			preparedStatement = connection.prepareStatement(query);
@@ -226,7 +261,7 @@ public abstract class JDBC_Abstract_Connection {
 		
 		try {
 			
-			connection = getConnection(DB_NAME);
+			connection = getConnection(DB_NAME_SYSTEM);
 			
 			final String update = "INSERT INTO \"user\" (\"username\", \"password\", \"salt\") VALUES (?, ?, ?)";
 			
@@ -242,7 +277,6 @@ public abstract class JDBC_Abstract_Connection {
 			
 			preparedStatement.executeUpdate();
 
-			 
 		} catch (Exception e) {
 			
 			System.err.println("Exception: " + e.getMessage());
@@ -253,20 +287,15 @@ public abstract class JDBC_Abstract_Connection {
 		}
 	}
 	
-	public List<DatabaseTable> getTables(String databaseName) {
-		return getTables(databaseName, null);
-	}
-	
-	public List<DatabaseTable> getTables(String databaseName, String schemaName) {
+	public List<DatabaseTable> getTables(String schemaName) {
 		Connection connection = null;
 		ResultSet resultSet = null;
 		
 		try {
-			
-			connection = getConnection(databaseName, DB_READONLY_USERNAME);
-			
+			connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
+
 			DatabaseMetaData metadata = connection.getMetaData();
-			resultSet = metadata.getTables(null, null, "%", new String[] {"TABLE"});
+			resultSet = metadata.getTables(null, schemaName, "%", new String[] {"TABLE"});
 			ArrayList<DatabaseTable> tables = new ArrayList<DatabaseTable>();
 			while(resultSet.next()) {
 				// the API tells us the third element is the TABLE_NAME string.
@@ -282,8 +311,6 @@ public abstract class JDBC_Abstract_Connection {
 			}
 			
 			return tables;
-
-			 
 		} catch (Exception e) {
 			
 			System.err.println("Exception: " + e.getMessage());
@@ -295,12 +322,12 @@ public abstract class JDBC_Abstract_Connection {
 		return null;
 	}
 	
-	public QueryResult getQueryResult(String databaseName, String query) throws SQLException {
-		Connection connection = getConnection(databaseName, DB_READONLY_USERNAME);
+	public QueryResult getQueryResult(String schemaName, String query) throws SQLException {
+		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
+		statement.execute("SET CURRENT_SCHEMA=" + schemaName);
 		ResultSet resultSet = statement.executeQuery(query);
 		ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-		QueryResult queryResult;
 	
 		int columnCount = resultSetMetaData.getColumnCount();
 		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
@@ -316,18 +343,17 @@ public abstract class JDBC_Abstract_Connection {
 			queryData.add(rowData);
 		}
 		// return the query result object
-		queryResult = new QueryResult(databaseName, 
-				columnNames, 
-				queryData);
+		QueryResult queryResult = new QueryResult(columnNames, queryData);
 		Utils.tryClose(resultSet);
 		Utils.tryClose(connection);
 		Utils.tryClose(statement);
 		return queryResult;
 	}
 	
-	public void verifyQuery(String databaseName, String query) throws SQLException {
-		Connection connection = getConnection(databaseName, DB_READONLY_USERNAME);
+	public void verifyQuery(String schemaName, String query) throws SQLException {
+		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
+		statement.execute("SET CURRENT_SCHEMA=" + schemaName);
 		statement.executeQuery(query);
 		Utils.tryClose(connection);
 		Utils.tryClose(statement);
