@@ -4,8 +4,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
 
-import edu.gatech.sqltutor.Utils;
-
 
 public class JDBC_PostgreSQL_Connection extends JDBC_Abstract_Connection {
 	protected static final String DB_CONNECTION_STRING = "jdbc:postgresql://localhost/";

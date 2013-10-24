@@ -302,7 +302,7 @@ public abstract class JDBC_Abstract_Connection {
 				tables.add(new DatabaseTable(resultSet.getString(3)));
 			}
 			for(int i=0; i < tables.size(); i++) {
-				resultSet = metadata.getColumns(null, null, tables.get(i).getTableName(), null);
+				resultSet = metadata.getColumns(null, schemaName, tables.get(i).getTableName(), null);
 				ArrayList<String> columns = new ArrayList<String>();
 				while(resultSet.next()) {
 					columns.add(resultSet.getString(4));

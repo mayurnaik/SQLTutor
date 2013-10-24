@@ -42,6 +42,7 @@
 					<p:ajax update="messages" listener="#{schemaSelectionBean.handleChange()}"/> 
 				</p:selectOneMenu>	
 			</h:panelGrid>
+			<!-- Probably want to make this run on a submit button rather than just auto-change and reload -->
 			<p:messages id="messages"/>
 		</h:form>
 	</p:dialog>
