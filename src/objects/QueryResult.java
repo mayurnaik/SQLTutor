@@ -9,6 +9,12 @@ public class QueryResult {
     
     public QueryResult() {}
     
+    @SuppressWarnings("unchecked")
+	public QueryResult(QueryResult queryResult) {
+    	this.columns = (List<String>) ((ArrayList<String>)queryResult.getColumns()).clone();
+    	this.data = (List<List<String>>) ((ArrayList<List<String>>)queryResult.getData()).clone();
+    }
+    
     public QueryResult(List<String> columns, List<List<String>> data) {
     	this.columns = columns;
     	this.data = data;

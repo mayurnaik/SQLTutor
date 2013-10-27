@@ -354,7 +354,7 @@ public abstract class JDBC_Abstract_Connection {
 	}
 	
 	public void verifyQuery(String schemaName, String query) throws SQLException {
-		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_MANAGER_USERNAME);
+		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
 		statement.execute("set search_path to '" + schemaName + "'");
 		statement.executeQuery(query);

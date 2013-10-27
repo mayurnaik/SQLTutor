@@ -1,16 +1,16 @@
 package beans;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import objects.DatabaseTable;
@@ -19,6 +19,9 @@ import objects.Question;
 import utilities.JDBC_Abstract_Connection;
 import utilities.JDBC_MySQL_Connection;
 import utilities.JDBC_PostgreSQL_Connection;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 @ManagedBean
 @ViewScoped
@@ -69,7 +72,6 @@ public class TutorialBean {
 			queryResult = connection.getQueryResult(selectedSchema, query);
 			feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			setResultSetDiffs();
-			
 		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 			resultSetFeedback = "Incorrect.";
@@ -77,69 +79,98 @@ public class TutorialBean {
 	} 
 	
 	public void setResultSetDiffs() {
-		QueryResult[] resultSetDiffs = null;
-		if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
-			resultSetDiffs = compareQueries(true, true); //false true when it is ready
-		} else {
-			resultSetDiffs = compareQueries(true, false); //false, false when it is ready
-		} 
-		//queryDiffResult = resultSetDiffs[0]; 
-		//answerDiffResult = resultSetDiffs[1];
-	}
-	
-	public QueryResult[] compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
-		QueryResult[] resultSetDiffs = null;
-		
 		try {
 			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
+			queryDiffResult = new QueryResult(queryResult);
+			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
+			queryDiffResult.getData().removeAll(answerResult.getData());
+			answerDiffResult = new QueryResult(answerResult);
+			answerDiffResult.getColumns().removeAll(queryResult.getColumns());
+			answerDiffResult.getData().removeAll(queryResult.getData());
 			
+			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
+				compareQueries(false, true); //false true when it is ready
+			} else {
+				compareQueries(false, false); //false, false when it is ready
+			} 
+			
+		} catch(SQLException e) {
+			resultSetFeedback = "The stored answer was malformed." + e.getMessage();
+		}
+	}
+	
+	public void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
+		
+		if(!queryResult.getColumns().containsAll(answerResult.getColumns())) {
+			resultSetFeedback = "Incorrect. Your query's columns did not match the stored answer's. Check your attributes.";
+		} else {
 			if(columnOrderMatters && rowOrderMatters) {
-				if(answerResult.getColumns().size() == queryResult.getColumns().size()) {
-					if(answerResult.equals(queryResult)) {
-						resultSetFeedback = "Correct!";
-					} else {
-						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-						//FIXME perhaps more specific feedback? different row data/order, order by? conditionals? different attributes?
-					}
+				if(answerResult.equals(queryResult)) {
+					resultSetFeedback = "Correct!";
 				} else {
-					resultSetFeedback = "Incorrect. Your query's number of columns did not match the stored answer's. Check your attributes.";
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+					//FIXME perhaps more specific feedback? different row data/order, order by? conditionals? different attributes?
 				}
-				//FIXME Can now tell if they are equal or not... but how to return their differences?
 			} else if(columnOrderMatters && !rowOrderMatters) {
-				//    (Q1 EXCEPT Q2) UNION ALL (Q2 EXCEPT Q1)
 				String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
 				String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
-				queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
-				answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
-				if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
-					resultSetFeedback = "Correct.";
-				} else {
-					//column size and type difference is handled by the exception
-					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-					// FIXME find queryDiffResult in queryResult and mark green. append answerDiffResult to the bottom in red.
+				try {
+					queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
+					answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
+					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
+						resultSetFeedback = "Correct.";
+					} else {
+						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";			
+					}
+				} catch(SQLException e) {
+					if(e.getMessage().contains("columns")) {
+						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
+					} else if(e.getMessage().contains("type")) {
+						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
+					} 
 				}
 			} else if(!columnOrderMatters && rowOrderMatters) {
-				//FIXME For this we use a map structure that automatically sorts its keys to hold the entity names and a list to hold the data, thus: 
-				//new TreeMap<String, List<String>>(); 
-				//q1MapOfLists.equals(q2MapOfLists)
+				Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
+				Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
+				for(int i = 0; i < queryResult.getColumns().size(); i++) {
+					List<String> columnData = new ArrayList<String>();
+					for(int j = 0; j < queryResult.getData().size(); j++) {
+						columnData.add(queryResult.getData().get(j).get(i));
+					}
+					queryTree.put(queryResult.getColumns().get(i), columnData);
+				}
+				for(int i = 0; i < answerResult.getColumns().size(); i++) {
+					List<String> columnData = new ArrayList<String>();
+					for(int j = 0; j < answerResult.getData().size(); j++) {
+						columnData.add(answerResult.getData().get(j).get(i));
+					}
+					queryTree.put(answerResult.getColumns().get(i), columnData);
+				}
+				if(queryTree.equals(answerTree)) {
+					resultSetFeedback = "Correct.";
+				} else {
+					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
+				}
 			} else {
-				//FIXME Put the data of the result sets into two separate multisets/bags (Google's Guava can be used to get this structure in Java). This structure will count the appearance of the data, making things simple:
-				//q1Bag.equals(q2Bag)
-				// For my implementation I needed to see their differences. To do so, for each entry of the 
-				//second bag you will check if the first bag contains it. If so, remove one count of that entry 
-				//from both bags. In the end, the first bag will contain all entries which the second result set 
-				//did not contain, and the second bag will contain all entries which the first did not contain. 
-			}
-		} catch(SQLException e) {
-			if(e.getMessage().contains("columns")) {
-				resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
-			} else if(e.getMessage().contains("type")) {
-				resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
-			} else {
-				resultSetFeedback = "The stored answer was malformed." + e.getMessage();
+				Multiset<String> queryBag = HashMultiset.create();
+				Multiset<String> answerBag = HashMultiset.create();
+				for(int i = 0; i < queryResult.getColumns().size(); i++) {
+					for(int j = 0; j < queryResult.getData().size(); j++) {
+						queryBag.add(queryResult.getData().get(j).get(i));
+					}
+				}
+				for(int i = 0; i < answerResult.getColumns().size(); i++) {
+					for(int j = 0; j < answerResult.getData().size(); j++) {
+						answerBag.add(answerResult.getData().get(j).get(i));
+					}
+				}
+				if(queryBag.equals(answerBag)) {
+					resultSetFeedback = "Correct.";
+				} else {
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+				} 
 			}
 		}
-		return resultSetDiffs;
 	}
 	
 	public void submitFeedback() {
@@ -231,18 +262,18 @@ public class TutorialBean {
 		return tables;
 	}
 
-	public QueryResult getQueryDiffAnswer() {
-		return queryDiffResult;
-	}
-	
 	public QueryResult getAnswerResult() {
 		return answerResult;
 	}
 
-	public QueryResult getAnswerDiffQuery() {
+	public QueryResult getQueryDiffResult() {
+		return queryDiffResult;
+	}
+	
+	public QueryResult getAnswerDiffResult() {
 		return answerDiffResult;
 	}
-
+	
 	public String getResultSetFeedback() {
 		return resultSetFeedback;
 	}
