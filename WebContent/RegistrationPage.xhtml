@@ -3,7 +3,7 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<f:event type="preRenderView" listener="#{userBean.loginRedirect}" />
+<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
 <h:head>
 	<title>SQL Tutor</title>
 	<ui:insert name="menu">
@@ -12,7 +12,8 @@
 </h:head>
 <h:body>
 	<h:form id="mainform">
-		<p:panel id="panel" header="Login">
+		<h2>Registration</h2>
+		<p:panel id="panel" header="Register">
 			<p:focus context="panel" />
 			<h:panelGrid columns="3">
 				<h:outputLabel for="username" value="Username: " />
@@ -26,20 +27,9 @@
 					value="#{userBean.password}">
 					<f:validateLength minimum="3" maximum="12" />
 				</p:password>
-				<p/>
-				<h:outputText value="Database: " />
-				<p:selectOneMenu id="database" value="#{userBean.selectedSchema}"
-					required="true" requiredMessage="Please select a database."
-					effect="fade">
-					<f:selectItems value="#{databaseSelectionBean.databases}"
-						itemValue="#{databaseSelectionBean.databases}"
-						itemLabel="#{databaseSelectionBean.databases}" />
-				</p:selectOneMenu>
 			</h:panelGrid>
-			  
-			<!--  <p:captcha label="Captcha" required="true" secure="true"/> -->    
-			
-			<p:commandButton value="Submit" ajax="false" update="mainform" action="#{userBean.login}" />
+			<p:captcha label="Captcha" required="true" secure="true"/>   
+			<p:commandButton value="Submit" ajax="false" update="mainform" action="#{userBean.register}" />
 		</p:panel>
 		<p:messages />
 	</h:form>

@@ -12,8 +12,9 @@
 <h:body style="height:1000px;">
 	<h:form>
 		<h2>Welcome to SQL Tutor.</h2>
-			<br/>
-			<h:outputLabel value="Project description coming soon..."/>
+		<h:outputText value="Welcome to our beginnings. Project details coming soon..."/><p/>
+		<h:outputText rendered="#{userBean.isLoggedIn()}" value="Our tutorial is still under heavy construction. We recommend trying out our NLP Feedback Sampler while you visit."/>
+		<h:outputText rendered="#{!userBean.isLoggedIn()}" value="In the mean time, please login with our guest account (username: guest, password: guest) or click the registration button above."/>
 	</h:form>
 </h:body>
 </html>

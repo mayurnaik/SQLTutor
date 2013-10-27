@@ -20,21 +20,20 @@ import java.util.regex.Pattern;
  */
 @ManagedBean
 @SessionScoped
-public class UserBean implements Serializable {
+public class RegistrationBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	/** CONNECTION will be used to connect to the 'Users' PostgreSQL database for user name and password verification. */
 	private final JDBC_PostgreSQL_Connection CONNECTION = new JDBC_PostgreSQL_Connection();
-	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
-	private final String LOGIN_ERROR = "The username or password you entered is incorrect.";
-	private final String REGISTRATION_ERROR = "The username you entered is already registered.";
+	/** REGISTRATION_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
+	private final String REGISTRATION_ERROR = "The username you entered is registered. The password you entered is incorrect.";
 	private String username;
 	private String password;
 	private boolean loggedIn;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
 	private String selectedSchema;
 
-	public UserBean() {
+	public RegistrationBean() {
 		loggedIn = false;
 		selectedSchema = "PostgreSQL company";
 	}
@@ -48,25 +47,14 @@ public class UserBean implements Serializable {
 	 * will move on as if the credentials were correct.
 	 */
 	public void login() throws IOException { 
-		String loginMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":loginForm:loginMessages").getClientId();
-		if(!CONNECTION.isUsernameRegistered(username.toLowerCase()) || 
-				!CONNECTION.isPasswordCorrect(username.toLowerCase(), password)) {
-			
-			FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, null));
-			return;
-		} 
-		loggedIn = true;
-		FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage("Success."));
-		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
-	}
-	
-	public void register() throws IOException {
 		if(CONNECTION.isUsernameRegistered(username.toLowerCase())) {
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
-			return;
-		} 
-		CONNECTION.registerUser(username.toLowerCase(), password);
+			if(!CONNECTION.isPasswordCorrect(username.toLowerCase(), password)) {
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(REGISTRATION_ERROR));
+				return;
+			}
+		} else {
+			CONNECTION.registerUser(username.toLowerCase(), password);
+		}
 		loggedIn = true;
 		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Success."));
 		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
@@ -81,10 +69,17 @@ public class UserBean implements Serializable {
 	 */
 	public void homepageRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        System.out.println(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
-        if(loggedIn && onRegistrationPage || !loggedIn && !onRegistrationPage) {
+        if(loggedIn && onRegistrationPage) {
         	externalContext.redirect(externalContext.getRequestContextPath() + "/Homepage.jsf");
         }
+	    if (!loggedIn) {
+	    	externalContext.redirect(externalContext.getRequestContextPath() + "/Homepage.jsf");
+	    } 
+	}
+	
+	public void registrationRedirect() {
 	}
 	
 	/**

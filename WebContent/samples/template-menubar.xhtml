@@ -9,26 +9,30 @@
 				<p:outputLabel value="SQL Tutor" style="margin-right:40px; margin-left:20px" />
 			</p:menuitem>
 			<p:submenu label="Navigation" icon="ui-icon-folder-open" style="margin-right:10px;"> 
-				<p:menuitem value="Home" icon="ui-icon-arrow-1-e" action="HomePage.xhtml?faces-redirect=true"/>
+				<p:menuitem value="Home" icon="ui-icon-arrow-1-e" action="Homepage.xhtml?faces-redirect=true"/>
 				<p:menuitem value="Tutorial" action="TutorialPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
-				<p:menuitem value="Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
+				<p:menuitem value="NLP Feedback Sample" action="SampleNLPPage.xhtml?faces-redirect=true"
+					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
+				<p:menuitem value="Dev Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
 				<p:menuitem value="Schema Upload" action="SchemaUploadPage.xhtml?faces-redirect=true" 
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
+				<p:submenu label="Contact Us" icon="ui-icon-contact">
+					<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
+					<p:menuitem value="Mayur Naik" icon="ui-icon-mail-closed" onclick="location.href='mailto:naik@cc.gatech.edu'"/>
+					<p:menuitem value="Jake Cobb" icon="ui-icon-mail-closed" onclick="location.href='mailto:jake.cobb@gatech.edu'"/>
+					<p:menuitem value="Will Holton" icon="ui-icon-mail-closed" onclick="location.href='mailto:wholton@gatech.edu'"/>
+				</p:submenu>
 			</p:submenu>
 			<p:menuitem value="Schema Options" icon="ui-icon-disk" type="button" style="margin-right:20px"
 				onclick="PF('schema_dlg').show();" rendered="#{userBean.isLoggedIn()}"/>
 			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
 				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
-			<p:menuitem value="Logout" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
+			<p:menuitem value="Logout" type="button" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
 				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
-			<p:submenu label="Contact Us" icon="ui-icon-contact" style="margin-right:10px;">
-				<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
-				<p:menuitem value="Mayur Naik" icon="ui-icon-mail-closed" onclick="location.href='mailto:naik@cc.gatech.edu'"/>
-				<p:menuitem value="Jake Cobb" icon="ui-icon-mail-closed" onclick="location.href='mailto:jake.cobb@gatech.edu'"/>
-				<p:menuitem value="Will Holton" icon="ui-icon-mail-closed" onclick="location.href='mailto:wholton@gatech.edu'"/>
-			</p:submenu>
+			<p:menuitem value="Register" action="RegistrationPage.xhtml?faces-redirect=true" 
+				icon="ui-icon-arrowreturnthick-1-e" style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}"/>
 		</p:menubar>
 	</h:form>
 	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
@@ -48,7 +52,7 @@
 	</p:dialog>
 	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg" 
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
-		<h:form id="dlg_form">
+		<h:form id="loginForm">
 			<p:panel id="loginPanel">
 				<h:panelGrid id="loginGrid" columns="3">
 					<h:outputLabel for="username" value="Username: " />
@@ -64,13 +68,12 @@
 					</p:password>
 					<br/>
 				</h:panelGrid>
-				<p:messages/>
+				<p:messages id="loginMessages"/>
 			</p:panel>
 			<!-- Temporarily disabling catcha. When re-enabled, disable 'alternativeButton'. -->
 			<ui:remove>
 			<p:captcha label="Captcha" theme="white" required="true" 
-				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
-			   
+				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/> 
 			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
 				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
 			</ui:remove>

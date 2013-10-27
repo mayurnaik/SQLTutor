@@ -46,4 +46,23 @@ public class JDBC_PostgreSQL_Connection extends JDBC_Abstract_Connection {
 		}
 		return connection;
 	}
+	
+	/*
+	 * 
+	 */
+	protected Connection getConnection(String databaseName, String databaseUsername, String schemaName) {
+		Connection connection = null;
+		try {
+			Class.forName(DB_DRIVER);
+		} catch (ClassNotFoundException e) {
+			System.out.println(e.getMessage());
+		}
+		try {
+			connection = DriverManager.getConnection(
+                            DB_CONNECTION_STRING + databaseName + "?schema=" + schemaName, databaseUsername, DB_PASSWORD);
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return connection;
+	}
 } 

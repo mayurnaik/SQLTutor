@@ -3,16 +3,16 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<f:event type="preRenderView" listener="#{tutorialBean.loginRedirect}" />
+<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
 <h:head>
 	<title>SQL Tutor</title>
 	<ui:insert name="menu">
 		<ui:include src="/samples/template-menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body style="height:1000px;width:1400px">
+<h:body style="height:1000px;width:1400px;margin-left:20px">
 	<h:form id="form">
-		<div style="position:absolute;width:700;height:500;top:auto;left:0">
+		<div style="position:absolute;width:700;height:500;top:auto;left:20">
 			<h2>Question:</h2>
 			<h:outputText id="question" value="#{tutorialBean.question}" />
 			<br/>
@@ -39,7 +39,7 @@
 				update="form"/>
 		</div>
 
-		<div style="position:absolute;width:700;height:500;top:auto;left:710">
+		<div style="position:absolute;width:700;height:500;top:auto;left:730">
 			<h2>Query Result:</h2>
 			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
 				value="#{tutorialBean.queryResult.data}" >
@@ -85,12 +85,12 @@
 		<h:form id="feedbackForm">
 			<p:panel id="feedbackPanel">
 				<h:outputText value="Please rate our English generation:"/>
-				<br/>
+				<br/><br/>
 				<h:outputText value="#{tutorialBean.feedbackNLP}"/>
-				<br/>
+				<br/><br/>
 				<p:rating/>
-				<br/>
-				<h:outputText value="Please describe how we might improve our feedback generation:"/>
+				<br/><br/>
+				<h:outputText value="Also, please describe how we might improve our feedback generation:"/>
 				<p:inputTextarea rows="3" cols="44" id="source" style="resize:none" 
 					value="#{tutorialBean.userFeedback}" autoResize="false"/>
 				<p:messages id="messages"/>

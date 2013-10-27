@@ -34,6 +34,8 @@ public abstract class JDBC_Abstract_Connection {
 	 */
 	protected abstract Connection getConnection(String databaseName, String databaseUsername);
 	
+	protected abstract Connection getConnection(String databaseName, String databaseUsername, String schemaName);
+	
 	public void saveUserQuery(UserQuery query) {
 		Connection conn = null;
 		PreparedStatement statement = null;
@@ -323,9 +325,10 @@ public abstract class JDBC_Abstract_Connection {
 	}
 	
 	public QueryResult getQueryResult(String schemaName, String query) throws SQLException {
+		// FIXME want to have this connection made by a user with read only if possible.
 		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
-		statement.execute("SET CURRENT_SCHEMA=" + schemaName);
+		statement.execute("set search_path to '" + schemaName + "'");
 		ResultSet resultSet = statement.executeQuery(query);
 		ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 	
@@ -351,9 +354,9 @@ public abstract class JDBC_Abstract_Connection {
 	}
 	
 	public void verifyQuery(String schemaName, String query) throws SQLException {
-		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
+		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_MANAGER_USERNAME);
 		Statement statement = connection.createStatement();
-		statement.execute("SET CURRENT_SCHEMA=" + schemaName);
+		statement.execute("set search_path to '" + schemaName + "'");
 		statement.executeQuery(query);
 		Utils.tryClose(connection);
 		Utils.tryClose(statement);

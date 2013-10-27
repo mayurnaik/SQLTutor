@@ -47,4 +47,11 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 		}
 		return connection;
 	}
+
+	@Override
+	protected Connection getConnection(String databaseName,
+			String databaseUsername, String schemaName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 } 

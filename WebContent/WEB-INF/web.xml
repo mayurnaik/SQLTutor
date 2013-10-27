@@ -43,4 +43,9 @@
 	    <res-type>javax.sql.Datasource</res-type>
 	    <res-auth>Container</res-auth>
 	</resource-ref>
+	<!-- Eventually we want this to redirect to an actual session expired page. -->
+	<error-page>
+	    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+	    <location>/Homepage.xhtml</location>
+	</error-page>
 </web-app>

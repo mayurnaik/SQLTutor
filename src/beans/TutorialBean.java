@@ -63,72 +63,83 @@ public class TutorialBean {
 		tables = connection.getTables(selectedSchema);
 		setQuestionsAndAnswers();
 	}
-	
-	public void loginRedirect() throws IOException {
-        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-	    if (!userBean.isLoggedIn()) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-	    } 
-	}
-	
+
 	public void processSQL() {
 		try {
 			queryResult = connection.getQueryResult(selectedSchema, query);
 			feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
-			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
-				queryEquivalenceCheck();
-			} else {
-				queryDifferenceCheck();
-			} 
-		} catch(Exception e) {
+			setResultSetDiffs();
+			
+		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 			resultSetFeedback = "Incorrect.";
 		}
 	} 
 	
-	public void queryEquivalenceCheck() {
-		try {
-			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
-			if(queryResult.getData().equals(answerResult.getData())) {
-				resultSetFeedback = "Correct.";
-			} else {
-				resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-				// FIXME find a way to mark where the queryResult did not equal the answerResult
-			}
-		} catch(SQLException e) {
-			resultSetFeedback = "The stored answer was malformed.";
-		}
+	public void setResultSetDiffs() {
+		QueryResult[] resultSetDiffs = null;
+		if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
+			resultSetDiffs = compareQueries(true, true); //false true when it is ready
+		} else {
+			resultSetDiffs = compareQueries(true, false); //false, false when it is ready
+		} 
+		//queryDiffResult = resultSetDiffs[0]; 
+		//answerDiffResult = resultSetDiffs[1];
 	}
 	
-	public void queryDifferenceCheck() {
+	public QueryResult[] compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
+		QueryResult[] resultSetDiffs = null;
+		
 		try {
 			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
+			
+			if(columnOrderMatters && rowOrderMatters) {
+				if(answerResult.getColumns().size() == queryResult.getColumns().size()) {
+					if(answerResult.equals(queryResult)) {
+						resultSetFeedback = "Correct!";
+					} else {
+						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+						//FIXME perhaps more specific feedback? different row data/order, order by? conditionals? different attributes?
+					}
+				} else {
+					resultSetFeedback = "Incorrect. Your query's number of columns did not match the stored answer's. Check your attributes.";
+				}
+				//FIXME Can now tell if they are equal or not... but how to return their differences?
+			} else if(columnOrderMatters && !rowOrderMatters) {
+				//    (Q1 EXCEPT Q2) UNION ALL (Q2 EXCEPT Q1)
+				String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
+				String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
+				queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
+				answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
+				if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
+					resultSetFeedback = "Correct.";
+				} else {
+					//column size and type difference is handled by the exception
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+					// FIXME find queryDiffResult in queryResult and mark green. append answerDiffResult to the bottom in red.
+				}
+			} else if(!columnOrderMatters && rowOrderMatters) {
+				//FIXME For this we use a map structure that automatically sorts its keys to hold the entity names and a list to hold the data, thus: 
+				//new TreeMap<String, List<String>>(); 
+				//q1MapOfLists.equals(q2MapOfLists)
+			} else {
+				//FIXME Put the data of the result sets into two separate multisets/bags (Google's Guava can be used to get this structure in Java). This structure will count the appearance of the data, making things simple:
+				//q1Bag.equals(q2Bag)
+				// For my implementation I needed to see their differences. To do so, for each entry of the 
+				//second bag you will check if the first bag contains it. If so, remove one count of that entry 
+				//from both bags. In the end, the first bag will contain all entries which the second result set 
+				//did not contain, and the second bag will contain all entries which the first did not contain. 
+			}
 		} catch(SQLException e) {
-			resultSetFeedback = "The stored answer was malformed.";
-		}
-		// Columns must be ordered correctly by the user.
-		String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
-		String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
-		try {
-			// The result set of all ADDITIONAL data gathered by the user's query.
-			queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
-			answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
-		} catch(SQLException e) {;
 			if(e.getMessage().contains("columns")) {
 				resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
-			} else if(e.getMessage().contains("type")){
+			} else if(e.getMessage().contains("type")) {
 				resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
+			} else {
+				resultSetFeedback = "The stored answer was malformed." + e.getMessage();
 			}
-			return;
 		}
-		// The result set of all MISSED data, not gathered by the user's query.
-		if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
-			resultSetFeedback = "Correct.";
-		} else {
-			resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-			// FIXME find queryDiffResult in queryResult and mark green
-			// append answerDiffResult to the bottom in red
-		}
+		return resultSetDiffs;
 	}
 	
 	public void submitFeedback() {

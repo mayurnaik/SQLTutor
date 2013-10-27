@@ -5,17 +5,4 @@
       http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
 	version="2.0">
 
-	<navigation-rule>
-		<from-view-id>/LoginPage.xhtml</from-view-id>
-		<navigation-case>
-			<from-outcome>success</from-outcome>
-			<to-view-id>/TutorialPage.xhtml?faces-redirect=true</to-view-id>
-			<redirect />
-		</navigation-case>
-		<navigation-case>
-			<from-outcome>dev</from-outcome>
-			<to-view-id>/DevTutorialPage.xhtml?faces-redirect=true</to-view-id>
-		</navigation-case>
-	</navigation-rule>
-
 </faces-config>
