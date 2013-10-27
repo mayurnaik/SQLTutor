@@ -83,7 +83,7 @@ public class UserBean implements Serializable {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
         if(loggedIn && onRegistrationPage || !loggedIn && !onRegistrationPage) {
-        	externalContext.redirect(externalContext.getRequestContextPath() + "/Homepage.jsf");
+        	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
         }
 	}
 	

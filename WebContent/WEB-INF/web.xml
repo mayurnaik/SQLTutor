@@ -46,6 +46,6 @@
 	<!-- Eventually we want this to redirect to an actual session expired page. -->
 	<error-page>
 	    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
-	    <location>/Homepage.xhtml</location>
+	    <location>/HomePage.xhtml</location>
 	</error-page>
 </web-app>

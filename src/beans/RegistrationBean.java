@@ -72,10 +72,10 @@ public class RegistrationBean implements Serializable {
         System.out.println(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
         if(loggedIn && onRegistrationPage) {
-        	externalContext.redirect(externalContext.getRequestContextPath() + "/Homepage.jsf");
+        	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
         }
 	    if (!loggedIn) {
-	    	externalContext.redirect(externalContext.getRequestContextPath() + "/Homepage.jsf");
+	    	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    } 
 	}
 	
