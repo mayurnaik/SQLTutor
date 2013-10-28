@@ -28,6 +28,8 @@ import com.akiban.sql.parser.ValueNode;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.graph.LabelNode;
+import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 
 /**
  * Meta-rule for labeling one-to-many join entities.
@@ -66,8 +68,8 @@ public class OneToAnyJoinRule implements ITranslationRule {
 //				node.accept(new TypeComputer());
 //				System.out.println("After types:");
 //				node.treePrint();
-				
-				new OneToAnyJoinRule("supervisor", "employee", "employee", "manager_ssn", "ssn").apply(node);
+				TranslationGraph graph = new TranslationGraph(QueryUtils.extractSelectNode(node));
+				new OneToAnyJoinRule("supervisor", "employee", "employee", "manager_ssn", "ssn").apply(graph, node);
 			} catch( RuntimeException e ) {
 				System.err.println("Failed to parse: " + arg);
 				e.printStackTrace();
@@ -107,6 +109,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	protected String oneAlias;
 	protected String anyAlias;
 	protected SelectNode select;
+	protected TranslationGraph graph;
 	
 	public OneToAnyJoinRule() { }	
 	
@@ -126,6 +129,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	protected void reset() {
 		this.select = null;
+		this.graph = null;
 		this.oneAlias = null;
 		this.anyAlias = null;
 	}
@@ -173,6 +177,10 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		oneAlias  = ((FromBaseTable)leftResult).getExposedName();
 		anyAlias = ((FromBaseTable)rightResult).getExposedName();
 		
+		if( hadRuleApplied(rightResult) ) {
+			return false;
+		}
+		
 		log.debug("Trying oneAlias={}, anyAlias={}", oneAlias, anyAlias);
 		
 		// TODO for now only match simple equality
@@ -188,13 +196,23 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		}
 		
 		RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightResult);
-		rightMeta.setLabel(this.label);
-		rightMeta.setOfAlias(oneAlias);
+		LabelNode rightTable = graph.getTableVertex(anyAlias);
+		rightTable.getLocalChoices().add(this.label);
+		rightTable.modified();
+//		rightMeta.setLabel(this.label);
+//		rightMeta.setOfAlias(oneAlias);
 		rightMeta.addContributor(this);
 		
 		log.debug("Labeled based on explicit INNER JOIN");
 		
 		return true;
+	}
+	
+	private boolean hadRuleApplied(QueryTreeNode node) {
+		RuleMetaData meta = (RuleMetaData)node.getUserData();
+		if( meta != null && meta.getContributors().contains(this) )
+			return true;
+		return false;
 	}
 	
 	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
@@ -208,6 +226,9 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	private boolean checkImplicitJoin(FromBaseTable leftRef, FromBaseTable rightRef) 
 			throws StandardException {
+		if( hadRuleApplied(rightRef) )
+			return false;
+		
 		oneAlias = leftRef.getExposedName();
 		anyAlias = rightRef.getExposedName();
 		
@@ -225,6 +246,9 @@ public class OneToAnyJoinRule implements ITranslationRule {
 							RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightRef);
 							rightMeta.setLabel(this.label);
 							rightMeta.setOfAlias(oneAlias);
+							LabelNode rightTable = graph.getTableVertex(anyAlias);
+							rightTable.getLocalChoices().add(this.label);
+							rightTable.modified();
 							rightMeta.addContributor(this);
 							
 							log.debug("Label based on implicit join and WHERE clause");
@@ -277,11 +301,12 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	}
 
 	@Override
-	public boolean apply(StatementNode statement) {
+	public boolean apply(TranslationGraph graph, StatementNode statement) {
 		reset();
 		
 		try {
 			select = QueryUtils.extractSelectNode(statement);
+			this.graph = graph;
 			
 			List<FromBaseTable> potentialLefts = new ArrayList<FromBaseTable>(1);
 			List<FromBaseTable> potentialRights = new ArrayList<FromBaseTable>(1);

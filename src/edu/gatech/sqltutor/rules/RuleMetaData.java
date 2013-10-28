@@ -1,8 +1,7 @@
 package edu.gatech.sqltutor.rules;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 
 public class RuleMetaData {
@@ -15,22 +14,17 @@ public class RuleMetaData {
 	private String ofAlias;
 	
 	/** Rules that contributed to the information in this metadata. */
-	private List<ITranslationRule> rules = 
-			new ArrayList<ITranslationRule>();
+	private Set<ITranslationRule> contributors = 
+		new LinkedHashSet<ITranslationRule>();
 	
 	public RuleMetaData() { }
 
-	public List<ITranslationRule> getContributors() {
-		return Collections.unmodifiableList(rules);
-	}
-	
-	public void setContributors(List<ITranslationRule> rules) {
-		this.rules.clear();
-		this.rules.addAll(rules);
+	public Set<ITranslationRule> getContributors() {
+		return this.contributors;
 	}
 	
 	public void addContributor(ITranslationRule rule) {
-		this.rules.add(rule);
+		this.contributors.add(rule);
 	}
 	
 	public boolean isHandled() {
@@ -69,7 +63,7 @@ public class RuleMetaData {
 	public String toString() {
 		return String.format(
 			"%s{handled=%b, label=\"%s\", rules=%s}",
-			this.getClass().getSimpleName(), isHandled, label, rules
+			this.getClass().getSimpleName(), isHandled, label, contributors
 		);
 	}
 }
