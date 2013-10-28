@@ -58,7 +58,7 @@ public class SampleNLPPageBean implements Serializable {
 			queryResult = connection.getQueryResult(selectedDatabase, query);
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
-			feedbackNLP = "The question you answered was: \n" + nlp;
+			feedbackNLP = "Corresponding question: \n" + nlp;
 		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 		}

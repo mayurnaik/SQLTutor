@@ -30,19 +30,19 @@
 			</p:panelGrid>
 		</div>
 		<div style="position:absolute;width:600;height:300;top:auto;left:495">
-			<p:dataTable var="databaseTable"
+			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="280"
 				value="#{sampleNLPPageBean.tables}">
-				<p:column headerText="Table Names">
+				<p:column headerText="Table Names" style="width:125px">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
-				<p:column headerText="Column Names" width="400" style="white-space: normal;">
+				<p:column headerText="Column Names" style="white-space: normal;width:375px">
 					<h:outputText value="#{databaseTable.columns}" />
 				</p:column>
 			</p:dataTable>
 			<br/>
 		</div>
 		<div style="position:absolute;width:600;height:500;top:300;left:495">
-			<p:dataTable id="resultsTable" var="row"
+			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="400"
 				value="#{sampleNLPPageBean.queryResult.data}">
 				<p:columns value="#{sampleNLPPageBean.queryResult.columns}"
 					var="column" columnIndexVar="columnIndex">

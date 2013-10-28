@@ -17,12 +17,12 @@
 			<h:outputText id="question" value="#{tutorialBean.question}" />
 			<br/>
 			<h2>Database:</h2>
-			<p:dataTable var="databaseTable"
+			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200" 
 				value="#{tutorialBean.tables}">
-				<p:column headerText="Table Names" width="100">
+				<p:column headerText="Table Names" style="width:125px">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
-				<p:column headerText="Column Names" width="400" style="white-space: normal;">
+				<p:column headerText="Column Names" style="white-space: normal;width:375px">
 					<h:outputText value="#{databaseTable.columns}" />
 				</p:column>
 			</p:dataTable>
