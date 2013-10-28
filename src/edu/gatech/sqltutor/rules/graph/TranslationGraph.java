@@ -24,6 +24,7 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.parser.Visitor;
+import com.google.common.base.Joiner;
 
 import edu.gatech.sqltutor.SQLTutorException;
 
@@ -38,7 +39,8 @@ public class TranslationGraph
 	private Map<QueryTreeNode, LabelNode> astToVertex = 
 		new HashMap<QueryTreeNode, LabelNode>();
 	
-	private LabelNode resultListNode = new LabelNode();
+	private LabelNode selectNode;
+	private LabelNode resultListNode;
 
 	public TranslationGraph() {
 		super(new TranslationEdgeFactory());
@@ -51,6 +53,10 @@ public class TranslationGraph
 
 	public void initializeFromSelect(SelectNode select) 
 			throws SQLTutorException {
+		selectNode = new LabelNode();
+		selectNode.setAstNode(select);
+		this.addVertex(selectNode);
+		
 		// add a parent node for the entire result list
 		resultListNode = new ListFormatNode();
 		resultListNode.setAstNode(select.getResultColumns());
@@ -101,6 +107,12 @@ public class TranslationGraph
 			log.info("Choices: {}", next.getChoices());
 		}
 		
+		List<List<String>> selectOutput = GraphUtils.mergeLists(selectNode.getChoices(), resultListNode.getChoices());
+		log.info("selectOutput: {}", selectOutput);
+		
+		for( List<String> parts: selectOutput ) {
+			log.info("output: {}", Joiner.on(' ').join(parts));
+		}
 	}
 	
 	public List<LabelNode> getChildrenOf(LabelNode node) {

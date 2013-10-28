@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules.graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,6 +22,16 @@ public class LabelNode {
 
 	public void modified() {
 		outputChoices = null;
+	}
+	
+	public void addLocalChoice(String choice) {
+		localChoices.add(choice);
+		modified();
+	}
+	
+	public void addLocalChoices(Collection<String> choices) {
+		localChoices.addAll(choices);
+		modified();
 	}
 	
 	public List<String> getLocalChoices() {

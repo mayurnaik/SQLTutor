@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,16 +29,23 @@ import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.graph.LabelNode;
-import edu.gatech.sqltutor.rules.graph.TemplatedNode;
+import edu.gatech.sqltutor.rules.graph.ListFormatNode;
+import edu.gatech.sqltutor.rules.graph.TemplateEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 
 public class RuleBasedTranslator implements IQueryTranslator {
 	private static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
 	
+	public static Collection<ITranslationRule> getDefaultRules() {
+		return Arrays.asList(
+			new DefaultSelectRule(),
+			new DefaultLabelRule()
+		);
+	}
+	
 	public static void main(String[] args) {
 		RuleBasedTranslator translator = new RuleBasedTranslator();
-		translator.addTranslationRule(new DefaultLabelRule());
 		translator.addTranslationRule(new OneToAnyJoinRule(
 			"supervisor", "employee", "employee", "manager_ssn", "ssn"
 		));
@@ -99,7 +107,15 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		}
 	}
 	
-	public RuleBasedTranslator() { }
+	public RuleBasedTranslator() { this(false); }
+	
+	public RuleBasedTranslator(boolean withoutDefaults) {
+		if( !withoutDefaults ) {
+			for( ITranslationRule rule: getDefaultRules() ) {
+				this.addTranslationRule(rule);
+			}
+		}
+	}
 	
 	public RuleBasedTranslator(String query) {
 		setQuery(query);
@@ -125,12 +141,15 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		TranslationEdge edge = null;
 		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
 				fromToResult.asMap().entrySet() ) {
-			LabelNode attrsNode = new TemplatedNode();
+			LabelNode attrsNode = new ListFormatNode();
+			graph.addVertex(attrsNode);
+			LabelNode tableNode = graph.getVertexForAST(entry.getKey());
+			TemplateEdge templateEdge = new TemplateEdge(attrsNode, tableNode, "table");
+			graph.addEdge(attrsNode, tableNode, templateEdge);
 			
 			// add as child of result list node
 			edge = new TranslationEdge(resultListNode, attrsNode);
 			edge.setChildEdge(true);
-			graph.addVertex(attrsNode);
 			graph.addEdge(resultListNode, attrsNode, edge);
 			
 			for( ResultColumn col: entry.getValue() ) {

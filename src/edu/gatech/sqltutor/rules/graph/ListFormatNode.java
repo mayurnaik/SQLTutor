@@ -51,8 +51,9 @@ public class ListFormatNode extends LabelNode {
 						result.append(',');
 					result.append(" and");
 				}
+				result.append(' ');
 			}
-			result.append(' ').append(term);
+			result.append(term);
 		}
 		
 		return result.toString();

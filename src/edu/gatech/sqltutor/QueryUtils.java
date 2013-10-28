@@ -13,6 +13,7 @@ import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 
+import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.RuleMetaData;
 
 /**
@@ -79,6 +80,20 @@ public class QueryUtils {
 		if( meta == null )
 			node.setUserData(meta = new RuleMetaData());
 		return meta;
+	}
+	
+	/**
+	 * Indicates whether <code>rule</code> has already contributed to <code>node</code>.
+	 * 
+	 * @param rule the rule to check
+	 * @param node the node to check
+	 * @return if the rule contributed already
+	 */
+	public static boolean hasContributed(ITranslationRule rule, QueryTreeNode node) {
+		RuleMetaData meta = (RuleMetaData)node.getUserData();
+		if( meta == null )
+			return false;
+		return meta.getContributors().contains(rule);
 	}
 	
 	/**
