@@ -1,7 +1,5 @@
 package edu.gatech.sqltutor.rules;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -18,7 +16,6 @@ import com.akiban.sql.parser.FromList;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.JoinNode;
 import com.akiban.sql.parser.NodeTypes;
-import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
@@ -77,26 +74,8 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		}
 	}
 	
-	private static String nodeTypeString(QueryTreeNode node) {
-		return nodeTypeToString(node.getNodeType());
-	}
-	
-	private static String nodeTypeToString(int nodeType) {
-		Field[] fields = NodeTypes.class.getDeclaredFields();
-		for( Field f: fields ) {
-			if( 0 == (f.getModifiers() & (Modifier.STATIC | Modifier.PUBLIC)) )
-				continue;
-			if( !f.getType().equals(int.class) )
-				continue;
-			
-			try {
-				if( nodeType == (Integer)f.get(null) )
-					return "NodeTypes." + f.getName();
-			} catch( Exception e ) { throw new RuntimeException(e); }
-		}
-		return "UNKNOWN";
-	}
-	
+	protected List<String> oneLabels = new ArrayList<String>(0);
+	protected List<String> anyLabels = new ArrayList<String>(0);
 	
 	protected String label;
 	protected String oneTable;
@@ -177,7 +156,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		oneAlias  = ((FromBaseTable)leftResult).getExposedName();
 		anyAlias = ((FromBaseTable)rightResult).getExposedName();
 		
-		if( hadRuleApplied(rightResult) ) {
+		if( QueryUtils.hasContributed(this, rightResult) ) {
 			return false;
 		}
 		
@@ -208,13 +187,6 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		return true;
 	}
 	
-	private boolean hadRuleApplied(QueryTreeNode node) {
-		RuleMetaData meta = (RuleMetaData)node.getUserData();
-		if( meta != null && meta.getContributors().contains(this) )
-			return true;
-		return false;
-	}
-	
 	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
 			String rightTable, String rightAttr) {
 		return (leftTable.equals(this.oneAlias) && leftAttr.equals(this.oneAttribute)
@@ -226,7 +198,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	
 	private boolean checkImplicitJoin(FromBaseTable leftRef, FromBaseTable rightRef) 
 			throws StandardException {
-		if( hadRuleApplied(rightRef) )
+		if( QueryUtils.hasContributed(this, rightRef) )
 			return false;
 		
 		oneAlias = leftRef.getExposedName();
