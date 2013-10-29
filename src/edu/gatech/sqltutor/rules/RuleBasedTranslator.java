@@ -141,16 +141,34 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		TranslationEdge edge = null;
 		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
 				fromToResult.asMap().entrySet() ) {
-			LabelNode attrsNode = new ListFormatNode();
-			graph.addVertex(attrsNode);
 			LabelNode tableNode = graph.getVertexForAST(entry.getKey());
-			TemplateEdge templateEdge = new TemplateEdge(attrsNode, tableNode, "table");
-			graph.addEdge(attrsNode, tableNode, templateEdge);
+			
+			// e.g. "$list of each $table"
+			LabelNode attrTemplate = new LabelNode();
+			// FIXME make these rule-based
+			attrTemplate.addLocalChoices(Arrays.asList(
+				"${list} of each ${table}",
+				"${list} of every ${table}",
+				"${list} of all ${table}",
+				"${list} for each ${table}",
+				"${list} for every ${table}",
+				"${list} for all ${table}",
+				"${list} of any ${table}"
+			));
+			graph.addVertex(attrTemplate);
+			graph.addEdge(attrTemplate, tableNode, 
+				new TemplateEdge(attrTemplate, tableNode, "table"));
 			
 			// add as child of result list node
-			edge = new TranslationEdge(resultListNode, attrsNode);
+			edge = new TranslationEdge(resultListNode, attrTemplate);
 			edge.setChildEdge(true);
-			graph.addEdge(resultListNode, attrsNode, edge);
+			graph.addEdge(resultListNode, attrTemplate, edge);
+			
+			// merge node for list of attributes
+			LabelNode attrsNode = new ListFormatNode();
+			graph.addVertex(attrsNode);
+			graph.addEdge(attrTemplate, attrsNode, 
+				new TemplateEdge(attrTemplate, attrsNode, "list"));
 			
 			for( ResultColumn col: entry.getValue() ) {
 				ValueNode expr = col.getExpression();

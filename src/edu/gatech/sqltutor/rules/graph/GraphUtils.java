@@ -3,8 +3,11 @@ package edu.gatech.sqltutor.rules.graph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class GraphUtils {
 	private GraphUtils() { }
@@ -50,5 +53,12 @@ public class GraphUtils {
 			}
 		}
 		return newList;
+	}
+	
+	public static <T> List<List<T>> singletonLists(List<T> items) {
+		List<List<T>> lists = new ArrayList<List<T>>(items.size());
+		for( T t: items )
+			lists.add(Collections.singletonList(t));
+		return lists;
 	}
 }
