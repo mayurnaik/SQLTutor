@@ -15,6 +15,7 @@ import com.akiban.sql.parser.StatementNode;
 
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.RuleMetaData;
+import edu.gatech.sqltutor.util.ParserVisitorAdapter;
 
 /**
  * Static utility functions related to SQL queries.
@@ -114,10 +115,21 @@ public class QueryUtils {
 	 */
 	public static Map<String, FromTable> buildTableAliasMap(SelectNode select) 
 			throws StandardException {
-		Map<String, FromTable> aliasMap = new HashMap<String, FromTable>();
-		for( FromTable fromTable: select.getFromList() ) {
-			aliasMap.put(fromTable.getExposedName(), fromTable);
-		}
+		final Map<String, FromTable> aliasMap = new HashMap<String, FromTable>();
+		select.getFromList().accept(new ParserVisitorAdapter() {
+			@Override
+			public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+				switch( node.getNodeType() ) {
+					case NodeTypes.FROM_BASE_TABLE:
+					case NodeTypes.FROM_SUBQUERY: {
+						FromTable fromTable = (FromTable)node;
+						aliasMap.put(fromTable.getExposedName(), fromTable);
+						break;
+					}
+				}
+				return node;
+			}
+		});
 		return aliasMap;
 	}
 }

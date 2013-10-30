@@ -210,8 +210,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		for( ResultColumn resultColumn: select.getResultColumns() ) {
 			String tableName = resultColumn.getTableName();
 			if( tableName == null ) {
-				tableName = this.findTableForColumn(resultColumn.getColumnName());
-				log.error("FIXME: Need to find exposed name for given table name.");
+				log.error("Result column does not have a table name: {}", resultColumn);
 				continue;
 			}
 			FromTable fromTable = tableAliases.get(tableName);

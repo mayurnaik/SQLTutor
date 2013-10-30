@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.FromList;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
@@ -18,7 +19,7 @@ import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.TableName;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.parser.Visitor;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.gatech.sqltutor.SQLTutorException;
@@ -33,17 +34,36 @@ public class ColumnReferenceResolver {
 
 	private class ASTVisitor implements Visitor {
 		private FromList fromTables;
-		private Multimap<String, FromTable> tableMap = HashMultimap.create();
+		private Multimap<String, FromTable> tableMap = LinkedHashMultimap.create();
 		
 		private ASTVisitor(SelectNode select) {
 			this.fromTables = select.getFromList();
-			for( FromTable table: fromTables ) {
-				TableName origName = table.getOrigTableName();
-				if( origName != null ) {
-					tableMap.put(origName.getTableName(), table);
-				} else {
-					log.warn("No original table name (type={}): {}", table.getClass().getSimpleName(), table);
-				}
+			
+			try {
+				this.fromTables.accept(new ParserVisitorAdapter() {
+					@Override
+					public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+						switch( node.getNodeType() ) {
+							case NodeTypes.FROM_BASE_TABLE: {
+								FromBaseTable table = (FromBaseTable)node;
+								TableName origName = table.getOrigTableName();
+								if( origName != null ) {
+									tableMap.put(origName.getTableName(), table);
+								} else {
+									log.warn("No original table name (type={}): {}", table.getClass().getSimpleName(), table);
+								}
+								break;
+							}
+							case NodeTypes.FROM_SUBQUERY:
+							case NodeTypes.FROM_VTI:
+								log.warn("Cannot resolve against from-list type: {}", node.getClass().getSimpleName());
+								break;
+						}
+						return node;
+					}
+				});
+			} catch( StandardException e ) {
+				throw new SQLTutorException(e);
 			}
 		}
 		
