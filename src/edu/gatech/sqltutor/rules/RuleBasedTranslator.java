@@ -33,6 +33,7 @@ import edu.gatech.sqltutor.rules.graph.ListFormatNode;
 import edu.gatech.sqltutor.rules.graph.TemplateEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
+import edu.gatech.sqltutor.util.ColumnReferenceResolver;
 
 public class RuleBasedTranslator implements IQueryTranslator {
 	private static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
@@ -227,6 +228,8 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			} catch( IllegalArgumentException e ) {
 				throw new SQLTutorException("Wrong query type for: " + query, e);
 			}
+			
+			new ColumnReferenceResolver(tables).resolve(select);
 			
 			buildMaps();
 			constructGraph();
