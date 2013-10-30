@@ -11,6 +11,12 @@ public class TranslationEdge extends DefaultEdge {
 	protected boolean isChildEdge;
 	protected String label;
 	
+	public TranslationEdge(boolean isChildEdge) { this.isChildEdge = isChildEdge; }
+	public TranslationEdge(String label, boolean isChildEdge) {
+		this.label = label;
+		this.isChildEdge = isChildEdge;
+	}
+	
 	public TranslationEdge(LabelNode source, LabelNode target) {
 		this.source = source;
 		this.target = target;
@@ -47,6 +53,16 @@ public class TranslationEdge extends DefaultEdge {
 
 	public void setLabel(String label) {
 		this.label = label;
+	}
+	
+	/** Sets the source, do not do this for attached edges. */
+	public void setSource(LabelNode source) {
+		this.source = source;
+	}
+	
+	/** Sets the target, do not do this for attached edges. */
+	public void setTarget(LabelNode target) {
+		this.target = target;
 	}
 
 	public LabelNode getSource() {

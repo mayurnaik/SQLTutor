@@ -38,7 +38,12 @@ public class ColumnReferenceResolver {
 		private ASTVisitor(SelectNode select) {
 			this.fromTables = select.getFromList();
 			for( FromTable table: fromTables ) {
-				tableMap.put(table.getOrigTableName().getTableName(), table);
+				TableName origName = table.getOrigTableName();
+				if( origName != null ) {
+					tableMap.put(origName.getTableName(), table);
+				} else {
+					log.warn("No original table name (type={}): {}", table.getClass().getSimpleName(), table);
+				}
 			}
 		}
 		

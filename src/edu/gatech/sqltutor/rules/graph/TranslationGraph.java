@@ -97,7 +97,7 @@ public class TranslationGraph
 		while( !vertexes.isEmpty() ) {
 			LabelNode next = vertexes.pop();
 
-			log.info("Visting node: {}", next);
+			log.trace("Visiting node: {}", next);
 			List<LabelNode> children = this.getChildrenOf(next);
 			if( children.isEmpty() ) {
 				next.setChildChoices(Collections.<List<String>>emptyList());
@@ -108,12 +108,12 @@ public class TranslationGraph
 				}
 				next.setChildChoices(childChoices);
 			}
-			log.debug("Children: {}", children);
-			log.debug("Choices: {}", next.getChoices());
+			log.trace("Children: {}", children);
+			log.trace("Choices: {}", next.getChoices());
 		}
 		
 		List<List<String>> selectOutput = GraphUtils.mergeLists(selectNode.getChoices(), resultListNode.getChoices());
-		log.debug("selectOutput: {}", selectOutput);
+		log.trace("selectOutput: {}", selectOutput);
 		
 		List<String> result = new ArrayList<String>(selectOutput.size());
 		for( List<String> parts: selectOutput ) {
@@ -276,6 +276,9 @@ public class TranslationGraph
 		return astToVertex.get(node);
 	}
 	
+	/** {@inheritDoc} 
+	 * <p>Extends super to maintain additional mapping info.</p>
+	 */
 	@Override
 	public boolean addVertex(LabelNode v) {
 		boolean retVal = super.addVertex(v);
@@ -296,6 +299,9 @@ public class TranslationGraph
 		return retVal;
 	}
 	
+	/** {@inheritDoc} 
+	 * <p>Extends super to maintain additional mapping info.</p>
+	 */
 	@Override
 	public boolean removeVertex(LabelNode v) {
 		boolean retVal = super.removeVertex(v);
@@ -315,8 +321,11 @@ public class TranslationGraph
 	}
 	
 	@Override
-	public TranslationEdge addEdge(LabelNode sourceVertex, LabelNode targetVertex) {
-		// TODO Auto-generated method stub
-		return super.addEdge(sourceVertex, targetVertex);
+	public boolean addEdge(LabelNode sourceVertex, LabelNode targetVertex, TranslationEdge e) {
+		if( this.containsEdge(e) )
+			throw new IllegalArgumentException("edge is already in graph: " + e);
+		e.setSource(sourceVertex);
+		e.setTarget(targetVertex);
+		return super.addEdge(sourceVertex, targetVertex, e);
 	}
 }

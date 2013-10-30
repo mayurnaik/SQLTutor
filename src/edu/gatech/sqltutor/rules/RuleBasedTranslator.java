@@ -46,9 +46,14 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	}
 	
 	public static void main(String[] args) {
+		// set -Dorg.slf4j.simpleLogger.logFile=<path> if you want logging to a file
 		RuleBasedTranslator translator = new RuleBasedTranslator();
 		translator.addTranslationRule(new OneToAnyJoinRule(
 			"supervisor", "employee", "employee", "manager_ssn", "ssn"
+		));
+		translator.addTranslationRule(new ResultColumnLabelingRule(
+			Arrays.asList("name", "first and last name"),
+			Arrays.asList("employee.first_name", "employee.last_name")
 		));
 		for( String arg: args ) {
 			try {
@@ -209,7 +214,12 @@ public class RuleBasedTranslator implements IQueryTranslator {
 				log.error("FIXME: Need to find exposed name for given table name.");
 				continue;
 			}
-			fromToResult.put(tableAliases.get(tableName), resultColumn);
+			FromTable fromTable = tableAliases.get(tableName);
+			if( fromTable != null ) {
+				fromToResult.put(fromTable, resultColumn);
+			} else {
+				log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
+			}
 		}
 	}
 	
