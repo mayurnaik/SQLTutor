@@ -71,7 +71,7 @@ public class TranslationGraph
 		this.addTableNodes(select);
 	}
 	
-	public void testPullTerms() {
+	public List<String> testPullTerms() {
 		DirectedMaskSubgraph<LabelNode, TranslationEdge> sub = new DirectedMaskSubgraph<LabelNode, TranslationEdge>(
 			(DirectedGraph<LabelNode, TranslationEdge>)this,
 			new MaskFunctor<LabelNode, TranslationEdge>() {
@@ -108,16 +108,21 @@ public class TranslationGraph
 				}
 				next.setChildChoices(childChoices);
 			}
-			log.info("Children: {}", children);
-			log.info("Choices: {}", next.getChoices());
+			log.debug("Children: {}", children);
+			log.debug("Choices: {}", next.getChoices());
 		}
 		
 		List<List<String>> selectOutput = GraphUtils.mergeLists(selectNode.getChoices(), resultListNode.getChoices());
-		log.info("selectOutput: {}", selectOutput);
+		log.debug("selectOutput: {}", selectOutput);
 		
+		List<String> result = new ArrayList<String>(selectOutput.size());
 		for( List<String> parts: selectOutput ) {
-			log.info("output: {}", Joiner.on(' ').join(parts));
+			String joined = Joiner.on(' ').join(parts);
+			result.add(joined);
+			log.debug("output: {}", joined);
 		}
+		
+		return result;
 	}
 	
 	private static final Pattern templatePattern = Pattern.compile("\\$\\{([^}]+)\\}");
@@ -219,6 +224,7 @@ public class TranslationGraph
 						LabelNode vertex = new LabelNode();
 						vertex.setAstNode(fbt);
 						addVertex(vertex);
+						log.info("Added table node for {}", fbt);
 					}
 					return node;
 				}
