@@ -50,10 +50,14 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			"supervisor", "employee", "employee", "manager_ssn", "ssn"
 		));
 		for( String arg: args ) {
-			translator.setQuery(arg);
-			String result = translator.getTranslation();
-			
-			System.out.println("QUERY:\n" + arg + "\nRESULT:\n" + result + "\n");
+			try {
+				translator.setQuery(arg);
+				String result = translator.getTranslation();
+				
+				System.out.println("QUERY:\n" + arg + "\nRESULT:\n" + result + "\n");
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -142,6 +146,10 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
 				fromToResult.asMap().entrySet() ) {
 			LabelNode tableNode = graph.getVertexForAST(entry.getKey());
+			if( tableNode == null ) {
+				log.warn("No table node for: {}", entry.getKey());
+				throw new NullPointerException("tableNode is null");
+			}
 			
 			// e.g. "$list of each $table"
 			LabelNode attrTemplate = new LabelNode();
@@ -149,10 +157,10 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			attrTemplate.addLocalChoices(Arrays.asList(
 				"${list} of each ${table}",
 				"${list} of every ${table}",
-				"${list} of all ${table}",
+				"${list} of all ${table}s",
 				"${list} for each ${table}",
 				"${list} for every ${table}",
-				"${list} for all ${table}",
+				"${list} for all ${table}s",
 				"${list} of any ${table}"
 			));
 			graph.addVertex(attrTemplate);
@@ -192,6 +200,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	}
 	
 	private void mapResultToFrom() {
+		fromToResult = HashMultimap.create();
 		for( ResultColumn resultColumn: select.getResultColumns() ) {
 			String tableName = resultColumn.getTableName();
 			if( tableName == null ) {
@@ -211,6 +220,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		
 		SQLParser parser = new SQLParser();
 		try {
+			log.info("Query: {}", query);
 			StatementNode statement = parser.parseStatement(query);
 			try {
 				select = QueryUtils.extractSelectNode(statement);
@@ -234,7 +244,10 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			
 			log.info("{}", counter);
 			
-			graph.testPullTerms();
+			List<String> result = graph.testPullTerms();
+			log.info("# of translations: {}", result.size());
+			if( result.size() > 0 )
+				log.info("1st translation: {}", result.get(0));
 			
 			// TODO now lower into natural language
 			
@@ -303,10 +316,19 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			translationRules = new ArrayList<ITranslationRule>();
 		translationRules.add(rule);
 	}
+	
+	public void clearResult() {
+		this.result = null;
+		this.fromToResult = null;
+		this.graph = null;
+		this.select = null;
+		this.tableAliases = null;
+	}
 
 	@Override
 	public void setQuery(String sql) {
 		this.query = (sql == null ? null : QueryUtils.sanitize(sql));
+		clearResult();
 	}
 
 	@Override
@@ -317,6 +339,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	@Override
 	public void setSchemaMetaData(List<DatabaseTable> tables) {
 		this.tables = tables;
+		clearResult();
 	}
 
 	@Override
