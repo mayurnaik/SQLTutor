@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import objects.DatabaseTable;
 
@@ -77,45 +78,6 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	
 	private Map<String, FromTable> tableAliases;
 	private Multimap<FromTable, ResultColumn> fromToResult = HashMultimap.create();
-//	private BiMap<ResultColumn, FromTable> resultToFrom = HashBiMap.create();
-	
-	/** Counter for applications of a rule. */
-	private static class RuleCount {
-		private ITranslationRule rule;
-		private int count;
-		public RuleCount(ITranslationRule rule) {
-			this.rule = rule;
-		}
-		
-		public void increment() { ++count; }
-		public ITranslationRule getRule() { return rule; }
-		public int getCount() { return count; }
-		
-		@Override
-		public String toString() {
-			return String.format("({}x) {}", count, rule);
-		}
-	}
-	
-	private static class RuleCounter {
-		private List<RuleCount> counts = new ArrayList<RuleCount>();
-		public RuleCounter() { }
-		public void ruleApplied(ITranslationRule rule) {
-			RuleCount count = null;
-			if( counts.size() > 0 )
-				count = counts.get(counts.size()-1);
-			if( count == null || !count.getRule().equals(rule) ) {
-				count = new RuleCount(rule);
-				counts.add(count);
-			}
-			count.increment();
-		}
-		
-		@Override
-		public String toString() {
-			return "RuleCounter{" + counts + "}";
-		}
-	}
 	
 	public RuleBasedTranslator() { this(false); }
 	
@@ -243,25 +205,22 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			buildMaps();
 			constructGraph();
 			
-			RuleCounter counter = new RuleCounter();
-			
 			sortRules();
 			for( ITranslationRule rule: translationRules ) {
 				while( rule.apply(graph, statement) ) {
 					// apply each rule as many times as possible
-					counter.ruleApplied(rule);
 					// FIXME non-determinism when precedences match?
 				}
 			}
 			
-			log.info("{}", counter);
-			
 			List<String> result = graph.testPullTerms();
 			log.info("# of translations: {}", result.size());
-			if( result.size() > 0 )
+			if( result.size() > 0 && log.isInfoEnabled() ) {
 				log.info("1st translation: {}", result.get(0));
-			
-			// TODO now lower into natural language
+				log.info("last translation: {}", result.get(result.size()-1));
+				int index = new Random().nextInt(result.size());
+				log.info("random translation [{}]: {}", index+1, result.get(index));
+			}
 			
 		} catch( StandardException e ) {
 			throw new SQLTutorException("Could not parse query: " + query, e);
