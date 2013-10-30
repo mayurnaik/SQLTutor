@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
-import com.akiban.sql.parser.FromList;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.ResultColumn;
@@ -50,7 +49,9 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		// set -Dorg.slf4j.simpleLogger.logFile=<path> if you want logging to a file
 		RuleBasedTranslator translator = new RuleBasedTranslator();
 		translator.addTranslationRule(new OneToAnyJoinRule(
-			"supervisor", "employee", "employee", "manager_ssn", "ssn"
+			"employee", "employee", "manager_ssn", "ssn",
+			Arrays.asList("supervisor", "manager"),
+			null
 		));
 		translator.addTranslationRule(new ResultColumnLabelingRule(
 			Arrays.asList("name", "first and last name"),
@@ -224,42 +225,6 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			
 		} catch( StandardException e ) {
 			throw new SQLTutorException("Could not parse query: " + query, e);
-		}
-	}
-	
-	/**
-	 * Finds the table name for a bare column name.
-	 * 
-	 * @param name the name
-	 * @return the tabel name
-	 * @throws IllegalStateException if the name cannot be resolved
-	 */
-	private String findTableForColumn(String name) {
-		if( tables == null ) {
-			// if no schema info and only one table, assume column belongs to it
-			FromList fromList = select.getFromList();
-			if( fromList.size() == 1 )
-				return fromList.get(0).getOrigTableName().getFullTableName();
-			throw new IllegalStateException("No schema info, could not resolve column: " + name);
-		} else {
-			DatabaseTable colTable = null;
-			for( DatabaseTable table: tables ) {
-				if( !table.getColumns().contains(name) )
-					continue;
-				
-				// check for ambiguity
-				if( colTable != null ) {
-					throw new IllegalStateException(String.format(
-						"Ambiguous name '%s', matches tables '%s' and '%s'",
-						name, colTable.getTableName(), table.getTableName()));
-				}
-				
-				colTable = table;
-			}
-			
-			if( colTable == null )
-				throw new IllegalStateException("Column name does not resolve to any table: " + name);
-			return colTable.getTableName();
 		}
 	}
 	

@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.rules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
@@ -66,7 +68,8 @@ public class OneToAnyJoinRule implements ITranslationRule {
 //				System.out.println("After types:");
 //				node.treePrint();
 				TranslationGraph graph = new TranslationGraph(QueryUtils.extractSelectNode(node));
-				new OneToAnyJoinRule("supervisor", "employee", "employee", "manager_ssn", "ssn").apply(graph, node);
+				new OneToAnyJoinRule("employee", "employee", "manager_ssn", "ssn",
+					Arrays.asList("supervisor"), null).apply(graph, node);
 			} catch( RuntimeException e ) {
 				System.err.println("Failed to parse: " + arg);
 				e.printStackTrace();
@@ -77,7 +80,6 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	protected List<String> oneLabels = new ArrayList<String>(0);
 	protected List<String> anyLabels = new ArrayList<String>(0);
 	
-	protected String label;
 	protected String oneTable;
 	protected String anyTable;
 	
@@ -90,15 +92,24 @@ public class OneToAnyJoinRule implements ITranslationRule {
 	protected SelectNode select;
 	protected TranslationGraph graph;
 	
-	public OneToAnyJoinRule() { }	
+	public OneToAnyJoinRule() { }
 	
-	public OneToAnyJoinRule(String label, String oneTable, String anyTable, 
-			String oneAttribute, String anyAttribute) {
-		this.label = label;
+	
+	public OneToAnyJoinRule(String oneTable, String anyTable, 
+			String oneAttribute, String anyAttribute, Collection<String> anyLabels, 
+			Collection<String> oneLabels) {
+		if( oneTable == null || anyTable == null || oneAttribute == null || anyAttribute == null )
+			throw new NullPointerException("Table and attribute arguments may not be null");
+		
 		this.oneTable = oneTable;
 		this.anyTable = anyTable;
 		this.oneAttribute = oneAttribute;
 		this.anyAttribute = anyAttribute;
+		
+		if( anyLabels != null )
+			this.anyLabels.addAll(anyLabels);
+		if( oneLabels != null )
+			this.oneLabels.addAll(oneLabels);
 	}
 
 	@Override
@@ -134,7 +145,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 				rightResult = join.getLogicalRightResultSet();
 		
 		if( !isBaseTable(oneTable, leftResult) || !isBaseTable(anyTable, rightResult) ) {
-			log.debug("Rejected join node based on table operands.");
+			log.trace("Rejected join node based on table operands.");
 			return false;
 		}
 		
@@ -174,17 +185,28 @@ public class OneToAnyJoinRule implements ITranslationRule {
 			return false;
 		}
 		
-		RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightResult);
-		LabelNode rightTable = graph.getTableVertex(anyAlias);
-		rightTable.getLocalChoices().add(this.label);
-		rightTable.modified();
-//		rightMeta.setLabel(this.label);
-//		rightMeta.setOfAlias(oneAlias);
-		rightMeta.addContributor(this);
+		this.applyLabels((FromBaseTable)leftResult, (FromBaseTable)rightResult);
 		
 		log.debug("Labeled based on explicit INNER JOIN");
 		
 		return true;
+	}
+	
+	private void applyLabels(FromBaseTable oneTable, FromBaseTable anyTable) {
+		RuleMetaData anyMeta = QueryUtils.getOrInitMetaData(anyTable);
+		anyMeta.addContributor(this);
+		
+		if( this.anyLabels.size() > 0 ) {
+			LabelNode anyTableNode = graph.getTableVertex(anyAlias);
+			anyTableNode.addLocalChoices(anyLabels);
+			log.debug("Labeled any-table '{}' with: {}", anyAlias, anyLabels);
+		}
+		
+		if( oneLabels.size() > 0 ) {
+			LabelNode oneTableNode = graph.getTableVertex(oneAlias);
+			oneTableNode.addLocalChoices(oneLabels);
+			log.debug("Labeled one-table '{}' with: {}", oneAlias, oneLabels);
+		}
 	}
 	
 	private boolean checkEqualsConstraint(String leftTable, String leftAttr, 
@@ -215,13 +237,8 @@ public class OneToAnyJoinRule implements ITranslationRule {
 				switch(toCheck.getNodeType()) {
 					case NodeTypes.BINARY_EQUALS_OPERATOR_NODE:
 						if( checkBinaryEquality((BinaryRelationalOperatorNode)toCheck)) {
-							RuleMetaData rightMeta = QueryUtils.getOrInitMetaData(rightRef);
-							rightMeta.setLabel(this.label);
-							rightMeta.setOfAlias(oneAlias);
-							LabelNode rightTable = graph.getTableVertex(anyAlias);
-							rightTable.getLocalChoices().add(this.label);
-							rightTable.modified();
-							rightMeta.addContributor(this);
+							
+							this.applyLabels(leftRef, rightRef);
 							
 							log.debug("Label based on implicit join and WHERE clause");
 							return true;
@@ -246,7 +263,7 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		ValueNode leftOp = eq.getLeftOperand(), rightOp = eq.getRightOperand();
 		if( NodeTypes.COLUMN_REFERENCE != leftOp.getNodeType() || 
 				NodeTypes.COLUMN_REFERENCE != rightOp.getNodeType() ) {
-			log.debug("Rejected join based on '=' operator types.");
+			log.trace("Rejected join based on '=' operator types.");
 			return false;
 		}
 		
@@ -256,18 +273,15 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		String leftColName = leftRef.getColumnName(), rightColName = rightRef.getColumnName();
 		
 		if( !checkEqualsConstraint(leftRefTable, leftColName, rightRefTable, rightColName) ) {
-			log.debug("Rejected join based on columns used, saw {}.{} = {}.{}",
+			log.trace("Rejected join based on columns used, saw {}.{} = {}.{}",
 				leftRefTable, leftColName, rightRefTable, rightColName);
 			return false;
 		}
 		
-		// consume join condition and label right-hand join table
+		// consume join condition
 		RuleMetaData onMeta = QueryUtils.getOrInitMetaData(eq);
 		onMeta.setHandled(true);
 		onMeta.addContributor(this);
-		
-		log.debug("Labeled right-table {} ({}) as \"{}\" of {} ({})", 
-			this.anyTable, this.anyAlias, this.label, this.oneTable, this.oneAlias);
 		
 		return true;
 	}
@@ -316,13 +330,21 @@ public class OneToAnyJoinRule implements ITranslationRule {
 		}
 		return false;
 	}
-
-	public String getLabel() {
-		return label;
+	
+	public List<String> getAnyLabels() {
+		return anyLabels;
 	}
-
-	public void setLabel(String label) {
-		this.label = label;
+	
+	public void setAnyLabels(List<String> anyLabels) {
+		this.anyLabels = anyLabels;
+	}
+	
+	public List<String> getOneLabels() {
+		return oneLabels;
+	}
+	
+	public void setOneLabels(List<String> oneLabels) {
+		this.oneLabels = oneLabels;
 	}
 
 	public String getLeftTable() {
