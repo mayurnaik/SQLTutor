@@ -33,21 +33,28 @@
 				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
 			<p:menuitem value="Register" action="RegistrationPage.xhtml?faces-redirect=true" 
 				icon="ui-icon-arrowreturnthick-1-e" style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}"/>
+	        <f:facet name="options">  
+	        	<h:outputText rendered="#{userBean.isLoggedIn()}" value="Current schema: #{userBean.selectedSchemaName}"/> 
+	        </f:facet>  
 		</p:menubar>
 	</h:form>
 	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
-		modal="true" width="400" height="150" resizable="false" appentTo="@(body)">
+		modal="true" width="350" resizable="false" appentTo="@(body)">
 		<h:form id="schemaForm">
-			<h:panelGrid id="schemaGrid" columns="2">
-				<p:outputLabel value="Please select a schema:" />
-				<p:selectOneMenu id="schema" value="#{userBean.selectedSchema}" effect="fade">
-					<f:selectItems value="#{schemaSelectionBean.schemas}" itemValue="#{schemaSelectionBean.schemas}"
-						itemLabel="#{schemaSelectionBean.schemas}" />
-					<p:ajax update="messages" listener="#{schemaSelectionBean.handleChange()}"/> 
-				</p:selectOneMenu>	
-			</h:panelGrid>
-			<!-- Probably want to make this run on a submit button rather than just auto-change and reload -->
-			<p:messages id="messages"/>
+			<h:outputText value="Current schema: #{userBean.selectedSchemaName}"/>
+			<br/><br/>
+			<p:panel>
+				<h:panelGrid id="schemaGrid" columns="2">
+					<h:outputText value="Please select a schema:" />
+					<p:selectOneMenu id="schema" value="#{schemaSelectionBean.selectedSchema}" effect="fade">
+						<f:selectItems value="#{schemaSelectionBean.schemas}" itemValue="#{schemaSelectionBean.schemas}"
+							itemLabel="#{schemaSelectionBean.schemas}" />
+					</p:selectOneMenu>	
+				</h:panelGrid>
+			</p:panel>
+			<br/><br/>
+			<p:commandButton value="Submit" update="schemaForm" action="#{userBean.setSelectedSchema(schemaSelectionBean.selectedSchema)}" style="float:right"/>
+			
 		</h:form>
 	</p:dialog>
 	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg" 

@@ -56,19 +56,18 @@ public class UserBean implements Serializable {
 			return;
 		} 
 		loggedIn = true;
-		FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage("Success."));
 		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
 	}
 	
 	public void register() throws IOException {
+		String registrationMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":registrationForm:registrationMessages").getClientId();
 		if(CONNECTION.isUsernameRegistered(username.toLowerCase())) {
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
+			FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
 			return;
 		} 
 		CONNECTION.registerUser(username.toLowerCase(), password);
 		loggedIn = true;
-		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Success."));
 		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
 	}
@@ -121,6 +120,11 @@ public class UserBean implements Serializable {
 	 */
 	public String getSelectedSchema() {
 		return selectedSchema;
+	}
+	
+	public String getSelectedSchemaName() {
+		String[] selectedSchemaSplit = selectedSchema.split(" ");
+		return selectedSchemaSplit[1];
 	}
 
 	/** 

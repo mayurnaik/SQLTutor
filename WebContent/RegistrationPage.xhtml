@@ -10,8 +10,8 @@
 		<ui:include src="/samples/template-menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body>
-	<h:form id="mainform">
+<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:form id="registrationForm">
 		<h2>Registration</h2>
 		<p:panel id="panel" header="Register">
 			<p:focus context="panel" />
@@ -29,9 +29,9 @@
 				</p:password>
 			</h:panelGrid>
 			<p:captcha label="Captcha" required="true" secure="true"/>   
-			<p:commandButton value="Submit" ajax="false" update="mainform" action="#{userBean.register}" />
+			<p:commandButton value="Submit" update="registrationMessages" action="#{userBean.register}" />
 		</p:panel>
-		<p:messages />
+		<p:messages id="registrationMessages"/>
 	</h:form>
 </h:body>
 </html>

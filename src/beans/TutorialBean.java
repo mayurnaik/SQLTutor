@@ -89,9 +89,9 @@ public class TutorialBean {
 			answerDiffResult.getData().removeAll(queryResult.getData());
 			
 			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
-				compareQueries(false, true); //false true when it is ready
+				compareQueries(false, true); 
 			} else {
-				compareQueries(false, false); //false, false when it is ready
+				compareQueries(false, false); 
 			} 
 			
 		} catch(SQLException e) {
@@ -101,8 +101,8 @@ public class TutorialBean {
 	
 	public void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
 		
-		if(!queryResult.getColumns().containsAll(answerResult.getColumns())) {
-			resultSetFeedback = "Incorrect. Your query's columns did not match the stored answer's. Check your attributes.";
+		if(!queryResult.getColumns().containsAll(answerResult.getColumns()) || !answerResult.getColumns().containsAll(queryResult.getColumns())) {
+			resultSetFeedback = "Incorrect. Check your attributes.";
 		} else {
 			if(columnOrderMatters && rowOrderMatters) {
 				if(answerResult.equals(queryResult)) {
@@ -144,7 +144,7 @@ public class TutorialBean {
 					for(int j = 0; j < answerResult.getData().size(); j++) {
 						columnData.add(answerResult.getData().get(j).get(i));
 					}
-					queryTree.put(answerResult.getColumns().get(i), columnData);
+					answerTree.put(answerResult.getColumns().get(i), columnData);
 				}
 				if(queryTree.equals(answerTree)) {
 					resultSetFeedback = "Correct.";
@@ -175,7 +175,8 @@ public class TutorialBean {
 	
 	public void submitFeedback() {
 		// FIXME We'll need to decide how we're going to store this.
-		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("We appreciate your submission."));
+		String feedbackMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":feedbackForm:feedbackMessages").getClientId();
+		FacesContext.getCurrentInstance().addMessage(feedbackMessagesId, new FacesMessage("We appreciate your submission."));
 	}
 	
 	public void setQuestionsAndAnswers() {

@@ -25,6 +25,7 @@ public class SchemaSelectionBean implements Serializable {
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
 	private List<SelectItem> schemas;
+	private String selectedSchema;
 
 	/** 
 	 * On initialization, the UserBean class will populate the selection list of databases.
@@ -55,12 +56,6 @@ public class SchemaSelectionBean implements Serializable {
 		}
 	}
 	
-	public void handleChange() {
-		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, 
-				"Your schema selection has been changed.", null);
-		FacesContext.getCurrentInstance().addMessage(null, msg);
-	}
-	
 	public DatabaseManager getDatabaseManager() {
 		return databaseManager;
 	}
@@ -82,5 +77,13 @@ public class SchemaSelectionBean implements Serializable {
 	 */
 	public void setSchemas(List<SelectItem> schemas) {
 		this.schemas = schemas;
+	}
+
+	public void setSelectedSchema(String selectedSchema) {
+		this.selectedSchema = selectedSchema;
+	}
+
+	public String getSelectedSchema() {
+		return selectedSchema;
 	}
 }
