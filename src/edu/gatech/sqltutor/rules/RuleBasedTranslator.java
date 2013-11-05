@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import objects.DatabaseTable;
 
@@ -124,13 +123,13 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			LabelNode attrTemplate = new LabelNode();
 			// FIXME make these rule-based
 			attrTemplate.addLocalChoices(Arrays.asList(
-				"${list} of each ${table}",
-				"${list} of every ${table}",
-				"${list} of all ${table}s",
-				"${list} for each ${table}",
-				"${list} for every ${table}",
-				"${list} for all ${table}s",
-				"${list} of any ${table}"
+				"the ${list} of each ${table}",
+				"the ${list} of every ${table}",
+				"the ${list} of all ${table}s",
+				"the ${list} for each ${table}",
+				"the ${list} for every ${table}",
+				"the ${list} for all ${table}s",
+				"the ${list} of any ${table}"
 			));
 			graph.addVertex(attrTemplate);
 			graph.addEdge(attrTemplate, tableNode, 
@@ -219,13 +218,35 @@ public class RuleBasedTranslator implements IQueryTranslator {
 			if( result.size() > 0 && log.isInfoEnabled() ) {
 				log.info("1st translation: {}", result.get(0));
 				log.info("last translation: {}", result.get(result.size()-1));
-				int index = new Random().nextInt(result.size());
-				log.info("random translation [{}]: {}", index+1, result.get(index));
+				
+				int[] indexes = getRandomIndexes(result.size(), 10);
+				for( int index: indexes )
+					log.info("random translation [{}]: {}", index+1, result.get(index));
 			}
 			
 		} catch( StandardException e ) {
 			throw new SQLTutorException("Could not parse query: " + query, e);
 		}
+	}
+	
+	private static int[] getRandomIndexes(int maxIndex, int maxItems) {
+		int[] result;
+		if( maxIndex < maxItems ) {
+			result = new int[maxIndex];
+			for( int i = 0; i < maxIndex; ++i )
+				result[i] = i;
+			return result;
+		}
+
+		List<Integer> indexes = new ArrayList<Integer>(maxIndex);
+		for( int i = 0; i < maxIndex; ++i )
+			indexes.add(i);
+		Collections.shuffle(indexes);
+		
+		result = new int[maxItems];
+		for( int i = 0; i < maxItems; ++i )
+			result[i] = indexes.get(i);
+		return result;
 	}
 	
 	/** Sort rules by decreasing precedence. */

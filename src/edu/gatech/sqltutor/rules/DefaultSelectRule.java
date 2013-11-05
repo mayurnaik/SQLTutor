@@ -12,12 +12,12 @@ import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 
 public class DefaultSelectRule implements ITranslationRule {
 	private static final List<String> phrases = Arrays.asList(
-		"Select the",
-		"List the",
-		"Retrieve the",
-		"Display the",
-		"Fetch the",
-		"Show the"
+//		"List the",
+//		"Display the",
+//		"Fetch the",
+//		"Show the",
+		"Select",
+		"Retrieve"
 	);
 
 	public DefaultSelectRule() {
