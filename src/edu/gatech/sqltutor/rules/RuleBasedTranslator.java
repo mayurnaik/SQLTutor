@@ -222,6 +222,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 				int[] indexes = getRandomIndexes(result.size(), 10);
 				for( int index: indexes )
 					log.info("random translation [{}]: {}", index+1, result.get(index));
+				this.result = result.get(indexes[0]);
 			}
 			
 		} catch( StandardException e ) {
