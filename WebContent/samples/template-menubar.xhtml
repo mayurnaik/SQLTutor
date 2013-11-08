@@ -39,6 +39,7 @@
 		</p:menubar>
 	</h:form>
 	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
+		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchemaName)}" 
 		modal="true" width="350" resizable="false" appentTo="@(body)">
 		<h:form id="schemaForm">
 			<h:outputText value="Current schema: #{userBean.selectedSchemaName}"/>
@@ -53,7 +54,11 @@
 				</h:panelGrid>
 			</p:panel>
 			<br/><br/>
-			<p:commandButton value="Submit" update="schemaForm" action="#{userBean.setSelectedSchema(schemaSelectionBean.selectedSchema)}" style="float:right"/>
+			<p:commandButton value="Submit" update="schemaForm" 
+				action="#{userBean.setSelectedSchema(schemaSelectionBean.selectedSchema)}"
+				oncomplete="PF('schema_dlg').hide()"   
+				style="float:right">
+			</p:commandButton>
 			
 		</h:form>
 	</p:dialog>
