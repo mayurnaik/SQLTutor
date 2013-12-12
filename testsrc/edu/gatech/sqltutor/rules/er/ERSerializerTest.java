@@ -14,18 +14,18 @@ public class ERSerializerTest {
 		
 		EREntity department;
 		diagram.addEntity(entity = department = new EREntity("department"));
-		entity.addAttribute(attr = new ERAttribute("Name"));
+		attr = entity.addAttribute("Name");
 		attr.setKey(true);
 		EREntity employee;
 		diagram.addEntity(entity = employee = new EREntity("employee"));
-		entity.addAttribute(attr = new ERAttribute("Ssn"));
+		attr = entity.addAttribute("Ssn");
 		attr.setKey(true);
 		
 		// composite attribute
-		entity.addAttribute(attr = new ERAttribute("Name"));
-		attr.addAttribute(new ERAttribute("Fname"));
-		attr.addAttribute(new ERAttribute("Minit"));
-		attr.addAttribute(new ERAttribute("Lname"));
+		attr = entity.addAttribute("Name");
+		attr.addAttribute("Fname");
+		attr.addAttribute("Minit");
+		attr.addAttribute("Lname");
 		
 		// relationship
 		relationship = new ERRelationship("works_for", 

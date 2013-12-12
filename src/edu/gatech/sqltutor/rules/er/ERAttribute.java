@@ -4,9 +4,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 @XStreamAlias("attribute")
 public class ERAttribute extends ERNamedNode implements ERNode {
@@ -23,8 +25,12 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 	private Set<ERAttribute> attributes = 
 		new HashSet<ERAttribute>(0);
 	
-	public ERAttribute(String name) {
+	@XStreamOmitField
+	private EREntity entity;
+	
+	public ERAttribute(EREntity entity, String name) {
 		super(name);
+		this.entity = entity;
 	}
 	
 	@Override
@@ -60,15 +66,54 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 		return attributes.size() > 0;
 	}
 	
-	public boolean addAttribute(ERAttribute attr) {
-		return attributes.add(attr);
+	public ERAttribute addAttribute(String name) {
+		ERAttribute attr = new ERAttribute(entity, name);
+		if( attributes.add(attr) )
+			return attr;
+		return getAttribute(name);
 	}
 	
-	public boolean removeAttribute(ERAttribute attr) {
-		return attributes.remove(attr);
+	public ERAttribute getAttribute(String name) {
+		for( ERAttribute attr: attributes ) 
+			if( name.equals(attr.getName()) )
+				return attr;
+		return null;
 	}
 	
 	public Set<ERAttribute> getAttributes() {
 		return Collections.unmodifiableSet(attributes);
+	}
+	
+	public EREntity getEntity() {
+		return entity;
+	}
+	
+	public void setEntity(EREntity entity) {
+		this.entity = entity;
+	}
+	
+	@Override
+	public int hashCode() {
+		int hashCode = super.hashCode();
+		if( entity != null )
+			hashCode ^= entity.hashCode();
+		return hashCode;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if( !super.equals(obj) )
+			return false;
+		ERAttribute that = (ERAttribute)obj;
+		return Objects.equal(this.entity, that.entity);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		if( entity != null )
+			b.append(entity).append('.');
+		b.append(getName());
+		return b.toString();
 	}
 }
