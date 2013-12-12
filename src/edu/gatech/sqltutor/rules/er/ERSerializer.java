@@ -19,7 +19,8 @@ public class ERSerializer {
 			ERDiagram.class,
 			EREntity.class,
 			ERAttribute.class,
-			ERRelationship.class
+			ERRelationship.class,
+			ERMapping.class
 		});
 		return xstream;
 	}
@@ -27,24 +28,24 @@ public class ERSerializer {
 	public ERSerializer() {
 	}
 	
-	public String serialize(ERDiagram diagram) {
+	public String serialize(Object diagram) {
 		if( diagram == null ) throw new NullPointerException("diagram is null");
 		return xstream.toXML(diagram);
 	}
 	
-	public void serialize(ERDiagram diagram, OutputStream stream) {
+	public void serialize(Object diagram, OutputStream stream) {
 		if( diagram == null ) throw new NullPointerException("diagram is null");
 		if( stream == null ) throw new NullPointerException("stream is null");
 		xstream.toXML(diagram, stream);
 	}
 	
-	public ERDiagram deserialize(String xml) {
+	public Object deserialize(String xml) {
 		if( xml == null ) throw new NullPointerException("xml is null");
-		return (ERDiagram)xstream.fromXML(xml);
+		return xstream.fromXML(xml);
 	}
 	
-	public ERDiagram deserialize(InputStream stream) {
+	public Object deserialize(InputStream stream) {
 		if( stream == null ) throw new NullPointerException("stream is null");
-		return (ERDiagram)xstream.fromXML(stream);
+		return xstream.fromXML(stream);
 	}
 }

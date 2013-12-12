@@ -1,11 +1,11 @@
 package edu.gatech.sqltutor.rules.er;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class ERSerializerTest {
-
-	@Test
-	public void test() {
+	
+	private ERDiagram makeDiagram() {
 		ERDiagram diagram = new ERDiagram();
 		
 		EREntity entity = null;
@@ -33,15 +33,38 @@ public class ERSerializerTest {
 			department, new EREdgeConstraint(4, -1, "Department"));
 		diagram.addRelationship(relationship);
 		
+		return diagram;
+	}
+
+	@Test
+	public void testDiagram() {
+		ERDiagram diagram = makeDiagram();
+		
 		ERSerializer serializer = new ERSerializer();
 		String xml = serializer.serialize(diagram);
 		
 		System.out.println(xml);
 
 		@SuppressWarnings("unused")
-		ERDiagram reloaded = serializer.deserialize(xml);
+		ERDiagram reloaded = (ERDiagram)serializer.deserialize(xml);
 		
 		System.out.println("Reloaded successfully.");
 	}
 
+	@Test
+	public void testMapping() {
+		ERDiagram diagram = makeDiagram();
+		ERMapping mapping = new ERMapping(diagram);
+		mapping.mapAttribute("Employee.Fname", "employee.first_name");
+		
+		ERSerializer serializer = new ERSerializer();
+		String xml = serializer.serialize(mapping);
+		
+		xml = xml.replaceAll(" class=\"com\\.google\\.common\\.collect\\.HashBiMap\"", "");
+		
+		System.out.println(xml);
+		
+		ERMapping reloaded = (ERMapping)serializer.deserialize(xml);
+		System.out.println("Reloaded successfully.");
+	}
 }

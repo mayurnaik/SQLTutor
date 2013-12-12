@@ -108,12 +108,16 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 		return Objects.equal(this.entity, that.entity);
 	}
 	
-	@Override
-	public String toString() {
+	public String getFullName() {
 		StringBuilder b = new StringBuilder();
 		if( entity != null )
 			b.append(entity).append('.');
 		b.append(getName());
 		return b.toString();
+	}
+	
+	@Override
+	public String toString() {
+		return getFullName();
 	}
 }
