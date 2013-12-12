@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules.er;
 
-import org.junit.Before;
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 public class ERSerializerTest {
@@ -13,11 +14,11 @@ public class ERSerializerTest {
 		ERRelationship relationship = null;
 		
 		EREntity department;
-		diagram.addEntity(entity = department = new EREntity("department"));
+		diagram.addEntity(entity = department = new EREntity("Department"));
 		attr = entity.addAttribute("Name");
 		attr.setKey(true);
 		EREntity employee;
-		diagram.addEntity(entity = employee = new EREntity("employee"));
+		diagram.addEntity(entity = employee = new EREntity("Employee"));
 		attr = entity.addAttribute("Ssn");
 		attr.setKey(true);
 		
@@ -65,6 +66,9 @@ public class ERSerializerTest {
 		System.out.println(xml);
 		
 		ERMapping reloaded = (ERMapping)serializer.deserialize(xml);
+		reloaded.setDiagram(diagram);
 		System.out.println("Reloaded successfully.");
+		
+		Assert.assertNotNull(reloaded.getAttribute("employee.first_name"));
 	}
 }
