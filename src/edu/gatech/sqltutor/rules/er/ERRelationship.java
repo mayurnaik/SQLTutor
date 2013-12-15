@@ -8,7 +8,7 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 @XStreamAlias("relationship")
-public class ERRelationship extends ERNamedNode implements ERNode {
+public class ERRelationship extends AbstractERNamedNode implements ERNode {
 	
 	@XStreamAlias("edge")
 	public static class ERRelationshipEdge {
@@ -84,5 +84,15 @@ public class ERRelationship extends ERNamedNode implements ERNode {
 	@Override
 	public int getNodeType() {
 		return ERNode.TYPE_RELATIONSHIP;
+	}
+	
+	public String getFullName() {
+		StringBuilder b = new StringBuilder();
+		if( leftEdge != null )
+			b.append(leftEdge.getEntity().getName()).append('.');
+		b.append(getName());
+		if( rightEdge != null )
+			b.append('.').append(rightEdge.getEntity().getName());
+		return b.toString();
 	}
 }

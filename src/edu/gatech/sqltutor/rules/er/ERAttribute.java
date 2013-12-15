@@ -1,17 +1,16 @@
 package edu.gatech.sqltutor.rules.er;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.google.common.base.Objects;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.thoughtworks.xstream.annotations.XStreamConverter;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+import edu.gatech.sqltutor.rules.er.converters.AttributeConverter;
+
 @XStreamAlias("attribute")
-public class ERAttribute extends ERNamedNode implements ERNode {
+@XStreamConverter(AttributeConverter.class)
+public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	@XStreamAsAttribute
 	private boolean isKey;
 	
@@ -21,16 +20,16 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 	@XStreamAsAttribute
 	private boolean isMultivalued;
 	
-	@XStreamImplicit
-	private Set<ERAttribute> attributes = 
-		new HashSet<ERAttribute>(0);
-	
 	@XStreamOmitField
-	private EREntity entity;
+	private ERNamedNode parent;
 	
-	public ERAttribute(EREntity entity, String name) {
+	public ERAttribute(String name) {
 		super(name);
-		this.entity = entity;
+	}
+	
+	public ERAttribute(ERNamedNode entity, String name) {
+		super(name);
+		this.parent = entity;
 	}
 	
 	@Override
@@ -63,40 +62,22 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 	}
 	
 	public boolean isComposite() {
-		return attributes.size() > 0;
+		return false;
 	}
 	
-	public ERAttribute addAttribute(String name) {
-		ERAttribute attr = new ERAttribute(entity, name);
-		if( attributes.add(attr) )
-			return attr;
-		return getAttribute(name);
+	public ERNamedNode getParent() {
+		return parent;
 	}
 	
-	public ERAttribute getAttribute(String name) {
-		for( ERAttribute attr: attributes ) 
-			if( name.equals(attr.getName()) )
-				return attr;
-		return null;
-	}
-	
-	public Set<ERAttribute> getAttributes() {
-		return Collections.unmodifiableSet(attributes);
-	}
-	
-	public EREntity getEntity() {
-		return entity;
-	}
-	
-	public void setEntity(EREntity entity) {
-		this.entity = entity;
+	public void setParent(ERNamedNode parent) {
+		this.parent = parent;
 	}
 	
 	@Override
 	public int hashCode() {
 		int hashCode = super.hashCode();
-		if( entity != null )
-			hashCode ^= entity.hashCode();
+		if( parent != null )
+			hashCode ^= parent.hashCode();
 		return hashCode;
 	}
 	
@@ -105,13 +86,13 @@ public class ERAttribute extends ERNamedNode implements ERNode {
 		if( !super.equals(obj) )
 			return false;
 		ERAttribute that = (ERAttribute)obj;
-		return Objects.equal(this.entity, that.entity);
+		return Objects.equal(this.parent, that.parent);
 	}
 	
 	public String getFullName() {
 		StringBuilder b = new StringBuilder();
-		if( entity != null )
-			b.append(entity).append('.');
+		if( parent != null )
+			b.append(parent).append('.');
 		b.append(getName());
 		return b.toString();
 	}

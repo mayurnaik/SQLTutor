@@ -1,7 +1,9 @@
 package edu.gatech.sqltutor.rules.er;
 
-import junit.framework.Assert;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ERSerializerTest {
@@ -23,15 +25,18 @@ public class ERSerializerTest {
 		attr.setKey(true);
 		
 		// composite attribute
-		attr = entity.addAttribute("Name");
-		attr.addAttribute("Fname");
-		attr.addAttribute("Minit");
-		attr.addAttribute("Lname");
+		attr = entity.addCompositeAttribute("Name");
+		
+		for( String childName: new String[]{"Fname", "Minit", "Lname"} )
+			entity.addChildAttribute("Name", childName);
+//		attr.addAttribute("Fname");
+//		attr.addAttribute("Minit");
+//		attr.addAttribute("Lname");
 		
 		// relationship
 		relationship = new ERRelationship("works_for", 
-			employee, new EREdgeConstraint(1, 1, "Employee"), 
-			department, new EREdgeConstraint(4, -1, "Department"));
+			employee, new EREdgeConstraint(1, "Employee"), 
+			department, new EREdgeConstraint(EREdgeConstraint.ANY_CARDINALITY, "Department"));
 		diagram.addRelationship(relationship);
 		
 		return diagram;
@@ -50,6 +55,12 @@ public class ERSerializerTest {
 		ERDiagram reloaded = (ERDiagram)serializer.deserialize(xml);
 		
 		System.out.println("Reloaded successfully.");
+		
+		String reloadedXML = serializer.serialize(reloaded);
+		
+		System.out.println(reloadedXML);
+		
+		Assert.assertEquals(xml, reloadedXML);
 	}
 
 	@Test
@@ -70,5 +81,18 @@ public class ERSerializerTest {
 		System.out.println("Reloaded successfully.");
 		
 		Assert.assertNotNull(reloaded.getAttribute("employee.first_name"));
+	}
+	
+	@Test
+	public void testRegex() {
+		Pattern p = Pattern.compile("([\"\\s]|&quot;)(http://.*?)(?=\\1)", Pattern.CASE_INSENSITIVE);
+		final String URL = "http://test.url/here.php?var1=val&var2=val2";
+		final String INPUT = "some text " + URL + " more text + \"" + URL + 
+				"\" more then &quot;" + URL + "&quot; testing greed &quot;";
+		
+		Matcher m = p.matcher(INPUT);
+		while( m.find() ) {
+			System.out.println("Found: " + m.group(2));
+		}
 	}
 }

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.Xpp3Driver;
 
 /**
@@ -13,7 +14,7 @@ public class ERSerializer {
 	private static XStream xstream = createXStream();
 	
 	static XStream createXStream() {
-		XStream xstream = new XStream(new Xpp3Driver());
+		XStream xstream = new XStream(new Sun14ReflectionProvider(),  new Xpp3Driver());
 		xstream.setMode(XStream.ID_REFERENCES);
 		xstream.processAnnotations(new Class<?>[] {
 			ERDiagram.class,
@@ -22,6 +23,7 @@ public class ERSerializer {
 			ERRelationship.class,
 			ERMapping.class
 		});
+		xstream.addDefaultImplementation(ERCompositeAttribute.class, ERAttribute.class);
 		return xstream;
 	}
 	

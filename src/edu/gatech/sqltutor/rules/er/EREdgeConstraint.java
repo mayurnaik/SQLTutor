@@ -17,8 +17,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * this is equivalent to N.
  */
 public class EREdgeConstraint {
+	public static final int ANY_CARDINALITY = -1;
 	
-	public static class MaxConverter implements Converter {
+	public static class CardinalityConverter implements Converter {
 		@Override
 		public boolean canConvert(
 				@SuppressWarnings("rawtypes") Class clazz) {
@@ -45,44 +46,30 @@ public class EREdgeConstraint {
 		}
 	}
 	
-	private int min;
-	
-	@XStreamConverter(value=MaxConverter.class)
-	private int max;
-	
 	private String label;
-
 	
-	public EREdgeConstraint(int min, int max) {
-		this(min, max, null);
+	@XStreamConverter(value=CardinalityConverter.class)
+	private int cardinality;
+
+	public EREdgeConstraint(int cardinality) {
+		this.cardinality = Math.max(-1, cardinality);
 	}
 	
-	public EREdgeConstraint(int min, int max, String label) {
-		if( min < 0 )
-			throw new IllegalArgumentException("Min must be non-negative: " + min);
-		if( max >= 0 && max < min )
-			throw new IllegalArgumentException("Max must not be less than min: (min=" + min + ", max=" + max + ")");
-		
-		this.min = min;
-		this.max = max;
+	public EREdgeConstraint(int cardinality, String label) {
 		this.label = label;
+		this.cardinality = Math.max(-1, cardinality);
 	}
-
 	public String getLabel() {
 		return label;
 	}
 	
-	public int getMin() {
-		return min;
-	}
-	
-	public int getMax() {
-		return max;
+	public int getCardinality() {
+		return cardinality;
 	}
 	
 	@Override
 	public String toString() {
-		return "(" + min + "," + (max < 0 ? 'N' : max) + ")" + 
+		return "[" + (cardinality < 0 ? 'N' : cardinality) + "]" + 
 			(label == null ? "" : " " + label);
 	}
 }
