@@ -1,18 +1,20 @@
 package edu.gatech.sqltutor.rules.er;
 
-import java.util.HashSet;
 import java.util.Set;
-
-import org.jgrapht.graph.Multigraph;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamConverter;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+import edu.gatech.sqltutor.rules.er.converters.ERDiagramConverter;
 import edu.gatech.sqltutor.rules.er.util.ERNodeMap;
 
 @XStreamAlias("erdiagram")
+@XStreamConverter(ERDiagramConverter.class)
 public class ERDiagram {
 	private static class IsNodeType implements Predicate<ERNode> {
 		private final int nodeType;
@@ -27,20 +29,30 @@ public class ERDiagram {
 		isRelationship = new IsNodeType(ERNode.TYPE_RELATIONSHIP),
 		isAttribute    = new IsNodeType(ERNode.TYPE_ATTRIBUTE);
 	
-	
-	// FIXME track here?
-	@XStreamOmitField
-	private Multigraph<ERNode, Object> graph = 
-		new Multigraph<ERNode, Object>(Object.class);
+	private static final Pattern attributeNamePattern = Pattern.compile(
+		"^([^\\.]+)(\\.[^\\.]+)*\\.([^\\.]+)$"
+	);
 	
 	@XStreamOmitField
-	private ERNodeMap<ERNamedNode> nodes = new ERNodeMap<ERNamedNode>();
+	private ERNodeMap<ERNamedNode> nodes;
 	
-//	private Set<EREntity> entities = new HashSet<EREntity>();
-	private ERNodeMap<EREntity> entities = new ERNodeMap<EREntity>();
-	private Set<ERRelationship> relationships = new HashSet<ERRelationship>();
+	private Set<EREntity> entities;
+	private Set<ERRelationship> relationships;
 
 	public ERDiagram() {
+		initialize();
+	}
+
+	@SuppressWarnings({"unchecked","rawtypes"})
+	protected void initialize() {
+		nodes = new ERNodeMap<ERNamedNode>();
+		entities = (Set)Sets.filter(nodes.getNodes(), isEntity);
+		relationships = (Set)Sets.filter(nodes.getNodes(), isRelationship);
+	}
+	
+	private Object readResolve() {
+		this.initialize();
+		return this;
 	}
 	
 	public EREntity newEntity(String name) {
@@ -52,35 +64,78 @@ public class ERDiagram {
 //		entities.add(entity);
 		return entity;
 	}
+	
+	public EREntity getEntity(String name) {
+		ERNamedNode node = nodes.getNode(name);
+		if( node.getNodeType() == ERNode.TYPE_ENTITY )
+			return (EREntity)node;
+		return null;
+	}
 
-	public boolean addEntity(EREntity entity) {
-		if( !entities.hasNode(entity) ) {
-			entities.addNode(entity);
-			return true;
-		}
-		return false;
-//		return entities.add(entity);
+	public void addEntity(EREntity entity) {
+		if( nodes.hasNode(entity.getName()) )
+			throw new IllegalArgumentException("Already exists.");
+		nodes.addNode(entity);
 	}
 	
-//	public boolean removeEntity(EREntity entity) {
-//		return entities.remove(entity);
-//	}
+	public void removeEntity(EREntity entity) {
+		entities.remove(entity);
+	}
 
-	@SuppressWarnings({"unchecked","rawtypes"})
 	public Set<EREntity> getEntities() {
-		return (Set)Sets.filter(nodes.getNodes(), isEntity);
-//		return entities;
+		return entities;
 	}
 	
-	public boolean addRelationship(ERRelationship relationship) {
-		return relationships.add(relationship);
+	public ERRelationship getRelationship(String name) {
+		ERNamedNode node = nodes.getNode(name);
+		if( node.getNodeType() == ERNode.TYPE_RELATIONSHIP )
+			return (ERRelationship)node;
+		return null;
+	}
+
+	public ERRelationship newRelationship(String name) {
+		if( name == null ) throw new NullPointerException("name is null");
+		if( nodes.hasNode(name) )
+			throw new IllegalArgumentException("Name is already in use: " + name);
+		ERRelationship rel = new ERRelationship(name);
+		nodes.addNode(rel);
+		return rel;
 	}
 	
-	public boolean removeRelationship(ERRelationship relationship) {
-		return relationships.remove(relationship);
+	public void addRelationship(ERRelationship relationship) {
+		addNode(relationship);
+	}
+	
+	public void removeRelationship(ERRelationship relationship) {
+		relationships.remove(relationship);
 	}
 	
 	public Set<ERRelationship> getRelationships() {
 		return relationships;
+	}
+	
+	public void addNode(ERNamedNode node) {
+		nodes.addNode(node);
+	}
+	
+	public ERNamedNode removeNode(String name) {
+		return nodes.removeNode(name);
+	}
+	
+	public ERAttribute getAttribute(String name) {
+		Matcher matcher = attributeNamePattern.matcher(name);
+		if( !matcher.matches() ) {
+			throw new IllegalArgumentException(
+				"Attribute name must be qualified with an entity or relationship: " + name);
+		}
+		
+		String parentName = matcher.group(1);
+		String attrName = matcher.group(3);
+		
+		ERAttributeContainer parent = (ERAttributeContainer)nodes.getNode(parentName);
+		if( parent == null )
+			return null; // exception?
+		
+		return parent.getAttribute(attrName);
 	}
 }

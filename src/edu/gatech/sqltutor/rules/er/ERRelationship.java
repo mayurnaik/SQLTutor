@@ -1,14 +1,10 @@
 package edu.gatech.sqltutor.rules.er;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 @XStreamAlias("relationship")
-public class ERRelationship extends AbstractERNamedNode implements ERNode {
+public class ERRelationship extends AbstractERAttributeContainer {
 	
 	@XStreamAlias("edge")
 	public static class ERRelationshipEdge {
@@ -36,10 +32,6 @@ public class ERRelationship extends AbstractERNamedNode implements ERNode {
 			this.constraint = constraint;
 		}
 	}
-	
-	@XStreamImplicit
-	private Set<ERAttribute> attributes = 
-		new HashSet<ERAttribute>(0);
 
 	private ERRelationshipEdge leftEdge;
 	private ERRelationshipEdge rightEdge;

@@ -46,6 +46,11 @@ public class ERSerializerTest {
 	public void testDiagram() {
 		ERDiagram diagram = makeDiagram();
 		
+		ERAttribute nameAttr = diagram.getAttribute("Employee.Name");
+		Assert.assertNotNull("Could not find Employee.Name attribute.", nameAttr);
+		ERAttribute fnameAttr = diagram.getAttribute("Employee.Fname");
+		Assert.assertNotNull("Could not find Employee.Fname attribute.", fnameAttr);
+		
 		ERSerializer serializer = new ERSerializer();
 		String xml = serializer.serialize(diagram);
 		

@@ -42,6 +42,14 @@ public class ERNodeMap<NodeType extends ERNamedNode> {
 		return nodes.get(name);
 	}
 	
+	public NodeType removeNode(String name) {
+		return nodes.remove(name);
+	}
+	
+	public void removeNode(NodeType node) {
+		nodes.inverse().remove(node);
+	}
+	
 	public Set<NodeType> getNodes() {
 		return nodes.values();
 	}

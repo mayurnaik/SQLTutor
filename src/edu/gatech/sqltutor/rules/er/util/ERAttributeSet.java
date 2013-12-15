@@ -68,6 +68,23 @@ public class ERAttributeSet extends ERNodeMap<ERAttribute> {
 		return getNode(name);
 	}
 	
+	public void removeAttribute(ERAttribute attr) {
+		String name = getNodeKey(attr);
+		ERAttribute current = getAttribute(name);
+		if( current == attr )
+			removeAttribute(name);
+	}
+	
+	public ERAttribute removeAttribute(String name) {
+		ERAttribute attr = removeNode(name);
+		if( attr instanceof ERCompositeAttribute ) {
+			ERCompositeAttribute comp = (ERCompositeAttribute)attr;
+			for( ERAttribute child: comp.getAttributes() )
+				removeNode(child);
+		}
+		return attr;
+	}
+	
 	public Set<ERAttribute> getSimpleAttributes() {
 		return Sets.filter(getNodes(), new Predicate<ERAttribute>() {
 			public boolean apply(ERAttribute attr) {
