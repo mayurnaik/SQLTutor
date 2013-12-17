@@ -1,10 +1,13 @@
 package edu.gatech.sqltutor.rules.er;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import static edu.gatech.sqltutor.rules.er.EREdgeConstraint.ANY_CARDINALITY;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
+import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
+import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
 public class ERSerializerTest {
 	
@@ -38,6 +41,19 @@ public class ERSerializerTest {
 			employee, new EREdgeConstraint(1, "Employee"), 
 			department, new EREdgeConstraint(EREdgeConstraint.ANY_CARDINALITY, "Department"));
 		diagram.addRelationship(relationship);
+		
+
+		
+		entity = diagram.newEntity("Project");
+		attr = entity.addAttribute("Pnumber");
+		attr.setKey(true);
+		entity.addAttribute("Pname");
+		
+		relationship = new ERRelationship("works_on", 
+			employee, new EREdgeConstraint(ANY_CARDINALITY, "Employee"),
+			entity, new EREdgeConstraint(ANY_CARDINALITY, "Project"));
+		diagram.addRelationship(relationship);
+		relationship.addAttribute("Hours");
 		
 		return diagram;
 	}
@@ -73,7 +89,12 @@ public class ERSerializerTest {
 		ERDiagram diagram = makeDiagram();
 		ERMapping mapping = new ERMapping(diagram);
 		mapping.mapAttribute("Employee.Fname", "employee.first_name");
-		
+		mapping.mapRelationship("works_for", 
+			new ERForeignKeyJoin("department.name", "employee.dno"));
+		mapping.mapRelationship("works_on", 
+			new ERLookupTableJoin("employee.ssn", "works_on.essn", 
+				"project.number", "works_on.pno"));
+
 		ERSerializer serializer = new ERSerializer();
 		String xml = serializer.serialize(mapping);
 		
@@ -86,18 +107,5 @@ public class ERSerializerTest {
 		System.out.println("Reloaded successfully.");
 		
 		Assert.assertNotNull(reloaded.getAttribute("employee.first_name"));
-	}
-	
-	@Test
-	public void testRegex() {
-		Pattern p = Pattern.compile("([\"\\s]|&quot;)(http://.*?)(?=\\1)", Pattern.CASE_INSENSITIVE);
-		final String URL = "http://test.url/here.php?var1=val&var2=val2";
-		final String INPUT = "some text " + URL + " more text + \"" + URL + 
-				"\" more then &quot;" + URL + "&quot; testing greed &quot;";
-		
-		Matcher m = p.matcher(INPUT);
-		while( m.find() ) {
-			System.out.println("Found: " + m.group(2));
-		}
 	}
 }

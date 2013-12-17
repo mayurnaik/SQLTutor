@@ -7,6 +7,10 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.Xpp3Driver;
 
+import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
+import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
+
 /**
  * For serializing {@link ERDiagram}s to/from XML.
  */
@@ -21,7 +25,9 @@ public class ERSerializer {
 			EREntity.class,
 			ERAttribute.class,
 			ERRelationship.class,
-			ERMapping.class
+			ERMapping.class,
+			ERJoinMap.class,
+			ERKeyPair.class
 		});
 		xstream.addDefaultImplementation(ERCompositeAttribute.class, ERAttribute.class);
 		return xstream;

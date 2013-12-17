@@ -1,6 +1,5 @@
-package edu.gatech.sqltutor.rules.er;
+package edu.gatech.sqltutor.rules.er.mapping;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.BiMap;
@@ -9,6 +8,9 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
+import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.er.ERDiagram;
+import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.er.converters.BiMapConverter;
 
 @XStreamAlias("ermapping")
@@ -23,12 +25,23 @@ public class ERMapping {
 		public AttributeColumnConverter() { super("attribute", "column"); }
 	}
 	
+	public static class RelationshipMapConverter extends BiMapConverter {
+		public RelationshipMapConverter() { 
+			super("relationship", "join");
+			setValueType(ERJoinMap.class);
+		}
+	}
+	
 	@XStreamOmitField
 	private ERDiagram diagram;
 	
-	@XStreamAlias(value="attribute-map")
+	@XStreamAlias("attribute-map")
 	@XStreamConverter(AttributeColumnConverter.class)
 	BiMap<String, String> attributeToColumn = HashBiMap.create();
+	
+	@XStreamAlias("join-map")
+	@XStreamConverter(RelationshipMapConverter.class)
+	BiMap<String, ERJoinMap> relationshipToJoin = HashBiMap.create();
 
 	public ERMapping(ERDiagram diagram) {
 		this.diagram = diagram;
@@ -63,31 +76,25 @@ public class ERMapping {
 		return attributeToColumn.inverse().get(column);
 	}
 	
-	public ERAttribute getAttribute(String name) {
+	/**
+	 * Returns the attribute a column is mapped to.
+	 * @param column the fully qualified column name
+	 * @return the attribute or <code>null</code> if there is no such attribute
+	 */
+	public ERAttribute getAttribute(String column) {
 		checkDiagram();
-		if( !isFQName(name) )
-			throw new IllegalArgumentException("Name must be fully qualified: " + name);
-		String attrName = getAttributeName(name);
-		if( attrName == null ) {
-			System.err.println("No attribute for column: " + name);
+		String attrName = getAttributeName(column);
+		if( attrName == null )
 			return null;
-		}
-		System.out.println("Looking for: " + attrName);
-		Matcher m = fqNamePattern.matcher(attrName);
-		if( !m.matches() )
-			throw new IllegalStateException("Attribute name must be fully qualified: " + name);
-		
-		String entityName = m.group(1);
-		attrName = m.group(2);
-		
-		for( EREntity entity: diagram.getEntities() ) {
-			if( !entityName.equals(entity.getName()) )
-				continue;
-			
-			return entity.getAttribute(attrName);
-		}
-		
-		return null;
+		return diagram.getAttribute(attrName);
+	}
+	
+	public void mapRelationship(ERRelationship relationship, ERJoinMap joinType) {
+		mapRelationship(relationship.getFullName(), joinType);
+	}
+	
+	public void mapRelationship(String name, ERJoinMap joinType) {
+		relationshipToJoin.put(name, joinType);
 	}
 	
 	protected void checkDiagram() {

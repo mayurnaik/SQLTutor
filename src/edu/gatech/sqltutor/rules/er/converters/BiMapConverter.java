@@ -19,6 +19,9 @@ public class BiMapConverter
 	protected String entryAlias = "entry";
 	protected String keyAlias = "key";
 	protected String valueAlias = "value";
+	
+	protected Class<?> keyType = String.class;
+	protected Class<?> valueType = String.class;
 
 	public BiMapConverter() {}
 	
@@ -60,7 +63,7 @@ public class BiMapConverter
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 		BiMap map = HashBiMap.create();
 		while( reader.hasMoreChildren() ) {
-			String key = null, value = null, nodeName;
+			Object key = null, value = null, nodeName;
 			reader.moveDown();
 			if( !entryAlias.equals(reader.getNodeName()) )
 				throw new ConversionException("Malformed XML, expected '" + entryAlias + "' node, not: " + reader.getNodeName());
@@ -69,9 +72,9 @@ public class BiMapConverter
 				reader.moveDown();
 				nodeName = reader.getNodeName();
 				if( keyAlias.equals(nodeName) )
-					key = reader.getValue(); // FIXME non-simple values?
+					key = context.convertAnother(map, keyType);
 				else if( valueAlias.equals(nodeName) )
-					value = reader.getValue();
+					value = context.convertAnother(map, valueType);
 				reader.moveUp();
 			}
 
@@ -80,9 +83,31 @@ public class BiMapConverter
 			if( value == null )
 				throw new ConversionException("Missing <" + valueAlias + ">");
 
-			map.put(key, value);
+			try {
+				map.put(key, value);
+			} catch( IllegalArgumentException e ) {
+				System.err.println("Could not insert key=" + key + ", value=" + value);
+				System.err.println("value.class=" + value.getClass());
+				throw e;
+			}
 			reader.moveUp();
 		}
 		return map;
+	}
+	
+	public Class<?> getValueType() {
+		return valueType;
+	}
+	
+	public void setValueType(Class<?> valueType) {
+		this.valueType = valueType;
+	}
+	
+	public Class<?> getKeyType() {
+		return keyType;
+	}
+	
+	public void setKeyType(Class<?> keyType) {
+		this.keyType = keyType;
 	}
 }

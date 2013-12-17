@@ -80,11 +80,12 @@ public class ERRelationship extends AbstractERAttributeContainer {
 	
 	public String getFullName() {
 		StringBuilder b = new StringBuilder();
-		if( leftEdge != null )
-			b.append(leftEdge.getEntity().getName()).append('.');
+		// TODO are relationships unique by local name or by combination with entities?
+//		if( leftEdge != null )
+//			b.append(leftEdge.getEntity().getName()).append('.');
 		b.append(getName());
-		if( rightEdge != null )
-			b.append('.').append(rightEdge.getEntity().getName());
+//		if( rightEdge != null )
+//			b.append('.').append(rightEdge.getEntity().getName());
 		return b.toString();
 	}
 }
