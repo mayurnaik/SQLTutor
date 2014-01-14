@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	This represents the Company database from "Fundamentals of Database Systems".
+	The diagram is found on page 225 of the sixth edition. 
+-->
+<erdiagram id="1">
+  <entities id="2">
+    <entity id="entityDepartment" isWeak="false">
+      <name>Department</name>
+      <attributes id="4">
+        <attribute id="6" isComposite="false" isKey="true" isDerived="false" isMultivalued="false">
+          <name>Name</name>
+        </attribute>
+        <attribute isKey="true">
+        	<name>Number</name>
+        </attribute>
+        <attribute isMultivalued="true">
+        	<name>Locations</name>
+        </attribute>
+      </attributes>
+      <type>THING</type>
+    </entity>
+    <entity id="entityEmployee" isWeak="false">
+      <name>Employee</name>
+      <attributes id="8">
+        <attribute id="10" isComposite="false" isKey="true" isDerived="false" isMultivalued="false">
+          <name>Ssn</name>
+        </attribute>
+        <attribute id="11" isComposite="true" isKey="false" isDerived="false" isMultivalued="false">
+          <name>Name</name>
+          <attributes id="12">
+            <attribute id="13" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
+              <name>Minit</name>
+            </attribute>
+            <attribute id="14" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
+              <name>Lname</name>
+            </attribute>
+            <attribute id="15" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
+              <name>Fname</name>
+            </attribute>
+          </attributes>
+        </attribute>
+        <attribute><name>Bdate</name></attribute>
+        <attribute><name>Address</name></attribute>
+        <attribute><name>Salary</name></attribute>
+        <attribute><name>Sex</name></attribute>
+      </attributes>
+      <type>PERSON</type>
+    </entity>
+    <entity id="entityProject" isWeak="false">
+      <name>Project</name>
+      <attributes id="17">
+        <attribute id="19" isKey="true">
+          <name>Name</name>
+        </attribute>
+        <attribute id="20" isKey="true">
+          <name>Number</name>
+        </attribute>
+        <attribute><name>Location</name></attribute>
+      </attributes>
+      <type>THING</type>
+    </entity>
+    <entity id="entityDependent" isWeak="true">
+    	<name>Dependent</name>
+    	<type>person</type>
+    	<attributes>
+    		<attribute isKey="true">
+    			<name>Name</name>
+    		</attribute>
+    		<attribute><name>Sex</name></attribute>
+    		<attribute><name>Birth_date</name></attribute>
+    		<attribute><name>Relationship</name></attribute>
+    	</attributes>
+    </entity>
+  </entities>
+  <relationships id="21">
+    <relationship id="22" isIdentifying="false">
+      <name>works_on</name>
+      <attributes id="23">
+        <attribute id="25" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
+          <name>Hours</name>
+        </attribute>
+      </attributes>
+      <leftEdge id="26">
+        <entity reference="entityEmployee"/>
+        <constraint id="27">
+          <label>Employee</label>
+          <cardinality>N</cardinality>
+        </constraint>
+      </leftEdge>
+      <rightEdge id="28">
+        <entity reference="entityProject"/>
+        <constraint id="29">
+          <label>Project</label>
+          <cardinality>N</cardinality>
+        </constraint>
+      </rightEdge>
+    </relationship>
+    <relationship id="30" isIdentifying="false">
+      <name>works_for</name>
+      <attributes id="31"/>
+      <leftEdge id="33">
+        <entity reference="entityEmployee"/>
+        <constraint id="34">
+          <label>Employee</label>
+          <cardinality>1</cardinality>
+        </constraint>
+      </leftEdge>
+      <rightEdge id="35">
+        <entity reference="entityDepartment"/>
+        <constraint id="36">
+          <label>Department</label>
+          <cardinality>N</cardinality>
+        </constraint>
+      </rightEdge>
+    </relationship>
+    <relationship>
+    	<name>supervision</name>
+    	<leftEdge>
+    		<entity reference="entityEmployee" />
+    		<constraint>
+    			<label>Supervisor</label>
+    			<cardinality>N</cardinality>
+    		</constraint>
+    	</leftEdge>
+    	<rightEdge>
+    		<entity reference="entityEmployee" />
+    		<constraint>
+    			<label>Supervisee</label>
+    			<cardinality>1</cardinality>
+    		</constraint>
+    	</rightEdge>
+    </relationship>
+    <relationship>
+    	<name>manages</name>
+    	<attributes>
+    		<attribute><name>Start_date</name></attribute>
+    	</attributes>
+    	<leftEdge>
+    		<entity reference="entityEmployee" />
+    		<constraint>
+    			<label>Manager</label>
+    			<cardinality>1</cardinality>
+    		</constraint>
+    	</leftEdge>
+    	<rightEdge>
+    		<entity reference="entityDepartment" />
+    		<constraint>
+    			<label>Department Managed</label>
+    			<cardinality>1</cardinality>
+    		</constraint>
+    	</rightEdge>
+    </relationship>
+    <relationship>
+    	<name>controls</name>
+    	<leftEdge>
+    		<entity reference="entityDepartment" />
+    		<constraint>
+    			<label>Controlling Department</label>
+    			<cardinality>N</cardinality>
+    		</constraint>
+    	</leftEdge>
+    	<rightEdge>
+    		<entity reference="entityProject" />
+    		<constraint>
+    			<label>Controlled Project</label>
+    			<cardinality>1</cardinality>
+    		</constraint>
+    	</rightEdge>
+    </relationship>
+    <relationship isIdentifying="true">
+    	<name>dependents_of</name>
+    	<leftEdge>
+    		<entity reference="entityEmployee" />
+    		<constraint>
+    			<label>Employee</label>
+    			<cardinality>N</cardinality>
+    		</constraint>
+    	</leftEdge>
+    	<rightEdge>
+    		<entity reference="entityDependent" />
+    		<constraint>
+    			<label>Dependent</label>
+    			<cardinality>1</cardinality>
+    		</constraint>
+    	</rightEdge>
+    </relationship>
+  </relationships>
+</erdiagram>

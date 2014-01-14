@@ -2,6 +2,8 @@ package edu.gatech.sqltutor.rules.er;
 
 import static edu.gatech.sqltutor.rules.er.EREdgeConstraint.ANY_CARDINALITY;
 
+import java.io.InputStream;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -107,5 +109,23 @@ public class ERSerializerTest {
 		System.out.println("Reloaded successfully.");
 		
 		Assert.assertNotNull(reloaded.getAttribute("employee.first_name"));
+	}
+	
+	@Test
+	public void testReadEmployeeDiagram() throws Exception {
+		ERSerializer serializer = new ERSerializer();
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream("/testdata/employee.er.xml");
+		ERDiagram diagram = null;
+		try {
+			diagram = (ERDiagram)serializer.deserialize(inStream);
+		} finally {
+			if( inStream != null ) inStream.close();
+		}
+		
+		System.out.println("Loaded successfully.");
+		
+		String xml = serializer.serialize(diagram);
+		System.out.println("Reserialization result:");
+		System.out.println(xml);
 	}
 }
