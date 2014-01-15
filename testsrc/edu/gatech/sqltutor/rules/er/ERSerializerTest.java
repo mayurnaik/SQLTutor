@@ -128,4 +128,22 @@ public class ERSerializerTest {
 		System.out.println("Reserialization result:");
 		System.out.println(xml);
 	}
+	
+	@Test
+	public void testReadEmployeeMapping() throws Exception {
+		ERSerializer serializer = new ERSerializer();
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream("/testdata/employee.mapping.xml");
+		ERMapping mapping = null;
+		try {
+			mapping = (ERMapping)serializer.deserialize(inStream);
+		} finally {
+			if( inStream != null ) inStream.close();
+		}
+		
+		System.out.println("Loaded successfully.");
+		
+		String xml = serializer.serialize(mapping);
+		System.out.println("Reserialization result:");
+		System.out.println(xml);
+	}
 }
