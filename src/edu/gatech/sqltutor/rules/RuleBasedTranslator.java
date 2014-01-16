@@ -18,11 +18,8 @@ import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SQLParser;
-import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.ValueNode;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
@@ -34,8 +31,8 @@ import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 import edu.gatech.sqltutor.util.ColumnReferenceResolver;
 
-public class RuleBasedTranslator implements IQueryTranslator {
-	private static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
+public class RuleBasedTranslator extends AbstractQueryTranslator implements IQueryTranslator {
+	static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
 	
 	public static Collection<ITranslationRule> getDefaultRules() {
 		return Arrays.asList(
@@ -46,7 +43,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	
 	public static void main(String[] args) {
 		// set -Dorg.slf4j.simpleLogger.logFile=<path> if you want logging to a file
-		RuleBasedTranslator translator = new RuleBasedTranslator();
+		AbstractQueryTranslator translator = new RuleBasedTranslator();
 		translator.addTranslationRule(new OneToAnyJoinRule(
 			"employee", "employee", "manager_ssn", "ssn",
 			Arrays.asList("supervisor", "manager"),
@@ -68,16 +65,7 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		}
 	}
 	
-	private String query;
-	private List<DatabaseTable> tables;
-	private String result;
-	private List<ITranslationRule> translationRules;
-	private SelectNode select;
-	private TranslationGraph graph;
-	
-	
-	private Map<String, FromTable> tableAliases;
-	private Multimap<FromTable, ResultColumn> fromToResult = HashMultimap.create();
+	TranslationGraph graph;
 	
 	public RuleBasedTranslator() { this(false); }
 	
@@ -96,11 +84,6 @@ public class RuleBasedTranslator implements IQueryTranslator {
 	public RuleBasedTranslator(String query, List<DatabaseTable> tables) {
 		setQuery(query);
 		setSchemaMetaData(tables);
-	}
-	
-	protected void buildMaps() throws StandardException {
-		tableAliases = QueryUtils.buildTableAliasMap(select);
-		mapResultToFrom();
 	}
 	
 	protected void constructGraph() throws StandardException {
@@ -167,23 +150,6 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		System.out.println("graph: " + graph);
 	}
 	
-	private void mapResultToFrom() {
-		fromToResult = HashMultimap.create();
-		for( ResultColumn resultColumn: select.getResultColumns() ) {
-			String tableName = resultColumn.getTableName();
-			if( tableName == null ) {
-				log.error("Result column does not have a table name: {}", resultColumn);
-				continue;
-			}
-			FromTable fromTable = tableAliases.get(tableName);
-			if( fromTable != null ) {
-				fromToResult.put(fromTable, resultColumn);
-			} else {
-				log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
-			}
-		}
-	}
-	
 	protected void computeTranslation() {
 		if( query == null )
 			throw new IllegalStateException("Query must be set before evaluation.");
@@ -230,6 +196,12 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		}
 	}
 	
+	@Override
+	public void clearResult() {
+		super.clearResult();
+		graph = null;
+	}
+	
 	private static int[] getRandomIndexes(int maxIndex, int maxItems) {
 		int[] result;
 		if( maxIndex < maxItems ) {
@@ -261,59 +233,8 @@ public class RuleBasedTranslator implements IQueryTranslator {
 		});
 	}
 	
-	public void setTranslationRules(List<ITranslationRule> translationRules) {
-		this.translationRules = translationRules;
-	}
-	
-	public List<ITranslationRule> getTranslationRules() {
-		return translationRules;
-	}
-	
-	public void addTranslationRule(ITranslationRule rule) {
-		if( translationRules == null )
-			translationRules = new ArrayList<ITranslationRule>();
-		translationRules.add(rule);
-	}
-	
-	public void clearResult() {
-		this.result = null;
-		this.fromToResult = null;
-		this.graph = null;
-		this.select = null;
-		this.tableAliases = null;
-	}
-
-	@Override
-	public void setQuery(String sql) {
-		this.query = (sql == null ? null : QueryUtils.sanitize(sql));
-		clearResult();
-	}
-
-	@Override
-	public String getQuery() {
-		return this.query;
-	}
-
-	@Override
-	public void setSchemaMetaData(List<DatabaseTable> tables) {
-		this.tables = tables;
-		clearResult();
-	}
-
-	@Override
-	public List<DatabaseTable> getSchemaMetaData() {
-		return tables;
-	}
-
 	@Override
 	public Object getTranslatorType() {
 		return "Parsing Rule-based";
-	}
-
-	@Override
-	public String getTranslation() throws SQLTutorException {
-		if( result == null )
-			computeTranslation();
-		return result;
 	}
 }
