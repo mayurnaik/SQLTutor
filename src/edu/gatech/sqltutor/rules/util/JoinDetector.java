@@ -1,7 +1,9 @@
 package edu.gatech.sqltutor.rules.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import org.slf4j.Logger;
@@ -59,7 +61,9 @@ public class JoinDetector {
 	
 	private Pair<String, String> firstKey;
 	private Pair<String, String> secondKey;
-//	
+	
+	private Set<ValueNode> matchedClauses = new HashSet<ValueNode>(4);
+	
 //	// temporaries
 	private SelectNode select;
 	private String firstAlias;
@@ -152,7 +156,7 @@ public class JoinDetector {
 	 * @throws StandardException
 	 */
 	private boolean checkTablePair(FromBaseTable firstTable, FromBaseTable secondTable, ValueNode clause) 
-			throws StandardException {		
+			throws StandardException {
 		firstAlias = firstTable.getExposedName();
 		secondAlias = secondTable.getExposedName();
 		
@@ -165,11 +169,18 @@ public class JoinDetector {
 				switch(toCheck.getNodeType()) {
 					case NodeTypes.BINARY_EQUALS_OPERATOR_NODE:
 						BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)toCheck;
-						if( checkBinaryEquality(binop) ) {
+						// prevent repeatedly matching the same clause
+						if( matchedClauses.contains(binop) ) {
+							_log.trace("Rejecting previously seen clause: {}", binop);
+							break;
+						} else if( checkBinaryEquality(binop) ) {
 							result = new JoinResult(firstTable, secondTable, binop);
-//							this.applyLabels(leftRef, rightRef);
+							matchedClauses.add(binop);
 							
-							_log.debug("Label based on implicit join and WHERE clause");
+							if( _log.isDebugEnabled() ) {
+								_log.debug("Matched on operator: {} (0x{})", binop.getOperator(), System.identityHashCode(binop));
+							}
+							
 							return true;
 						}
 						break;

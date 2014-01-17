@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.rules;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -156,5 +158,16 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 		if( result == null )
 			computeTranslation();
 		return result;
+	}
+
+	/** Sort rules by decreasing precedence. */
+	protected void sortRules() {
+		Collections.sort(translationRules, new Comparator<ITranslationRule>() {
+			@Override
+			public int compare(ITranslationRule o1, ITranslationRule o2) {
+				int p1 = o1.getPrecedence(), p2 = o2.getPrecedence();
+				return (p1 < p2 ? 1 : (p1 == p2 ? 0 : -1));
+			}
+		});
 	}
 }
