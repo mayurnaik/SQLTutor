@@ -36,7 +36,9 @@ public class SymbolicFragmentTest {
 
 			{"SELECT ALL e.salary FROM employee e"},
 
-			{"SELECT DISTINCT e.salary FROM employee e"}
+			{"SELECT DISTINCT e.salary FROM employee e"},
+			
+			{"SELECT p.id, e.name FROM project p, works_on w, employee e WHERE p.id=w.project_id AND w.employee_ssn=e.ssn"},
 		};
 		return Arrays.asList(queries);
 	}

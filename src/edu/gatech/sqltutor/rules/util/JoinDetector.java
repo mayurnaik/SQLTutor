@@ -138,6 +138,15 @@ public class JoinDetector {
 		return null;
 	}
 	
+	/**
+	 * Adds a clause to the skip list.
+	 * <p>This will prevent the detector from matching on the element again.</p>
+	 * @param clause
+	 */
+	public void skipClause(ValueNode clause) {
+		matchedClauses.add(clause);
+	}
+	
 	private void clearTemporaryState() {
 		select = null;
 		firstAlias = secondAlias = null;
@@ -175,7 +184,6 @@ public class JoinDetector {
 							break;
 						} else if( checkBinaryEquality(binop) ) {
 							result = new JoinResult(firstTable, secondTable, binop);
-							matchedClauses.add(binop);
 							
 							if( _log.isDebugEnabled() ) {
 								_log.debug("Matched on operator: {} (0x{})", binop.getOperator(), System.identityHashCode(binop));

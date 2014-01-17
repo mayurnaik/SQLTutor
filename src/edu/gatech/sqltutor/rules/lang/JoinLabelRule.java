@@ -74,10 +74,13 @@ public class JoinLabelRule implements ITranslationRule {
 	@Override
 	public boolean apply(TranslationGraph graph, StatementNode statement) {
 		SelectNode select = QueryUtils.extractSelectNode(statement);
+		
+		// first look for two-table joins
 		for( ListIterator<JoinDetector> iter = fkDetectors.listIterator(); iter.hasNext(); ) {
 			JoinDetector detector = iter.next();
 			JoinResult result = detector.detect(select);
 			if( result != null ) {
+				detector.skipClause(result.getJoinCondition()); // we're done with this detection
 				_log.warn("TODO: Process match result: " + result);
 				return true;
 			} else {
@@ -85,8 +88,24 @@ public class JoinLabelRule implements ITranslationRule {
 			}
 		}
 		
-		if( lookupDetectors.size() > 0 )
-			_log.error("FIXME: Lookup detection not yet implemented."); // FIXME
+		// next look for three-table (lookup table) joins
+		for( ListIterator<Pair<JoinDetector, JoinDetector>> iter = lookupDetectors.listIterator(); iter.hasNext(); ) {
+			Pair<JoinDetector, JoinDetector> next = iter.next();
+			JoinDetector detector1 = next.getFirst(), detector2 = next.getSecond();
+			
+			JoinResult result1 = detector1.detect(select);
+			if( result1 != null ) {
+				JoinResult result2 = detector2.detect(select);
+				if( result2 != null ) {
+					detector1.skipClause(result1.getJoinCondition());
+					detector2.skipClause(result2.getJoinCondition());
+					_log.warn("TODO: Process match results: {} and {}", result1, result2);
+					return true;
+				}
+			}
+			
+			iter.remove();
+		}
 		
 		// TODO Auto-generated method stub
 		return false;
