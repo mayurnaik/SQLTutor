@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules.er.mapping;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.BiMap;
@@ -87,6 +88,10 @@ public class ERMapping {
 		if( attrName == null )
 			return null;
 		return diagram.getAttribute(attrName);
+	}
+	
+	public Set<ERJoinMap> getJoins() {
+		return relationshipToJoin.values();
 	}
 	
 	public void mapRelationship(ERRelationship relationship, ERJoinMap joinType) {

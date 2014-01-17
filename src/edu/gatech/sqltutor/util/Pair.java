@@ -61,4 +61,9 @@ public class Pair<FirstType, SecondType> {
 			return false;
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return "Pair{" + first + ", " + second + "}";
+	}
 }

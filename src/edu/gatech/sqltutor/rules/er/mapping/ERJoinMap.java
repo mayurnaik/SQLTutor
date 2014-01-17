@@ -35,6 +35,8 @@ public abstract class ERJoinMap {
 		public String getPrimaryKey() { return keys.getFirst(); }
 		public String getForeignKey() { return keys.getSecond(); }
 		
+		public Pair<String, String> asPair() { return keys; }
+		
 		@Override
 		public int hashCode() {
 			return Objects.hashCode(keys);

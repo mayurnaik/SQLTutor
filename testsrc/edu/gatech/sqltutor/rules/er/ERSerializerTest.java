@@ -7,6 +7,7 @@ import java.io.InputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.gatech.sqltutor.TestConst;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -114,7 +115,7 @@ public class ERSerializerTest {
 	@Test
 	public void testReadEmployeeDiagram() throws Exception {
 		ERSerializer serializer = new ERSerializer();
-		InputStream inStream = ERSerializerTest.class.getResourceAsStream("/testdata/employee.er.xml");
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM);
 		ERDiagram diagram = null;
 		try {
 			diagram = (ERDiagram)serializer.deserialize(inStream);
@@ -132,7 +133,7 @@ public class ERSerializerTest {
 	@Test
 	public void testReadEmployeeMapping() throws Exception {
 		ERSerializer serializer = new ERSerializer();
-		InputStream inStream = ERSerializerTest.class.getResourceAsStream("/testdata/employee.mapping.xml");
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING);
 		ERMapping mapping = null;
 		try {
 			mapping = (ERMapping)serializer.deserialize(inStream);

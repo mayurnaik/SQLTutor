@@ -13,23 +13,18 @@ import objects.DatabaseTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.ResultColumn;
-import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.ValueNode;
 
 import edu.gatech.sqltutor.IQueryTranslator;
-import edu.gatech.sqltutor.QueryUtils;
-import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.graph.LabelNode;
 import edu.gatech.sqltutor.rules.graph.ListFormatNode;
 import edu.gatech.sqltutor.rules.graph.TemplateEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
-import edu.gatech.sqltutor.util.ColumnReferenceResolver;
 
 public class RuleBasedTranslator extends AbstractQueryTranslator implements IQueryTranslator {
 	static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
@@ -86,7 +81,7 @@ public class RuleBasedTranslator extends AbstractQueryTranslator implements IQue
 		setSchemaMetaData(tables);
 	}
 	
-	protected void constructGraph() throws StandardException {
+	protected void constructGraph() {
 		graph = new TranslationGraph(select);
 		
 		// create one parent attributes node per from table
@@ -155,44 +150,30 @@ public class RuleBasedTranslator extends AbstractQueryTranslator implements IQue
 			throw new IllegalStateException("Query must be set before evaluation.");
 		if( translationRules == null )
 			throw new IllegalStateException("No translation rules provided.");
+			
+		StatementNode statement = parseQuery();
 		
-		SQLParser parser = new SQLParser();
-		try {
-			log.info("Query: {}", query);
-			StatementNode statement = parser.parseStatement(query);
-			try {
-				select = QueryUtils.extractSelectNode(statement);
-			} catch( IllegalArgumentException e ) {
-				throw new SQLTutorException("Wrong query type for: " + query, e);
+		buildMaps();
+		constructGraph();
+		
+		sortRules();
+		for( ITranslationRule rule: translationRules ) {
+			while( rule.apply(graph, statement) ) {
+				// apply each rule as many times as possible
+				// FIXME non-determinism when precedences match?
 			}
+		}
+		
+		List<String> result = graph.testPullTerms();
+		log.info("# of translations: {}", result.size());
+		if( result.size() > 0 && log.isInfoEnabled() ) {
+			log.info("1st translation: {}", result.get(0));
+			log.info("last translation: {}", result.get(result.size()-1));
 			
-			new ColumnReferenceResolver(tables).resolve(select);
-			
-			buildMaps();
-			constructGraph();
-			
-			sortRules();
-			for( ITranslationRule rule: translationRules ) {
-				while( rule.apply(graph, statement) ) {
-					// apply each rule as many times as possible
-					// FIXME non-determinism when precedences match?
-				}
-			}
-			
-			List<String> result = graph.testPullTerms();
-			log.info("# of translations: {}", result.size());
-			if( result.size() > 0 && log.isInfoEnabled() ) {
-				log.info("1st translation: {}", result.get(0));
-				log.info("last translation: {}", result.get(result.size()-1));
-				
-				int[] indexes = getRandomIndexes(result.size(), 10);
-				for( int index: indexes )
-					log.info("random translation [{}]: {}", index+1, result.get(index));
-				this.result = result.get(indexes[0]);
-			}
-			
-		} catch( StandardException e ) {
-			throw new SQLTutorException("Could not parse query: " + query, e);
+			int[] indexes = getRandomIndexes(result.size(), 10);
+			for( int index: indexes )
+				log.info("random translation [{}]: {}", index+1, result.get(index));
+			this.result = result.get(indexes[0]);
 		}
 	}
 	
