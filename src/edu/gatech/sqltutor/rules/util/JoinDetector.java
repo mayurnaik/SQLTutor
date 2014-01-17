@@ -193,7 +193,7 @@ public class JoinDetector {
 						}
 						break;
 					case NodeTypes.AND_NODE: {
-						AndNode and = (AndNode)clause;
+						AndNode and = (AndNode)toCheck;
 						nodesToCheck.push(and.getLeftOperand());
 						nodesToCheck.push(and.getRightOperand());
 						break;
@@ -235,6 +235,10 @@ public class JoinDetector {
 	 * Check if a binary equality matches our key pair.
 	 */
 	private boolean checkBinaryEquality(BinaryRelationalOperatorNode eq) {
+		if( eq.getOperatorType() != BinaryRelationalOperatorNode.EQUALS_RELOP ) {
+			_log.trace("Rejected operator type '{}'", eq.getOperator());
+			return false;
+		}
 		ValueNode leftOp = eq.getLeftOperand(), rightOp = eq.getRightOperand();
 		if( NodeTypes.COLUMN_REFERENCE != leftOp.getNodeType() || 
 				NodeTypes.COLUMN_REFERENCE != rightOp.getNodeType() ) {
