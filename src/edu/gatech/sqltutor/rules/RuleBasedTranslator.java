@@ -25,6 +25,7 @@ import edu.gatech.sqltutor.rules.graph.TemplateEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 
+@Deprecated
 public class RuleBasedTranslator extends AbstractQueryTranslator implements IQueryTranslator {
 	static final Logger log = LoggerFactory.getLogger(RuleBasedTranslator.class);
 	

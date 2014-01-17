@@ -102,6 +102,15 @@ public class ERMapping {
 		relationshipToJoin.put(name, joinType);
 	}
 	
+	public String getRelationshipName(ERJoinMap join) {
+		return relationshipToJoin.inverse().get(join);
+	}
+	
+	public ERRelationship getRelationship(ERJoinMap join) {
+		checkDiagram();
+		return diagram.getRelationship(getRelationshipName(join));
+	}
+	
 	protected void checkDiagram() {
 		if( diagram == null ) throw new IllegalStateException("No ER diagram is associated.");
 	}

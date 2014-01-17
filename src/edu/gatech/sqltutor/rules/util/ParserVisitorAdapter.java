@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.util;
+package edu.gatech.sqltutor.rules.util;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.QueryTreeNode;
@@ -19,6 +19,16 @@ public abstract class ParserVisitorAdapter implements Visitor {
 	 * @throws StandardException
 	 */
 	public abstract QueryTreeNode visit(QueryTreeNode node) throws StandardException;
+	
+	/** @see Visitor#visitChildrenFirst(Visitable) */
+	public boolean visitChildrenFirst(QueryTreeNode node) {
+		return false;
+	}
+	
+	/** @see Visitor#skipChildren(Visitable) */
+	public boolean skipChildren(QueryTreeNode node) {
+		return false;
+	}
 
 	@Override
 	public Visitable visit(Visitable node) throws StandardException {
@@ -27,7 +37,7 @@ public abstract class ParserVisitorAdapter implements Visitor {
 
 	@Override
 	public boolean visitChildrenFirst(Visitable node) {
-		return false;
+		return visitChildrenFirst((QueryTreeNode)node);
 	}
 
 	@Override
@@ -37,7 +47,6 @@ public abstract class ParserVisitorAdapter implements Visitor {
 
 	@Override
 	public boolean skipChildren(Visitable node) throws StandardException {
-		return false;
+		return skipChildren((QueryTreeNode)node);
 	}
-
 }

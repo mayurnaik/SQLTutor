@@ -39,6 +39,9 @@ public class SymbolicFragmentTest {
 			{"SELECT DISTINCT e.salary FROM employee e"},
 			
 			{"SELECT p.id, e.name FROM project p, works_on w, employee e WHERE p.id=w.project_id AND w.employee_ssn=e.ssn"},
+
+
+			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary > 100000 AND S.salary < 1000000"},
 		};
 		return Arrays.asList(queries);
 	}

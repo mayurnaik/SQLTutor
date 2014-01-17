@@ -23,7 +23,7 @@ import com.google.common.collect.Multimap;
 import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.util.ColumnReferenceResolver;
+import edu.gatech.sqltutor.rules.util.ColumnReferenceResolver;
 
 /**
  * Base class for query translators.  Maintains the query and 

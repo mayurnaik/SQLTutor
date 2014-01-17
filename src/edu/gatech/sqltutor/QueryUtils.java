@@ -12,10 +12,11 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.akiban.sql.parser.Visitable;
 
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.RuleMetaData;
-import edu.gatech.sqltutor.util.ParserVisitorAdapter;
+import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 /**
  * Static utility functions related to SQL queries.
@@ -131,5 +132,78 @@ public class QueryUtils {
 			}
 		});
 		return aliasMap;
+	}
+	
+	/**
+	 * Find the parent of <code>child</code> by searching the AST from <code>root</code>.
+	 * 
+	 * @param root   the AST root node or a known ancestor of <code>child</code>
+	 * @param child  the child node
+	 * @return the parent node if found or <code>null</code>
+	 * @throws SQLTutorException if an error occurs
+	 */
+	public static QueryTreeNode findParent(QueryTreeNode root, final QueryTreeNode child) 
+			throws SQLTutorException {
+		
+		class HasChildVisitor extends ParserVisitorAdapter {
+			QueryTreeNode parent;
+			QueryTreeNode child;
+			boolean found;
+			
+			public HasChildVisitor(QueryTreeNode child) {
+				this.child = child;
+			}
+			
+			@Override
+			public boolean stopTraversal() {
+				return found;
+			}
+			
+			@Override
+			public boolean skipChildren(Visitable node) throws StandardException {
+				if( parent == null ) {
+					parent = (QueryTreeNode)node;
+					return false;
+				}
+				return true;
+			}
+			
+			@Override
+			public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+				if( parent == node )
+					return node;
+				if( node.equals(child) )
+					found = true;
+				return node;
+			}
+			
+			public void reset() { parent = null; found = false; }
+			
+			public QueryTreeNode getParent() { return parent; }
+			public boolean isFound() { return found; }
+		}
+		
+		final HasChildVisitor hasChild = new HasChildVisitor(child);
+		try {
+			root.accept(new ParserVisitorAdapter() {
+				boolean found;
+				@Override
+				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+					hasChild.reset();
+					node.accept(hasChild);
+					if( hasChild.isFound() )
+						found = true;
+					return node;
+				}
+				
+				@Override
+				public boolean stopTraversal() {
+					return found;
+				}
+			});
+		} catch( StandardException e ) {
+			throw new SQLTutorException(e);
+		}
+		return hasChild.getParent();
 	}
 }

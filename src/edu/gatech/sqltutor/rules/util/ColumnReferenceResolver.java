@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.util;
+package edu.gatech.sqltutor.rules.util;
 
 import java.util.Collection;
 import java.util.List;

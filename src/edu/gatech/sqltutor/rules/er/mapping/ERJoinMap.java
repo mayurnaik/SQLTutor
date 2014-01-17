@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.er.mapping;
 import com.google.common.base.Objects;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 import edu.gatech.sqltutor.rules.er.converters.JoinMapConverter;
 import edu.gatech.sqltutor.rules.er.converters.KeyPairConverter;
@@ -59,10 +60,21 @@ public abstract class ERJoinMap {
 				.toString();
 		}
 	}
+	
+	@XStreamOmitField
+	private transient String relationship;
 
 	public ERJoinMap() {
 	}
 	
 	/** Returns the type of join mapping this is. */
 	public abstract MapType getMapType();
+	
+	public String getRelationship() {
+		return relationship;
+	}
+	
+	public void setRelationship(String relationship) {
+		this.relationship = relationship;
+	}
 }

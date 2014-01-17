@@ -20,7 +20,7 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.graph.LabelNode;
 import edu.gatech.sqltutor.rules.graph.TranslationEdge;
 import edu.gatech.sqltutor.rules.graph.TranslationGraph;
-import edu.gatech.sqltutor.util.ParserVisitorAdapter;
+import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 /**
  * Applies a non-default label to 1 or more columns.
