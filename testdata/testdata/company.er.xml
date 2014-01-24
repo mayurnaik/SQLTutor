@@ -120,14 +120,14 @@
     		<entity reference="entityEmployee" />
     		<constraint>
     			<label>Supervisor</label>
-    			<cardinality>N</cardinality>
+    			<cardinality>1</cardinality>
     		</constraint>
     	</leftEdge>
     	<rightEdge>
     		<entity reference="entityEmployee" />
     		<constraint>
     			<label>Supervisee</label>
-    			<cardinality>1</cardinality>
+    			<cardinality>N</cardinality>
     		</constraint>
     	</rightEdge>
     </relationship>
