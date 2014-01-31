@@ -3,16 +3,29 @@ package edu.gatech.sqltutor.rules.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
+import org.deri.iris.EvaluationException;
+import org.deri.iris.KnowledgeBase;
+import org.deri.iris.KnowledgeBaseFactory;
+import org.deri.iris.api.IKnowledgeBase;
+import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.google.common.collect.Maps;
 
 import edu.gatech.sqltutor.IQueryTranslator;
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
+import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
+import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
@@ -21,6 +34,7 @@ public class SymbolicFragmentTranslator
 	private static final Logger _log = 
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
 	
+	protected SQLFacts sqlFacts = new SQLFacts();
 	protected ERDiagram erDiagram;
 	protected ERMapping erMapping;
 	protected boolean withDefaults;
@@ -47,10 +61,19 @@ public class SymbolicFragmentTranslator
 		}
 		
 		StatementNode statement = parseQuery();
+		SelectNode select = QueryUtils.extractSelectNode(statement);
+		
+		IKnowledgeBase kb = createSQLKnowledgeBase(select);
 		
 		sortRules();
 		for( ITranslationRule rule: translationRules ) {
-			while( rule.apply(statement) ) {
+			boolean applied = false;
+			ISQLTranslationRule sqlRule = null;
+			if( rule instanceof ISQLTranslationRule )
+				sqlRule = (ISQLTranslationRule)rule;
+			while( sqlRule != null ? sqlRule.apply(kb, select) : rule.apply(statement) ) {
+				kb = createSQLKnowledgeBase(select); // regenerate as update may be destructive
+				
 				// apply each rule as many times as possible
 				// FIXME non-determinism when precedences match?
 				_log.debug("Applied rule: {}", rule);
@@ -60,6 +83,19 @@ public class SymbolicFragmentTranslator
 		_log.info("statement: " + statement.statementToString());
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
+	}
+	
+	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select) {
+		SQLRules sqlRules = SQLRules.getInstance();
+		sqlFacts.generateFacts(select, true);
+		Map<IPredicate, IRelation> facts = Maps.newHashMap();
+		facts.putAll(sqlFacts.getFacts());
+		facts.putAll(sqlRules.getFacts());
+		try {
+			return KnowledgeBaseFactory.createKnowledgeBase(facts, sqlRules.getRules());
+		} catch( EvaluationException e ) {
+			throw new SQLTutorException(e);
+		}
 	}
 
 	private Collection<ITranslationRule> makeDefaultRules() {
