@@ -3,14 +3,10 @@ package edu.gatech.sqltutor.rules.datalog.iris;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.asTuple;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.newLiteral;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.deri.iris.Configuration;
 import org.deri.iris.EvaluationException;
 import org.deri.iris.KnowledgeBaseFactory;
 import org.deri.iris.api.IKnowledgeBase;
@@ -21,11 +17,8 @@ import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.compiler.Parser;
-import org.deri.iris.compiler.ParserException;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
-import org.deri.iris.storage.IRelationFactory;
-import org.deri.iris.storage.simple.SimpleRelationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,33 +30,20 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.CharStreams;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 public class IrisTest {
 	static final Logger _log = LoggerFactory.getLogger(IrisTest.class);
 	
-	private static final String STATIC_RULES;
-	static {
-		InputStream in = IrisTest.class.getResourceAsStream("/iristest.dlog");
-		try {
-			STATIC_RULES = CharStreams.toString(new InputStreamReader(in, Charsets.UTF_8));
-		} catch( IOException e ) {
-			throw new RuntimeException(e);
-		} finally {
-			Utils.tryClose(in);
-		}
-	}
+	private static final SQLRules sqlRules = SQLRules.getInstance();
 	
 	public static void main(String[] args) {
 		SQLParser p = new SQLParser();
@@ -78,8 +58,6 @@ public class IrisTest {
 			}
 		}
 	}
-	
-	private static final IRelationFactory relationFactory = new SimpleRelationFactory();
 	
 	private SelectNode select;
 	private BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
@@ -97,9 +75,8 @@ public class IrisTest {
 	}
 	
 	public void evaluate() {
-		long duration = -System.currentTimeMillis();
-		Configuration irisConfig = KnowledgeBaseFactory.getDefaultConfiguration();
 		try {
+			long duration = -System.currentTimeMillis();
 			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
 			_log.info("Knowledge based created in {} ms.", duration + System.currentTimeMillis());
 			
@@ -150,13 +127,7 @@ public class IrisTest {
 	}
 	
 	private void addStaticRules() {
-		Parser p = new Parser();
-		try {
-			p.parse(STATIC_RULES);
-		} catch( ParserException e ) {
-			throw new SQLTutorException("Could not parse static rules.", e);
-		}
-		
+		Parser p = sqlRules.getParser();
 		facts.putAll(p.getFacts());
 		rules.addAll(p.getRules());
 	}
@@ -221,7 +192,7 @@ public class IrisTest {
 		ITuple tuple = IrisUtil.asTuple(vals); 
 		IRelation rel = facts.get(pred);
 		if( rel == null )
-			facts.put(pred, rel = relationFactory.createRelation());
+			facts.put(pred, rel = IrisUtil.newRelation());
 		rel.add(tuple);
 		_log.info("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
 	}

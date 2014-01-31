@@ -12,7 +12,6 @@ import com.akiban.sql.parser.BinaryOperatorNode;
 import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
-import com.akiban.sql.parser.SQLParserContext;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.ValueNode;

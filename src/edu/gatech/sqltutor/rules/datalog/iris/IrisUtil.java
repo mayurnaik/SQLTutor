@@ -5,6 +5,9 @@ import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.factory.Factory;
+import org.deri.iris.storage.IRelation;
+import org.deri.iris.storage.IRelationFactory;
+import org.deri.iris.storage.simple.SimpleRelationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +16,7 @@ import edu.gatech.sqltutor.SQLTutorException;
 /** Static util functions for the IRIS reasoner. */
 public class IrisUtil {
 	private static final Logger _log = LoggerFactory.getLogger(IrisUtil.class);
+	private static final IRelationFactory relationFactory = new SimpleRelationFactory();
 
 	/**
 	 * Attempt to convert a value to an equivalent <code>ITerm</code>.
@@ -80,4 +84,6 @@ public class IrisUtil {
 	public static ILiteral newLiteral(IPredicate pred, Object... vals) {
 		return newLiteral(true, pred, vals);
 	}
+	
+	public static IRelation newRelation() { return relationFactory.createRelation(); }
 }
