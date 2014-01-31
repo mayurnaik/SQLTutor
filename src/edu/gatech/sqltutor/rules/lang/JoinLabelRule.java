@@ -83,7 +83,13 @@ public class JoinLabelRule implements ITranslationRule {
 	}
 
 	@Override
+	@Deprecated
 	public boolean apply(TranslationGraph graph, StatementNode statement) {
+		return apply(statement);
+	}
+	
+	@Override
+	public boolean apply(StatementNode statement) {
 		select = QueryUtils.extractSelectNode(statement);
 		
 		try {

@@ -14,31 +14,20 @@ import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
-import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.IVariable;
-import org.deri.iris.compiler.Parser;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
-import com.akiban.sql.parser.BinaryOperatorNode;
-import com.akiban.sql.parser.ColumnReference;
-import com.akiban.sql.parser.FromBaseTable;
-import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
-import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 public class IrisTest {
 	static final Logger _log = LoggerFactory.getLogger(IrisTest.class);
@@ -60,10 +49,7 @@ public class IrisTest {
 	}
 	
 	private SelectNode select;
-	private BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
-	
-	private Map<IPredicate, IRelation> facts = Maps.newHashMap();
-	private List<IRule> rules = Lists.newArrayList();
+	private SQLFacts sqlFacts = new SQLFacts();
 
 	public IrisTest(StatementNode node) {
 		this(QueryUtils.extractSelectNode(node));
@@ -77,6 +63,10 @@ public class IrisTest {
 	public void evaluate() {
 		try {
 			long duration = -System.currentTimeMillis();
+			Map<IPredicate, IRelation> facts = Maps.newHashMap();
+			facts.putAll(sqlFacts.getFacts());
+			facts.putAll(sqlRules.getFacts());
+			List<IRule> rules = new ArrayList<IRule>(sqlRules.getRules());
 			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
 			_log.info("Knowledge based created in {} ms.", duration + System.currentTimeMillis());
 			
@@ -102,98 +92,7 @@ public class IrisTest {
 	
 	private void init() {
 		long duration = -System.currentTimeMillis();
-		try {
-			// assign ids to all nodes, from the top down
-			select.accept(new ParserVisitorAdapter() {
-				int nextId = 0;
-				@Override
-				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
-					nodeIds.put(nextId++, node);
-					return node;
-				}
-			});
-		} catch( StandardException e ) {
-			throw new SQLTutorException(e);
-		}
-		_log.info("ID assignment in {} ms.", duration + System.currentTimeMillis());
-		
-		duration = -System.currentTimeMillis();
-		addStaticRules();
-		_log.info("Static rules added in {} ms.", duration + System.currentTimeMillis());
-		
-		duration = -System.currentTimeMillis();
-		addFacts(select);
-		_log.info("Facts generated in {} ms.", duration + System.currentTimeMillis());
-	}
-	
-	private void addStaticRules() {
-		Parser p = sqlRules.getParser();
-		facts.putAll(p.getFacts());
-		rules.addAll(p.getRules());
-	}
-	
-	private void addFacts(QueryTreeNode node) {
-		try {
-			node.accept(new ParserVisitorAdapter() {
-				GetChildrenVisitor childVisitor = new GetChildrenVisitor();
-				
-				List<QueryTreeNode> getChildren(QueryTreeNode node) throws StandardException {
-					childVisitor.reset();
-					node.accept(childVisitor);
-					return childVisitor.getChildren();
-				}
-				
-				@Override
-				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
-					Integer nodeId = nodeIds.inverse().get(node);
-					addLocalFacts(node);
-					for( QueryTreeNode child: getChildren(node) ) {
-						Integer childId = nodeIds.inverse().get(child);
-						addFact(SQLPredicates.parentOf, nodeId, childId);
-					}
-					return node;
-				}
-			});
-		} catch( StandardException e ) {
-			throw new SQLTutorException(e);
-		}
-	}
-	
-	private void addLocalFacts(QueryTreeNode node) {
-		Integer nodeId = nodeIds.inverse().get(node);
-		String nodeType = node.getClass().getName().replaceAll("^.*\\.", "");
-		addFact(SQLPredicates.nodeHasType, nodeId, nodeType);
-		
-		if( node instanceof ColumnReference )
-			addColumnReferenceFacts(nodeId, (ColumnReference)node);
-		if( node instanceof BinaryOperatorNode )
-			addBinopFacts(nodeId, (BinaryOperatorNode)node);
-		if( node instanceof FromBaseTable )
-			addTableFacts(nodeId, (FromBaseTable)node);
-	}
-	
-	private void addBinopFacts(Integer nodeId, BinaryOperatorNode binop) {
-		String op = binop.getOperator();
-		addFact(SQLPredicates.operator, nodeId, op);
-	}
-	
-	private void addTableFacts(Integer nodeId, FromBaseTable table) {
-		addFact(SQLPredicates.tableName, nodeId, table.getOrigTableName().getTableName());
-		addFact(SQLPredicates.tableAlias, nodeId, table.getExposedName());
-	}
-	
-	private void addColumnReferenceFacts(Integer nodeId, ColumnReference col) {
-		addFact(SQLPredicates.tableAlias, nodeId, col.getTableName());
-		addFact(SQLPredicates.columnName, nodeId, col.getColumnName());
-	}
-	
-	private void addFact(IPredicate pred, Object... vals) {
-		assert pred != null : "pred is null";
-		ITuple tuple = IrisUtil.asTuple(vals); 
-		IRelation rel = facts.get(pred);
-		if( rel == null )
-			facts.put(pred, rel = IrisUtil.newRelation());
-		rel.add(tuple);
-		_log.info("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
+		sqlFacts.generateFacts(select, false);
+		_log.info("Fact generation in {} ms.", duration += System.currentTimeMillis());
 	}
 }

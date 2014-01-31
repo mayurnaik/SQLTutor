@@ -17,6 +17,7 @@ import com.akiban.sql.parser.Visitable;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.RuleMetaData;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
+import edu.gatech.sqltutor.util.Pair;
 
 /**
  * Static utility functions related to SQL queries.
@@ -205,5 +206,20 @@ public class QueryUtils {
 			throw new SQLTutorException(e);
 		}
 		return hasChild.getParent();
+	}
+
+	/**
+	 * Splits <code>key</code> into table and column parts.
+	 * 
+	 * @param key the key
+	 * @return the table and column parts
+	 * @throws IllegalArgumentException if <code>key</code> is not of the form <code>table.column</code>
+	 */
+	public static Pair<String, String> splitKeyParts(String key) {
+		if( key == null ) throw new NullPointerException("key is null");
+		String[] parts = key.split("\\.", 2);
+		if( parts.length != 2 )
+			throw new IllegalArgumentException("Key must be fully qualified, got: " + key);
+		return Pair.make(parts[0], parts[1]);
 	}
 }

@@ -23,6 +23,7 @@ import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.TableName;
 import com.akiban.sql.parser.ValueNode;
 
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.util.Pair;
 
@@ -77,8 +78,8 @@ public class JoinDetector {
 	}
 	
 	public JoinDetector(String first, String second) {
-		this.firstKey = splitParts(first);
-		this.secondKey = splitParts(second);
+		this.firstKey = QueryUtils.splitKeyParts(first);
+		this.secondKey = QueryUtils.splitKeyParts(second);
 	}
 	
 	/**
@@ -303,13 +304,5 @@ public class JoinDetector {
 			throws StandardException {
 		_log.trace("Checking implicit join, left={}, right={}", leftRef, rightRef);
 		return checkTablePair(leftRef, rightRef, select.getWhereClause());
-	}
-	
-	private Pair<String, String> splitParts(String key) {
-		if( key == null ) throw new NullPointerException("key is null");
-		String[] parts = key.split("\\.", 2);
-		if( parts.length < 2 )
-			throw new IllegalArgumentException("Key must be fully qualified, got: " + key);
-		return Pair.make(parts[0], parts[1]);
 	}
 }

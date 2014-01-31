@@ -1,0 +1,172 @@
+package edu.gatech.sqltutor.rules.datalog.iris;
+
+import java.util.List;
+import java.util.Map;
+
+import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.storage.IRelation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.akiban.sql.StandardException;
+import com.akiban.sql.parser.BinaryOperatorNode;
+import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.FromBaseTable;
+import com.akiban.sql.parser.QueryTreeNode;
+import com.akiban.sql.parser.SelectNode;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
+
+import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
+import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
+
+/**
+ * Dynamic SQL AST facts.
+ */
+public class SQLFacts {
+	private static final Logger _log = LoggerFactory.getLogger(SQLFacts.class);
+	
+	/** IDs assigned to AST nodes. */
+	private BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
+	
+	/** Generated facts. */
+	private Map<IPredicate, IRelation> facts = Maps.newHashMap();
+	
+	public SQLFacts() {}
+
+	public void generateFacts(SelectNode select, boolean preserveIds) {
+		facts.clear();
+		if( !preserveIds || nodeIds.isEmpty() )
+			mapNodes(select);
+		
+		long duration = -System.currentTimeMillis();
+		addFacts(select);
+		_log.info("Fact generation took {} ms.", duration += System.currentTimeMillis());
+	}
+
+	public void reset() {
+		nodeIds.clear();
+		facts.clear();
+	}
+	
+	/**
+	 * Gets the ID assigned to <code>node</code>.
+	 * 
+	 * @param node the node
+	 * @return the id, which is never <code>null</code>
+	 * @throws SQLTutorException if there is no id for the node
+	 */
+	public Integer getNodeId(QueryTreeNode node) {
+		if( node == null )
+			throw new NullPointerException("node is null");
+		Integer id = nodeIds.inverse().get(node);
+		if( id == null )
+			throw new SQLTutorException("No id mapped to node: " + node);
+		return id;
+	}
+	
+	public Map<IPredicate, IRelation> getFacts() {
+		return facts;
+	}
+	
+	/**
+	 * Gets the node referenced by <code>id</code>.
+	 * 
+	 * @param id the node id
+	 * @return the node, which is never <code>null</code>
+	 * @throws SQLTutorException if there is no node mapped to the id
+	 */
+	public QueryTreeNode getNode(Integer id) {
+		if( id == null )
+			throw new NullPointerException("id is null");
+		QueryTreeNode node = nodeIds.get(id);
+		if( node == null )
+			throw new SQLTutorException("No node with id: " + id);
+		return node;
+	}
+	
+	private void mapNodes(SelectNode select) {
+		nodeIds.clear();
+		try {
+			// assign ids to all nodes, from the top down
+			select.accept(new ParserVisitorAdapter() {
+				int nextId = 0;
+				@Override
+				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+					nodeIds.put(nextId++, node);
+					return node;
+				}
+			});
+		} catch( StandardException e ) {
+			throw new SQLTutorException(e);
+		}
+	}
+	
+	private void addFacts(QueryTreeNode node) {
+		try {
+			node.accept(new ParserVisitorAdapter() {
+				GetChildrenVisitor childVisitor = new GetChildrenVisitor();
+				
+				List<QueryTreeNode> getChildren(QueryTreeNode node) throws StandardException {
+					childVisitor.reset();
+					node.accept(childVisitor);
+					return childVisitor.getChildren();
+				}
+				
+				@Override
+				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+					Integer nodeId = nodeIds.inverse().get(node);
+					addLocalFacts(node);
+					for( QueryTreeNode child: getChildren(node) ) {
+						Integer childId = nodeIds.inverse().get(child);
+						addFact(SQLPredicates.parentOf, nodeId, childId);
+					}
+					return node;
+				}
+			});
+		} catch( StandardException e ) {
+			throw new SQLTutorException(e);
+		}
+	}
+	
+	private void addLocalFacts(QueryTreeNode node) {
+		Integer nodeId = nodeIds.inverse().get(node);
+		String nodeType = node.getClass().getName().replaceAll("^.*\\.", "");
+		addFact(SQLPredicates.nodeHasType, nodeId, nodeType);
+		
+		if( node instanceof ColumnReference )
+			addColumnReferenceFacts(nodeId, (ColumnReference)node);
+		if( node instanceof BinaryOperatorNode )
+			addBinopFacts(nodeId, (BinaryOperatorNode)node);
+		if( node instanceof FromBaseTable )
+			addTableFacts(nodeId, (FromBaseTable)node);
+	}
+	
+	private void addBinopFacts(Integer nodeId, BinaryOperatorNode binop) {
+		String op = binop.getOperator();
+		addFact(SQLPredicates.operator, nodeId, op);
+	}
+	
+	private void addTableFacts(Integer nodeId, FromBaseTable table) {
+		addFact(SQLPredicates.tableName, nodeId, table.getOrigTableName().getTableName());
+		addFact(SQLPredicates.tableAlias, nodeId, table.getExposedName());
+	}
+	
+	private void addColumnReferenceFacts(Integer nodeId, ColumnReference col) {
+		addFact(SQLPredicates.tableAlias, nodeId, col.getTableName());
+		addFact(SQLPredicates.columnName, nodeId, col.getColumnName());
+	}
+	
+	private void addFact(IPredicate pred, Object... vals) {
+		assert pred != null : "pred is null";
+		ITuple tuple = IrisUtil.asTuple(vals); 
+		IRelation rel = facts.get(pred);
+		if( rel == null )
+			facts.put(pred, rel = IrisUtil.newRelation());
+		rel.add(tuple);
+		_log.debug("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
+	}
+}

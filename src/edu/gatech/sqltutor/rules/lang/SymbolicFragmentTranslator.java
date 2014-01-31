@@ -50,7 +50,7 @@ public class SymbolicFragmentTranslator
 		
 		sortRules();
 		for( ITranslationRule rule: translationRules ) {
-			while( rule.apply(null, statement) ) {
+			while( rule.apply(statement) ) {
 				// apply each rule as many times as possible
 				// FIXME non-determinism when precedences match?
 				_log.debug("Applied rule: {}", rule);

@@ -18,6 +18,16 @@ public interface ITranslationRule {
 	 * @graph the translation graph being built
 	 * @param statement the query AST
 	 * @return <code>true</code> if the rule applies, <code>false</code> otherwise
+	 * @deprecated Not used in symbolic language fragment strategy
 	 */
+	@Deprecated
 	public boolean apply(TranslationGraph graph, StatementNode statement);
+	
+	/**
+	 * Apply any transformation to the given statement AST.
+	 * 
+	 * @param statement the query AST
+	 * @return <code>true</code> if the rule applies, <code>false</code> otherwise
+	 */
+	public boolean apply(StatementNode statement);
 }
