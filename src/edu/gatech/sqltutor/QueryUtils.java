@@ -15,8 +15,6 @@ import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.unparser.NodeToString;
 
-import edu.gatech.sqltutor.rules.ITranslationRule;
-import edu.gatech.sqltutor.rules.RuleMetaData;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 import edu.gatech.sqltutor.util.Pair;
 
@@ -60,44 +58,6 @@ public class QueryUtils {
 			throw new IllegalArgumentException("statement is not a select node");
 		
 		return (SelectNode)select;
-	}
-	
-	/**
-	 * Checks if a node has already been handled.
-	 * 
-	 * @param node the node to check, must not be <code>null</code>
-	 * @return if the node is handled already
-	 */
-	public static boolean isHandled(QueryTreeNode node) {
-		RuleMetaData meta = (RuleMetaData)node.getUserData();
-		return meta != null && meta.isHandled();
-	}
-	
-	/**
-	 * Get a node's metadata, creating and attaching it if necessary.
-	 * 
-	 * @param node
-	 * @return the new or existing metadata
-	 */
-	public static RuleMetaData getOrInitMetaData(QueryTreeNode node) {
-		RuleMetaData meta = (RuleMetaData)node.getUserData();
-		if( meta == null )
-			node.setUserData(meta = new RuleMetaData());
-		return meta;
-	}
-	
-	/**
-	 * Indicates whether <code>rule</code> has already contributed to <code>node</code>.
-	 * 
-	 * @param rule the rule to check
-	 * @param node the node to check
-	 * @return if the rule contributed already
-	 */
-	public static boolean hasContributed(ITranslationRule rule, QueryTreeNode node) {
-		RuleMetaData meta = (RuleMetaData)node.getUserData();
-		if( meta == null )
-			return false;
-		return meta.getContributors().contains(rule);
 	}
 	
 	/**

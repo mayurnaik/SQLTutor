@@ -102,10 +102,6 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 				tableName("?t2", fk.getFirst())
 			);
 			List<IVariable> bindings = new ArrayList<IVariable>(3);
-//			ILiteral t1Name = tableName("?t1", pk.getFirst());
-//			ILiteral t2Name = tableName("?t2", fk.getFirst());
-//			ILiteral joinRule = newLiteral(joinRuleFK, 
-//				"?t1", pk.getSecond(), "?t2", fk.getSecond(), "?eq");
 			IRelation result = null;
 			try {
 				result = state.getKnowledgeBase().execute(query, bindings);
