@@ -1,5 +1,7 @@
 package edu.gatech.sqltutor.rules.er.mapping;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -100,6 +102,7 @@ public class ERMapping {
 	
 	public void mapRelationship(String name, ERJoinMap joinType) {
 		relationshipToJoin.put(name, joinType);
+		joinType.setRelationship(name);
 	}
 	
 	public String getRelationshipName(ERJoinMap join) {
@@ -113,5 +116,12 @@ public class ERMapping {
 	
 	protected void checkDiagram() {
 		if( diagram == null ) throw new IllegalStateException("No ER diagram is associated.");
+	}
+	
+	private Object readResolve() {
+		for( Entry<String, ERJoinMap> entry: relationshipToJoin.entrySet() ) {
+			entry.getValue().setRelationship(entry.getKey());
+		}
+		return this;
 	}
 }

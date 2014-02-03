@@ -1,25 +1,14 @@
 package edu.gatech.sqltutor.rules.lang;
 
-import com.akiban.sql.parser.SelectNode;
-import com.akiban.sql.parser.StatementNode;
-
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
+import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
-import edu.gatech.sqltutor.rules.er.ERDiagram;
-import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.graph.TranslationGraph;
+import edu.gatech.sqltutor.rules.SQLState;
 
-public abstract class AbstractSQLRule implements ITranslationRule {
-	protected ERDiagram erDiagram;
-	protected ERMapping erMapping;
-	protected SelectNode select;
+public abstract class AbstractSQLRule implements ISQLTranslationRule {
+	protected SQLState state;
 
-	public AbstractSQLRule(ERDiagram erDiagram, ERMapping erMapping) {
-		if( erDiagram == null ) throw new NullPointerException("erDiagram is null");
-		if( erMapping == null ) throw new NullPointerException("erMapping is null");
-		this.erDiagram = erDiagram;
-		this.erMapping = erMapping;
-		erMapping.setDiagram(erDiagram);
+	public AbstractSQLRule() {
 	}
 	
 	@Override
@@ -28,8 +17,11 @@ public abstract class AbstractSQLRule implements ITranslationRule {
 	}
 	
 	@Override
-	@Deprecated
-	public boolean apply(TranslationGraph graph, StatementNode statement) {
-		return apply(statement);
+	public int getType() {
+		return ITranslationRule.TYPE_SQL;
+	}
+	
+	public SQLState getState() {
+		return state;
 	}
 }

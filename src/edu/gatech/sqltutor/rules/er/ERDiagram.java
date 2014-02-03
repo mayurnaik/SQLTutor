@@ -88,7 +88,7 @@ public class ERDiagram {
 	
 	public ERRelationship getRelationship(String name) {
 		ERNamedNode node = nodes.getNode(name);
-		if( node.getNodeType() == ERNode.TYPE_RELATIONSHIP )
+		if( node != null && node.getNodeType() == ERNode.TYPE_RELATIONSHIP )
 			return (ERRelationship)node;
 		return null;
 	}

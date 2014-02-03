@@ -1,8 +1,5 @@
 package edu.gatech.sqltutor.rules;
 
-import com.akiban.sql.parser.StatementNode;
-
-import edu.gatech.sqltutor.rules.graph.TranslationGraph;
 
 /**
  * Rule that matches on portions of an 
@@ -10,24 +7,22 @@ import edu.gatech.sqltutor.rules.graph.TranslationGraph;
  * or output for a natural language description.
  */
 public interface ITranslationRule {
+	
+	public static final int TYPE_SQL = 1;
+	public static final int TYPE_SYMBOLIC = 2;
+	
+	/** 
+	 * Returns the precedence of this rule.  
+	 * Rules should be applied in order of precedence.
+	 * @return the precedence.
+	 */
 	public int getPrecedence();
 	
 	/**
-	 * Apply any transformation to the given statement AST.
+	 * Returns the type of this translation rule, for determining 
+	 * sub-interfaces.
 	 * 
-	 * @graph the translation graph being built
-	 * @param statement the query AST
-	 * @return <code>true</code> if the rule applies, <code>false</code> otherwise
-	 * @deprecated Not used in symbolic language fragment strategy
+	 * @return the translation rule type
 	 */
-	@Deprecated
-	public boolean apply(TranslationGraph graph, StatementNode statement);
-	
-	/**
-	 * Apply any transformation to the given statement AST.
-	 * 
-	 * @param statement the query AST
-	 * @return <code>true</code> if the rule applies, <code>false</code> otherwise
-	 */
-	public boolean apply(StatementNode statement);
+	public int getType();
 }

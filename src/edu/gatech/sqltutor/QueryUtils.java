@@ -13,6 +13,7 @@ import com.akiban.sql.parser.ResultSetNode;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.Visitable;
+import com.akiban.sql.unparser.NodeToString;
 
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.RuleMetaData;
@@ -221,5 +222,13 @@ public class QueryUtils {
 		if( parts.length != 2 )
 			throw new IllegalArgumentException("Key must be fully qualified, got: " + key);
 		return Pair.make(parts[0], parts[1]);
+	}
+	
+	public static String nodeToString(QueryTreeNode node) {
+		try {
+			return new NodeToString().toString(node);
+		} catch( StandardException e ) {
+			throw new SQLTutorException(e);
+		}
 	}
 }

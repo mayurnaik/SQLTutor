@@ -23,7 +23,9 @@ import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
@@ -63,20 +65,37 @@ public class SymbolicFragmentTranslator
 		StatementNode statement = parseQuery();
 		SelectNode select = QueryUtils.extractSelectNode(statement);
 		
+		SQLState sqlState = new SQLState();
+		sqlState.setErDiagram(erDiagram);
+		sqlState.setErMapping(erMapping);
+		sqlState.setAst(select);
+		sqlState.setSqlFacts(sqlFacts);
+		
 		IKnowledgeBase kb = createSQLKnowledgeBase(select);
+		sqlState.setKnowledgeBase(kb);
 		
 		sortRules();
 		for( ITranslationRule rule: translationRules ) {
-			boolean applied = false;
-			ISQLTranslationRule sqlRule = null;
-			if( rule instanceof ISQLTranslationRule )
-				sqlRule = (ISQLTranslationRule)rule;
-			while( sqlRule != null ? sqlRule.apply(kb, select) : rule.apply(statement) ) {
-				kb = createSQLKnowledgeBase(select); // regenerate as update may be destructive
-				
-				// apply each rule as many times as possible
-				// FIXME non-determinism when precedences match?
-				_log.debug("Applied rule: {}", rule);
+			switch( rule.getType() ) {
+				case ITranslationRule.TYPE_SQL: {
+					ISQLTranslationRule sqlRule = (ISQLTranslationRule)rule;
+					while( sqlRule.apply(sqlState) ) {
+						kb = createSQLKnowledgeBase(select); // regenerate as update may be destructive
+						sqlState.setKnowledgeBase(kb);
+						
+						// apply each rule as many times as possible
+						// FIXME non-determinism when precedences match?
+						_log.debug("Applied rule: {}", rule);
+					}
+					break;
+				}
+				case ITranslationRule.TYPE_SYMBOLIC: {
+					ISymbolicTranslationRule symRule = (ISymbolicTranslationRule)rule;
+					_log.error("FIXME: Symbolic handling not implemented.");
+					break;
+				}
+				default:
+					throw new SQLTutorException("Unknown rule type for rule: " + rule);
 			}
 		}
 		
@@ -100,7 +119,7 @@ public class SymbolicFragmentTranslator
 
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
-			new JoinLabelRule(erDiagram, erMapping)
+			new JoinLabelRule2()
 		);
 	}
 	

@@ -1,9 +1,11 @@
 package edu.gatech.sqltutor.rules;
 
-import org.deri.iris.api.IKnowledgeBase;
 
-import com.akiban.sql.parser.SelectNode;
-
+/**
+ * Translation rule that applies some information at 
+ * the AST level.
+ */
 public interface ISQLTranslationRule extends ITranslationRule {
-	public boolean apply(IKnowledgeBase knowledgeBase, SelectNode select);
+	
+	public boolean apply(SQLState state);
 }

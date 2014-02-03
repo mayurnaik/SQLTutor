@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.api.terms.ITerm;
+import org.deri.iris.api.terms.concrete.IIntegerTerm;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,15 @@ public class SQLFacts {
 	
 	public SQLFacts() {}
 
+	/**
+	 * (Re)generate facts for the given AST.
+	 * <p>
+	 * If the AST has been modified but no new nodes exist, 
+	 * use <code>preserveIds</code> to keep the old node ids.</p> 
+	 * 
+	 * @param select      the <code>SELECT</code> statement root of the AST
+	 * @param preserveIds if previously generated node ids should be preserved
+	 */
 	public void generateFacts(SelectNode select, boolean preserveIds) {
 		facts.clear();
 		if( !preserveIds || nodeIds.isEmpty() )
@@ -86,6 +97,24 @@ public class SQLFacts {
 		if( node == null )
 			throw new SQLTutorException("No node with id: " + id);
 		return node;
+	}
+	
+	/**
+	 * Gets the node referenced by <code>id</code>.  
+	 * <code>id</code> must be an integer term.
+	 * 
+	 * @param id the term containing the id
+	 * @return the node, which is never <code>null</code>
+	 * @throws SQLTutorException if there is no node mapped to the id or the term is the wrong type
+	 */
+	public QueryTreeNode getNode(ITerm id) {
+		try {
+			return getNode(((IIntegerTerm)id).getValue().intValueExact());
+		} catch ( ClassCastException e ) {
+			throw new SQLTutorException("Term is not an integer.", e);
+		} catch( ArithmeticException e ) {
+			throw new SQLTutorException("Term is not an integer or is too large.", e);
+		}
 	}
 	
 	private void mapNodes(SelectNode select) {
