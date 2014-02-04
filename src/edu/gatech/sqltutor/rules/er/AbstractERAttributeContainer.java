@@ -68,5 +68,10 @@ public abstract class AbstractERAttributeContainer
 	public Set<ERAttribute> getTopLevelAttributes() {
 		return attributes.getTopLevelAttributes();
 	}
-
+	
+	protected Object readResolve() {
+		if( attributes == null )
+			attributes = new ERAttributeSet(this);
+		return this;
+	}
 }
