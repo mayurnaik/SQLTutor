@@ -1,6 +1,6 @@
 package edu.gatech.sqltutor.rules.lang;
 
-import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.newLiteral;
+import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +79,7 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 	}
 	
 	private static ILiteral tableName(String var, String name) {
-		return newLiteral(SQLPredicates.tableName, var, name);
+		return literal(SQLPredicates.tableName, var, name);
 	}
 	
 	private boolean detectFKJoin() {
@@ -96,7 +96,7 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 
 			
 			IQuery query = Factory.BASIC.createQuery(
-				newLiteral(joinRuleFK, 
+				literal(joinRuleFK, 
 					"?t1", pk.getSecond(), "?t2", fk.getSecond(), "?eq"),
 				tableName("?t1", pk.getFirst()),
 				tableName("?t2", fk.getFirst())
@@ -156,7 +156,7 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 			}
 			
 			IQuery query = Factory.BASIC.createQuery(
-				newLiteral(joinRuleLookup, 
+				literal(joinRuleLookup, 
 					"?t1", pk1.getSecond(), "?t2", fk1.getSecond(),
 					"?t3", pk2.getSecond(), "?t4", fk2.getSecond(), "?eq1", "?eq2"),
 				tableName("?t1", pk1.getFirst()),

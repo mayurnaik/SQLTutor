@@ -1,0 +1,14 @@
+erEntityOrRelationship(?name) :- erEntity(?name).
+erEntityOrRelationship(?name) :- erRelationship(?name).
+
+erEdgeIsLeft(?rel,?pos) :- erRelationship(?rel),?pos = 0.
+erEdgeIsRight(?rel,?pos) :- erRelationship(?rel),?pos = 1.
+
+erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
+  erFKJoinPK(?rel, ?pktable, ?pkattr),
+  erFKJoinFK(?rel, ?fktable, ?fkattr).
+
+erLookupJoinKeyPair(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
+  erLookupJoinPK(?rel, ?pos, ?pktable, ?pkattr),
+  erLookupJoinPK(?rel, ?pos, ?fktable, ?fkattr).
+  

@@ -1,55 +1,55 @@
-ancestorOf(?a,?d) :- parentOf(?a,?d).
-ancestorOf(?a,?d) :- parentOf(?a,?p),parentOf(?p,?d).
+sqlAncestorOf(?a,?d) :- sqlParentOf(?a,?d).
+sqlAncestorOf(?a,?d) :- sqlParentOf(?a,?p), sqlParentOf(?p,?d).
             
-isAttributeEquality(?eq) :- 
-  nodeHasType(?eq, 'BinaryRelationalOperatorNode'),
-  operator(?eq, '='),
-  parentOf(?eq, ?c1), parentOf(?eq, ?c2), ?c1 != ?c2,
-  nodeHasType(?c1, 'ColumnReference'), nodeHasType(?c2, 'ColumnReference').
+sqlIsAttributeEquality(?eq) :- 
+  sqlNodeHasType(?eq, 'BinaryRelationalOperatorNode'),
+  sqlOperator(?eq, '='),
+  sqlParentOf(?eq, ?c1), sqlParentOf(?eq, ?c2), ?c1 != ?c2,
+  sqlNodeHasType(?c1, 'ColumnReference'), sqlNodeHasType(?c2, 'ColumnReference').
             
-isKeyEquality(?eq, ?t1, ?attr1, ?t2, ?attr2) :- 
-  isAttributeEquality(?eq),
-  parentOf(?eq, ?c1), parentOf(?eq, ?c2),
-  tableAlias(?t1, ?alias1), tableAlias(?c1, ?alias1), columnName(?c1, ?attr1),
-  tableAlias(?t2, ?alias2), tableAlias(?c2, ?alias2), columnName(?c2, ?attr2).
+sqlIsKeyEquality(?eq, ?t1, ?attr1, ?t2, ?attr2) :- 
+  sqlIsAttributeEquality(?eq),
+  sqlParentOf(?eq, ?c1), sqlParentOf(?eq, ?c2),
+  sqlTableAlias(?t1, ?alias1), sqlTableAlias(?c1, ?alias1), sqlColumnName(?c1, ?attr1),
+  sqlTableAlias(?t2, ?alias2), sqlTableAlias(?c2, ?alias2), sqlColumnName(?c2, ?attr2).
 
-opAlwaysCandidate(?node) :- nodeHasType(?node, 'BinaryRelationalOperatorNode').
-opAlwaysCandidate(?node) :- nodeHasType(?node, 'AndNode').
+sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'BinaryRelationalOperatorNode').
+sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'AndNode').
             
-operatorAlways(?node) :- opAlwaysCandidate(?node), parentOf(?p, ?node), nodeHasType(?p, 'SelectNode').
-operatorAlways(?node) :- opAlwaysCandidate(?node), parentOf(?p, ?node), nodeHasType(?p, 'JoinNode').
-operatorAlways(?node) :- opAlwaysCandidate(?node), parentOf(?p, ?node), operatorAlways(?p).
+sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlNodeHasType(?p, 'SelectNode').
+sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlNodeHasType(?p, 'JoinNode').
+sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlOperatorAlways(?p).
 
-isTablePair(?t1,?t2) :- 
-  nodeHasType(?t1,'FromBaseTable'), 
-  nodeHasType(?t2, 'FromBaseTable'), 
+sqlIsTablePair(?t1,?t2) :- 
+  sqlNodeHasType(?t1,'FromBaseTable'), 
+  sqlNodeHasType(?t2, 'FromBaseTable'), 
   ?t1 != ?t2.
   
-implicitJoined(?t1,?t2) :- 
-  isTablePair(?t1,?t2), 
-  parentOf(?flist, ?t1), 
-  parentOf(?flist, ?t1), 
-  nodeHasType(?flist, 'FromList').
+sqlImplicitJoined(?t1,?t2) :- 
+  sqlIsTablePair(?t1,?t2), 
+  sqlParentOf(?flist, ?t1), 
+  sqlParentOf(?flist, ?t1), 
+  sqlNodeHasType(?flist, 'FromList').
   
-explicitJoined(?t1,?t2) :- 
-  isTablePair(?t1,?t2), 
-  parentOf(?join, ?t1), 
-  parentOf(?join, ?t2), 
-  nodeHasType(?join, 'JoinNode').
+sqlExplicitJoined(?t1,?t2) :- 
+  sqlIsTablePair(?t1,?t2), 
+  sqlParentOf(?join, ?t1), 
+  sqlParentOf(?join, ?t2), 
+  sqlNodeHasType(?join, 'JoinNode').
   
-joined(?t1,?t2) :- implicitJoined(?t1,?t2).
-joined(?t1,?t2) :- explicitJoined(?t1,?t2).
+sqlJoined(?t1,?t2) :- sqlImplicitJoined(?t1,?t2).
+sqlJoined(?t1,?t2) :- sqlExplicitJoined(?t1,?t2).
 
 joinRuleFK(?t1,?attr1,?t2,?attr2,?eq) :- 
-  joined(?t1,?t2), 
-  isKeyEquality(?eq,?t1,?attr1,?t2,?attr2).
+  sqlJoined(?t1,?t2), 
+  sqlIsKeyEquality(?eq,?t1,?attr1,?t2,?attr2).
   
 joinRuleFKByName(?tname1,?attr1,?tname2,?attr2,?eq) :-
-  joinRuleFK(?t1, ?attr1, ?t2, ?attr2, ?eq),
-  tableName(?t1,?tname1),
-  tableName(?t2,?tname2).
+  sqlJoinRuleFK(?t1, ?attr1, ?t2, ?attr2, ?eq),
+  sqlTableName(?t1,?tname1),
+  sqlTableName(?t2,?tname2).
   
 joinRuleLookup(?t1,?a1,?t2,?a2,?t3,?a3,?t4,?a4,?eq1,?eq2) :- 
-  joinRuleFK(?t1,?a1,?t2,?a2,?eq1), 
-  joinRuleFK(?t3,?a3,?t4,?a4,?eq2).
-  
+  sqlJoinRuleFK(?t1,?a1,?t2,?a2,?eq1), 
+  sqlJoinRuleFK(?t3,?a3,?t4,?a4,?eq2).
+

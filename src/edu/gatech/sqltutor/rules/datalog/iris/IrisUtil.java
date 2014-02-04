@@ -77,13 +77,17 @@ public class IrisUtil {
 		return Factory.BASIC.createTuple(asTerms(vals));
 	}
 	
-	public static ILiteral newLiteral(boolean isPositive, IPredicate pred, Object... vals) {
+	public static ILiteral literal(boolean isPositive, IPredicate pred, Object... vals) {
 		return Factory.BASIC.createLiteral(isPositive, pred, asTuple(vals));
 	}
 	
-	public static ILiteral newLiteral(IPredicate pred, Object... vals) {
-		return newLiteral(true, pred, vals);
+	public static ILiteral literal(IPredicate pred, Object... vals) {
+		return literal(true, pred, vals);
 	}
 	
-	public static IRelation newRelation() { return relationFactory.createRelation(); }
+	public static IRelation relation() { return relationFactory.createRelation(); }
+	
+	public static IPredicate predicate(String symbol, int arity) {
+		return Factory.BASIC.createPredicate(symbol, arity);
+	}
 }

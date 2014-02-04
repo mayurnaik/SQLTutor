@@ -1,13 +1,9 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.util.List;
-import java.util.Map;
 
-import org.deri.iris.api.basics.IPredicate;
-import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.concrete.IIntegerTerm;
-import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +13,8 @@ import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
-import com.akiban.sql.unparser.NodeToString;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
@@ -30,14 +24,11 @@ import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 /**
  * Dynamic SQL AST facts.
  */
-public class SQLFacts {
+public class SQLFacts extends DynamicFacts {
 	private static final Logger _log = LoggerFactory.getLogger(SQLFacts.class);
 	
 	/** IDs assigned to AST nodes. */
-	private BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
-	
-	/** Generated facts. */
-	private Map<IPredicate, IRelation> facts = Maps.newHashMap();
+	BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
 	
 	public SQLFacts() {}
 
@@ -57,14 +48,15 @@ public class SQLFacts {
 		
 		long duration = -System.currentTimeMillis();
 		addFacts(select);
-		_log.info("Fact generation took {} ms.", duration += System.currentTimeMillis());
-	}
-
-	public void reset() {
-		nodeIds.clear();
-		facts.clear();
+		_log.info("SQL fact generation took {} ms.", duration += System.currentTimeMillis());
 	}
 	
+	@Override
+	public void reset() {
+		super.reset();
+		nodeIds.clear();
+	}
+
 	/**
 	 * Gets the ID assigned to <code>node</code>.
 	 * 
@@ -79,10 +71,6 @@ public class SQLFacts {
 		if( id == null )
 			throw new SQLTutorException("No id mapped to node: " + node);
 		return id;
-	}
-	
-	public Map<IPredicate, IRelation> getFacts() {
-		return facts;
 	}
 	
 	/**
@@ -194,15 +182,5 @@ public class SQLFacts {
 	private void addColumnReferenceFacts(Integer nodeId, ColumnReference col) {
 		addFact(SQLPredicates.tableAlias, nodeId, col.getTableName());
 		addFact(SQLPredicates.columnName, nodeId, col.getColumnName());
-	}
-	
-	private void addFact(IPredicate pred, Object... vals) {
-		assert pred != null : "pred is null";
-		ITuple tuple = IrisUtil.asTuple(vals); 
-		IRelation rel = facts.get(pred);
-		if( rel == null )
-			facts.put(pred, rel = IrisUtil.newRelation());
-		rel.add(tuple);
-		_log.debug("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
 	}
 }

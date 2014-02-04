@@ -6,25 +6,25 @@ import org.deri.iris.factory.Factory;
 /** Predicates for facts we will generate. */
 public class SQLPredicates {
 	/** <code>nodeHasType(?nodeId:int,?type:string)</code> => node <code>nodeId</code> has AST type </code>type</code>. */
-	public static final IPredicate nodeHasType = create("nodeHasType");
+	public static final IPredicate nodeHasType = create("sqlNodeHasType");
 
 	/** <code>parentOf(?id1:int,?id2:int)</code> => node <code>id1</code> is the direct parent of node <code>id2</code>. */
-	public static final IPredicate parentOf = create("parentOf");
+	public static final IPredicate parentOf = create("sqlParentOf");
 
 	/** <code>operator(?nodeId:int,?op:string)</code>. */
-	public static final IPredicate operator = create("operator");
+	public static final IPredicate operator = create("sqlOperator");
 
 	/** <code>tableName(?nodeId:int, ?name:string)</code>. */
-	public static final IPredicate tableName = create("tableName");
+	public static final IPredicate tableName = create("sqlTableName");
 
 	/** <code>tableAlias(?nodeId:int, ?alias:string)</code>. */
-	public static final IPredicate tableAlias = create("tableAlias");
+	public static final IPredicate tableAlias = create("sqlTableAlias");
 
 	/** <code>columnName(?nodeId:int, ?name:string)</code>. */
-	public static final IPredicate columnName = create("columnName");
+	public static final IPredicate columnName = create("sqlColumnName");
 	
 	/** For debugging only. */
-	public static final IPredicate nodeDebugString = create("nodeDebugString");
+	public static final IPredicate nodeDebugString = create("sqlNodeDebugString");
 	
 	private static IPredicate create(String symbol, int arity) {
 		return Factory.BASIC.createPredicate(symbol, arity);

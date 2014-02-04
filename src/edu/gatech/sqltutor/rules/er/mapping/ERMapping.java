@@ -1,6 +1,5 @@
 package edu.gatech.sqltutor.rules.er.mapping;
 
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -90,6 +89,14 @@ public class ERMapping {
 		if( attrName == null )
 			return null;
 		return diagram.getAttribute(attrName);
+	}
+	
+	public Set<String> getAttributes() {
+		return attributeToColumn.keySet();
+	}
+	
+	public Set<String> getColumns() {
+		return attributeToColumn.values();
 	}
 	
 	public Set<ERJoinMap> getJoins() {

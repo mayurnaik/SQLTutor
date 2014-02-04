@@ -1,7 +1,7 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.asTuple;
-import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.newLiteral;
+import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,8 +74,8 @@ public class IrisTest {
 			ILiteral joinRuleLit = Factory.BASIC.createLiteral(true, joinRuleFK, asTuple(
 				"?t1", "ssn", "?t2", "manager_ssn", "?eq"
 			));
-			ILiteral t1Name = newLiteral(SQLPredicates.tableName, "?t1", "employee");
-			ILiteral t2Name = newLiteral(SQLPredicates.tableName, "?t2", "employee");
+			ILiteral t1Name = literal(SQLPredicates.tableName, "?t1", "employee");
+			ILiteral t2Name = literal(SQLPredicates.tableName, "?t2", "employee");
 			IQuery query = Factory.BASIC.createQuery(joinRuleLit, t1Name, t2Name);
 			
 			_log.info("Evaluating: " + query);

@@ -26,6 +26,7 @@ import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
+import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
@@ -36,6 +37,7 @@ public class SymbolicFragmentTranslator
 	private static final Logger _log = 
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
 	
+	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
 	protected ERDiagram erDiagram;
 	protected ERMapping erMapping;
@@ -61,6 +63,11 @@ public class SymbolicFragmentTranslator
 			translationRules.addAll(makeDefaultRules());
 			defaultsAdded = true;
 		}
+		
+		// ER diagram generated once now
+		// TODO may need to adjust if updating
+		erFacts.generateFacts(erDiagram);
+		erFacts.generateFacts(erMapping);
 		
 		StatementNode statement = parseQuery();
 		SelectNode select = QueryUtils.extractSelectNode(statement);
@@ -110,6 +117,7 @@ public class SymbolicFragmentTranslator
 		Map<IPredicate, IRelation> facts = Maps.newHashMap();
 		facts.putAll(sqlFacts.getFacts());
 		facts.putAll(sqlRules.getFacts());
+		facts.putAll(erFacts.getFacts());
 		try {
 			return KnowledgeBaseFactory.createKnowledgeBase(facts, sqlRules.getRules());
 		} catch( EvaluationException e ) {
@@ -126,6 +134,8 @@ public class SymbolicFragmentTranslator
 	@Override
 	public void clearResult() {
 		super.clearResult();
+		sqlFacts.reset();
+		erFacts.reset();
 		defaultsAdded = false;
 	}
 
