@@ -23,7 +23,9 @@ public class SQLPredicates {
 	/** <code>columnName(?nodeId:int, ?name:string)</code>. */
 	public static final IPredicate columnName = create("columnName");
 	
-
+	/** For debugging only. */
+	public static final IPredicate nodeDebugString = create("nodeDebugString");
+	
 	private static IPredicate create(String symbol, int arity) {
 		return Factory.BASIC.createPredicate(symbol, arity);
 	}

@@ -17,10 +17,12 @@ import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
+import com.akiban.sql.unparser.NodeToString;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
@@ -172,6 +174,11 @@ public class SQLFacts {
 			addBinopFacts(nodeId, (BinaryOperatorNode)node);
 		if( node instanceof FromBaseTable )
 			addTableFacts(nodeId, (FromBaseTable)node);
+		
+		if( _log.isDebugEnabled() ) {
+			// gen facts to make debugging easier
+			addFact(SQLPredicates.nodeDebugString, nodeId, QueryUtils.nodeToString(node));
+		}
 	}
 	
 	private void addBinopFacts(Integer nodeId, BinaryOperatorNode binop) {

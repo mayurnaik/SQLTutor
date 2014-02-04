@@ -24,6 +24,8 @@ public class SymbolicFragmentTest {
 	@Parameters
 	public static Collection<Object[]> parameters() {
 		Object[][] queries = {
+			{"SELECT * FROM employee e, works_on wo, project p WHERE e.ssn=wo.employee_ssn AND p.id=wo.project_id"},
+			
 			{"SELECT e.birthdate, e.address FROM employee e WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},
 
 			{"SELECT e.first_name, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id"},

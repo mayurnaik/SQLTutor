@@ -47,7 +47,7 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 	
 	// rules defined statically
 	private static final IPredicate joinRuleFK = Factory.BASIC.createPredicate("joinRuleFK", 5);
-	private static final IPredicate joinRuleLookup = Factory.BASIC.createPredicate("joinRuleLookup", 8);
+	private static final IPredicate joinRuleLookup = Factory.BASIC.createPredicate("joinRuleLookup", 10);
 
 	private boolean isInitialized = false;
 	private Stack<ERForeignKeyJoin> fkJoins;
@@ -113,14 +113,14 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 			_log.info("Bindings: {}", bindings);
 			if( result.size() == 0 )
 				continue;
-			if( result.size() > 1 )
-				_log.warn("More than one result, only using first: {}", result);
+			if( result.size() > 1 ) _log.warn("More than one result, only using first: {}", result);
 			
-			RelationExtractor ext = new RelationExtractor(bindings, "t1", "t2", "eq");
+			RelationExtractor ext = new RelationExtractor(bindings);
+			ext.setSqlFacts(facts);
 			ITuple first = result.get(0);
-			FromBaseTable t1Table = (FromBaseTable)facts.getNode(ext.getTerm(0, first));
-			FromBaseTable t2Table = (FromBaseTable)facts.getNode(ext.getTerm(1, first));
-			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)facts.getNode(ext.getTerm(2, first));
+			FromBaseTable t1Table = (FromBaseTable)ext.getNode("?t1", first);
+			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?t2", first);
+			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)ext.getNode("?eq", first);
 			
 			_log.info("t1Table: {}\nt2Table: {}\nbinop: {}", t1Table, t2Table, binop);
 
@@ -128,8 +128,10 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 			EREdgeConstraint leftConstraint = rel.getLeftEdge().getConstraint();
 			EREdgeConstraint rightConstraint = rel.getRightEdge().getConstraint();
 			
+			// TODO actually apply the rule
 			_log.info("\nApply {} to table {}\nApply {} to table {}", 
 				leftConstraint.getLabel(), t1Table, rightConstraint.getLabel(), t2Table);
+			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
 			deleteCondition(binop);
@@ -140,7 +142,65 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 	}
 	
 	private boolean detectLookupJoins() {
-		// TODO
+		final boolean DEBUG = _log.isDebugEnabled();
+		SQLFacts facts = state.getSqlFacts();
+		while( !lookupJoins.isEmpty() ) {
+			ERLookupTableJoin join = lookupJoins.pop();
+			Pair<String,String> pk1 = QueryUtils.splitKeyParts(join.getLeftKeyPair().getPrimaryKey());
+			Pair<String,String> fk1 = QueryUtils.splitKeyParts(join.getLeftKeyPair().getForeignKey());
+			Pair<String,String> pk2 = QueryUtils.splitKeyParts(join.getRightKeyPair().getPrimaryKey());
+			Pair<String,String> fk2 = QueryUtils.splitKeyParts(join.getRightKeyPair().getForeignKey());
+			ERRelationship rel = state.getErMapping().getRelationship(join);
+			if( rel == null ) {
+				throw new SQLTutorException("No relationship for join: " + join);
+			}
+			
+			IQuery query = Factory.BASIC.createQuery(
+				newLiteral(joinRuleLookup, 
+					"?t1", pk1.getSecond(), "?t2", fk1.getSecond(),
+					"?t3", pk2.getSecond(), "?t4", fk2.getSecond(), "?eq1", "?eq2"),
+				tableName("?t1", pk1.getFirst()),
+				tableName("?t2", fk1.getFirst()),
+				tableName("?t3", pk2.getFirst()),
+				tableName("?t4", fk2.getFirst())
+			);
+			_log.info("Evaluating query: {}", query);
+			List<IVariable> bindings = new ArrayList<IVariable>(6);
+			IRelation result = null;
+			try {
+				result = state.getKnowledgeBase().execute(query, bindings);
+			} catch( EvaluationException e ) {
+				throw new SQLTutorException(e);
+			}
+			
+			if( _log.isTraceEnabled() ) {
+				_log.trace("Result: {}", result);
+				_log.trace("Bindings: {}", bindings);
+			}
+			if( result.size() == 0 )
+				continue;
+			if( result.size() > 1 ) 
+				_log.warn("More than one result, only using first: {}", result);
+
+			_log.debug("Matched on relationship: {}", rel.getFullName());			
+			
+			RelationExtractor ext = new RelationExtractor(bindings);
+			ext.setSqlFacts(facts);
+			ITuple first = result.get(0);
+			BinaryRelationalOperatorNode binop1 = (BinaryRelationalOperatorNode)ext.getNode("?eq1", first),
+					binop2 = (BinaryRelationalOperatorNode)ext.getNode("?eq2", first);
+			
+			// TODO actually apply the rule
+			_log.warn("FIXME: Need to apply rule.");
+			
+			// remove the join conditions
+			SelectNode select = state.getAst();
+			if( DEBUG ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
+			deleteCondition(binop1);
+			if( DEBUG ) _log.debug("Intermediate query state: {}", QueryUtils.nodeToString(select));
+			deleteCondition(binop2);
+			if( DEBUG ) _log.debug("New query state: {}", QueryUtils.nodeToString(select));
+		}
 		return false;
 	}
 
@@ -165,7 +225,7 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 	
 	private void deleteCondition(BinaryRelationalOperatorNode binop) {
 		QueryTreeNode parent = QueryUtils.findParent(state.getAst(), binop);
-		_log.info("Found parent: {}", parent);
+		_log.debug("Found parent: {}", parent);
 		
 		if( parent instanceof BinaryOperatorNode ) {
 			BinaryOperatorNode parentOp = (BinaryOperatorNode)parent;
@@ -178,7 +238,9 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 			_log.debug("Deleting WHERE clause.");
 			((SelectNode)parent).setWhereClause(null);
 		} else {
-			throw new SQLTutorException("FIXME: Unhandled parent type: " + parent.getClass().getName());
+			String type = parent.getClass().getName();
+			_log.warn("Unhandled parent type ({}) for node: {}", type, QueryUtils.nodeToString(parent));
+			throw new SQLTutorException("FIXME: Unhandled parent type: " + type);
 		}
 	}
 
@@ -194,8 +256,8 @@ public class JoinLabelRule2 extends AbstractSQLRule implements ISQLTranslationRu
 			else
 				binop.setRightOperand(withOperand);
 		} else if( grandparent instanceof SelectNode ) {
-			_log.debug("Deleting WHERE clause.");
-			((SelectNode)grandparent).setWhereClause(null);
+			if( _log.isDebugEnabled() ) _log.debug("Replacing WHERE clause with: {}", QueryUtils.nodeToString(withOperand));
+			((SelectNode)grandparent).setWhereClause(withOperand);
 		} else {
 			throw new SQLTutorException("FIXME: Unhandled parent type: " + grandparent.getClass().getName());
 		}
