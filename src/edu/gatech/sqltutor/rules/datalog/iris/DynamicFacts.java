@@ -33,7 +33,7 @@ public abstract class DynamicFacts {
 		if( rel == null )
 			facts.put(pred, rel = IrisUtil.relation());
 		rel.add(tuple);
-		_log.debug("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
+		_log.trace("Added fact: {}{}", pred.getPredicateSymbol(), tuple);
 	}
 
 }

@@ -3,13 +3,14 @@ package edu.gatech.sqltutor.rules.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.deri.iris.EvaluationException;
-import org.deri.iris.KnowledgeBase;
 import org.deri.iris.KnowledgeBaseFactory;
 import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,10 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
+import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
+import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
@@ -77,6 +80,7 @@ public class SymbolicFragmentTranslator
 		sqlState.setErMapping(erMapping);
 		sqlState.setAst(select);
 		sqlState.setSqlFacts(sqlFacts);
+		sqlState.setErFacts(erFacts);
 		
 		IKnowledgeBase kb = createSQLKnowledgeBase(select);
 		sqlState.setKnowledgeBase(kb);
@@ -111,15 +115,33 @@ public class SymbolicFragmentTranslator
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
 	
+	// FIXME add datalog rules on a per-meta-rule basis?
+	@Deprecated
+	private static final StaticRules astRules = new StaticRules("/astrules.dlog"); 
+	
 	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select) {
+		long duration = -System.currentTimeMillis();
 		SQLRules sqlRules = SQLRules.getInstance();
+		ERRules erRules = ERRules.getInstance();
 		sqlFacts.generateFacts(select, true);
 		Map<IPredicate, IRelation> facts = Maps.newHashMap();
 		facts.putAll(sqlFacts.getFacts());
 		facts.putAll(sqlRules.getFacts());
 		facts.putAll(erFacts.getFacts());
+		facts.putAll(erRules.getFacts());
+		facts.putAll(astRules.getFacts());
+		List<IRule> rules = new ArrayList<IRule>(sqlRules.getRules());
+		rules.addAll(erRules.getRules());
+		// FIXME want to do this on a per-rule basis
+		rules.addAll(astRules.getRules());
+		
+		_log.info("KB creation prep in {} ms.", duration + System.currentTimeMillis());
+		
 		try {
-			return KnowledgeBaseFactory.createKnowledgeBase(facts, sqlRules.getRules());
+			duration = -System.currentTimeMillis();
+			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
+			_log.info("KB creation in {} ms.", duration + System.currentTimeMillis());
+			return kb;
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);
 		}
@@ -127,7 +149,7 @@ public class SymbolicFragmentTranslator
 
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
-			new JoinLabelRule2()
+			new JoinLabelRule3()
 		);
 	}
 	

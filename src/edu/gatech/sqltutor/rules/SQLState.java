@@ -4,6 +4,7 @@ import org.deri.iris.api.IKnowledgeBase;
 
 import com.akiban.sql.parser.SelectNode;
 
+import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -14,6 +15,7 @@ public class SQLState {
 	private IKnowledgeBase knowledgeBase;
 	private SelectNode ast;
 	private SQLFacts sqlFacts;
+	private ERFacts erFacts;
 
 	public SQLState() {
 	}
@@ -56,5 +58,13 @@ public class SQLState {
 
 	public void setSqlFacts(SQLFacts sqlFacts) {
 		this.sqlFacts = sqlFacts;
+	}
+
+	public ERFacts getErFacts() {
+		return erFacts;
+	}
+
+	public void setErFacts(ERFacts erFacts) {
+		this.erFacts = erFacts;
 	}
 }

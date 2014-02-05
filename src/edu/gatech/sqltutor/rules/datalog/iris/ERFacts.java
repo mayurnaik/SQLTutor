@@ -80,26 +80,22 @@ public class ERFacts extends DynamicFacts {
 	private void addFKJoin(ERForeignKeyJoin join) {
 		String rel = join.getRelationship();
 		ERKeyPair keys = join.getKeyPair();
-		Pair<String,String> pk = splitKeyParts(keys.getPrimaryKey()),
-			fk = splitKeyParts(keys.getForeignKey());
-		
-		addFact(ERPredicates.erFKJoinPK, rel, pk.getFirst(), pk.getSecond());
-		addFact(ERPredicates.erFKJoinFK, rel, fk.getFirst(), fk.getSecond());
+		addTableJoinKeys(rel, 0, keys);
 	}
 	
 	private void addLookupTableJoin(ERLookupTableJoin join) {
 		String rel = join.getRelationship();
-		addLookupTableJoinKeys(rel, 0, join.getLeftKeyPair());
-		addLookupTableJoinKeys(rel, 1, join.getRightKeyPair());
+		addTableJoinKeys(rel, 0, join.getLeftKeyPair());
+		addTableJoinKeys(rel, 1, join.getRightKeyPair());
 	}
 	
-	private void addLookupTableJoinKeys(String rel, Integer pos, ERKeyPair keys) {
+	private void addTableJoinKeys(String rel, Integer pos, ERKeyPair keys) {
 		assert pos != null && pos >= 0 : "pos should be a non-negative integer.";
 		Pair<String,String> pk = splitKeyParts(keys.getPrimaryKey()),
 				fk = splitKeyParts(keys.getForeignKey());
 		
-		addFact(ERPredicates.erLookupJoinPK, rel, pos, pk.getFirst(), pk.getSecond());
-		addFact(ERPredicates.erLookupJoinFK, rel, pos, fk.getFirst(), fk.getSecond());
+		addFact(ERPredicates.erJoinPK, rel, pos, pk.getFirst(), pk.getSecond());
+		addFact(ERPredicates.erJoinFK, rel, pos, fk.getFirst(), fk.getSecond());
 	}
 	
 	private void addEntity(EREntity entity) {

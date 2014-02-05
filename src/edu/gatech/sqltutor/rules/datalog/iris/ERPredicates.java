@@ -42,13 +42,10 @@ public class ERPredicates {
 	
 	public static final IPredicate erRelationshipJoinType = predicate("erRelationshipJoinType", 2);
 	
-	/** <code>(?rel:string,?table:string,?col:string)</code> */
-	public static final IPredicate erFKJoinPK = predicate("erFKJoinPK", 3);
-	/** <code>(?rel:string,?table:string,?col:string)</code> */
-	public static final IPredicate erFKJoinFK = predicate("erFKJoinFK", 3);	
+	/** <code>(?rel:string,?pos:int,?table:string,?col:string)</code> */
+	public static final IPredicate erJoinPK = predicate("erJoinPK", 4);
+	/** <code>(?rel:string,?pos:int, ?table:string,?col:string)</code> */
+	public static final IPredicate erJoinFK = predicate("erJoinFK", 4);
 	
-	/** <code>(?rel:string,?n:int,?table:string,?col:string)</code> */
-	public static final IPredicate erLookupJoinPK = predicate("erLookupJoinPK", 4);
-	/** <code>(?rel:string,?n:int,?table:string,?col:string)</code> */
-	public static final IPredicate erLookupJoinFK = predicate("erLookupJoinFK", 4);
+	
 }
