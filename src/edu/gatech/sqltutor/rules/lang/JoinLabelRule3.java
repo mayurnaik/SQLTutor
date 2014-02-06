@@ -26,6 +26,7 @@ import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
+import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 
 public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRule {
@@ -33,7 +34,7 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 	
 	// rules defined statically
 	private static final IPredicate joinRuleFK = 
-			Factory.BASIC.createPredicate("joinRuleFK3", 8);
+			Factory.BASIC.createPredicate("joinRuleFK3", 8);	
 	private static final IPredicate joinRuleLookup = 
 			Factory.BASIC.createPredicate("joinRuleLookup3", 15);
 
@@ -62,7 +63,10 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 			literal(joinRuleFK, "?rel", 
 				"?tref1", "?tname1", "?attr1",
 				"?tref2", "?tname2", "?attr2",
-				"?eq")
+				"?eq"),
+			literal(ERPredicates.erFKJoinSides, "?rel", "?pkPos", "?fkPos"),
+			literal(ERPredicates.erRelationshipEdgeLabel, "?rel", "?pkPos", "?pkLabel"),
+			literal(ERPredicates.erRelationshipEdgeLabel, "?rel", "?fkPos", "?fkLabel")
 		);
 		List<IVariable> bindings = new ArrayList<IVariable>(joinRuleFK.getArity());
 		IRelation results = null;
@@ -88,13 +92,12 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
 			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)ext.getNode("?eq", result);
 			
-//			_log.info("t1Table: {}\nt2Table: {}\nbinop: {}", t1Table, t2Table, binop);
-//			EREdgeConstraint leftConstraint = rel.getLeftEdge().getConstraint();
-//			EREdgeConstraint rightConstraint = rel.getRightEdge().getConstraint();
-//			
-//			// TODO actually apply the rule
-//			_log.info("\nApply {} to table {}\nApply {} to table {}", 
-//				leftConstraint.getLabel(), t1Table, rightConstraint.getLabel(), t2Table);
+			String pkLabel = ext.getTerm("?pkLabel", result).toString();
+			String fkLabel = ext.getTerm("?fkLabel", result).toString();
+			
+			// TODO actually apply the rule
+			_log.info("\nApply {} to table {}\nApply {} to table {}", 
+				pkLabel, t1Table, fkLabel, t2Table);
 			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));

@@ -5,6 +5,7 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 import org.deri.iris.api.basics.IPredicate;
 
 public class ERPredicates {
+// dynamically generated predicates 
 	/** <code>erEntity(?ent:string)</code> => <code>ent</code> names an entity. */
 	public static final IPredicate erEntity = predicate("erEntity", 1);
 
@@ -47,5 +48,11 @@ public class ERPredicates {
 	/** <code>(?rel:string,?pos:int, ?table:string,?col:string)</code> */
 	public static final IPredicate erJoinFK = predicate("erJoinFK", 4);
 	
-	
+//
+// statically defined predicates
+//
+	public static final IPredicate erEntityOrRelationship = predicate("erEntityOrRelationship", 1); 
+	public static final IPredicate erFKJoin = predicate("erFKJoin", 5);
+	public static final IPredicate erFKJoinSides = predicate("erFKJoinSides", 3);
+	public static final IPredicate erLookupJoinKeyPair = predicate("erLookupJoinKeyPair", 6); 
 }

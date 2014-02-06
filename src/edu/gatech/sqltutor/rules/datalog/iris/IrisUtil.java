@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
+import org.deri.iris.api.basics.IAtom;
 import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.ITuple;
@@ -75,6 +76,11 @@ public class IrisUtil {
 		if( vals.length == 1 && vals[0] instanceof ITuple )
 			return (ITuple)vals[0];
 		return Factory.BASIC.createTuple(asTerms(vals));
+	}
+	
+	public static ILiteral literal(IAtom atom) { return literal(true, atom); }
+	public static ILiteral literal(boolean isPositive, IAtom atom) {
+		return Factory.BASIC.createLiteral(isPositive, atom);
 	}
 	
 	public static ILiteral literal(boolean isPositive, IPredicate pred, Object... vals) {

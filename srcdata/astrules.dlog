@@ -2,9 +2,9 @@
 joinRuleFK3(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq) :-
   sqlJoined(?tref1,?tref2),
   sqlIsKeyEquality(?eq,?tref1,?attr1,?tref2,?attr2),
-  erFKJoin(?rel,?tname1,?attr1,?tname2,?attr2),
   sqlTableName(?tref1,?tname1),
-  sqlTableName(?tref2,?tname2).
+  sqlTableName(?tref2,?tname2),
+  erFKJoin(?rel,?tname1,?attr1,?tname2,?attr2).
 
 joinRuleLookupOneSide(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq,?pos) :-
   sqlJoined(?tref1,?tref2),

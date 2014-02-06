@@ -1,16 +1,29 @@
 erEntityOrRelationship(?name) :- erEntity(?name).
 erEntityOrRelationship(?name) :- erRelationship(?name).
 
-erEdgeIsLeft(?rel,?pos) :- erRelationship(?rel),?pos = 0.
-erEdgeIsRight(?rel,?pos) :- erRelationship(?rel),?pos = 1.
-
 erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
   erJoinPK(?rel, 0, ?pktable, ?pkattr),
   erJoinFK(?rel, 0, ?fktable, ?fkattr).
 
+// ?pos is the edge index of the primary key 
+erFKJoinPKSide(?rel,?pos) :-
+  erRelationshipJoinType(?rel, 'foreign_key'),
+  erRelationshipEdgeCardinality(?rel,?pos,?card),
+  ?card >= 0.
+  
+// ?pos is the edge index of the foreign key
+erFKJoinFKSide(?rel,?pos) :-
+  erRelationshipJoinType(?rel, 'foreign_key'),
+  erRelationshipEdgeCardinality(?rel,?pos,?card),
+  ?card < 0.
+
+
+erFKJoinSides(?rel,?pkSide,?fkSide) :- 
+  erFKJoinPKSide(?rel,?pkSide),
+  erFKJoinFKSide(?rel,?fkSide).
+  
 erLookupJoinKeyPair(?rel, ?pos, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'lookup_table'),
   erJoinPK(?rel, ?pos, ?pktable, ?pkattr),
   erJoinFK(?rel, ?pos, ?fktable, ?fkattr).
-  
