@@ -1,5 +1,9 @@
 package edu.gatech.sqltutor.rules;
 
+import java.util.List;
+
+import org.deri.iris.api.basics.IRule;
+
 
 /**
  * Rule that matches on portions of an 
@@ -7,7 +11,6 @@ package edu.gatech.sqltutor.rules;
  * or output for a natural language description.
  */
 public interface ITranslationRule {
-	
 	public static final int TYPE_SQL = 1;
 	public static final int TYPE_SYMBOLIC = 2;
 	
@@ -25,4 +28,10 @@ public interface ITranslationRule {
 	 * @return the translation rule type
 	 */
 	public int getType();
+	
+	/**
+	 * Returns a list of static datalog rules used by this meta-rule.
+	 * @return the static rules, which may be empty but should not be <code>null</code>
+	 */
+	public List<IRule> getDatalogRules();
 }

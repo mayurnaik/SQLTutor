@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules;
 
 
+
 /**
  * Translation rule that applies some information at 
  * the AST level.

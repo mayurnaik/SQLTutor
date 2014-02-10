@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import edu.gatech.sqltutor.IQueryTranslator;
@@ -81,8 +82,9 @@ public class SymbolicFragmentTranslator
 		sqlState.setAst(select);
 		sqlState.setSqlFacts(sqlFacts);
 		sqlState.setErFacts(erFacts);
+		loadStaticRules();
 		
-		IKnowledgeBase kb = createSQLKnowledgeBase(select);
+		IKnowledgeBase kb = createSQLKnowledgeBase(select, sqlState);
 		sqlState.setKnowledgeBase(kb);
 		
 		sortRules();
@@ -91,7 +93,7 @@ public class SymbolicFragmentTranslator
 				case ITranslationRule.TYPE_SQL: {
 					ISQLTranslationRule sqlRule = (ISQLTranslationRule)rule;
 					while( sqlRule.apply(sqlState) ) {
-						kb = createSQLKnowledgeBase(select); // regenerate as update may be destructive
+						kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
 						sqlState.setKnowledgeBase(kb);
 						
 						// apply each rule as many times as possible
@@ -115,25 +117,50 @@ public class SymbolicFragmentTranslator
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
 	
+	private List<IRule> staticRules;
+	private void loadStaticRules() {
+		SQLRules sqlRules = SQLRules.getInstance();
+		ERRules erRules = ERRules.getInstance();
+		
+		staticRules = Lists.newArrayList();
+		staticRules.addAll(sqlRules.getRules());
+		staticRules.addAll(erRules.getRules());
+		staticRules.addAll(astRules.getRules());
+		for( ITranslationRule rule: translationRules ) {
+			staticRules.addAll(rule.getDatalogRules());
+		}
+	}
+	
 	// FIXME add datalog rules on a per-meta-rule basis?
 	@Deprecated
-	private static final StaticRules astRules = new StaticRules("/astrules.dlog"); 
+	private static final StaticRules astRules = new StaticRules("/astrules.dlog");
 	
-	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select) {
+	private static Map<IPredicate, IRelation> mergeFacts(Map<IPredicate, IRelation>... facts) {
+		int size = 1;
+		for( Map<IPredicate, IRelation> someFacts: facts )
+			size += someFacts.size();
+		Map<IPredicate, IRelation> mergedFacts = Maps.newHashMapWithExpectedSize(size);
+		for( Map<IPredicate, IRelation> someFacts: facts )
+			mergedFacts.putAll(someFacts);
+		return mergedFacts;
+	}
+	
+	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select, SQLState state) {
 		long duration = -System.currentTimeMillis();
 		SQLRules sqlRules = SQLRules.getInstance();
 		ERRules erRules = ERRules.getInstance();
 		sqlFacts.generateFacts(select, true);
-		Map<IPredicate, IRelation> facts = Maps.newHashMap();
-		facts.putAll(sqlFacts.getFacts());
-		facts.putAll(sqlRules.getFacts());
-		facts.putAll(erFacts.getFacts());
-		facts.putAll(erRules.getFacts());
-		facts.putAll(astRules.getFacts());
-		List<IRule> rules = new ArrayList<IRule>(sqlRules.getRules());
-		rules.addAll(erRules.getRules());
-		// FIXME want to do this on a per-rule basis
-		rules.addAll(astRules.getRules());
+		@SuppressWarnings("unchecked")
+		Map<IPredicate, IRelation> facts = mergeFacts(		
+			sqlFacts.getFacts(),
+			sqlRules.getFacts(),
+			erFacts.getFacts(),
+			erRules.getFacts(),
+			astRules.getFacts(),
+			state.getRuleFacts()
+		);
+		
+		List<IRule> rules = staticRules;
 		
 		_log.info("KB creation prep in {} ms.", duration + System.currentTimeMillis());
 		
@@ -149,7 +176,8 @@ public class SymbolicFragmentTranslator
 
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
-			new JoinLabelRule3()
+			new JoinLabelRule3(),
+			new DefaultTableLabelRule()
 		);
 	}
 	

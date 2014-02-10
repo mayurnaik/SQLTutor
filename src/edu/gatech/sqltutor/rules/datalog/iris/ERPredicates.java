@@ -51,6 +51,7 @@ public class ERPredicates {
 //
 // statically defined predicates
 //
+	public static final IPredicate erTableRefsEntity = predicate("erTableRefsEntity", 2); 
 	public static final IPredicate erEntityOrRelationship = predicate("erEntityOrRelationship", 1); 
 	public static final IPredicate erFKJoin = predicate("erFKJoin", 5);
 	public static final IPredicate erFKJoinSides = predicate("erFKJoinSides", 3);

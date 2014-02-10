@@ -29,6 +29,29 @@ import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 
+/**
+ * Meta-rule for labeling join entities.
+ * 
+ * <p>
+ * Given an inner join of the form:
+ * </p><p>
+ * <i>t<sub>1</sub></i> <tt>INNER JOIN</tt> <i>t<sub>2</sub></i> 
+ * <tt>ON</tt> <i>t<sub>1</sub>.a</i> <tt>=</tt> <i>t<sub>2</sub>.b</i>
+ * </p><p>
+ * Where <i>t<sub>1</sub>.a</i> and <i>t<sub>2</sub>.b</i> form a 
+ * one-to-one or one-to-many foreign-key relationship, there is a specified 
+ * name or label for the <i>t<sub>1</sub></i> and <i>t<sub>2</sub></i> entities in the context 
+ * of this join.
+ * </p><p>
+ * For example, in a company database, the join:
+ * </p><p>
+ * <code>employee AS e1 INNER JOIN employee e2 ON e1.manager_ssn=e2.ssn</code> 
+ * implies that <code>e2</code> is the "manager" of <code>e1</code>.
+ * </p><p>
+ * Similarly, for lookup table joins there is a verb relationship between two 
+ * entities based on two lookups.
+ * </p>
+ */
 public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(JoinLabelRule3.class);
 	

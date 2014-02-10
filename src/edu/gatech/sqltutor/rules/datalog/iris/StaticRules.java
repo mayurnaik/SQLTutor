@@ -47,7 +47,7 @@ public class StaticRules {
 	
 	protected Parser parse(Reader reader) {
 		if( reader == null ) throw new NullPointerException("reader is null");
-		Parser parser = new Parser();
+		Parser parser = IrisUtil.newParser();
 		try {
 			parser.parse(reader);
 		} catch( ParserException e ) {

@@ -1,6 +1,12 @@
 erEntityOrRelationship(?name) :- erEntity(?name).
 erEntityOrRelationship(?name) :- erRelationship(?name).
 
+// the table named ?tname references the entity ?ent
+erTableRefsEntity(?tname,?ent) :- 
+  sqlTableName(?tref,?tname),
+  erEntity(?ent),
+  erAttributeMapsTo(?ent,?attr,?tname,?column).
+
 erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
   erJoinPK(?rel, 0, ?pktable, ?pkattr),

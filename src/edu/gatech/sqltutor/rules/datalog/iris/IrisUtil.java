@@ -5,6 +5,7 @@ import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
+import org.deri.iris.compiler.Parser;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.deri.iris.storage.IRelationFactory;
@@ -18,6 +19,18 @@ import edu.gatech.sqltutor.SQLTutorException;
 public class IrisUtil {
 	private static final Logger _log = LoggerFactory.getLogger(IrisUtil.class);
 	private static final IRelationFactory relationFactory = new SimpleRelationFactory();
+	
+	public static Parser newParser() {
+		ITerm t1 = Factory.TERM.createVariable( "a" );
+		ITerm t2 = Factory.TERM.createVariable( "b" );
+		ITerm t3 = Factory.TERM.createVariable( "c" );
+		ITerm t4 = Factory.TERM.createVariable( "d" );
+		ITerm t5 = Factory.TERM.createVariable( "e" );
+		
+		Parser p = new Parser();
+		p.getBuiltinRegister().registerBuiltin(new EntityLabelFormat(t1,t2));
+		return p;
+	}
 
 	/**
 	 * Attempt to convert a value to an equivalent <code>ITerm</code>.

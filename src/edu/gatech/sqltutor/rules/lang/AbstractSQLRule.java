@@ -1,5 +1,10 @@
 package edu.gatech.sqltutor.rules.lang;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.deri.iris.api.basics.IRule;
+
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
@@ -19,6 +24,11 @@ public abstract class AbstractSQLRule implements ISQLTranslationRule {
 	@Override
 	public int getType() {
 		return ITranslationRule.TYPE_SQL;
+	}
+	
+	@Override
+	public List<IRule> getDatalogRules() {
+		return Collections.emptyList();
 	}
 	
 	public SQLState getState() {
