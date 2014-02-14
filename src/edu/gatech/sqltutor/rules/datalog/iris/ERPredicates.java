@@ -27,6 +27,12 @@ public class ERPredicates {
 	 */
 	public static final IPredicate erAttributeIsKey = predicate("erAttributeIsKey", 2);
 	
+	/** <code>erAttributeDescribes(?ent,?attr,?type)</code> =>  
+	 * the attribute can be used to describe the entity, 
+	 * type indicates how, one of ('prepend', 'replace', ...?others?)
+	 */
+	public static final IPredicate erAttributeDescribes = predicate("erAttributeDescribes", 3); 
+	
 	/**
 	 * <code>erRelationshipEdgeEntity(?rel:string,?n:int,?ent:string)</code> =><br />
 	 *   The <code>n</code>th (0-based) edge of relationship <code>rel</code> refers 

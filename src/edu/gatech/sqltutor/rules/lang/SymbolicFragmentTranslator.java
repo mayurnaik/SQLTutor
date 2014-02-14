@@ -188,6 +188,7 @@ public class SymbolicFragmentTranslator
 		return Arrays.<ITranslationRule>asList(
 			new JoinLabelRule3(),
 			new DefaultTableLabelRule()
+//			new DescribingAttributeLabelRule()
 		);
 	}
 	

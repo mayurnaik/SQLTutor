@@ -15,16 +15,14 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akiban.sql.parser.BinaryOperatorNode;
 import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.FromBaseTable;
-import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
-import com.akiban.sql.parser.ValueNode;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.QueryManip;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -124,7 +122,7 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
-			deleteCondition(binop);
+			QueryManip.deleteCondition(state, binop);
 			if( _log.isDebugEnabled() ) _log.debug("New query state: {}", QueryUtils.nodeToString(select));
 		}
 		
@@ -173,52 +171,12 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 			// remove the join conditions
 			SelectNode select = state.getAst();
 			if( DEBUG ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
-			deleteCondition(binop1);
+			QueryManip.deleteCondition(state, binop1);
 			if( DEBUG ) _log.debug("Intermediate query state: {}", QueryUtils.nodeToString(select));
-			deleteCondition(binop2);
+			QueryManip.deleteCondition(state, binop2);
 			if( DEBUG ) _log.debug("New query state: {}", QueryUtils.nodeToString(select));
 		}
 		
 		return false;
-	}
-	
-	private void deleteCondition(BinaryRelationalOperatorNode binop) {
-		QueryTreeNode parent = QueryUtils.findParent(state.getAst(), binop);
-		_log.debug("Found parent: {}", parent);
-		
-		if( parent instanceof BinaryOperatorNode ) {
-			BinaryOperatorNode parentOp = (BinaryOperatorNode)parent;
-			if( binop == parentOp.getLeftOperand() ) {
-				replaceParent(parentOp, parentOp.getRightOperand());
-			} else {
-				replaceParent(parentOp, parentOp.getLeftOperand());
-			}
-		} else if( parent instanceof SelectNode ) {
-			_log.debug("Deleting WHERE clause.");
-			((SelectNode)parent).setWhereClause(null);
-		} else {
-			String type = parent.getClass().getName();
-			_log.warn("Unhandled parent type ({}) for node: {}", type, QueryUtils.nodeToString(parent));
-			throw new SQLTutorException("FIXME: Unhandled parent type: " + type);
-		}
-	}
-
-	private void replaceParent(BinaryOperatorNode parentOp, ValueNode withOperand) {
-		parentOp.setLeftOperand(null);
-		parentOp.setRightOperand(null);
-		
-		QueryTreeNode grandparent = QueryUtils.findParent(state.getAst(), parentOp);
-		if( grandparent instanceof BinaryOperatorNode ) {
-			BinaryOperatorNode binop = (BinaryOperatorNode)grandparent;
-			if( binop.getLeftOperand() == parentOp )
-				binop.setLeftOperand(withOperand);
-			else
-				binop.setRightOperand(withOperand);
-		} else if( grandparent instanceof SelectNode ) {
-			if( _log.isDebugEnabled() ) _log.debug("Replacing WHERE clause with: {}", QueryUtils.nodeToString(withOperand));
-			((SelectNode)grandparent).setWhereClause(withOperand);
-		} else {
-			throw new SQLTutorException("FIXME: Unhandled parent type: " + grandparent.getClass().getName());
-		}
 	}
 }

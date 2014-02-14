@@ -10,6 +10,7 @@
       <attributes id="4">
         <attribute id="6" isComposite="false" isKey="true" isDerived="false" isMultivalued="false">
           <name>Name</name>
+          <describesEntity>prepend</describesEntity>
         </attribute>
         <attribute isKey="true">
         	<name>Number</name>

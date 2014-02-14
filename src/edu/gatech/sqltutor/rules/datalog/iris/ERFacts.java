@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.datalog.iris;
 
 import static edu.gatech.sqltutor.QueryUtils.splitKeyParts;
 
+import java.util.Locale;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERRelationship.ERRelationshipEdge;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
@@ -126,6 +128,9 @@ public class ERFacts extends DynamicFacts {
 		addFact(ERPredicates.erAttribute, parent, attrName);
 		if( attr.isKey() )
 			addFact(ERPredicates.erAttributeIsKey, parent, attrName);
+		DescriptionType dtype = attr.getDescribesEntity();
+		if( dtype != null && dtype != DescriptionType.NONE )
+			addFact(ERPredicates.erAttributeDescribes, parent, attrName, dtype.toString().toLowerCase(Locale.ENGLISH));
 	}
 
 	private void addRelationshipEdge(String rel, Integer pos, ERRelationshipEdge edge) {

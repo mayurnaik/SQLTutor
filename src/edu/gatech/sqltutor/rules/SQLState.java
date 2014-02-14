@@ -1,14 +1,16 @@
 package edu.gatech.sqltutor.rules;
 
+import java.util.List;
 import java.util.Map;
 
 import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.storage.IRelation;
-import org.deri.iris.storage.simple.SimpleRelationFactory;
 
 import com.akiban.sql.parser.SelectNode;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
@@ -25,6 +27,7 @@ public class SQLState {
 	private SQLFacts sqlFacts;
 	private ERFacts erFacts;
 	private Map<IPredicate, IRelation> ruleFacts = Maps.newHashMap();
+	private List<IRule> rules = Lists.newArrayList();
 
 	public SQLState() {
 	}
@@ -48,6 +51,18 @@ public class SQLState {
 	 */
 	public Map<IPredicate, IRelation> getRuleFacts() {
 		return ruleFacts;
+	}
+	
+	public void addRule(IRule rule) {
+		rules.add(rule);
+	}
+	
+	/**
+	 * Get datalog rules add by the metarules.
+	 * @return
+	 */
+	public List<IRule> getRules() {
+		return rules;
 	}
 
 	public ERDiagram getErDiagram() {

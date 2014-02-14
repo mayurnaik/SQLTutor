@@ -26,6 +26,18 @@ public class StaticRules {
 
 	protected StaticRules() { }
 	
+	/**
+	 * Parse rules matching the class.  If the 
+	 * class is foo.Bar, then the resource should be 
+	 * <code>/foo/Bar.dlog</code>.
+	 * 
+	 * @param clazz
+	 */
+	public StaticRules(Class<?> clazz) {
+		String resource = "/" + clazz.getName().replace('.', '/') + ".dlog";
+		parser = parseResource(resource);
+	}
+	
 	public StaticRules(String resource) {
 		parser = parseResource(resource);
 	}

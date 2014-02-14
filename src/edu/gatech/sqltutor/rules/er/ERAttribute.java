@@ -7,10 +7,15 @@ import com.thoughtworks.xstream.annotations.XStreamConverter;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 import edu.gatech.sqltutor.rules.er.converters.AttributeConverter;
+import edu.gatech.sqltutor.rules.er.converters.RelaxedEnumConverter;
 
 @XStreamAlias("attribute")
 @XStreamConverter(AttributeConverter.class)
 public class ERAttribute extends AbstractERNamedNode implements ERNode {
+	public static enum DescriptionType {
+		PREPEND, REPLACE, NONE;
+	}
+	
 	@XStreamAsAttribute
 	private boolean isKey;
 	
@@ -19,6 +24,9 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	
 	@XStreamAsAttribute
 	private boolean isMultivalued;
+	
+	@XStreamConverter(RelaxedEnumConverter.class)
+	private DescriptionType describesEntity;
 	
 	@XStreamOmitField
 	private ERNamedNode parent;
@@ -71,6 +79,14 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	
 	public void setParent(ERNamedNode parent) {
 		this.parent = parent;
+	}
+	
+	public DescriptionType getDescribesEntity() {
+		return describesEntity;
+	}
+	
+	public void setDescribesEntity(DescriptionType describesEntity) {
+		this.describesEntity = describesEntity;
 	}
 	
 	@Override

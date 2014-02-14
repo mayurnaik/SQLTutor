@@ -1,9 +1,16 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
+import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
+
 import java.util.List;
 
+import org.deri.iris.EvaluationException;
+import org.deri.iris.api.IKnowledgeBase;
+import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.concrete.IIntegerTerm;
+import org.deri.iris.factory.Factory;
+import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +113,39 @@ public class SQLFacts extends DynamicFacts {
 		} catch( ArithmeticException e ) {
 			throw new SQLTutorException("Term is not an integer or is too large.", e);
 		}
+	}
+	
+	/**
+	 * Get the parent of <code>child</code>, evaluated using the knowledge base.
+	 * 
+	 * @param child the child node
+	 * @param kb    the datalog knowledge base
+	 * @return the parent node or <code>null</code> if the node has no parent
+	 * @throws SQLTutorException if <code>child</code> is not mapped, 
+	 *                           the query fails to evaluate,
+	 *                           or the parent is not unique
+	 */
+	public QueryTreeNode getParent(QueryTreeNode child, IKnowledgeBase kb) {
+		Integer childId = nodeIds.inverse().get(child);
+		if( childId == null )
+			throw new SQLTutorException("No id mapped to child: " + QueryUtils.nodeToString(child));
+		
+		IQuery q = Factory.BASIC.createQuery(
+			literal(SQLPredicates.parentOf, "?parentId", childId)
+		);
+		IRelation relation = null;
+		try {
+			relation = kb.execute(q);
+		} catch( EvaluationException e ) {
+			throw new SQLTutorException(e);
+		}
+		
+		if( relation.size() == 0 )
+			return null;
+		if( relation.size() > 1 )
+			throw new SQLTutorException("Non-unique parent, found " + relation.size() + " nodes.");
+		
+		return getNode(relation.get(0).get(0));
 	}
 	
 	private void mapNodes(SelectNode select) {
