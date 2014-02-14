@@ -9,7 +9,9 @@ import org.deri.iris.EvaluationException;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.IVariable;
+import org.deri.iris.builtins.EqualBuiltin;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -21,13 +23,19 @@ import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.EntityLabelFormat;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
+import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 
 public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(DefaultTableLabelRule.class);
 	
-	public static final IPredicate PREDICATE = IrisUtil.predicate("rulDefaultTableLabel", 2); 
+	public static final String RULE_SOURCE = DefaultTableLabelRule.class.getSimpleName();
+	
+	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
+	
+	/** <code>(?tref:int,?label:string,?source)</code> */
+	private static final IPredicate PREDICATE = LearnedPredicates.tableLabel;
 	
 	public DefaultTableLabelRule() {
 	}
@@ -40,7 +48,8 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 				literal(SQLPredicates.tableName, "?tref", "?tname"),
 				literal(ERPredicates.erTableRefsEntity, "?tname", "?ent"),
 				literal(new EntityLabelFormat("?ent", "?label")),
-				literal(false, PREDICATE, "?tref", "?label")
+				literal(new EqualBuiltin(IrisUtil.asTerms("?rule", TERM_RULE_SOURCE))),
+				literal(false, PREDICATE, "?tref", "?label", "?rule")
 			);
 			List<IVariable> bindings = new ArrayList<IVariable>(3);
 			IRelation results = null;
@@ -58,9 +67,9 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 			for( int i = 0; i < results.size(); ++i ) {
 				ITuple result = results.get(i);
 				ITuple fact = IrisUtil.asTuple(ext.getTerm("?tref", result), 
-					ext.getTerm("?label", result));
+					ext.getTerm("?label", result), TERM_RULE_SOURCE);
 				state.addFact(PREDICATE, fact);
-				_log.info("Added label fact: {}{}", PREDICATE.getPredicateSymbol(), fact);
+				_log.info("Added label fact: {}{}", PREDICATE, fact);
 			}
 			return true;
 		} finally {

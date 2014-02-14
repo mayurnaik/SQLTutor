@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.akiban.sql.unparser.NodeToString;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -30,6 +31,7 @@ import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
@@ -112,7 +114,10 @@ public class SymbolicFragmentTranslator
 			}
 		}
 		
-		_log.info("statement: " + statement.statementToString());
+		if( _log.isInfoEnabled() )
+			_log.info("statement: {}", QueryUtils.nodeToString(statement));
+		IrisUtil.dumpFacts(makeFacts(sqlState));
+		IrisUtil.dumpRules(staticRules);
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
@@ -145,11 +150,9 @@ public class SymbolicFragmentTranslator
 		return mergedFacts;
 	}
 	
-	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select, SQLState state) {
-		long duration = -System.currentTimeMillis();
+	protected Map<IPredicate, IRelation> makeFacts(SQLState state) {
 		SQLRules sqlRules = SQLRules.getInstance();
 		ERRules erRules = ERRules.getInstance();
-		sqlFacts.generateFacts(select, true);
 		@SuppressWarnings("unchecked")
 		Map<IPredicate, IRelation> facts = mergeFacts(		
 			sqlFacts.getFacts(),
@@ -159,6 +162,13 @@ public class SymbolicFragmentTranslator
 			astRules.getFacts(),
 			state.getRuleFacts()
 		);
+		return facts;
+	}
+	
+	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select, SQLState state) {
+		long duration = -System.currentTimeMillis();
+		sqlFacts.generateFacts(select, true);
+		Map<IPredicate, IRelation> facts = makeFacts(state);
 		
 		List<IRule> rules = staticRules;
 		

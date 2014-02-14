@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.BinaryOperatorNode;
 import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
@@ -162,6 +163,8 @@ public class SQLFacts extends DynamicFacts {
 			addBinopFacts(nodeId, (BinaryOperatorNode)node);
 		if( node instanceof FromBaseTable )
 			addTableFacts(nodeId, (FromBaseTable)node);
+		if( node instanceof ConstantNode )
+			addConstantFacts(nodeId, (ConstantNode)node);
 		
 		if( _log.isDebugEnabled() ) {
 			// gen facts to make debugging easier
@@ -182,5 +185,9 @@ public class SQLFacts extends DynamicFacts {
 	private void addColumnReferenceFacts(Integer nodeId, ColumnReference col) {
 		addFact(SQLPredicates.tableAlias, nodeId, col.getTableName());
 		addFact(SQLPredicates.columnName, nodeId, col.getColumnName());
+	}
+	
+	private void addConstantFacts(Integer nodeId, ConstantNode constant) {
+		addFact(SQLPredicates.literalValue, nodeId, constant.getValue());
 	}
 }

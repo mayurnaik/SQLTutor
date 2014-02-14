@@ -1,8 +1,14 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
+import java.io.PrintStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.deri.iris.api.basics.IAtom;
 import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.compiler.Parser;
@@ -108,5 +114,26 @@ public class IrisUtil {
 	
 	public static IPredicate predicate(String symbol, int arity) {
 		return Factory.BASIC.createPredicate(symbol, arity);
+	}
+	
+	public static void dumpFacts(Map<IPredicate, IRelation> facts) { dumpFacts(facts, System.out); }
+	public static void dumpFacts(Map<IPredicate, IRelation> facts, PrintStream out) {
+		for( Entry<IPredicate, IRelation> entry: facts.entrySet() ) {
+			IPredicate pred = entry.getKey();
+			IRelation rel = entry.getValue();
+			int nTuples = rel.size();
+			for( int i = 0; i < nTuples; ++i ) {
+				out.print(pred.getPredicateSymbol());
+				out.print(rel.get(i));
+				out.println('.');
+			}
+		}
+	}
+	
+	public static void dumpRules(Iterable<IRule> rules) { dumpRules(rules, System.out); }
+	public static void dumpRules(Iterable<IRule> rules, PrintStream out) {
+		for( IRule rule: rules ) {
+			out.println(rule);
+		}
 	}
 }

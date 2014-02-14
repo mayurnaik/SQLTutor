@@ -1,4 +1,8 @@
 
+
+//
+// Join Label Rule
+//
 joinRuleFK3(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq) :-
   sqlJoined(?tref1,?tref2),
   sqlIsKeyEquality(?eq,?tref1,?attr1,?tref2,?attr2),
@@ -17,4 +21,20 @@ joinRuleLookup3(?rel, ?tref1,?tname1,?attr1, ?tref2,?tname2,?attr2,
     ?tref3,?tname3,?attr3, ?tref4,?tname4,?attr4, ?eq1, ?eq2) :-
   joinRuleLookupOneSide(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq1,0),
   joinRuleLookupOneSide(?rel,?tref3,?tname3,?attr3,?tref4,?tname4,?attr4,?eq2,1).
+
+
+//
+// Identifying Attribute Rule
+//
+
+// erAttributeDescribes(?ent,?attr,?type) =>  the attribute can be used to describe the entity
+//   type indicates how, one of ('prepend', 'replace', ...?others?)
+
+ruleAttributeDescribes(?table,?eq,?value,?type) :- 
+  erAttributeDescribes(?ent,?attr,?type),
+  erAttributeMapsTo(?ent,?attr,?tablename,?col),
+  sqlTableName(?table, ?tablename),
+  sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), ?op = '='.
+
+// lrnTableLabel(?table,?label,?source)
 

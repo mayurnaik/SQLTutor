@@ -12,23 +12,25 @@ erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erJoinPK(?rel, 0, ?pktable, ?pkattr),
   erJoinFK(?rel, 0, ?fktable, ?fkattr).
 
-// ?pos is the edge index of the primary key 
+// ?pos is the edge index of the primary key for relationship ?rel 
 erFKJoinPKSide(?rel,?pos) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
   erRelationshipEdgeCardinality(?rel,?pos,?card),
   ?card >= 0.
   
-// ?pos is the edge index of the foreign key
+// ?pos is the edge index of the foreign key for relationship ?rel
 erFKJoinFKSide(?rel,?pos) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
   erRelationshipEdgeCardinality(?rel,?pos,?card),
   ?card < 0.
 
-
+// ?pkSide and ?fkSide are the positions of the primary and 
+// foreign key edges of relationship ?rel 
 erFKJoinSides(?rel,?pkSide,?fkSide) :- 
   erFKJoinPKSide(?rel,?pkSide),
   erFKJoinFKSide(?rel,?fkSide).
   
+
 erLookupJoinKeyPair(?rel, ?pos, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'lookup_table'),
   erJoinPK(?rel, ?pos, ?pktable, ?pkattr),

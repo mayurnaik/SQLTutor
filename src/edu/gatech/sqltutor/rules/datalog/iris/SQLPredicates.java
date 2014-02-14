@@ -23,6 +23,9 @@ public class SQLPredicates {
 	/** <code>columnName(?nodeId:int, ?name:string)</code>. */
 	public static final IPredicate columnName = create("sqlColumnName");
 	
+	/** <code>(?node:int,?val:string|number)</code> => <code>node</code> is a constant with literal value <code>val</code>. */
+	public static final IPredicate literalValue = create("sqlLiteralValue", 2); 
+	
 	/** For debugging only. */
 	public static final IPredicate nodeDebugString = create("sqlNodeDebugString");
 	

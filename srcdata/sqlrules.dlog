@@ -1,17 +1,36 @@
 sqlAncestorOf(?a,?d) :- sqlParentOf(?a,?d).
 sqlAncestorOf(?a,?d) :- sqlParentOf(?a,?p), sqlParentOf(?p,?d).
             
+// ?eq is an '=' operator comparing two columns            
 sqlIsAttributeEquality(?eq) :- 
   sqlNodeHasType(?eq, 'BinaryRelationalOperatorNode'),
   sqlOperator(?eq, '='),
   sqlParentOf(?eq, ?c1), sqlParentOf(?eq, ?c2), ?c1 != ?c2,
   sqlNodeHasType(?c1, 'ColumnReference'), sqlNodeHasType(?c2, 'ColumnReference').
             
+// ?eq is an '=' operator comparing attributes ?t1.?attr1 and ?t2.?attr2
 sqlIsKeyEquality(?eq, ?t1, ?attr1, ?t2, ?attr2) :- 
   sqlIsAttributeEquality(?eq),
   sqlParentOf(?eq, ?c1), sqlParentOf(?eq, ?c2),
   sqlTableAlias(?t1, ?alias1), sqlTableAlias(?c1, ?alias1), sqlColumnName(?c1, ?attr1),
   sqlTableAlias(?t2, ?alias2), sqlTableAlias(?c2, ?alias2), sqlColumnName(?c2, ?attr2).
+  
+sqlStringLiteral(?node,?value) :-
+  sqlNodeHasType(?node, 'CharConstantNode'),
+  sqlLiteralValue(?node,?value).
+
+// ?eq is an operator type ?op comparing with a literal value ?val
+sqlLiteralComparison(?eq, ?op, ?table, ?colname, ?val) :-
+  // binary operator
+  sqlNodeHasType(?eq, 'BinaryRelationalOperatorNode'),
+  sqlOperator(?eq, ?op),
+  // capture children
+  sqlParentOf(?eq, ?child1), sqlParentOf(?eq, ?child2), ?child1 != ?child2,
+  // one child is the attribute
+  sqlTableAlias(?table, ?alias), sqlTableAlias(?child1, ?alias), sqlColumnName(?child1, ?colname),
+  // the other is a string literal
+  sqlStringLiteral(?child2,?val).
+
 
 sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'BinaryRelationalOperatorNode').
 sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'AndNode').
