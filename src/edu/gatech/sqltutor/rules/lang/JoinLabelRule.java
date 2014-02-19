@@ -133,9 +133,9 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			
 			// generate facts for the labels
 			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
-				ext.getTerm("?tref1", result), pkLabel, TERM_RULE_SOURCE));
+				ext.getTerm("?tref1", result), pkLabel.toLowerCase(), TERM_RULE_SOURCE));
 			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
-				ext.getTerm("?tref2", result), fkLabel, TERM_RULE_SOURCE));
+				ext.getTerm("?tref2", result), fkLabel.toLowerCase(), TERM_RULE_SOURCE));
 			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));

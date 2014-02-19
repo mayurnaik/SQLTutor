@@ -104,14 +104,14 @@
         <entity reference="entityEmployee"/>
         <constraint id="34">
           <label>Employee</label>
-          <cardinality>1</cardinality>
+          <cardinality>N</cardinality>
         </constraint>
       </leftEdge>
       <rightEdge id="35">
         <entity reference="entityDepartment"/>
         <constraint id="36">
           <label>Department</label>
-          <cardinality>N</cardinality>
+          <cardinality>1</cardinality>
         </constraint>
       </rightEdge>
     </relationship>
