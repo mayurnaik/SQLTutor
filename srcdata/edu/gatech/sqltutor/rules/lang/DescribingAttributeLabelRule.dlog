@@ -29,7 +29,7 @@ lrnTableLabel(?table,?label,?source) :-
 lrnTableLabel(?table,?label,?source) :-
   lrnTableLabel(?table, ?label, ?othersource),
   ?source != ?othersource, ?source = 'DescribingAttributeLabelRule',
-  ruleAttributeDescribesLabel(?tabel,?value,?type),
+  ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'replace',
   ?label = ?value.
   
