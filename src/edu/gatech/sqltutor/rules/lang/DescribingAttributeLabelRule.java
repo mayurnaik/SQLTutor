@@ -33,8 +33,8 @@ public class DescribingAttributeLabelRule extends AbstractSQLRule implements ISQ
 	private static final Logger _log = LoggerFactory.getLogger(DescribingAttributeLabelRule.class);
 	
 	// ruleAttributeDescribes(?table,?eq,?value,?type)
-	private static final IPredicate ruleAttributeDescribes = predicate("ruleAttributeDescribes", 3);
-	public static final IPredicate ruleAttributeDescribesLabel = predicate("ruleAttributeDescribesLabel", 4); 
+	private static final IPredicate ruleAttributeDescribes = predicate("ruleAttributeDescribes", 4);
+	public static final IPredicate ruleAttributeDescribesLabel = predicate("ruleAttributeDescribesLabel", 3); 
 	
 	public static final String RULE_SOURCE = DescribingAttributeLabelRule.class.getSimpleName();
 	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);

@@ -10,7 +10,9 @@ import org.deri.iris.EvaluationException;
 import org.deri.iris.KnowledgeBaseFactory;
 import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
+import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
+import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
@@ -42,6 +45,9 @@ public class SymbolicFragmentTranslator
 		extends AbstractQueryTranslator implements IQueryTranslator {
 	private static final Logger _log = 
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
+	
+	// FIXME temp flag to enable non-logging debug output
+	private static final boolean DEBUG = true;
 	
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
@@ -116,8 +122,24 @@ public class SymbolicFragmentTranslator
 		
 		if( _log.isInfoEnabled() )
 			_log.info("statement: {}", QueryUtils.nodeToString(statement));
-		IrisUtil.dumpFacts(makeFacts(sqlState));
-		IrisUtil.dumpRules(staticRules);
+		
+		// FIXME remove this eventually
+		if( DEBUG ) {
+			IrisUtil.dumpFacts(makeFacts(sqlState));
+			IrisUtil.dumpRules(staticRules);
+			
+			IQuery q = Factory.BASIC.createQuery(
+				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
+			);
+			try {
+				IRelation rel = kb.execute(q);
+				for( int i = 0; i < rel.size(); ++i ) {
+					System.out.println(rel.get(i));
+				}
+			} catch( EvaluationException e ) {
+				e.printStackTrace();
+			}
+		}
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
@@ -187,8 +209,8 @@ public class SymbolicFragmentTranslator
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
 			new JoinLabelRule3(),
-			new DefaultTableLabelRule()
-//			new DescribingAttributeLabelRule()
+			new DefaultTableLabelRule(),
+			new DescribingAttributeLabelRule()
 		);
 	}
 	

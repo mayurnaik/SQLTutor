@@ -16,12 +16,10 @@ ruleAttributeDescribes(?table,?eq,?value,?type) :-
 //   generated fact to say ?table matched the rule with ?value and ?type
 
 // now propogate the generated facts to the learned label rule
-
-// FIXME: rule is considered unsafe, does not understand built-in resolution for ?temp and ?label
 lrnTableLabel(?table,?label,?source) :-
   lrnTableLabel(?table, ?otherlabel, ?othersource),
   ?source != ?othersource, ?source = 'DescribingAttributeLabelRule',
-  ruleAttributeDescribesLabel(?tabel,?value,?type),
+  ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'prepend',
   STRING_CONCAT(?value, ' ', ?temp),
   STRING_CONCAT(?temp, ?otherlabel, ?label).
@@ -32,4 +30,3 @@ lrnTableLabel(?table,?label,?source) :-
   ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'replace',
   ?label = ?value.
-  
