@@ -8,7 +8,10 @@ import java.util.List;
 import org.deri.iris.EvaluationException;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.api.terms.IStringTerm;
+import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
@@ -25,7 +28,10 @@ import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.QueryManip;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
+import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
+import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 
 /**
  * Meta-rule for labeling join entities.
@@ -50,16 +56,21 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
  * entities based on two lookups.
  * </p>
  */
-public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRule {
-	private static final Logger _log = LoggerFactory.getLogger(JoinLabelRule3.class);
+public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRule {
+	private static final Logger _log = LoggerFactory.getLogger(JoinLabelRule.class);
+	
+	private static final String RULE_SOURCE = JoinLabelRule.class.getSimpleName();
+	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
+	
+	private static final StaticRules staticRules = new StaticRules(JoinLabelRule.class);
+
 	
 	// rules defined statically
 	private static final IPredicate joinRuleFK = 
-			Factory.BASIC.createPredicate("joinRuleFK3", 8);	
+			Factory.BASIC.createPredicate("joinRuleFK", 8);	
 	private static final IPredicate joinRuleLookup = 
-			Factory.BASIC.createPredicate("joinRuleLookup3", 15);
-
-	public JoinLabelRule3() {
+			Factory.BASIC.createPredicate("joinRuleLookup", 15);
+	public JoinLabelRule() {
 	}
 	
 	@Override
@@ -101,6 +112,7 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 		if( results.size() == 0 )
 			return false;
 		
+		_log.debug("Bindings: {}", bindings);
 		_log.debug("Results: {}", results);
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
@@ -113,12 +125,17 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
 			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)ext.getNode("?eq", result);
 			
-			String pkLabel = ext.getTerm("?pkLabel", result).toString();
-			String fkLabel = ext.getTerm("?fkLabel", result).toString();
+			String pkLabel = ((IStringTerm)ext.getTerm("?pkLabel", result)).getValue();
+			String fkLabel = ((IStringTerm)ext.getTerm("?fkLabel", result)).getValue();
 			
-			// TODO actually apply the rule
-			_log.info("\nApply {} to table {}\nApply {} to table {}", 
+			_log.debug("\nApply {} to table {}\nApply {} to table {}", 
 				pkLabel, t1Table, fkLabel, t2Table);
+			
+			// generate facts for the labels
+			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
+				ext.getTerm("?tref1", result), pkLabel, TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
+				ext.getTerm("?tref2", result), fkLabel, TERM_RULE_SOURCE));
 			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
@@ -178,5 +195,10 @@ public class JoinLabelRule3 extends AbstractSQLRule implements ISQLTranslationRu
 		}
 		
 		return false;
+	}
+	
+	@Override
+	public List<IRule> getDatalogRules() {
+		return staticRules.getRules();
 	}
 }

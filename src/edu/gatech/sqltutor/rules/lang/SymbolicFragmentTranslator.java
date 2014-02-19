@@ -32,6 +32,7 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
+import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
@@ -128,20 +129,29 @@ public class SymbolicFragmentTranslator
 			IrisUtil.dumpFacts(makeFacts(sqlState));
 			IrisUtil.dumpRules(staticRules);
 			
-			IQuery q = Factory.BASIC.createQuery(
+			dumpQuery(kb, Factory.BASIC.createQuery(
 				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
-			);
-			try {
-				IRelation rel = kb.execute(q);
-				for( int i = 0; i < rel.size(); ++i ) {
-					System.out.println(rel.get(i));
-				}
-			} catch( EvaluationException e ) {
-				e.printStackTrace();
-			}
+			));
+			dumpQuery(kb, Factory.BASIC.createQuery(
+				IrisUtil.literal(ERPredicates.erFKJoin, "?rel", "?pktable", "?pkattr", "?fktable", "?fkattr")
+			));
+			dumpQuery(kb, Factory.BASIC.createQuery(
+				IrisUtil.literal(ERPredicates.erFKJoinSides, "?rel", "?pkSide", "?fkSide")
+			));
 		}
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
+	}
+	
+	private static void dumpQuery(IKnowledgeBase kb, IQuery q) {
+		try {
+			IRelation rel = kb.execute(q);
+			for( int i = 0; i < rel.size(); ++i ) {
+				System.out.println(rel.get(i));
+			}
+		} catch( EvaluationException e ) {
+			e.printStackTrace();
+		}
 	}
 	
 	private List<IRule> staticRules;
@@ -208,7 +218,7 @@ public class SymbolicFragmentTranslator
 
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
-			new JoinLabelRule3(),
+			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DescribingAttributeLabelRule()
 		);

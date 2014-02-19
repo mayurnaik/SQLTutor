@@ -15,6 +15,7 @@ sqlIsKeyEquality(?eq, ?t1, ?attr1, ?t2, ?attr2) :-
   sqlTableAlias(?t1, ?alias1), sqlTableAlias(?c1, ?alias1), sqlColumnName(?c1, ?attr1),
   sqlTableAlias(?t2, ?alias2), sqlTableAlias(?c2, ?alias2), sqlColumnName(?c2, ?attr2).
   
+// ?node is a string literal with value ?value
 sqlStringLiteral(?node,?value) :-
   sqlNodeHasType(?node, 'CharConstantNode'),
   sqlLiteralValue(?node,?value).
@@ -32,24 +33,31 @@ sqlLiteralComparison(?eq, ?op, ?table, ?colname, ?val) :-
   sqlStringLiteral(?child2,?val).
 
 
+// only binary relational operators or AND nodes are possible always-on choices
 sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'BinaryRelationalOperatorNode').
 sqlOpAlwaysCandidate(?node) :- sqlNodeHasType(?node, 'AndNode').
             
+// condition applies when it's the WHERE clause
 sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlNodeHasType(?p, 'SelectNode').
+// or an ON clause
 sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlNodeHasType(?p, 'JoinNode').
+// or it's parent always applies
 sqlOperatorAlways(?node) :- sqlOpAlwaysCandidate(?node), sqlParentOf(?p, ?node), sqlOperatorAlways(?p).
 
+// ?t1 and ?t2 are two distinct table references
 sqlIsTablePair(?t1,?t2) :- 
   sqlNodeHasType(?t1,'FromBaseTable'), 
   sqlNodeHasType(?t2, 'FromBaseTable'), 
   ?t1 != ?t2.
   
+// ?t1 and ?t2 are two implicitly joined table references
 sqlImplicitJoined(?t1,?t2) :- 
   sqlIsTablePair(?t1,?t2), 
   sqlParentOf(?flist, ?t1), 
   sqlParentOf(?flist, ?t1), 
   sqlNodeHasType(?flist, 'FromList').
-  
+
+// ?t1 and ?t2 are two explicitly joined table references  
 sqlExplicitJoined(?t1,?t2) :- 
   sqlIsTablePair(?t1,?t2), 
   sqlParentOf(?join, ?t1), 
@@ -58,17 +66,4 @@ sqlExplicitJoined(?t1,?t2) :-
   
 sqlJoined(?t1,?t2) :- sqlImplicitJoined(?t1,?t2).
 sqlJoined(?t1,?t2) :- sqlExplicitJoined(?t1,?t2).
-
-joinRuleFK(?t1,?attr1,?t2,?attr2,?eq) :- 
-  sqlJoined(?t1,?t2), 
-  sqlIsKeyEquality(?eq,?t1,?attr1,?t2,?attr2).
-  
-joinRuleFKByName(?tname1,?attr1,?tname2,?attr2,?eq) :-
-  sqlJoinRuleFK(?t1, ?attr1, ?t2, ?attr2, ?eq),
-  sqlTableName(?t1,?tname1),
-  sqlTableName(?t2,?tname2).
-  
-joinRuleLookup(?t1,?a1,?t2,?a2,?t3,?a3,?t4,?a4,?eq1,?eq2) :- 
-  sqlJoinRuleFK(?t1,?a1,?t2,?a2,?eq1), 
-  sqlJoinRuleFK(?t3,?a3,?t4,?a4,?eq2).
 

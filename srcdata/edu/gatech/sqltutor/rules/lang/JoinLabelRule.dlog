@@ -1,9 +1,8 @@
-
-
 //
 // Join Label Rule
 //
-joinRuleFK3(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq) :-
+
+joinRuleFK(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq) :-
   sqlJoined(?tref1,?tref2),
   sqlIsKeyEquality(?eq,?tref1,?attr1,?tref2,?attr2),
   sqlTableName(?tref1,?tname1),
@@ -17,7 +16,8 @@ joinRuleLookupOneSide(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq,?pos)
   sqlTableName(?tref2,?tname2),
   erLookupJoinKeyPair(?rel, ?pos, ?tname1, ?attr1, ?tname2, ?attr2).  
   
-joinRuleLookup3(?rel, ?tref1,?tname1,?attr1, ?tref2,?tname2,?attr2,
+joinRuleLookup(?rel, ?tref1,?tname1,?attr1, ?tref2,?tname2,?attr2,
     ?tref3,?tname3,?attr3, ?tref4,?tname4,?attr4, ?eq1, ?eq2) :-
   joinRuleLookupOneSide(?rel,?tref1,?tname1,?attr1,?tref2,?tname2,?attr2,?eq1,0),
   joinRuleLookupOneSide(?rel,?tref3,?tname3,?attr3,?tref4,?tname4,?attr4,?eq2,1).
+  
