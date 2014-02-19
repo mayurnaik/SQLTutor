@@ -6,10 +6,12 @@ package edu.gatech.sqltutor.rules.lang;
  * <p>
  * These were scraped from the UPenn  
  * <a href="http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">
- * course website</a>.
+ * course website</a> and supplemented with chunks from 
+ * <a href="http://www.clips.ua.ac.be/pages/mbsp-tags">Penn Treebank II</a>.
  * </p>
  */
 public enum PartOfSpeech {
+	// non-chunks
 	COORDINATING_CONJUNCTION("CC"),
 	CARDINAL_NUMBER("CD"),
 	DETERMINER("DT"),
@@ -45,11 +47,51 @@ public enum PartOfSpeech {
 	WH_DETERMINER("WDT"),
 	WH_PRONOUN("WP"),
 	POSSESSIVE_WH_PRONOUN("WP$"),
-	WH_ADVERB("WRB");
+	WH_ADVERB("WRB"),
+	
+	//// CHUNKS
+	
+	// words: DT+RB+JJ+NN + PR
+	// example: the strange bird
+	NOUN_PHRASE (true,"NP"),
 
+	// words: TO+IN
+	// example: in between
+	PREPOSITIONAL_PHRASE(true,"PP"),
+
+	// words: RB+MD+VB 
+	// example: was looking
+	VERB_PHRASE (true,"VP "),
+
+	// words: RB
+	// example: also
+	ADVERB_PHRASE(true,"ADVP"),
+
+	// words: CC+RB+JJ
+	// example: warm and cosy
+	ADJECTIVE_PHRASE (true,"ADJP"),
+
+	// words: IN
+	// example: ->whether<- or not
+	SUBORDINATING_CONJUNCTION (true,"SBAR"),
+
+	// words: RP
+	// example: ->up<- the stairs
+	PARTICLE_CHUNK(true,"PRT"),
+
+	// words: UH
+	// example: hello
+	INTERJECTION_CHUNK(true,"INTJ");
+
+	private final boolean isChunk;
 	private final String tag;
 
 	private PartOfSpeech(String tag) {
+		this(false, tag);
+	}
+	
+	private PartOfSpeech(boolean isChunk, String tag) {
+		this.isChunk = isChunk;
 		this.tag = tag;
 	}
 
@@ -62,6 +104,8 @@ public enum PartOfSpeech {
 	public String toString() {
 		return getTag();
 	}
+	
+	public boolean isChunk() { return isChunk; }
 
 	protected String getTag() {
 		return this.tag;
