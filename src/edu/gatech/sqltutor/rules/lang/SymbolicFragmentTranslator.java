@@ -162,15 +162,10 @@ public class SymbolicFragmentTranslator
 		staticRules = Lists.newArrayList();
 		staticRules.addAll(sqlRules.getRules());
 		staticRules.addAll(erRules.getRules());
-		staticRules.addAll(astRules.getRules());
 		for( ITranslationRule rule: translationRules ) {
 			staticRules.addAll(rule.getDatalogRules());
 		}
 	}
-	
-	// FIXME add datalog rules on a per-meta-rule basis?
-	@Deprecated
-	private static final StaticRules astRules = new StaticRules("/astrules.dlog");
 	
 	private static Map<IPredicate, IRelation> mergeFacts(Map<IPredicate, IRelation>... facts) {
 		int size = 1;
@@ -191,7 +186,6 @@ public class SymbolicFragmentTranslator
 			sqlRules.getFacts(),
 			erFacts.getFacts(),
 			erRules.getFacts(),
-			astRules.getFacts(),
 			state.getRuleFacts()
 		);
 		return facts;
