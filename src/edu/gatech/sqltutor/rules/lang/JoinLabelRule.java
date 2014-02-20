@@ -63,7 +63,6 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
 	
 	private static final StaticRules staticRules = new StaticRules(JoinLabelRule.class);
-
 	
 	// rules defined statically
 	private static final IPredicate joinRuleFK = 
@@ -183,7 +182,8 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			FromBaseTable t4Table = (FromBaseTable)ext.getNode("?tref4", result);
 			BinaryRelationalOperatorNode binop2 = (BinaryRelationalOperatorNode)ext.getNode("?eq2", result);
 			
-			_log.info("t1Table: {}\nt2Table: {}\nbinop: {}", t1Table, t2Table, binop1);
+			_log.info("t1Table: {}\nt2Table: {}\neq1: {}\nt3Table: {}\nt4Table: {}\neq2: {}", 
+				t1Table, t2Table, binop1, t3Table, t4Table, binop2);
 
 			// remove the join conditions
 			SelectNode select = state.getAst();
