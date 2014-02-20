@@ -5,7 +5,36 @@
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>		
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
+  </appender>
+   
+  <appender name="debug.log" class="ch.qos.logback.core.FileAppender">
+    <file>${java.io.tmpdir}/sqltutor.log</file>
+    <append>false</append>
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
+  </appender>
+   
+  <appender name="datalog.log" class="ch.qos.logback.core.FileAppender">
+    <file>${java.io.tmpdir}/sqltutor.datalog.log</file>
+    <append>false</append>
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+	    <Name>DATALOG_FILTER</Name>
+	    <Marker>DATALOG</Marker>
+    	<OnMatch>ALLOW</OnMatch>
+    	<OnMismatch>DENY</OnMismatch>
+	</turboFilter> 
   </appender>
   
   <logger name="org.deri" level="INFO" />
@@ -13,5 +42,7 @@
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="debug.log" />
+    <appender-ref ref="datalog.log" />
   </root>
 </configuration>

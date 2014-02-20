@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules.lang;
 
+import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.asTuple;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
@@ -118,23 +119,31 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		ext.setSqlFacts(state.getSqlFacts());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
-			String relationship = ext.getTerm("?rel", result).toString();
+			ITerm relationship = ext.getTerm("?rel", result);
 			_log.debug("Matched on relationship: {}", relationship);
-			FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
-			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
 			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)ext.getNode("?eq", result);
 			
 			String pkLabel = ((IStringTerm)ext.getTerm("?pkLabel", result)).getValue();
 			String fkLabel = ((IStringTerm)ext.getTerm("?fkLabel", result)).getValue();
 			
-			_log.debug("\nApply {} to table {}\nApply {} to table {}", 
-				pkLabel, t1Table, fkLabel, t2Table);
+			if( _log.isDebugEnabled() ) {
+				FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
+				FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
+				_log.debug("\nApply {} to table {}\nApply {} to table {}", 
+					pkLabel, t1Table, fkLabel, t2Table);
+			}
 			
 			// generate facts for the labels
-			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
-				ext.getTerm("?tref1", result), pkLabel.toLowerCase(), TERM_RULE_SOURCE));
-			state.addFact(LearnedPredicates.tableLabel, IrisUtil.asTuple(
-				ext.getTerm("?tref2", result), fkLabel.toLowerCase(), TERM_RULE_SOURCE));
+			ITerm tref1 = ext.getTerm("?tref1", result),
+					tref2 = ext.getTerm("?tref2", result);
+			state.addFact(LearnedPredicates.tableLabel, asTuple(
+				tref1, pkLabel.toLowerCase(), TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableLabel, asTuple(
+				tref2, fkLabel.toLowerCase(), TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableInRelationship, asTuple(
+				tref1, relationship, ext.getTerm("?pkPos", result), TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableInRelationship, asTuple(
+				tref2, relationship, ext.getTerm("?fkPos", result), TERM_RULE_SOURCE));
 			
 			SelectNode select = state.getAst();
 			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));

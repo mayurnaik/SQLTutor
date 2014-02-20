@@ -133,10 +133,7 @@ public class SymbolicFragmentTranslator
 				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
 			));
 			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(ERPredicates.erFKJoin, "?rel", "?pktable", "?pkattr", "?fktable", "?fkattr")
-			));
-			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(ERPredicates.erFKJoinSides, "?rel", "?pkSide", "?fkSide")
+				IrisUtil.literal(LearnedPredicates.tableInRelationship, "?tref","?rel","?pos","?source")
 			));
 		}
 		
@@ -146,6 +143,7 @@ public class SymbolicFragmentTranslator
 	private static void dumpQuery(IKnowledgeBase kb, IQuery q) {
 		try {
 			IRelation rel = kb.execute(q);
+			System.out.println(q);
 			for( int i = 0; i < rel.size(); ++i ) {
 				System.out.println(rel.get(i));
 			}

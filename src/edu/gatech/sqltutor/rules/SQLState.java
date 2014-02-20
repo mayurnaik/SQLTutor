@@ -8,6 +8,8 @@ import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.storage.IRelation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.google.common.collect.Lists;
@@ -20,6 +22,8 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
 public class SQLState {
+	private static final Logger _log = LoggerFactory.getLogger(SQLState.class);
+	
 	private ERDiagram erDiagram;
 	private ERMapping erMapping;
 	private IKnowledgeBase knowledgeBase;
@@ -43,6 +47,7 @@ public class SQLState {
 		if( rel == null )
 			ruleFacts.put(predicate, rel = IrisUtil.relation());
 		rel.add(values);
+		_log.debug(Markers.DATALOG_FACTS, "New fact: {}{}", predicate.getPredicateSymbol(), values);
 	}
 	
 	/**
@@ -55,6 +60,7 @@ public class SQLState {
 	
 	public void addRule(IRule rule) {
 		rules.add(rule);
+		_log.debug(Markers.DATALOG_RULES, "New rule: {}", rule);
 	}
 	
 	/**

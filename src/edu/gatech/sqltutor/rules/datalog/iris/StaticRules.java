@@ -12,16 +12,21 @@ import org.deri.iris.api.basics.IRule;
 import org.deri.iris.compiler.Parser;
 import org.deri.iris.compiler.ParserException;
 import org.deri.iris.storage.IRelation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.Utils;
+import edu.gatech.sqltutor.rules.Markers;
 
 /**
  * Static datalog rules parsed from some resource.
  */
 public class StaticRules {
+	private static final Logger _log = LoggerFactory.getLogger(StaticRules.class);
+	
 	private Parser parser;
 
 	protected StaticRules() { }
@@ -36,18 +41,22 @@ public class StaticRules {
 	public StaticRules(Class<?> clazz) {
 		String resource = "/" + clazz.getName().replace('.', '/') + ".dlog";
 		parser = parseResource(resource);
+		logParse();
 	}
 	
 	public StaticRules(String resource) {
 		parser = parseResource(resource);
+		logParse();
 	}
 	
 	public StaticRules(InputStream input) {
 		parser = parse(input);
+		logParse();
 	}
 	
 	public StaticRules(Reader reader) {
 		parser = parse(reader);
+		logParse();
 	}
 	
 	protected Parser parseString(String program) {
@@ -83,6 +92,7 @@ public class StaticRules {
 		InputStream in = StaticRules.class.getResourceAsStream(resourcePath);
 		if( in == null )
 			throw new SQLTutorException("Rule datalog resource not found: " + resourcePath);
+		_log.info(Markers.DATALOG_RULES, "Parsing rules from resource: {}", resourcePath);
 		return parse(in);
 	}
 
@@ -96,5 +106,22 @@ public class StaticRules {
 
 	public Parser getParser() {
 		return parser;
+	}
+	
+	private void logParse() {
+		List<IRule> rules = parser.getRules();
+		Map<IPredicate, IRelation> facts = parser.getFacts();
+		_log.info(Markers.DATALOG_RULES, "Parsed {} rules and {} facts.", 
+			rules.size(), facts.size());
+		if( facts.size() > 0 && _log.isDebugEnabled(Markers.DATALOG_FACTS) ) {
+			for( Map.Entry<IPredicate, IRelation> entry: facts.entrySet() ) {
+				_log.debug(Markers.DATALOG_FACTS, "Parsed fact: {}{}", entry.getKey().getPredicateSymbol(), entry.getValue());
+			}
+		}
+		if( rules.size() > 0 && _log.isDebugEnabled(Markers.DATALOG_RULES) ) {
+			for( IRule rule: rules ) {
+				_log.debug(Markers.DATALOG_RULES, "Parsed rule: {}", rule);
+			}
+		}
 	}
 }
