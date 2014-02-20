@@ -156,13 +156,20 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 	
 	private boolean detectLookupJoins() {
 		final boolean DEBUG = _log.isDebugEnabled(Markers.METARULE);
+		
+		// reuse int terms
+		final ITerm ZERO = Factory.CONCRETE.createInt(0);
+		final ITerm ONE  = Factory.CONCRETE.createInt(1);
+		
 		IQuery query = Factory.BASIC.createQuery(
 			literal(joinRuleLookup, "?rel", 
 				"?tref1", "?tname1", "?attr1",
 				"?tref2", "?tname2", "?attr2",
 				"?tref3", "?tname3", "?attr3",
 				"?tref4", "?tname4", "?attr4",
-				"?eq1", "?eq2")
+				"?eq1", "?eq2"),
+			literal(ERPredicates.erRelationshipEdgeLabel, "?rel", ZERO, "?pkLabelLeft"),
+			literal(ERPredicates.erRelationshipEdgeLabel, "?rel", ONE, "?pkLabelRight")
 		);
 		List<IVariable> bindings = new ArrayList<IVariable>(joinRuleLookup.getArity());
 		IRelation results = null;
@@ -182,17 +189,25 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		ext.setSqlFacts(state.getSqlFacts());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
-			String relationship = ext.getTerm("?rel", result).toString();
+			ITerm relationship = ext.getTerm("?rel", result);
 			_log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
-			FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
-			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
+			
+			ITerm pkRefLeft = ext.getTerm("?tref1", result), 
+					pkRefRight = ext.getTerm("?tref3", result);
+			String pkLabelLeft = ((IStringTerm)ext.getTerm("?pkLabelLeft", result)).getValue(),
+					pkLabelRight = ((IStringTerm)ext.getTerm("?pkLabelRight", result)).getValue();
 			BinaryRelationalOperatorNode binop1 = (BinaryRelationalOperatorNode)ext.getNode("?eq1", result);
-			FromBaseTable t3Table = (FromBaseTable)ext.getNode("?tref3", result);
-			FromBaseTable t4Table = (FromBaseTable)ext.getNode("?tref4", result);
 			BinaryRelationalOperatorNode binop2 = (BinaryRelationalOperatorNode)ext.getNode("?eq2", result);
 			
-			_log.info(Markers.METARULE, "t1Table: {}\nt2Table: {}\neq1: {}\nt3Table: {}\nt4Table: {}\neq2: {}", 
-				t1Table, t2Table, binop1, t3Table, t4Table, binop2);
+			if( DEBUG ) {
+				FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
+				FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
+				FromBaseTable t3Table = (FromBaseTable)ext.getNode("?tref3", result);
+				FromBaseTable t4Table = (FromBaseTable)ext.getNode("?tref4", result);
+				
+				_log.debug(Markers.METARULE, "t1Table: {}\nt2Table: {}\neq1: {}\nt3Table: {}\nt4Table: {}\neq2: {}", 
+					t1Table, t2Table, binop1, t3Table, t4Table, binop2);
+			}
 
 			// remove the join conditions
 			SelectNode select = state.getAst();
@@ -201,6 +216,18 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			if( DEBUG ) _log.debug(Markers.METARULE, "Intermediate query state: {}", QueryUtils.nodeToString(select));
 			QueryManip.deleteCondition(state, binop2);
 			if( DEBUG ) _log.debug(Markers.METARULE, "New query state: {}", QueryUtils.nodeToString(select));
+			
+			// add label and relationship facts
+			// left edge
+			state.addFact(LearnedPredicates.tableLabel,
+				asTuple(pkRefLeft, pkLabelLeft.toLowerCase(), TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableInRelationship, 
+				asTuple(pkRefLeft, relationship, ZERO, TERM_RULE_SOURCE));
+			// right edge
+			state.addFact(LearnedPredicates.tableLabel,
+				asTuple(pkRefRight, pkLabelRight.toLowerCase(), TERM_RULE_SOURCE));
+			state.addFact(LearnedPredicates.tableInRelationship, 
+				asTuple(pkRefRight, relationship, ONE, TERM_RULE_SOURCE));
 		}
 		
 		return false;

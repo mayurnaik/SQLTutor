@@ -22,6 +22,7 @@ import com.akiban.sql.parser.BinaryOperatorNode;
 
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.QueryManip;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
@@ -46,7 +47,7 @@ public class DescribingAttributeLabelRule extends AbstractSQLRule implements ISQ
 
 	@Override
 	public boolean apply(SQLState state) {
-		final boolean DEBUG = _log.isDebugEnabled();
+		final boolean DEBUG = _log.isDebugEnabled(Markers.METARULE);
 		
 		IQuery query = Factory.BASIC.createQuery(
 			literal(ruleAttributeDescribes, "?table", "?eq", "?value", "?type")
@@ -74,7 +75,7 @@ public class DescribingAttributeLabelRule extends AbstractSQLRule implements ISQ
 				ext.getTerm("?value", result), ext.getTerm("?type", result));
 			state.addFact(ruleAttributeDescribesLabel, fact);
 			
-			if( DEBUG ) _log.debug("Added fact: {}{}", ruleAttributeDescribesLabel.getPredicateSymbol(), fact);
+			if( DEBUG ) _log.debug(Markers.METARULE, "Added fact: {}{}", ruleAttributeDescribesLabel.getPredicateSymbol(), fact);
 		}
 		
 		return true;
