@@ -26,6 +26,7 @@ import com.akiban.sql.parser.SelectNode;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.QueryManip;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
@@ -103,7 +104,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		List<IVariable> bindings = new ArrayList<IVariable>(joinRuleFK.getArity());
 		IRelation results = null;
 		try {
-			_log.debug("Evaluating query: {}", query);
+			_log.debug(Markers.METARULE, "Evaluating query: {}", query);
 			results = state.getKnowledgeBase().execute(query, bindings);
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);
@@ -112,15 +113,14 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		if( results.size() == 0 )
 			return false;
 		
-		_log.debug("Bindings: {}", bindings);
-		_log.debug("Results: {}", results);
+		_log.debug(Markers.METARULE, "Join rule foreign-key results: {}", results);
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
 		ext.setSqlFacts(state.getSqlFacts());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
 			ITerm relationship = ext.getTerm("?rel", result);
-			_log.debug("Matched on relationship: {}", relationship);
+			_log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
 			BinaryRelationalOperatorNode binop = (BinaryRelationalOperatorNode)ext.getNode("?eq", result);
 			
 			String pkLabel = ((IStringTerm)ext.getTerm("?pkLabel", result)).getValue();
@@ -129,7 +129,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			if( _log.isDebugEnabled() ) {
 				FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
 				FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
-				_log.debug("\nApply {} to table {}\nApply {} to table {}", 
+				_log.debug(Markers.METARULE, "\nApply {} to table {}\nApply {} to table {}", 
 					pkLabel, t1Table, fkLabel, t2Table);
 			}
 			
@@ -146,16 +146,16 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 				tref2, relationship, ext.getTerm("?fkPos", result), TERM_RULE_SOURCE));
 			
 			SelectNode select = state.getAst();
-			if( _log.isDebugEnabled() ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
+			if( _log.isDebugEnabled() ) _log.debug(Markers.METARULE, "Original query state: {}", QueryUtils.nodeToString(select));
 			QueryManip.deleteCondition(state, binop);
-			if( _log.isDebugEnabled() ) _log.debug("New query state: {}", QueryUtils.nodeToString(select));
+			if( _log.isDebugEnabled() ) _log.debug(Markers.METARULE, "New query state: {}", QueryUtils.nodeToString(select));
 		}
 		
 		return true;
 	}
 	
 	private boolean detectLookupJoins() {
-		final boolean DEBUG = _log.isDebugEnabled();
+		final boolean DEBUG = _log.isDebugEnabled(Markers.METARULE);
 		IQuery query = Factory.BASIC.createQuery(
 			literal(joinRuleLookup, "?rel", 
 				"?tref1", "?tname1", "?attr1",
@@ -167,7 +167,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		List<IVariable> bindings = new ArrayList<IVariable>(joinRuleLookup.getArity());
 		IRelation results = null;
 		try {
-			_log.debug("Evaluating query: {}", query);
+			if( DEBUG ) _log.debug(Markers.DATALOG, "Evaluating query: {}", query);
 			results = state.getKnowledgeBase().execute(query, bindings);
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);
@@ -176,14 +176,14 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		if( results.size() == 0 )
 			return false;
 		
-		_log.debug("JOIN RULE LOOKUP Results: {}", results);
+		if( DEBUG ) _log.debug(Markers.METARULE, "JOIN RULE LOOKUP Results: {}", results);
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
 		ext.setSqlFacts(state.getSqlFacts());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
 			String relationship = ext.getTerm("?rel", result).toString();
-			_log.debug("Matched on relationship: {}", relationship);
+			_log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
 			FromBaseTable t1Table = (FromBaseTable)ext.getNode("?tref1", result);
 			FromBaseTable t2Table = (FromBaseTable)ext.getNode("?tref2", result);
 			BinaryRelationalOperatorNode binop1 = (BinaryRelationalOperatorNode)ext.getNode("?eq1", result);
@@ -191,16 +191,16 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			FromBaseTable t4Table = (FromBaseTable)ext.getNode("?tref4", result);
 			BinaryRelationalOperatorNode binop2 = (BinaryRelationalOperatorNode)ext.getNode("?eq2", result);
 			
-			_log.info("t1Table: {}\nt2Table: {}\neq1: {}\nt3Table: {}\nt4Table: {}\neq2: {}", 
+			_log.info(Markers.METARULE, "t1Table: {}\nt2Table: {}\neq1: {}\nt3Table: {}\nt4Table: {}\neq2: {}", 
 				t1Table, t2Table, binop1, t3Table, t4Table, binop2);
 
 			// remove the join conditions
 			SelectNode select = state.getAst();
-			if( DEBUG ) _log.debug("Original query state: {}", QueryUtils.nodeToString(select));
+			if( DEBUG ) _log.debug(Markers.METARULE, "Original query state: {}", QueryUtils.nodeToString(select));
 			QueryManip.deleteCondition(state, binop1);
-			if( DEBUG ) _log.debug("Intermediate query state: {}", QueryUtils.nodeToString(select));
+			if( DEBUG ) _log.debug(Markers.METARULE, "Intermediate query state: {}", QueryUtils.nodeToString(select));
 			QueryManip.deleteCondition(state, binop2);
-			if( DEBUG ) _log.debug("New query state: {}", QueryUtils.nodeToString(select));
+			if( DEBUG ) _log.debug(Markers.METARULE, "New query state: {}", QueryUtils.nodeToString(select));
 		}
 		
 		return false;
