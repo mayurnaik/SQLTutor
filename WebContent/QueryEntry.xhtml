@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/samples/template-menubar.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:form id="sampleNLPForm">
+		<div style="position:absolute;width:550;height:400;top:auto;left:20px">
+			<p:panelGrid columns="2">
+				<f:facet name="header">  
+				    Try Queries
+				</f:facet>
+				<p:outputLabel for="query" value="Enter Query:"/>
+				<p:inputTextarea rows="5" cols="37" id="query" reRender="results"
+					autoResize="false" style="resize:none" value="#{sampleNLPPageBean.query}" 
+					requiredMessage="Query entry is required." />
+				<f:facet name="footer">
+					<p:commandButton id="sampleNLPButton"
+						action="#{sampleNLPPageBean.processSQL}"
+						update="sampleNLPForm" 
+						value="Submit" icon="ui-icon-check" style="margin:0"/>
+				</f:facet> 
+			</p:panelGrid>
+		</div>
+		<div style="position:absolute;top:300;left:20">
+			<h2>Query Result:</h2>
+			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"  scrollWidth="495"
+				value="#{sampleNLPPageBean.queryResult.data}" >
+				<p:columns value="#{sampleNLPPageBean.queryResult.columns}" style="white-space: normal;"
+					var="column" columnIndexVar="columnIndex" >
+					<f:facet name="header">
+						#{column}
+					</f:facet>
+					#{row[columnIndex]}
+				</p:columns>
+			</p:dataTable>
+			<p:messages />
+		</div>
+		<div style="position:absolute;width:450;height:600;top:auto;left:550">
+			<p:graphicImage value="/images/schema/companydatabase.png"/>  
+			<br/>
+		</div>
+	</h:form>
+</h:body>
+</html>
