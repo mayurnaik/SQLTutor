@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
 
 /**
  * The types of symbolic language fragments.

@@ -1,4 +1,5 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
+
 
 /**
  * A language fragment that is a literal expression 

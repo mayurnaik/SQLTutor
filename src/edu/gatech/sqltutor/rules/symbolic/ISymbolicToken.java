@@ -1,6 +1,7 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
 
 import java.util.List;
+
 
 /**
  * A symbolic language fragment.

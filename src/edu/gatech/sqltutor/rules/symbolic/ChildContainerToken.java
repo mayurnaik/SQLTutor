@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
 
 import java.util.ArrayList;
 import java.util.Collections;

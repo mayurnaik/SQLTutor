@@ -1,7 +1,8 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
 
 import java.util.Collections;
 import java.util.List;
+
 
 /** The act of selecting. */
 public class SelectToken implements ISymbolicToken {

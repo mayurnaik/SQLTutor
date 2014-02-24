@@ -1,4 +1,5 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
+
 
 /** A series of literal tokens. */
 public class LiteralsToken extends ChildContainerToken implements ISymbolicToken {

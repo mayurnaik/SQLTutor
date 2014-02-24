@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.rules.lang;
+package edu.gatech.sqltutor.rules.symbolic;
 
 /**
  * <a href="http://www.cis.upenn.edu/~treebank/">Penn Treebank Project</a> 
