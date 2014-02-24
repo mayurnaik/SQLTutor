@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.akiban.sql.unparser.NodeToString;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -32,13 +31,11 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
-import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
-import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
