@@ -20,7 +20,7 @@ import edu.gatech.sqltutor.IQueryTranslator;
 
 @ManagedBean
 @ViewScoped
-public class SampleNLPPageBean implements Serializable {
+public class QueryEntryPageBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
@@ -58,9 +58,6 @@ public class SampleNLPPageBean implements Serializable {
 	public void processSQL() {
 		try {
 			queryResult = connection.getQueryResult(selectedDatabase, query);
-			IQueryTranslator question = new Question(query, tables);
-			String nlp = question.getTranslation();
-			feedbackNLP = "Corresponding question: \n" + nlp;
 			queryMalformed = false;
 		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
@@ -112,5 +109,11 @@ public class SampleNLPPageBean implements Serializable {
 	
 	public boolean getQueryMalformed() {
 		return queryMalformed;
+	}
+	
+	public boolean highColumnCount() {
+		if(queryResult != null && queryResult.getColumns().size() > 8)
+			return true;
+		return false;
 	}
 }

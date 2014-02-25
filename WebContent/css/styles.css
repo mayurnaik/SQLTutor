@@ -78,3 +78,17 @@ ul.aligned {
 .ui-datatable tbody td.wrap {
 	white-space: normal;
 }
+
+div.table1{
+	position:absolute;
+	top:300px;
+	left:20px;
+	width:1000px;	
+}
+
+div.table2{
+	position:absolute;
+	top:300px;
+	left:20px;
+	width:2000px;	
+}
