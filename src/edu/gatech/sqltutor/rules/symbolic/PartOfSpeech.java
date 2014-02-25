@@ -49,6 +49,12 @@ public enum PartOfSpeech {
 	POSSESSIVE_WH_PRONOUN("WP$"),
 	WH_ADVERB("WRB"),
 	
+	//// PUNCTUATION
+	COMMA(","),
+	PERIOD("."),
+	QUESTION_MARK("?"),
+	EXCLAMATION_POINT("!"),
+	
 	//// CHUNKS
 	
 	// words: DT+RB+JJ+NN + PR
@@ -81,7 +87,9 @@ public enum PartOfSpeech {
 
 	// words: UH
 	// example: hello
-	INTERJECTION_CHUNK(true,"INTJ");
+	INTERJECTION_CHUNK(true,"INTJ"),
+	
+	SENTENCE(true, "S");
 
 	private final boolean isChunk;
 	private final String tag;
@@ -107,7 +115,7 @@ public enum PartOfSpeech {
 	
 	public boolean isChunk() { return isChunk; }
 
-	protected String getTag() {
+	public String getTag() {
 		return this.tag;
 	}
 
