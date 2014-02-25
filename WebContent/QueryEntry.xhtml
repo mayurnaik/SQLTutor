@@ -11,7 +11,7 @@
 	</ui:insert>
 </h:head>
 <h:body style="height:1000px;width:1400px;margin-left:20px">
-	<h:form id="sampleNLPForm">
+	<h:form id="queryEntryForm">
     	<p:commandButton id="schemaDiagramButton" value="Schema Diagram" type="button" />
 	    <p:overlayPanel id="schemaDiagramPanel" for="schemaDiagramButton" hideEffect="fade">
 			<div style="width:450;height:600;">
@@ -26,21 +26,25 @@
 				</f:facet>
 				<p:outputLabel for="query" value="Enter Query:"/>
 				<p:inputTextarea rows="5" cols="100" id="query" reRender="results"
-					autoResize="false" style="resize:none" value="#{sampleNLPPageBean.query}" 
+					autoResize="false" style="resize:none" value="#{queryEntryPageBean.query}" 
 					requiredMessage="Query entry is required." />
 				<f:facet name="footer">
-					<p:commandButton id="sampleNLPButton"
-						action="#{sampleNLPPageBean.processSQL}"
-						update="sampleNLPForm" 
+					<p:commandButton id="queryEntryButton"
+						action="#{queryEntryPageBean.processSQL}"
+						update="queryEntryForm" 
 						value="Submit" icon="ui-icon-check" style="margin:0"/>
 				</f:facet> 
 			</p:panelGrid>
 		</div>
-		<div style="position:absolute;top:300px;left:20px;width:1000px;">
-			<h2>Query Result:</h2>
+		<style type="text/css"> 
+		#defaultTable {position:absolute;top:300px;left:20px;width:1000px;}	
+		#wideTable {position:absolute;top:300px;left:20px;width:2000px;}
+		</style>
+		<div id="#{queryEntryPageBean.highColumnCount() ? 'wideTable' : 'defaultTable'}">
+			<br/><h2>Query Result:</h2>
 			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"  scrollWidth="1000"
-				value="#{sampleNLPPageBean.queryResult.data}" >
-				<p:columns value="#{sampleNLPPageBean.queryResult.columns}" style="white-space: normal;"
+				value="#{queryEntryPageBean.queryResult.data}" rendered="#{!queryEntryPageBean.getQueryMalformed()}">
+				<p:columns value="#{queryEntryPageBean.queryResult.columns}" style="white-space: normal;"
 					var="column" columnIndexVar="columnIndex" >
 					<f:facet name="header">
 						#{column}
@@ -48,6 +52,8 @@
 					#{row[columnIndex]}
 				</p:columns>
 			</p:dataTable>
+			<h:outputText id="results" value="#{queryEntryPageBean.feedbackNLP}" style="width: 450px!important; display:block!important;" escape="false"
+				rendered="#{queryEntryPageBean.getQueryMalformed()}" />
 			<p:messages />
 		</div>
 	</h:form>
