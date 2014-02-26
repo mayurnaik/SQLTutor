@@ -54,6 +54,7 @@ public enum PartOfSpeech {
 	PERIOD("."),
 	QUESTION_MARK("?"),
 	EXCLAMATION_POINT("!"),
+	DOLLAR_SIGN("$"),
 	
 	//// CHUNKS
 	

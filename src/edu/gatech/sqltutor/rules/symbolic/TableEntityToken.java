@@ -1,12 +1,20 @@
 package edu.gatech.sqltutor.rules.symbolic;
 
+import com.akiban.sql.parser.FromTable;
+
+import edu.gatech.sqltutor.QueryUtils;
+
 public class TableEntityToken extends AbstractSymbolicToken implements ISymbolicToken {
-	public TableEntityToken() {
-		super(PartOfSpeech.NOUN_SINGULAR_OR_MASS);
+	/** The referenced table. */
+	protected FromTable table;
+	
+	public TableEntityToken(FromTable table) {
+		this(table, PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 	}
 	
-	public TableEntityToken(PartOfSpeech pos) {
+	public TableEntityToken(FromTable table, PartOfSpeech pos) {
 		super(pos);
+		this.table = table;
 	}
 
 	@Override
@@ -25,5 +33,20 @@ public class TableEntityToken extends AbstractSymbolicToken implements ISymbolic
 				throw new SymbolicException("Table entities must be nouns or noun phrases: " + partOfSpeech);
 		}
 		super.setPartOfSpeech(partOfSpeech);
+	}
+	
+	public FromTable getTable() {
+		return table;
+	}
+	
+	public void setTable(FromTable table) {
+		this.table = table;
+	}
+	
+	@Override
+	public String toString() {
+		if( table == null )
+			return super.toString();
+		return "{" + typeAndTag() + ", table=" + QueryUtils.nodeToString(table) + "}"; 
 	}
 }

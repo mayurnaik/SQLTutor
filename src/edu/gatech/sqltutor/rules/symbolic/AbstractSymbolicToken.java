@@ -24,8 +24,10 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 		return Collections.emptyList();
 	}
 	
+	protected String typeAndTag() { return getType() + "/" + getPartOfSpeech().getTag(); }
+	
 	@Override
 	public String toString() {
-		return "{" + getType() + "/" + getPartOfSpeech().getTag() + "}";
+		return "{" + typeAndTag() + "}";
 	}
 }
