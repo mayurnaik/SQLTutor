@@ -36,6 +36,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
@@ -49,6 +50,8 @@ public class SymbolicFragmentTranslator
 	
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
+	protected SymbolicFacts symFacts = new SymbolicFacts();
+	
 	protected ERDiagram erDiagram;
 	protected ERMapping erMapping;
 	protected boolean withDefaults;
@@ -218,6 +221,7 @@ public class SymbolicFragmentTranslator
 		super.clearResult();
 		sqlFacts.reset();
 		erFacts.reset();
+		symFacts.reset();
 		defaultsAdded = false;
 	}
 

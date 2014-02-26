@@ -101,7 +101,7 @@ public abstract class ChildContainerToken
 	
 	protected void acceptOrThrow(ISymbolicToken token) {
 		if( !canAcceptChild(token) )
-			throw new SQLTutorException(this + " does not accept token " + token);
+			throw new SymbolicException(this + " does not accept token " + token);
 	}
 	
 	@Override

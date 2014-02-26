@@ -7,7 +7,7 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 	protected PartOfSpeech partOfSpeech;
 	
 	protected AbstractSymbolicToken(PartOfSpeech pos) {
-		this.partOfSpeech = pos;
+		setPartOfSpeech(pos);
 	}
 	
 	@Override

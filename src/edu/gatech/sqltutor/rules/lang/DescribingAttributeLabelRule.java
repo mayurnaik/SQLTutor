@@ -23,11 +23,11 @@ import com.akiban.sql.parser.BinaryOperatorNode;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.QueryManip;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
+import edu.gatech.sqltutor.rules.util.QueryManip;
 
 
 public class DescribingAttributeLabelRule extends AbstractSQLRule implements ISQLTranslationRule {

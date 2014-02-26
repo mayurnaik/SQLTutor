@@ -61,7 +61,7 @@ public class RelationExtractor {
 	public QueryTreeNode getNode(String var, ITuple tuple) {
 		if( sqlFacts == null )
 			throw new SQLTutorException("No sql-facts associated.");
-		return sqlFacts.getNode(getTerm(var, tuple));
+		return sqlFacts.getNodeMap().getMappedObject(getTerm(var, tuple));
 	}
 	
 	public SQLFacts getSqlFacts() {

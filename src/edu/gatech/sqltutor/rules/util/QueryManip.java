@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.rules;
+package edu.gatech.sqltutor.rules.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +10,7 @@ import com.akiban.sql.parser.ValueNode;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.SQLState;
 
 /** Static utility functions for manipulating the AST. */
 public class QueryManip {

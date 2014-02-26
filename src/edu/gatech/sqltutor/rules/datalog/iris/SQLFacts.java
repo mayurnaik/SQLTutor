@@ -7,8 +7,6 @@ import java.util.List;
 import org.deri.iris.EvaluationException;
 import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.api.terms.ITerm;
-import org.deri.iris.api.terms.concrete.IIntegerTerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -21,12 +19,11 @@ import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
+import edu.gatech.sqltutor.rules.util.ObjectMapper;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 /**
@@ -35,8 +32,36 @@ import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 public class SQLFacts extends DynamicFacts {
 	private static final Logger _log = LoggerFactory.getLogger(SQLFacts.class);
 	
-	/** IDs assigned to AST nodes. */
-	BiMap<Integer, QueryTreeNode> nodeIds = HashBiMap.create();
+	/** A mapping of ids to query tree nodes. */
+	public static class NodeMap extends ObjectMapper<QueryTreeNode> {
+		@Override
+		public void mapObjects(QueryTreeNode root) {
+			if( !(root instanceof SelectNode) )
+				throw new SQLTutorException("Root node should be select node.");
+			clearMap();
+			try {
+				// assign ids to all nodes, from the top down
+				root.accept(new ParserVisitorAdapter() {
+					@Override
+					public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+						mapObject(node);
+						return node;
+					}
+				});
+			} catch( StandardException e ) {
+				throw new SQLTutorException(e);
+			}
+		}
+		
+		@Override
+		protected String objectToString(QueryTreeNode obj) {
+			if( obj == null ) return "null";
+			return QueryUtils.nodeToString(obj);
+		}
+	}
+	
+	/** Map for AST nodes. */
+	protected NodeMap nodeMap = new NodeMap();
 	
 	public SQLFacts() {}
 
@@ -51,8 +76,8 @@ public class SQLFacts extends DynamicFacts {
 	 */
 	public void generateFacts(SelectNode select, boolean preserveIds) {
 		facts.clear();
-		if( !preserveIds || nodeIds.isEmpty() )
-			mapNodes(select);
+		if( !preserveIds || nodeMap.size() < 1 )
+			nodeMap.mapObjects(select);
 		
 		long duration = -System.currentTimeMillis();
 		addFacts(select);
@@ -62,58 +87,11 @@ public class SQLFacts extends DynamicFacts {
 	@Override
 	public void reset() {
 		super.reset();
-		nodeIds.clear();
-	}
-
-	/**
-	 * Gets the ID assigned to <code>node</code>.
-	 * 
-	 * @param node the node
-	 * @return the id, which is never <code>null</code>
-	 * @throws SQLTutorException if there is no id for the node
-	 */
-	public Integer getNodeId(QueryTreeNode node) {
-		if( node == null )
-			throw new NullPointerException("node is null");
-		Integer id = nodeIds.inverse().get(node);
-		if( id == null )
-			throw new SQLTutorException("No id mapped to node: " + node);
-		return id;
+		nodeMap.clearMap();
 	}
 	
-	/**
-	 * Gets the node referenced by <code>id</code>.
-	 * 
-	 * @param id the node id
-	 * @return the node, which is never <code>null</code>
-	 * @throws SQLTutorException if there is no node mapped to the id
-	 */
-	public QueryTreeNode getNode(Integer id) {
-		if( id == null )
-			throw new NullPointerException("id is null");
-		QueryTreeNode node = nodeIds.get(id);
-		if( node == null )
-			throw new SQLTutorException("No node with id: " + id);
-		return node;
-	}
+	public NodeMap getNodeMap() { return nodeMap; }
 	
-	/**
-	 * Gets the node referenced by <code>id</code>.  
-	 * <code>id</code> must be an integer term.
-	 * 
-	 * @param id the term containing the id
-	 * @return the node, which is never <code>null</code>
-	 * @throws SQLTutorException if there is no node mapped to the id or the term is the wrong type
-	 */
-	public QueryTreeNode getNode(ITerm id) {
-		try {
-			return getNode(((IIntegerTerm)id).getValue().intValueExact());
-		} catch ( ClassCastException e ) {
-			throw new SQLTutorException("Term is not an integer.", e);
-		} catch( ArithmeticException e ) {
-			throw new SQLTutorException("Term is not an integer or is too large.", e);
-		}
-	}
 	
 	/**
 	 * Get the parent of <code>child</code>, evaluated using the knowledge base.
@@ -126,7 +104,7 @@ public class SQLFacts extends DynamicFacts {
 	 *                           or the parent is not unique
 	 */
 	public QueryTreeNode getParent(QueryTreeNode child, IKnowledgeBase kb) {
-		Integer childId = nodeIds.inverse().get(child);
+		Integer childId = nodeMap.getObjectId(child);
 		if( childId == null )
 			throw new SQLTutorException("No id mapped to child: " + QueryUtils.nodeToString(child));
 		
@@ -145,24 +123,7 @@ public class SQLFacts extends DynamicFacts {
 		if( relation.size() > 1 )
 			throw new SQLTutorException("Non-unique parent, found " + relation.size() + " nodes.");
 		
-		return getNode(relation.get(0).get(0));
-	}
-	
-	private void mapNodes(SelectNode select) {
-		nodeIds.clear();
-		try {
-			// assign ids to all nodes, from the top down
-			select.accept(new ParserVisitorAdapter() {
-				int nextId = 0;
-				@Override
-				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
-					nodeIds.put(nextId++, node);
-					return node;
-				}
-			});
-		} catch( StandardException e ) {
-			throw new SQLTutorException(e);
-		}
+		return nodeMap.getMappedObject(relation.get(0).get(0));
 	}
 	
 	private void addFacts(QueryTreeNode node) {
@@ -178,10 +139,10 @@ public class SQLFacts extends DynamicFacts {
 				
 				@Override
 				public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
-					Integer nodeId = nodeIds.inverse().get(node);
+					Integer nodeId = nodeMap.getObjectId(node);
 					addLocalFacts(node);
 					for( QueryTreeNode child: getChildren(node) ) {
-						Integer childId = nodeIds.inverse().get(child);
+						Integer childId = nodeMap.getObjectId(child);
 						addFact(SQLPredicates.parentOf, nodeId, childId);
 					}
 					return node;
@@ -193,7 +154,7 @@ public class SQLFacts extends DynamicFacts {
 	}
 	
 	private void addLocalFacts(QueryTreeNode node) {
-		Integer nodeId = nodeIds.inverse().get(node);
+		Integer nodeId = nodeMap.getObjectId(node);
 		String nodeType = node.getClass().getName().replaceAll("^.*\\.", "");
 		addFact(SQLPredicates.nodeHasType, nodeId, nodeType);
 		
