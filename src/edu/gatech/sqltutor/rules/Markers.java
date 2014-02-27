@@ -12,6 +12,13 @@ public class Markers {
 	public static final Marker DATALOG_RULES = MarkerFactory.getMarker("DATALOG_RULES");
 	static { DATALOG.add(DATALOG_RULES); }
 	
+	/** Related to metarule evaluation. */
+	public static final Marker SYMBOLIC = MarkerFactory.getMarker("SYMBOLIC");
+	
 	/** For metarule-specific info. */
 	public static final Marker METARULE = MarkerFactory.getMarker("METARULE");
+	static {
+		METARULE.add(DATALOG);
+		METARULE.add(SYMBOLIC);
+	}
 }

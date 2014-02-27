@@ -14,7 +14,6 @@ import edu.gatech.sqltutor.SQLTutorException;
  */
 public abstract class ChildContainerToken 
 		extends AbstractSymbolicToken implements ISymbolicToken {
-	
 	/** The child tokens, in order. */
 	protected List<ISymbolicToken> children = makeChildContainer();
 	
@@ -112,7 +111,7 @@ public abstract class ChildContainerToken
 	
 	@Override
 	public String toString() {
-		StringBuilder b = new StringBuilder('{').append(getType()).append('/')
+		StringBuilder b = new StringBuilder("{").append(getType()).append('/')
 			.append(getPartOfSpeech().getTag()).append(": ");
 		Joiner.on(", ").appendTo(b, children);
 		return b.append('}').toString();
