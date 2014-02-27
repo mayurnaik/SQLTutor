@@ -1,0 +1,45 @@
+package edu.gatech.sqltutor.rules.symbolic;
+
+import edu.gatech.sqltutor.rules.er.ERAttribute;
+
+public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken {
+	
+	protected ERAttribute attribute;
+
+	public AttributeToken(AttributeToken token) {
+		super(token);
+		this.attribute = token.attribute;
+	}
+	
+	public AttributeToken(ERAttribute attr) {
+		this(attr, PartOfSpeech.NOUN_SINGULAR_OR_MASS);
+	}
+	
+	public AttributeToken(ERAttribute attr, PartOfSpeech pos) {
+		super(pos);
+		this.attribute = attr;
+	}
+
+	@Override
+	public SymbolicType getType() {
+		return SymbolicType.ATTRIBUTE;
+	}
+
+	@Override
+	protected void setPartOfSpeech(PartOfSpeech partOfSpeech) {
+		switch( partOfSpeech ) {
+			case NOUN_SINGULAR_OR_MASS:
+			case NOUN_PLURAL:
+			case NOUN_PHRASE:
+				break;
+			default:
+				throw new SymbolicException("Attributes must be nouns or noun phrases: " + partOfSpeech);
+		}
+		super.setPartOfSpeech(partOfSpeech);
+	}
+	
+	@Override
+	public String toString() {
+		return "{" + typeAndTag() + " attribute=" + (attribute == null ? "null" : attribute.getFullName()) + "}";
+	}
+}
