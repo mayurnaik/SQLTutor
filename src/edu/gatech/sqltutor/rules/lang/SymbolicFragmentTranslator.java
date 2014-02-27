@@ -46,8 +46,14 @@ import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.AttributeListToken;
 import edu.gatech.sqltutor.rules.symbolic.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.LiteralToken;
+import edu.gatech.sqltutor.rules.symbolic.LiteralsToken;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.SelectToken;
+import edu.gatech.sqltutor.rules.symbolic.SequenceToken;
+import edu.gatech.sqltutor.rules.symbolic.TableEntityToken;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {
@@ -233,12 +239,15 @@ public class SymbolicFragmentTranslator
 		root.addChild(new SelectToken());
 		
 		// create an attribute list for each group of columns that go with a table reference
-		List<AttributeListToken> attrLists = Lists.newLinkedList();
+		List<ISymbolicToken> attrLists = Lists.newLinkedList();
 		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
 				fromToResult.asMap().entrySet() ) {
 			FromTable fromTable = entry.getKey();
 			Collection<ResultColumn> resultColumns = entry.getValue();
 			
+			SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+			
+			// list of attributes
 			AttributeListToken attrList = new AttributeListToken();
 			for( ResultColumn resultColumn: resultColumns ) {
 				String attrName = fromTable.getOrigTableName().getTableName() + "." + resultColumn.getExpression().getColumnName(); 
@@ -248,18 +257,31 @@ public class SymbolicFragmentTranslator
 				AttributeToken attr = new AttributeToken(erAttr);
 				attrList.addChild(attr);
 			}
-			attrLists.add(attrList);
+			
+			seq.addChild(attrList);
+			
+			// "of each" {entity}
+			LiteralsToken literals = new LiteralsToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
+			LiteralToken of = new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
+			LiteralToken each = new LiteralToken("each", PartOfSpeech.DETERMINER);
+			literals.addChild(of);
+			literals.addChild(each);
+			seq.addChild(literals);
+			
+			TableEntityToken table = new TableEntityToken(fromTable);
+			seq.addChild(table);
+			
+			attrLists.add(seq);
 		}
 		
 		if( attrLists.size() == 1 ) {
 			root.addChild(attrLists.get(0));
 		} else {
 			AndToken and = new AndToken();
-			for( AttributeListToken attrList: attrLists )
+			for( ISymbolicToken attrList: attrLists )
 				and.addChild(attrList);
 			root.addChild(and);
 		}
-		
 		
 		return root;
 	}

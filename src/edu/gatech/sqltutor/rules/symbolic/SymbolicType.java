@@ -13,5 +13,6 @@ public enum SymbolicType {
 	TABLE_ENTITY,
 	WHERE,
 	AND,
-	OR
+	OR,
+	SEQUENCE;
 }
