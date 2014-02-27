@@ -113,5 +113,13 @@ public class ERAttributeSet extends ERNodeMap<ERAttribute> {
 	
 	public void setParent(ERNamedNode parent) {
 		this.parent = parent;
+		if( parent != null )
+			readResolve();
+	}
+	
+	protected Object readResolve() {
+		for(ERAttribute attr: getNodes())
+			attr.setParent(parent);
+		return this;
 	}
 }

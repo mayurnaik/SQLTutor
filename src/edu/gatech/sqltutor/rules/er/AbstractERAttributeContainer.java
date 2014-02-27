@@ -72,6 +72,8 @@ public abstract class AbstractERAttributeContainer
 	protected Object readResolve() {
 		if( attributes == null )
 			attributes = new ERAttributeSet(this);
+		else
+			attributes.setParent(this);
 		return this;
 	}
 }
