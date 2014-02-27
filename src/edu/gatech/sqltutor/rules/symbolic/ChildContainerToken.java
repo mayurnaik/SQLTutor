@@ -18,6 +18,12 @@ public abstract class ChildContainerToken
 	/** The child tokens, in order. */
 	protected List<ISymbolicToken> children = makeChildContainer();
 	
+	public ChildContainerToken(ISymbolicToken token) {
+		super(token);
+		for( ISymbolicToken child: token.getChildren() )
+			addChild(SymbolicUtil.copyToken(child));
+	}
+	
 	public ChildContainerToken(PartOfSpeech pos) {
 		super(pos);
 	}

@@ -8,6 +8,11 @@ public class TableEntityToken extends AbstractSymbolicToken implements ISymbolic
 	/** The referenced table. */
 	protected FromTable table;
 	
+	public TableEntityToken(TableEntityToken token) {
+		super(token);
+		this.table = token.table;
+	}
+	
 	public TableEntityToken(FromTable table) {
 		this(table, PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 	}

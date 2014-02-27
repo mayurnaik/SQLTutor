@@ -18,6 +18,10 @@
       <column>employee.last_name</column>
     </entry>
     <entry>
+      <attribute>Employee.Address</attribute>
+      <column>employee.address</column>
+    </entry>
+    <entry>
       <attribute>Employee.Bdate</attribute>
       <column>employee.birthdate</column>
     </entry>

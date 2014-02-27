@@ -3,6 +3,10 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 /** A series of literal tokens. */
 public class LiteralsToken extends ChildContainerToken implements ISymbolicToken {
+	public LiteralsToken(LiteralsToken token) {
+		super(token);
+	}
+	
 	public LiteralsToken(PartOfSpeech pos) {
 		super(pos);
 	}

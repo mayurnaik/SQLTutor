@@ -8,6 +8,11 @@ package edu.gatech.sqltutor.rules.symbolic;
 public class LiteralToken extends AbstractSymbolicToken {
 	protected final String expression;
 	
+	public LiteralToken(LiteralToken token) {
+		super(token);
+		this.expression = token.expression;
+	}
+	
 	public LiteralToken(String expression, PartOfSpeech pos) {
 		super(pos);
 		if( pos == null ) 

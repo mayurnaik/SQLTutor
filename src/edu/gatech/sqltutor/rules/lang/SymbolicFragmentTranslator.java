@@ -17,8 +17,11 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.FromTable;
+import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -37,8 +40,14 @@ import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
+import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.AndToken;
+import edu.gatech.sqltutor.rules.symbolic.AttributeListToken;
+import edu.gatech.sqltutor.rules.symbolic.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.SelectToken;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {
@@ -97,28 +106,19 @@ public class SymbolicFragmentTranslator
 		sqlState.setKnowledgeBase(kb);
 		
 		sortRules();
-		for( ITranslationRule rule: translationRules ) {
-			switch( rule.getType() ) {
-				case ITranslationRule.TYPE_SQL: {
-					ISQLTranslationRule sqlRule = (ISQLTranslationRule)rule;
-					while( sqlRule.apply(sqlState) ) {
-						kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
-						sqlState.setKnowledgeBase(kb);
-						
-						// apply each rule as many times as possible
-						// FIXME non-determinism when precedences match?
-						_log.debug("Applied rule: {}", rule);
-					}
-					break;
-				}
-				case ITranslationRule.TYPE_SYMBOLIC: {
-					ISymbolicTranslationRule symRule = (ISymbolicTranslationRule)rule;
-					_log.error("FIXME: Symbolic handling not implemented.");
-					break;
-				}
-				default:
-					throw new SQLTutorException("Unknown rule type for rule: " + rule);
+		
+		// apply analysis rules to discover new facts
+		for( ISQLTranslationRule sqlRule: 
+				Iterables.filter(translationRules, ISQLTranslationRule.class) ) {
+			while( sqlRule.apply(sqlState) ) {
+				kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
+				sqlState.setKnowledgeBase(kb);
+				
+				// apply each rule as many times as possible
+				// FIXME non-determinism when precedences match?
+				_log.debug("Applied rule: {}", sqlRule);
 			}
+			
 		}
 		
 		if( _log.isInfoEnabled() )
@@ -135,6 +135,16 @@ public class SymbolicFragmentTranslator
 			dumpQuery(kb, Factory.BASIC.createQuery(
 				IrisUtil.literal(LearnedPredicates.tableInRelationship, "?tref","?rel","?pos","?source")
 			));
+		}
+		
+		// create initial symbolic state
+		RootToken symbolic = makeSymbolic();
+		_log.info("Symbolic state: {}", symbolic);
+		
+		// perform rewriting rules
+		for( ISymbolicTranslationRule metarule: 
+				Iterables.filter(translationRules, ISymbolicTranslationRule.class) ) {
+			// FIXME implement this
 		}
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
@@ -214,6 +224,44 @@ public class SymbolicFragmentTranslator
 			new DefaultTableLabelRule(),
 			new DescribingAttributeLabelRule()
 		);
+	}
+	
+	private RootToken makeSymbolic() {
+		this.buildMaps();
+		
+		RootToken root = new RootToken();
+		root.addChild(new SelectToken());
+		
+		// create an attribute list for each group of columns that go with a table reference
+		List<AttributeListToken> attrLists = Lists.newLinkedList();
+		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
+				fromToResult.asMap().entrySet() ) {
+			FromTable fromTable = entry.getKey();
+			Collection<ResultColumn> resultColumns = entry.getValue();
+			
+			AttributeListToken attrList = new AttributeListToken();
+			for( ResultColumn resultColumn: resultColumns ) {
+				String attrName = fromTable.getOrigTableName().getTableName() + "." + resultColumn.getExpression().getColumnName(); 
+				ERAttribute erAttr = erMapping.getAttribute(attrName);
+				if( erAttr == null )
+					_log.warn("No attribute for name {}", attrName);
+				AttributeToken attr = new AttributeToken(erAttr);
+				attrList.addChild(attr);
+			}
+			attrLists.add(attrList);
+		}
+		
+		if( attrLists.size() == 1 ) {
+			root.addChild(attrLists.get(0));
+		} else {
+			AndToken and = new AndToken();
+			for( AttributeListToken attrList: attrLists )
+				and.addChild(attrList);
+			root.addChild(and);
+		}
+		
+		
+		return root;
 	}
 	
 	@Override
