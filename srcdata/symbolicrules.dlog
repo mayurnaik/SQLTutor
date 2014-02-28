@@ -1,4 +1,6 @@
 
+// part of speech groups
+//
 symIsVerb('VB').
 symIsVerb('VBD').
 symIsVerb('VBG').
@@ -33,4 +35,16 @@ symIsChunk('SBAR').
 symIsChunk('PRT').
 symIsChunk('INTJ').
 symIsChunk('S').
+
+
+// symbolic node ?id is a leaf node (has a parent but no children)
+symIsLeaf(?id) :- 
+  symParentOf(?parent,?id,?pos),
+  not symParentOf(?id,?child,?pos2).
+  
+// all the non-literal leaf tokens.  empty means all leaves are literals.
+symNonLiteralLeaves(?id) :-
+  symIsLeaf(?id),
+  symType(?id,?type),
+  ?type != 'LITERAL'.
 

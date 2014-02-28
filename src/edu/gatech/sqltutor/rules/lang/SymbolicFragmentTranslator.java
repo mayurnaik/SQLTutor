@@ -133,19 +133,6 @@ public class SymbolicFragmentTranslator
 		if( _log.isInfoEnabled() )
 			_log.info("statement: {}", QueryUtils.nodeToString(statement));
 		
-		// FIXME remove this eventually
-		if( DEBUG ) {
-			IrisUtil.dumpFacts(makeFacts(sqlState));
-			IrisUtil.dumpRules(staticRules);
-			
-			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
-			));
-			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(LearnedPredicates.tableInRelationship, "?tref","?rel","?pos","?source")
-			));
-		}
-		
 		// all non-symbolic facts and rules are now frozen
 		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
 		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
@@ -158,6 +145,21 @@ public class SymbolicFragmentTranslator
 		SymbolicState symState = new SymbolicState(sqlState);
 		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
 		symState.setKnowledgeBase(kb);
+		
+		// FIXME remove this eventually
+		if( DEBUG ) {
+			IrisUtil.dumpFacts(queryFacts);
+			symFacts.generateFacts(symbolic, false);
+			IrisUtil.dumpFacts(symFacts.getFacts());
+			IrisUtil.dumpRules(staticRules);
+			
+			dumpQuery(kb, Factory.BASIC.createQuery(
+				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
+			));
+			dumpQuery(kb, Factory.BASIC.createQuery(
+				IrisUtil.literal(LearnedPredicates.tableInRelationship, "?tref","?rel","?pos","?source")
+			));
+		}
 		
 		// perform rewriting rules
 		for( ISymbolicTranslationRule metarule: 
