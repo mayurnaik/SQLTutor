@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.rules.symbolic.ISymbolicToken;
-import edu.gatech.sqltutor.rules.symbolic.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
 
 /** Fact generator for symbolic state. */

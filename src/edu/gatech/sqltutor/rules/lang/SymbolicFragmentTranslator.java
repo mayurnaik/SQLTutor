@@ -46,17 +46,17 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.symbolic.AndToken;
-import edu.gatech.sqltutor.rules.symbolic.AttributeListToken;
-import edu.gatech.sqltutor.rules.symbolic.AttributeToken;
-import edu.gatech.sqltutor.rules.symbolic.ISymbolicToken;
-import edu.gatech.sqltutor.rules.symbolic.LiteralToken;
-import edu.gatech.sqltutor.rules.symbolic.LiteralsToken;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
-import edu.gatech.sqltutor.rules.symbolic.RootToken;
-import edu.gatech.sqltutor.rules.symbolic.SelectToken;
-import edu.gatech.sqltutor.rules.symbolic.SequenceToken;
-import edu.gatech.sqltutor.rules.symbolic.TableEntityToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralsToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {

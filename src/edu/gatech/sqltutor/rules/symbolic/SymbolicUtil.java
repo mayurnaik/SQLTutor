@@ -3,6 +3,8 @@ package edu.gatech.sqltutor.rules.symbolic;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+
 public class SymbolicUtil {
 	/**
 	 * Attempt to copy a token using its copy constructor.

@@ -1,6 +1,9 @@
-package edu.gatech.sqltutor.rules.symbolic;
+package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken {
 	

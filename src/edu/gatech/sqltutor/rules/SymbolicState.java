@@ -2,7 +2,7 @@ package edu.gatech.sqltutor.rules;
 
 import org.deri.iris.api.IKnowledgeBase;
 
-import edu.gatech.sqltutor.rules.symbolic.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicState {
 	private RootToken rootToken;

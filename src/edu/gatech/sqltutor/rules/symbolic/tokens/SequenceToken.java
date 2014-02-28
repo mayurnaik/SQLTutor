@@ -1,4 +1,7 @@
-package edu.gatech.sqltutor.rules.symbolic;
+package edu.gatech.sqltutor.rules.symbolic.tokens;
+
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 /**
  * Generic sequence of tokens.

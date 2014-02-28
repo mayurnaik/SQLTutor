@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.rules.symbolic;
+package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +8,9 @@ import java.util.ListIterator;
 import com.google.common.base.Joiner;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 
 /**
  * A symbolic token that accepts children.

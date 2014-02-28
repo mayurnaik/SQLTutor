@@ -1,6 +1,9 @@
-package edu.gatech.sqltutor.rules.symbolic;
+package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import java.util.List;
+
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 
 /**

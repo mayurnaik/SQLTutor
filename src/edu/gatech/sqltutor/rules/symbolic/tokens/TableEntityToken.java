@@ -1,8 +1,11 @@
-package edu.gatech.sqltutor.rules.symbolic;
+package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import com.akiban.sql.parser.FromTable;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class TableEntityToken extends AbstractSymbolicToken implements ISymbolicToken {
 	/** The referenced table. */
