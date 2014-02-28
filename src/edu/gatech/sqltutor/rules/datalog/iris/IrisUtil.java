@@ -1,7 +1,6 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.io.PrintStream;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -63,7 +62,7 @@ public class IrisUtil {
 		}
 		
 		String strVal = val.toString();
-		if( !(val instanceof String) ) {
+		if( !(val instanceof String || val instanceof Enum<?>) ) {
 			_log.warn("Unknown type, using string representation: " + val.getClass().getName());
 		}
 		if( strVal.startsWith("?") )

@@ -34,6 +34,7 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
+import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
@@ -41,6 +42,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -123,7 +125,7 @@ public class SymbolicFragmentTranslator
 				
 				// apply each rule as many times as possible
 				// FIXME non-determinism when precedences match?
-				_log.debug("Applied rule: {}", sqlRule);
+				_log.debug(Markers.METARULE, "Applied rule: {}", sqlRule);
 			}
 			
 		}
@@ -144,20 +146,59 @@ public class SymbolicFragmentTranslator
 			));
 		}
 		
+		// all non-symbolic facts and rules are now frozen
+		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
+		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
+		staticRules.addAll(SymbolicRules.getInstance().getRules());
+		
 		// create initial symbolic state
 		RootToken symbolic = makeSymbolic();
 		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", symbolic);
 		
+		SymbolicState symState = new SymbolicState(sqlState);
+		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+		symState.setKnowledgeBase(kb);
 		
 		// perform rewriting rules
 		for( ISymbolicTranslationRule metarule: 
 				Iterables.filter(translationRules, ISymbolicTranslationRule.class) ) {
-			// FIXME implement this
+			while( metarule.apply(symState) ) {
+				kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+				symState.setKnowledgeBase(kb);
+				
+				// FIXME non-determinism and final output checks
+				
+				// apply each rule as many times as possible
+				// FIXME non-determinism when precedences match?
+				_log.debug(Markers.METARULE, "Applied rule: {}", metarule);
+				_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
+			}
 		}
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
 	
+	private IKnowledgeBase createSymbolicKnowledgeBase(Map<IPredicate, IRelation> queryFacts, 
+			RootToken symbolic) {
+
+		long duration = -System.currentTimeMillis();
+		symFacts.generateFacts(symbolic, false);
+		Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symFacts.getFacts());
+		
+		List<IRule> rules = staticRules;
+		
+		_log.info("KB creation prep in {} ms.", duration + System.currentTimeMillis());
+		
+		try {
+			duration = -System.currentTimeMillis();
+			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
+			_log.info("KB creation in {} ms.", duration + System.currentTimeMillis());
+			return kb;
+		} catch( EvaluationException e ) {
+			throw new SQLTutorException(e);
+		}
+	}
+
 	private static void dumpQuery(IKnowledgeBase kb, IQuery q) {
 		try {
 			IRelation rel = kb.execute(q);
