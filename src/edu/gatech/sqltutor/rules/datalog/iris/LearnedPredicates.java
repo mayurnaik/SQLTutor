@@ -19,4 +19,11 @@ public class LearnedPredicates {
 	 * learned from source <code>?source</code>.</p>
 	 */
 	public static final IPredicate tableInRelationship = predicate("lrnTableInRelationship", 4); 
+	
+	/**
+	 * <code>(?entity:string,?attribute:string,?label:string,?source:string)</code>
+	 * <p>Attribute <code>?entity.?attribute</code> has label <code>?label</code>, 
+	 * learned from source <code>?source</code>.
+	 */
+	public static final IPredicate attributeLabel = predicate("lrnAttributeLabel", 4); 
 }

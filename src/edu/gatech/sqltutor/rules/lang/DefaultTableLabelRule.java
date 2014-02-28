@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.EntityLabelFormat;
@@ -27,6 +28,11 @@ import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 
+/**
+ * For a table named <em>t</em> referencing entity <em>e</em>, 
+ * use <em>t</em> and <em>e</em> as potential labels.  Label names 
+ * are first processed by {@link EntityLabelFormat}.
+ */
 public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(DefaultTableLabelRule.class);
 	
@@ -48,8 +54,10 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 				literal(SQLPredicates.tableName, "?tref", "?tname"),
 				literal(ERPredicates.erTableRefsEntity, "?tname", "?ent"),
 				literal(new EntityLabelFormat("?ent", "?label")),
+				literal(new EntityLabelFormat("?tname", "?label2")),
 				literal(new EqualBuiltin(IrisUtil.asTerms("?rule", TERM_RULE_SOURCE))),
-				literal(false, PREDICATE, "?tref", "?label", "?rule")
+				literal(false, PREDICATE, "?tref", "?label", "?rule"),
+				literal(false, PREDICATE, "?tref", "?label2", "?rule")
 			);
 			List<IVariable> bindings = new ArrayList<IVariable>(3);
 			IRelation results = null;
@@ -66,10 +74,13 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 			RelationExtractor ext = new RelationExtractor(bindings);
 			for( int i = 0; i < results.size(); ++i ) {
 				ITuple result = results.get(i);
-				ITuple fact = IrisUtil.asTuple(ext.getTerm("?tref", result), 
-					ext.getTerm("?label", result), TERM_RULE_SOURCE);
+				ITerm tref = ext.getTerm("?tref", result);
+				ITuple fact = IrisUtil.asTuple(tref, ext.getTerm("?label", result), TERM_RULE_SOURCE);
 				state.addFact(PREDICATE, fact);
-				_log.info("Added label fact: {}{}", PREDICATE, fact);
+				_log.info(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
+				fact = IrisUtil.asTuple(tref, ext.getTerm("?label2", result), TERM_RULE_SOURCE);
+				state.addFact(PREDICATE, fact);
+				_log.info(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
 			}
 			return true;
 		} finally {

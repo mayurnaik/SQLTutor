@@ -32,6 +32,7 @@ import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
@@ -145,7 +146,8 @@ public class SymbolicFragmentTranslator
 		
 		// create initial symbolic state
 		RootToken symbolic = makeSymbolic();
-		_log.info("Symbolic state: {}", symbolic);
+		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", symbolic);
+		
 		
 		// perform rewriting rules
 		for( ISymbolicTranslationRule metarule: 
@@ -228,6 +230,7 @@ public class SymbolicFragmentTranslator
 		return Arrays.<ITranslationRule>asList(
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
+			new DefaultAttributeLabelRule(),
 			new DescribingAttributeLabelRule()
 		);
 	}

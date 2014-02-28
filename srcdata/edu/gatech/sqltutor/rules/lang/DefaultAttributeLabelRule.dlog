@@ -1,0 +1,8 @@
+
+ruleDefaultAttributeLabel(?entity,?attribute,?tableName,?colName) :-
+  sqlColumnName(?colId,?colName),
+  sqlTableAlias(?colId,?tableAlias),
+  sqlTableAlias(?tableId,?tableAlias),
+  sqlTableName(?tableId,?tableName),
+  erTableRefsEntity(?tableName,?entity),
+  erAttributeMapsTo(?entity,?attribute,?tableName,?colName).
