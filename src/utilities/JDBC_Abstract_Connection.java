@@ -329,10 +329,9 @@ public abstract class JDBC_Abstract_Connection {
 		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
 		statement.execute("set search_path to '" + schemaName + "'");
-		if(query.contains(",user ") || query.contains(" user ") || query.contains(",user,") ||
-				query.contains(" user,") || query.endsWith(",user") || query.endsWith(" user")) {
-			query = query.replace("user", "\"user\"");
-		} 
+		if(schemaName.equals("jobs")) {
+			query = query.replaceAll("[^a-zA-Z]user", " \"user\"");
+		}
 		ResultSet resultSet = statement.executeQuery(query);
 		ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 	
