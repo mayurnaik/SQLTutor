@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
@@ -86,7 +89,7 @@ public class SymbolicFacts extends DynamicFacts {
 		Integer childId = tokenMap.getObjectId(child);
 		
 		IQuery q = Factory.BASIC.createQuery(
-			literal(SymbolicPredicates.parentOf, "?parentId", childId)
+			literal(SymbolicPredicates.parentOf, "?parentId", childId, "?pos")
 		);
 		IRelation relation = null;
 		try {
@@ -123,11 +126,23 @@ public class SymbolicFacts extends DynamicFacts {
 
 	private void addLocalFacts(Integer tokenId, ISymbolicToken token) {
 		addFact(SymbolicPredicates.partOfSpeech, tokenId, token.getPartOfSpeech().getTag());
-		addFact(SymbolicPredicates.type, tokenId, token.getType());
+		SymbolicType tokenType = token.getType();
+		addFact(SymbolicPredicates.type, tokenId, tokenType);
+		
+		switch( tokenType ) {
+			case ATTRIBUTE: addAttributeFacts(tokenId, (AttributeToken)token); break;
+			default: break;
+		}
 		
 		if( _log.isDebugEnabled() ) {
 			addFact(SymbolicPredicates.debugString, tokenId, token.toString());
 		}
+	}
+	
+	private void addAttributeFacts(Integer tokenId, AttributeToken token) {
+		ERAttribute attr = token.getAttribute();
+		String[] parts = attr.getFullName().split("\\.");
+		addFact(SymbolicPredicates.refsAttribute, tokenId, parts[0], parts[parts.length-1]);
 	}
 
 }

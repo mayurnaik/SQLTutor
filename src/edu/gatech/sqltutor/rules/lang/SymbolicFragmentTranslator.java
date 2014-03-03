@@ -46,6 +46,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
@@ -143,6 +144,7 @@ public class SymbolicFragmentTranslator
 		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", symbolic);
 		
 		SymbolicState symState = new SymbolicState(sqlState);
+		symState.setSymbolicFacts(symFacts);
 		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
 		symState.setKnowledgeBase(kb);
 		
@@ -176,6 +178,8 @@ public class SymbolicFragmentTranslator
 				_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
 			}
 		}
+		
+		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", symbolic);
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}
@@ -271,10 +275,14 @@ public class SymbolicFragmentTranslator
 
 	private Collection<ITranslationRule> makeDefaultRules() {
 		return Arrays.<ITranslationRule>asList(
+			// analysis rules
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
-			new DescribingAttributeLabelRule()
+			new DescribingAttributeLabelRule(),
+			
+			// rewrite rules
+			new AttributeLiteralLabelRule()
 		);
 	}
 	

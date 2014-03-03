@@ -116,7 +116,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		_log.debug(Markers.METARULE, "Join rule foreign-key results: {}", results);
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
-		ext.setSqlFacts(state.getSqlFacts());
+		ext.setNodeMap(state.getSqlFacts().getNodeMap());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
 			ITerm relationship = ext.getTerm("?rel", result);
@@ -186,7 +186,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		if( DEBUG ) _log.debug(Markers.METARULE, "JOIN RULE LOOKUP Results: {}", results);
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
-		ext.setSqlFacts(state.getSqlFacts());
+		ext.setNodeMap(state.getSqlFacts().getNodeMap());
 		for( int i = 0, ilen = results.size(); i < ilen; ++i ) {
 			ITuple result = results.get(i);
 			ITerm relationship = ext.getTerm("?rel", result);

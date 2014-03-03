@@ -64,7 +64,7 @@ public class DescribingAttributeLabelRule extends AbstractSQLRule implements ISQ
 			return false;
 		
 		RelationExtractor ext = new RelationExtractor(bindings);
-		ext.setSqlFacts(state.getSqlFacts());
+		ext.setNodeMap(state.getSqlFacts().getNodeMap());
 		for( int i = 0; i < size; ++i ) {
 			ITuple result = rel.get(i);
 			

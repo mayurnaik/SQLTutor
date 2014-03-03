@@ -2,11 +2,13 @@ package edu.gatech.sqltutor.rules;
 
 import org.deri.iris.api.IKnowledgeBase;
 
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicState {
 	private RootToken rootToken;
 	private SQLState sqlState;
+	private SymbolicFacts symbolicFacts;
 	private IKnowledgeBase knowledgeBase;
 	
 	public SymbolicState() { }
@@ -34,5 +36,13 @@ public class SymbolicState {
 	}
 	public void setKnowledgeBase(IKnowledgeBase knowledgeBase) {
 		this.knowledgeBase = knowledgeBase;
+	}
+	
+	public SymbolicFacts getSymbolicFacts() {
+		return symbolicFacts;
+	}
+	
+	public void setSymbolicFacts(SymbolicFacts symbolicFacts) {
+		this.symbolicFacts = symbolicFacts;
 	}
 }

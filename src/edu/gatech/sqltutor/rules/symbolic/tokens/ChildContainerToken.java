@@ -85,10 +85,10 @@ public abstract class ChildContainerToken
 		}
 	}
 	
-	/** Returns an unmodifiable view of the child tokens. */
+	/** Returns the child tokens, which are modifiable. */
 	@Override
 	public List<ISymbolicToken> getChildren() {
-		return Collections.unmodifiableList(children);
+		return children;
 	}
 	
 	/** Instantiate the initial child container. */

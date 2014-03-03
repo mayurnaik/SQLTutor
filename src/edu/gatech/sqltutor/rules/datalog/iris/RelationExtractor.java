@@ -11,12 +11,16 @@ import org.deri.iris.api.terms.IVariable;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.util.IObjectMapper;
 
 /**
  * Extractor for terms of tuples in a relation that uses 
  * the variable name.
  */
 public class RelationExtractor {
+	private IObjectMapper<ISymbolicToken> tokenMap;
+	private IObjectMapper<QueryTreeNode> nodeMap;
 	private SQLFacts sqlFacts;
 	private Map<String,Integer> varMap;
 	
@@ -54,21 +58,31 @@ public class RelationExtractor {
 	
 	/**
 	 * Convienence method when the term is known to be a query tree node.
-	 * @throws SQLTutorException if no <code>SQLFacts</code> has been associated
+	 * @throws SQLTutorException if no node map has been associated
 	 *                           or the term does not identify a node
-	 * @throws IndexOutOfBoundsException if <code>pos</code> is out of range
 	 */
 	public QueryTreeNode getNode(String var, ITuple tuple) {
-		if( sqlFacts == null )
-			throw new SQLTutorException("No sql-facts associated.");
-		return sqlFacts.getNodeMap().getMappedObject(getTerm(var, tuple));
+		if( nodeMap == null )
+			throw new SQLTutorException("No node map associated.");
+		return nodeMap.getMappedObject(getTerm(var, tuple));
+	}
+
+	/**
+	 * Convienence method when the term is known to be a symbolic token.
+	 * @throws SQLTutorException if no token map has been associated
+	 *                           or the term does not identify a node
+	 */
+	public ISymbolicToken getToken(String var, ITuple tuple) {
+		if( tokenMap == null )
+			throw new SQLTutorException("No token map associated.");
+		return tokenMap.getMappedObject(getTerm(var, tuple));
 	}
 	
-	public SQLFacts getSqlFacts() {
-		return sqlFacts;
+	public void setNodeMap(IObjectMapper<QueryTreeNode> nodeMap) {
+		this.nodeMap = nodeMap;
 	}
 	
-	public void setSqlFacts(SQLFacts sqlFacts) {
-		this.sqlFacts = sqlFacts;
+	public void setTokenMap(IObjectMapper<ISymbolicToken> tokenMap) {
+		this.tokenMap = tokenMap;
 	}
 }

@@ -10,7 +10,6 @@ public abstract class AbstractERAttributeContainer
 
 	public AbstractERAttributeContainer(String name) {
 		super(name);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override

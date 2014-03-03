@@ -18,6 +18,9 @@ public class SymbolicPredicates {
 	/** <code>(?token:int,?tag:string)</code> => <code>?token</code> has part of speech tag <code>?tag</code> */
 	public static final IPredicate partOfSpeech = predicate("symPartOfSpeech", 2); 
 	
+	/** <code>(?token:int,?entity:string,?attribute:string)</code> */
+	public static final IPredicate refsAttribute = predicate("symRefsAttribute", 3); 
+	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2); 
 }

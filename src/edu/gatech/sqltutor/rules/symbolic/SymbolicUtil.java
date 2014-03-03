@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 
@@ -42,5 +43,24 @@ public class SymbolicUtil {
 		}
 		
 		return copy;
+	}
+	
+	/**
+	 * Replace a child token with another token, in the same position.
+	 * 
+	 * @param parent the parent token
+	 * @param child  the child token
+	 * @param replacement the token to replace <code>child</code> with
+	 * @return <code>true</code> if the child was found and replaced, <code>false</code> otherwise
+	 */
+	public static boolean replaceChild(ISymbolicToken parent, ISymbolicToken child, ISymbolicToken replacement) {
+		List<ISymbolicToken> children = parent.getChildren();
+		for( int i = 0, ilen = children.size(); i < ilen; ++i ) {
+			if( children.get(i).equals(child) ) {
+				children.set(i, replacement);
+				return true;
+			}
+		}
+		return false;
 	}
 }

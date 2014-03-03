@@ -40,7 +40,7 @@
   <logger name="org.deri" level="INFO" />
   <logger name="edu.gatech.sqltutor" level="DEBUG" />
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="debug.log" />
     <appender-ref ref="datalog.log" />

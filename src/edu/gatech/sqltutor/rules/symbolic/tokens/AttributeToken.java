@@ -27,6 +27,14 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public SymbolicType getType() {
 		return SymbolicType.ATTRIBUTE;
 	}
+	
+	public ERAttribute getAttribute() {
+		return attribute;
+	}
+	
+	public void setAttribute(ERAttribute attribute) {
+		this.attribute = attribute;
+	}
 
 	@Override
 	protected void setPartOfSpeech(PartOfSpeech partOfSpeech) {
