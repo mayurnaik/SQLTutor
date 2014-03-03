@@ -36,7 +36,7 @@ public class UserBean implements Serializable {
 
 	public UserBean() {
 		loggedIn = false;
-		selectedSchema = "PostgreSQL company";
+		selectedSchema = "PostgreSQL jobs";
 	}
 	
 	/** 

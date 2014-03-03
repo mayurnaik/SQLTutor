@@ -12,13 +12,27 @@
 </h:head>
 <h:body style="height:1000px;width:1400px;margin-left:20px">
 	<h:form id="queryEntryForm">
+		<p:commandButton id="databaseButton" value="Show Schema" />
+		<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+				<p:dataTable var="databaseTable"
+					value="#{queryEntryPageBean.tables}">
+					<p:column headerText="Table Names">
+						<h:outputText value="#{databaseTable.tableName}" />
+					</p:column>
+					<p:column headerText="Column Names" width="400" style="white-space: normal;">
+						<h:outputText value="#{databaseTable.columns}" />
+					</p:column>
+				</p:dataTable>
+		</p:overlayPanel> 
+		<!-- 
     	<p:commandButton id="schemaDiagramButton" value="Schema Diagram" type="button" />
 	    <p:overlayPanel id="schemaDiagramPanel" for="schemaDiagramButton" hideEffect="fade">
 			<div style="width:450;height:600;">
 				<p:graphicImage value="/images/schema/companydatabase.png"/>  
 				<br/>
 			</div>  
-	    </p:overlayPanel> 
+	    </p:overlayPanel>
+	    --> 
 		<div style="position:absolute;width:1000px;height:400px;top:auto;left:20px">
 			<p:panelGrid columns="2">
 				<f:facet name="header">  
