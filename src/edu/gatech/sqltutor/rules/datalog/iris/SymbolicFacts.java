@@ -13,12 +13,16 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.QueryTreeNode;
+
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
+import edu.gatech.sqltutor.rules.util.IObjectMapper;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
 
 /** Fact generator for symbolic state. */
@@ -52,6 +56,7 @@ public class SymbolicFacts extends DynamicFacts {
 	}
 	
 	protected TokenMap tokenMap = new TokenMap();
+	protected IObjectMapper<QueryTreeNode> nodeMap;
 	
 	public SymbolicFacts() { }
 	
@@ -73,6 +78,14 @@ public class SymbolicFacts extends DynamicFacts {
 	
 	public TokenMap getTokenMap() {
 		return tokenMap;
+	}
+	
+	public IObjectMapper<QueryTreeNode> getNodeMap() {
+		return nodeMap;
+	}
+	
+	public void setNodeMap(IObjectMapper<QueryTreeNode> nodeMap) {
+		this.nodeMap = nodeMap;
 	}
 	
 	/**
@@ -131,6 +144,7 @@ public class SymbolicFacts extends DynamicFacts {
 		
 		switch( tokenType ) {
 			case ATTRIBUTE: addAttributeFacts(tokenId, (AttributeToken)token); break;
+			case TABLE_ENTITY: addTableEntityFacts(tokenId, (TableEntityToken)token); break;
 			default: break;
 		}
 		
@@ -143,6 +157,11 @@ public class SymbolicFacts extends DynamicFacts {
 		ERAttribute attr = token.getAttribute();
 		String[] parts = attr.getFullName().split("\\.");
 		addFact(SymbolicPredicates.refsAttribute, tokenId, parts[0], parts[parts.length-1]);
+	}
+	
+	private void addTableEntityFacts(Integer tokenId, TableEntityToken token) {
+		Integer tableId = nodeMap.getObjectId(token.getTable());
+		addFact(SymbolicPredicates.refsTable, tokenId, tableId);
 	}
 
 }

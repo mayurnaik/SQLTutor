@@ -48,6 +48,7 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
@@ -138,6 +139,7 @@ public class SymbolicFragmentTranslator
 		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
 		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
 		staticRules.addAll(SymbolicRules.getInstance().getRules());
+		symFacts.setNodeMap(sqlFacts.getNodeMap());
 		
 		// create initial symbolic state
 		RootToken symbolic = makeSymbolic();
@@ -282,7 +284,8 @@ public class SymbolicFragmentTranslator
 			new DescribingAttributeLabelRule(),
 			
 			// rewrite rules
-			new AttributeLiteralLabelRule()
+			new AttributeLiteralLabelRule(),
+			new TableEntityLiteralLabelRule()
 		);
 	}
 	

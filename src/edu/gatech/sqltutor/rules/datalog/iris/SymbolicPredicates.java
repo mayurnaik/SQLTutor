@@ -19,7 +19,10 @@ public class SymbolicPredicates {
 	public static final IPredicate partOfSpeech = predicate("symPartOfSpeech", 2); 
 	
 	/** <code>(?token:int,?entity:string,?attribute:string)</code> */
-	public static final IPredicate refsAttribute = predicate("symRefsAttribute", 3); 
+	public static final IPredicate refsAttribute = predicate("symRefsAttribute", 3);
+	
+	/** <code>(?token:int,?table:int)</code> */
+	public static final IPredicate refsTable = predicate("symRefsTable", 2); 
 	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2); 
