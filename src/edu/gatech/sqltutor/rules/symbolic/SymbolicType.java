@@ -14,5 +14,7 @@ public enum SymbolicType {
 	WHERE,
 	AND,
 	OR,
-	SEQUENCE;
+	SEQUENCE,
+	BINARY_COMPARISON,
+	NUMBER;
 }

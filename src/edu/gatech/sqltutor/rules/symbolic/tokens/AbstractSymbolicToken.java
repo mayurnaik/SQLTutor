@@ -37,6 +37,11 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 		return Collections.emptyList();
 	}
 	
+	@Override
+	public void addChild(ISymbolicToken child) {
+		throw new SymbolicException(this + " does not support children.");
+	}
+	
 	protected String typeAndTag() { return getType() + "/" + getPartOfSpeech().getTag(); }
 	
 	@Override

@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 import java.util.List;
 
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 
@@ -18,6 +19,14 @@ public interface ISymbolicToken {
 	 * @return the possibly empty list of child tokens
 	 */
 	public List<ISymbolicToken> getChildren();
+	
+	/**
+	 * Adds a child token.
+	 * @param child the child token
+	 * @throws SymbolicException if this token does not accept children or 
+	 *                           does not permit the type of token <code>child</code> is 
+	 */
+	public void addChild(ISymbolicToken child);
 	
 	/**
 	 * Returns the part of speech associated with this fragment, 

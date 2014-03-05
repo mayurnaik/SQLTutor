@@ -6,6 +6,8 @@ import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.google.common.collect.Lists;
 
+import edu.gatech.sqltutor.SQLTutorException;
+
 /**
  * AST visitor that collects immediate children of the 
  * accepting node.
@@ -15,6 +17,17 @@ public class GetChildrenVisitor extends ParserVisitorAdapter {
 	protected List<QueryTreeNode> children;
 	
 	public GetChildrenVisitor() {
+	}
+	
+	/** Reset, collect and then return the children of <code>parent</code>. */
+	public List<QueryTreeNode> getChildren(QueryTreeNode parent) {
+		this.reset();
+		try {
+			parent.accept(this);
+		} catch( StandardException e ) {
+			throw new SQLTutorException(e);
+		}
+		return getChildren();
 	}
 	
 	@Override

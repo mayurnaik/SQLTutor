@@ -10,6 +10,22 @@ erRelationshipEdgeLabel('works_for', 0, 'Employee').
 erRelationshipEdgeLabel('works_for', 1, 'Department').
 erRelationshipEdgeLabel('works_on', 0, 'Employee').
 erRelationshipEdgeLabel('works_on', 1, 'Project').
+sqlOperator(11, 'and').
+sqlOperator(16, '>').
+sqlOperator(19, '<').
+sqlLiteralValue(18, 100000).
+sqlLiteralValue(21, 1000000).
+lrnAttributeLabel('Employee', 'Fname', 'fname', 'DefaultAttributeLabelRule').
+lrnAttributeLabel('Employee', 'Lname', 'lname', 'DefaultAttributeLabelRule').
+lrnAttributeLabel('Employee', 'Salary', 'salary', 'DefaultAttributeLabelRule').
+lrnAttributeLabel('Employee', 'Fname', 'first name', 'DefaultAttributeLabelRule').
+lrnAttributeLabel('Employee', 'Lname', 'last name', 'DefaultAttributeLabelRule').
+erRelationshipJoinType('dependents_of', 'foreign_key').
+erRelationshipJoinType('manages', 'foreign_key').
+erRelationshipJoinType('controls', 'foreign_key').
+erRelationshipJoinType('supervision', 'foreign_key').
+erRelationshipJoinType('works_for', 'foreign_key').
+erRelationshipJoinType('works_on', 'lookup_table').
 erRelationshipEdgeEntity('dependents_of', 0, 'Employee').
 erRelationshipEdgeEntity('dependents_of', 1, 'Dependent').
 erRelationshipEdgeEntity('manages', 0, 'Employee').
@@ -22,18 +38,6 @@ erRelationshipEdgeEntity('works_for', 0, 'Employee').
 erRelationshipEdgeEntity('works_for', 1, 'Department').
 erRelationshipEdgeEntity('works_on', 0, 'Employee').
 erRelationshipEdgeEntity('works_on', 1, 'Project').
-erRelationshipJoinType('dependents_of', 'foreign_key').
-erRelationshipJoinType('manages', 'foreign_key').
-erRelationshipJoinType('controls', 'foreign_key').
-erRelationshipJoinType('supervision', 'foreign_key').
-erRelationshipJoinType('works_for', 'foreign_key').
-erRelationshipJoinType('works_on', 'lookup_table').
-lrnAttributeLabel('Employee', 'Fname', 'fname', 'DefaultAttributeLabelRule').
-lrnAttributeLabel('Employee', 'Lname', 'lname', 'DefaultAttributeLabelRule').
-lrnAttributeLabel('Employee', 'Address', 'address', 'DefaultAttributeLabelRule').
-lrnAttributeLabel('Department', 'Name', 'name', 'DefaultAttributeLabelRule').
-lrnAttributeLabel('Employee', 'Fname', 'first name', 'DefaultAttributeLabelRule').
-lrnAttributeLabel('Employee', 'Lname', 'last name', 'DefaultAttributeLabelRule').
 sqlNodeHasType(0, 'SelectNode').
 sqlNodeHasType(1, 'ResultColumnList').
 sqlNodeHasType(2, 'ResultColumn').
@@ -45,6 +49,13 @@ sqlNodeHasType(7, 'ColumnReference').
 sqlNodeHasType(8, 'FromList').
 sqlNodeHasType(9, 'FromBaseTable').
 sqlNodeHasType(10, 'FromBaseTable').
+sqlNodeHasType(11, 'AndNode').
+sqlNodeHasType(16, 'BinaryRelationalOperatorNode').
+sqlNodeHasType(17, 'ColumnReference').
+sqlNodeHasType(18, 'NumericConstantNode').
+sqlNodeHasType(19, 'BinaryRelationalOperatorNode').
+sqlNodeHasType(20, 'ColumnReference').
+sqlNodeHasType(21, 'NumericConstantNode').
 symIsNoun('NN').
 symIsNoun('NNS').
 symIsNoun('NNP').
@@ -59,14 +70,14 @@ erJoinFK('supervision', 0, 'employee', 'manager_ssn').
 erJoinFK('works_for', 0, 'employee', 'department_id').
 erJoinFK('works_on', 0, 'works_on', 'employee_ssn').
 erJoinFK('works_on', 1, 'works_on', 'project_id').
-sqlTableName(9, 'employee').
-sqlTableName(10, 'department').
 erRelationship('dependents_of').
 erRelationship('manages').
 erRelationship('controls').
 erRelationship('supervision').
 erRelationship('works_for').
 erRelationship('works_on').
+sqlTableName(9, 'employee').
+sqlTableName(10, 'employee').
 symIsVerb('VB').
 symIsVerb('VBD').
 symIsVerb('VBG').
@@ -79,15 +90,17 @@ erAttributeIsKey('Project', 'Name').
 erAttributeIsKey('Project', 'Number').
 erAttributeIsKey('Employee', 'Ssn').
 erAttributeIsKey('Dependent', 'Name').
-sqlTableAlias(3, 'e').
-sqlTableAlias(5, 'e').
-sqlTableAlias(7, 'e').
-sqlTableAlias(9, 'e').
-sqlTableAlias(10, 'd').
 erEntity('Department').
 erEntity('Project').
 erEntity('Employee').
 erEntity('Dependent').
+sqlTableAlias(3, 'e').
+sqlTableAlias(5, 'e').
+sqlTableAlias(7, 's').
+sqlTableAlias(9, 'e').
+sqlTableAlias(10, 's').
+sqlTableAlias(17, 's').
+sqlTableAlias(20, 's').
 erAttribute('Department', 'Name').
 erAttribute('Department', 'Number').
 erAttribute('Department', 'Locations').
@@ -118,7 +131,6 @@ symIsChunk('SBAR').
 symIsChunk('PRT').
 symIsChunk('INTJ').
 symIsChunk('S').
-ruleAttributeDescribesLabel(10, 'Research', 'prepend').
 erEntityType('Department', 'thing').
 erEntityType('Project', 'thing').
 erEntityType('Employee', 'person').
@@ -136,16 +148,13 @@ erRelationshipEdgeCardinality('works_for', 0, -1).
 erRelationshipEdgeCardinality('works_for', 1, 1).
 erRelationshipEdgeCardinality('works_on', 0, -1).
 erRelationshipEdgeCardinality('works_on', 1, -1).
-sqlParentOf(0, 1).
-sqlParentOf(0, 8).
-sqlParentOf(1, 2).
-sqlParentOf(1, 4).
-sqlParentOf(1, 6).
-sqlParentOf(2, 3).
-sqlParentOf(4, 5).
-sqlParentOf(6, 7).
-sqlParentOf(8, 9).
-sqlParentOf(8, 10).
+erJoinPK('dependents_of', 0, 'employee', 'ssn').
+erJoinPK('manages', 0, 'employee', 'ssn').
+erJoinPK('controls', 0, 'department', 'id').
+erJoinPK('supervision', 0, 'employee', 'ssn').
+erJoinPK('works_for', 0, 'department', 'id').
+erJoinPK('works_on', 0, 'employee', 'ssn').
+erJoinPK('works_on', 1, 'project', 'id').
 erAttributeMapsTo('Project', 'Number', 'project', 'id').
 erAttributeMapsTo('Employee', 'Ssn', 'employee', 'ssn').
 erAttributeMapsTo('Project', 'Name', 'project', 'name').
@@ -165,73 +174,111 @@ erAttributeMapsTo('Employee', 'Salary', 'employee', 'salary').
 erAttributeMapsTo('Project', 'Location', 'project', 'location').
 erAttributeMapsTo('Employee', 'Fname', 'employee', 'first_name').
 erAttributeMapsTo('Employee', 'Lname', 'employee', 'last_name').
-erJoinPK('dependents_of', 0, 'employee', 'ssn').
-erJoinPK('manages', 0, 'employee', 'ssn').
-erJoinPK('controls', 0, 'department', 'id').
-erJoinPK('supervision', 0, 'employee', 'ssn').
-erJoinPK('works_for', 0, 'department', 'id').
-erJoinPK('works_on', 0, 'employee', 'ssn').
-erJoinPK('works_on', 1, 'project', 'id').
-lrnTableInRelationship(10, 'works_for', 1, 'JoinLabelRule').
-lrnTableInRelationship(9, 'works_for', 0, 'JoinLabelRule').
-lrnTableLabel(10, 'department', 'JoinLabelRule').
-lrnTableLabel(9, 'employee', 'JoinLabelRule').
+sqlParentOf(0, 1).
+sqlParentOf(0, 8).
+sqlParentOf(0, 11).
+sqlParentOf(1, 2).
+sqlParentOf(1, 4).
+sqlParentOf(1, 6).
+sqlParentOf(2, 3).
+sqlParentOf(4, 5).
+sqlParentOf(6, 7).
+sqlParentOf(8, 9).
+sqlParentOf(8, 10).
+sqlParentOf(11, 16).
+sqlParentOf(11, 19).
+sqlParentOf(16, 17).
+sqlParentOf(16, 18).
+sqlParentOf(19, 20).
+sqlParentOf(19, 21).
+lrnTableLabel(10, 'supervisor', 'JoinLabelRule').
+lrnTableLabel(9, 'supervisee', 'JoinLabelRule').
 lrnTableLabel(9, 'employee', 'DefaultTableLabelRule').
-lrnTableLabel(10, 'department', 'DefaultTableLabelRule').
-lrnTableLabel(10, 'Research department', 'DescribingAttributeLabelRule').
+lrnTableLabel(10, 'employee', 'DefaultTableLabelRule').
+lrnTableInRelationship(10, 'supervision', 0, 'JoinLabelRule').
+lrnTableInRelationship(9, 'supervision', 1, 'JoinLabelRule').
 symIsPronoun('PRP').
 symIsPronoun('PRP$').
 symIsPronoun('WP').
 symIsPronoun('WP$').
 sqlColumnName(3, 'first_name').
 sqlColumnName(5, 'last_name').
-sqlColumnName(7, 'address').
+sqlColumnName(7, 'salary').
+sqlColumnName(17, 'salary').
+sqlColumnName(20, 'salary').
 symIsAdjective('JJ').
 symIsAdjective('JJR').
 symIsAdjective('JJS').
-sqlNodeDebugString(0, 'SELECT e.first_name AS first_name, e.last_name AS last_name, e.address AS address FROM employee AS e, department AS d').
-sqlNodeDebugString(1, 'e.first_name AS first_name, e.last_name AS last_name, e.address AS address').
-sqlNodeDebugString(2, 'e.first_name AS first_name').
-sqlNodeDebugString(3, 'e.first_name').
-sqlNodeDebugString(4, 'e.last_name AS last_name').
-sqlNodeDebugString(5, 'e.last_name').
-sqlNodeDebugString(6, 'e.address AS address').
-sqlNodeDebugString(7, 'e.address').
-sqlNodeDebugString(8, 'employee AS e, department AS d').
-sqlNodeDebugString(9, 'employee AS e').
-sqlNodeDebugString(10, 'department AS d').
 symParentOf(0, 1, 0).
 symParentOf(0, 2, 1).
-symParentOf(2, 3, 0).
-symParentOf(2, 4, 1).
-symParentOf(2, 5, 2).
-symParentOf(3, 6, 0).
-symParentOf(3, 7, 1).
-symParentOf(3, 8, 2).
-symParentOf(4, 9, 0).
-symParentOf(4, 10, 1).
+symParentOf(0, 3, 2).
+symParentOf(0, 4, 3).
+symParentOf(2, 5, 0).
+symParentOf(2, 6, 1).
+symParentOf(4, 7, 0).
+symParentOf(4, 8, 1).
+symParentOf(5, 9, 0).
+symParentOf(5, 10, 1).
+symParentOf(5, 11, 2).
+symParentOf(6, 12, 0).
+symParentOf(6, 13, 1).
+symParentOf(6, 14, 2).
+symParentOf(9, 15, 0).
+symParentOf(9, 16, 1).
+symParentOf(10, 17, 0).
+symParentOf(10, 18, 1).
+symParentOf(12, 19, 0).
+symParentOf(13, 20, 0).
+symParentOf(13, 21, 1).
+symRefsAttribute(15, 'Employee', 'Fname').
+symRefsAttribute(16, 'Employee', 'Lname').
+symRefsAttribute(19, 'Employee', 'Salary').
 symType(0, 'ROOT').
 symType(1, 'SELECT').
-symType(2, 'SEQUENCE').
-symType(3, 'ATTRIBUTE_LIST').
-symType(4, 'LITERALS').
-symType(5, 'TABLE_ENTITY').
-symType(6, 'ATTRIBUTE').
-symType(7, 'ATTRIBUTE').
-symType(8, 'ATTRIBUTE').
-symType(9, 'LITERAL').
-symType(10, 'LITERAL').
+symType(2, 'AND').
+symType(3, 'WHERE').
+symType(4, 'AND').
+symType(5, 'SEQUENCE').
+symType(6, 'SEQUENCE').
+symType(7, 'BINARY_COMPARISON').
+symType(8, 'BINARY_COMPARISON').
+symType(9, 'ATTRIBUTE_LIST').
+symType(10, 'LITERALS').
+symType(11, 'TABLE_ENTITY').
+symType(12, 'ATTRIBUTE_LIST').
+symType(13, 'LITERALS').
+symType(14, 'TABLE_ENTITY').
+symType(15, 'ATTRIBUTE').
+symType(16, 'ATTRIBUTE').
+symType(17, 'LITERAL').
+symType(18, 'LITERAL').
+symType(19, 'ATTRIBUTE').
+symType(20, 'LITERAL').
+symType(21, 'LITERAL').
 symPartOfSpeech(0, 'S').
 symPartOfSpeech(1, 'VB').
 symPartOfSpeech(2, 'NP').
-symPartOfSpeech(3, 'NP').
-symPartOfSpeech(4, 'PP').
-symPartOfSpeech(5, 'NN').
-symPartOfSpeech(6, 'NN').
-symPartOfSpeech(7, 'NN').
-symPartOfSpeech(8, 'NN').
-symPartOfSpeech(9, 'IN').
-symPartOfSpeech(10, 'DT').
+symPartOfSpeech(3, 'WRB').
+symPartOfSpeech(4, 'NP').
+symPartOfSpeech(5, 'NP').
+symPartOfSpeech(6, 'NP').
+symPartOfSpeech(7, 'QP').
+symPartOfSpeech(8, 'QP').
+symPartOfSpeech(9, 'NP').
+symPartOfSpeech(10, 'PP').
+symPartOfSpeech(11, 'NN').
+symPartOfSpeech(12, 'NP').
+symPartOfSpeech(13, 'PP').
+symPartOfSpeech(14, 'NN').
+symPartOfSpeech(15, 'NN').
+symPartOfSpeech(16, 'NN').
+symPartOfSpeech(17, 'IN').
+symPartOfSpeech(18, 'DT').
+symPartOfSpeech(19, 'NN').
+symPartOfSpeech(20, 'IN').
+symPartOfSpeech(21, 'DT').
+symRefsTable(11, 9).
+symRefsTable(14, 10).
 sqlAncestorOf(?a, ?d) :- sqlParentOf(?a, ?d).
 sqlAncestorOf(?a, ?d) :- sqlParentOf(?a, ?p), sqlParentOf(?p, ?d).
 sqlIsAttributeEquality(?eq) :- sqlNodeHasType(?eq, 'BinaryRelationalOperatorNode'), sqlOperator(?eq, '='), sqlParentOf(?eq, ?c1), sqlParentOf(?eq, ?c2), NOT_EQUAL(?c1, ?c2), sqlNodeHasType(?c1, 'ColumnReference'), sqlNodeHasType(?c2, 'ColumnReference').
@@ -264,9 +311,6 @@ ruleAttributeDescribes(?table, ?eq, ?value, ?type) :- erAttributeDescribes(?ent,
 lrnTableLabel(?table, ?label, ?source) :- lrnTableLabel(?table, ?otherlabel, ?othersource), NOT_EQUAL(?source, ?othersource), EQUAL(?source, 'DescribingAttributeLabelRule'), ruleAttributeDescribesLabel(?table, ?value, ?type), EQUAL(?type, 'prepend'), STRING_CONCAT(?value, ' ', ?temp), STRING_CONCAT(?temp, ?otherlabel, ?label).
 lrnTableLabel(?table, ?label, ?source) :- lrnTableLabel(?table, ?label, ?othersource), NOT_EQUAL(?source, ?othersource), EQUAL(?source, 'DescribingAttributeLabelRule'), ruleAttributeDescribesLabel(?table, ?value, ?type), EQUAL(?type, 'replace'), EQUAL(?label, ?value).
 symIsLeaf(?id) :- symParentOf(?parent, ?id, ?pos), !symParentOf(?id, ?child, ?pos2).
-symIsAllLiterals(?root) :- symType(?root, 'ROOT'), symIsLeaf(?id), symType(?id, 'LITERAL').
+symNonLiteralLeaves(?id) :- symIsLeaf(?id), symType(?id, ?type), NOT_EQUAL(?type, 'LITERAL').
 
-symNonLiteralLeaves(?id) :- symIsLeaf(?id), symType(?id,?type), ?type != 'LITERAL'.
-
-
-?-symNonLiteralLeaves(?id).
+?-?nodeId=17,sqlNodeHasType(?nodeId, 'ColumnReference'),sqlColumnName(?nodeId,?cname),sqlTableAlias(?nodeId,?talias),sqlTableAlias(?tid,?talias),sqlTableName(?tid,?tname).

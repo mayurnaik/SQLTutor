@@ -90,6 +90,8 @@ public enum PartOfSpeech {
 	// example: hello
 	INTERJECTION_CHUNK(true,"INTJ"),
 	
+	QUANTIFIER_PHRASE(true, "QP"),
+	
 	SENTENCE(true, "S");
 	
 	public static boolean isPunctuation(PartOfSpeech pos) {
