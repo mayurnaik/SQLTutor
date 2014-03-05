@@ -42,7 +42,7 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 	protected String result;
 	protected List<ITranslationRule> translationRules;
 	protected Map<String, FromTable> tableAliases;
-	protected Multimap<FromTable, ResultColumn> fromToResult = LinkedListMultimap.create();
+	protected Multimap<FromTable, ResultColumn> fromToResult;
 
 	protected SelectNode select;
 
@@ -95,7 +95,7 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 	}
 
 	private void mapResultToFrom() {
-		fromToResult = HashMultimap.create();
+		fromToResult = LinkedListMultimap.create();
 		for( ResultColumn resultColumn: select.getResultColumns() ) {
 			String tableName = resultColumn.getTableName();
 			if( tableName == null ) {
