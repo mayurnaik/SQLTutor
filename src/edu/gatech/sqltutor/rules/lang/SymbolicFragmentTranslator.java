@@ -17,11 +17,8 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akiban.sql.parser.FromTable;
-import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.akiban.sql.parser.ValueNode;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -44,26 +41,15 @@ import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
-import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
-import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
-import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralsToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.WhereToken;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {
@@ -147,7 +133,7 @@ public class SymbolicFragmentTranslator
 		symFacts.setNodeMap(sqlFacts.getNodeMap());
 		
 		// create initial symbolic state
-		RootToken symbolic = makeSymbolic();
+		RootToken symbolic = makeSymbolic(sqlState);
 		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", symbolic);
 		
 		SymbolicState symState = new SymbolicState(sqlState);
@@ -300,65 +286,9 @@ public class SymbolicFragmentTranslator
 		);
 	}
 	
-	private RootToken makeSymbolic() {
+	private RootToken makeSymbolic(SQLState sqlState) {
 		this.buildMaps();
-		
-		RootToken root = new RootToken();
-		root.addChild(new SelectToken());
-		
-		// create an attribute list for each group of columns that go with a table reference
-		List<ISymbolicToken> attrLists = Lists.newLinkedList();
-		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
-				sqlMaps.getFromToResult().asMap().entrySet() ) {
-			FromTable fromTable = entry.getKey();
-			Collection<ResultColumn> resultColumns = entry.getValue();
-			
-			SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-			
-			// list of attributes
-			AttributeListToken attrList = new AttributeListToken();
-			for( ResultColumn resultColumn: resultColumns ) {
-				String attrName = fromTable.getOrigTableName().getTableName() + "." + resultColumn.getExpression().getColumnName(); 
-				ERAttribute erAttr = erMapping.getAttribute(attrName);
-				if( erAttr == null )
-					_log.warn("No attribute for name {}", attrName);
-				AttributeToken attr = new AttributeToken(erAttr);
-				attrList.addChild(attr);
-			}
-			
-			seq.addChild(attrList);
-			
-			// "of each" {entity}
-			LiteralsToken literals = new LiteralsToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
-			LiteralToken of = new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
-			LiteralToken each = new LiteralToken("each", PartOfSpeech.DETERMINER);
-			literals.addChild(of);
-			literals.addChild(each);
-			seq.addChild(literals);
-			
-			TableEntityToken table = new TableEntityToken(fromTable);
-			seq.addChild(table);
-			
-			attrLists.add(seq);
-		}
-		
-		if( attrLists.size() == 1 ) {
-			root.addChild(attrLists.get(0));
-		} else {
-			AndToken and = new AndToken();
-			for( ISymbolicToken attrList: attrLists )
-				and.addChild(attrList);
-			root.addChild(and);
-		}
-		
-		// now the WHERE clause
-		ValueNode where = select.getWhereClause();
-		if( where != null ) {
-			root.addChild(new WhereToken());
-			_log.info(Markers.SYMBOLIC, "Have WHERE clause to convert: {}", QueryUtils.nodeToString(where));
-		}
-		
-		return root;
+		return new SymbolicCreator(sqlState, sqlMaps).makeSymbolic();
 	}
 	
 	@Override

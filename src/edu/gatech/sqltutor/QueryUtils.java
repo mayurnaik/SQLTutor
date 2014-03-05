@@ -1,12 +1,9 @@
 package edu.gatech.sqltutor;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.CursorNode;
-import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;

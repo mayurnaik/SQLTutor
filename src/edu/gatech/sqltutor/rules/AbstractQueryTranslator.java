@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import objects.DatabaseTable;
 
@@ -12,13 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
-import com.akiban.sql.parser.FromTable;
-import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 
 import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
