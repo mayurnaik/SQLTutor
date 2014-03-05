@@ -48,6 +48,9 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
@@ -166,6 +169,7 @@ public class SymbolicFragmentTranslator
 		}
 		
 		// perform rewriting rules
+		SymbolicReader symReader = new SymbolicReader();
 		for( ISymbolicTranslationRule metarule: 
 				Iterables.filter(translationRules, ISymbolicTranslationRule.class) ) {
 			while( metarule.apply(symState) ) {
@@ -173,6 +177,10 @@ public class SymbolicFragmentTranslator
 				symState.setKnowledgeBase(kb);
 				
 				// FIXME non-determinism and final output checks
+				if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
+					String output = symReader.readSymbolicState(symbolic);
+					_log.info("Output: {}", output);
+				}
 				
 				// apply each rule as many times as possible
 				// FIXME non-determinism when precedences match?
@@ -285,7 +293,8 @@ public class SymbolicFragmentTranslator
 			
 			// rewrite rules
 			new AttributeLiteralLabelRule(),
-			new TableEntityLiteralLabelRule()
+			new TableEntityLiteralLabelRule(),
+			new SelectLabelRule()
 		);
 	}
 	

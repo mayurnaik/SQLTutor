@@ -91,6 +91,19 @@ public enum PartOfSpeech {
 	INTERJECTION_CHUNK(true,"INTJ"),
 	
 	SENTENCE(true, "S");
+	
+	public static boolean isPunctuation(PartOfSpeech pos) {
+		if( pos == null ) throw new NullPointerException("pos is null");
+		switch( pos ) {
+			case COMMA:
+			case PERIOD:
+			case DOLLAR_SIGN:
+			case EXCLAMATION_POINT:
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	private final boolean isChunk;
 	private final String tag;
