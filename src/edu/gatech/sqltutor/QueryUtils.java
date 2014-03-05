@@ -61,42 +61,6 @@ public class QueryUtils {
 	}
 	
 	/**
-	 * Build a map from exposed table names to the from-list elements they reference.
-	 * 
-	 * <p>
-	 * Given:<br/>
-	 * <code>SELECT ... FROM foo f, bar, (SELECT ...) AS baz</code><br />
-	 * The map would be:<br />
-	 * "f" =&gt; foo (FromBaseTable instance)<br />
-	 * "bar" =&gt; bar (FromBaseTable instance)<br />
-	 * "baz" =&gt; FromSubquery instance for the subquery<br />
-	 * </p>
-	 * 
-	 * @param select the select node to build a map for
-	 * @return the alias map
-	 * @throws StandardException
-	 */
-	public static Map<String, FromTable> buildTableAliasMap(SelectNode select) 
-			throws StandardException {
-		final Map<String, FromTable> aliasMap = new HashMap<String, FromTable>();
-		select.getFromList().accept(new ParserVisitorAdapter() {
-			@Override
-			public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
-				switch( node.getNodeType() ) {
-					case NodeTypes.FROM_BASE_TABLE:
-					case NodeTypes.FROM_SUBQUERY: {
-						FromTable fromTable = (FromTable)node;
-						aliasMap.put(fromTable.getExposedName(), fromTable);
-						break;
-					}
-				}
-				return node;
-			}
-		});
-		return aliasMap;
-	}
-	
-	/**
 	 * Find the parent of <code>child</code> by searching the AST from <code>root</code>.
 	 * 
 	 * @param root   the AST root node or a known ancestor of <code>child</code>

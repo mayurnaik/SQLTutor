@@ -21,6 +21,7 @@ import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.akiban.sql.parser.ValueNode;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -62,6 +63,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.WhereToken;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {
@@ -307,7 +309,7 @@ public class SymbolicFragmentTranslator
 		// create an attribute list for each group of columns that go with a table reference
 		List<ISymbolicToken> attrLists = Lists.newLinkedList();
 		for( Map.Entry<FromTable, Collection<ResultColumn>> entry : 
-				fromToResult.asMap().entrySet() ) {
+				sqlMaps.getFromToResult().asMap().entrySet() ) {
 			FromTable fromTable = entry.getKey();
 			Collection<ResultColumn> resultColumns = entry.getValue();
 			
@@ -347,6 +349,13 @@ public class SymbolicFragmentTranslator
 			for( ISymbolicToken attrList: attrLists )
 				and.addChild(attrList);
 			root.addChild(and);
+		}
+		
+		// now the WHERE clause
+		ValueNode where = select.getWhereClause();
+		if( where != null ) {
+			root.addChild(new WhereToken());
+			_log.info(Markers.SYMBOLIC, "Have WHERE clause to convert: {}", QueryUtils.nodeToString(where));
 		}
 		
 		return root;

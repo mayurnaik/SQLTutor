@@ -17,7 +17,6 @@ import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -41,8 +40,7 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 	protected List<DatabaseTable> tables;
 	protected String result;
 	protected List<ITranslationRule> translationRules;
-	protected Map<String, FromTable> tableAliases;
-	protected Multimap<FromTable, ResultColumn> fromToResult;
+	protected SQLMaps sqlMaps = new SQLMaps();
 
 	protected SelectNode select;
 
@@ -86,29 +84,7 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 	 * @throws SQLTutorException if there is an error processing the query
 	 */
 	protected void buildMaps() throws SQLTutorException {
-		try {
-			tableAliases = QueryUtils.buildTableAliasMap(select);
-		} catch( StandardException e ) {
-			throw new SQLTutorException(e);
-		}
-		mapResultToFrom();
-	}
-
-	private void mapResultToFrom() {
-		fromToResult = LinkedListMultimap.create();
-		for( ResultColumn resultColumn: select.getResultColumns() ) {
-			String tableName = resultColumn.getTableName();
-			if( tableName == null ) {
-				log.error("Result column does not have a table name: {}", resultColumn);
-				continue;
-			}
-			FromTable fromTable = tableAliases.get(tableName);
-			if( fromTable != null ) {
-				fromToResult.put(fromTable, resultColumn);
-			} else {
-				log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
-			}
-		}
+		sqlMaps.buildMaps(select);
 	}
 
 	public void setTranslationRules(List<ITranslationRule> translationRules) {
@@ -127,9 +103,8 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 
 	public void clearResult() {
 		this.result = null;
-		this.fromToResult = null;
+		this.sqlMaps.clear();
 		this.select = null;
-		this.tableAliases = null;
 	}
 
 	@Override
