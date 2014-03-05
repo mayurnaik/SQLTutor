@@ -62,7 +62,7 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 			List<IVariable> bindings = new ArrayList<IVariable>(3);
 			IRelation results = null;
 			try {
-				_log.debug("Evaluating query: {}", query);
+				_log.trace(Markers.DATALOG, "Evaluating query: {}", query);
 				results = state.getKnowledgeBase().execute(query, bindings);
 			} catch( EvaluationException e ) {
 				throw new SQLTutorException(e);
@@ -77,10 +77,10 @@ public class DefaultTableLabelRule extends AbstractSQLRule implements ISQLTransl
 				ITerm tref = ext.getTerm("?tref", result);
 				ITuple fact = IrisUtil.asTuple(tref, ext.getTerm("?label", result), TERM_RULE_SOURCE);
 				state.addFact(PREDICATE, fact);
-				_log.info(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
+				_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
 				fact = IrisUtil.asTuple(tref, ext.getTerm("?label2", result), TERM_RULE_SOURCE);
 				state.addFact(PREDICATE, fact);
-				_log.info(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
+				_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", PREDICATE, fact);
 			}
 			return true;
 		} finally {

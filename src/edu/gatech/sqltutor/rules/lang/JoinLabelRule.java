@@ -104,7 +104,7 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 		List<IVariable> bindings = new ArrayList<IVariable>(joinRuleFK.getArity());
 		IRelation results = null;
 		try {
-			_log.debug(Markers.METARULE, "Evaluating query: {}", query);
+			_log.trace(Markers.METARULE, "Evaluating query: {}", query);
 			results = state.getKnowledgeBase().execute(query, bindings);
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);

@@ -18,6 +18,7 @@ import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.gatech.sqltutor.IQueryTranslator;
@@ -41,7 +42,7 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 	protected String result;
 	protected List<ITranslationRule> translationRules;
 	protected Map<String, FromTable> tableAliases;
-	protected Multimap<FromTable, ResultColumn> fromToResult = HashMultimap.create();
+	protected Multimap<FromTable, ResultColumn> fromToResult = LinkedListMultimap.create();
 
 	protected SelectNode select;
 

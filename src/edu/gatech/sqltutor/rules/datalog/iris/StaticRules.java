@@ -92,7 +92,7 @@ public class StaticRules {
 		InputStream in = StaticRules.class.getResourceAsStream(resourcePath);
 		if( in == null )
 			throw new SQLTutorException("Rule datalog resource not found: " + resourcePath);
-		_log.info(Markers.DATALOG_RULES, "Parsing rules from resource: {}", resourcePath);
+		_log.debug(Markers.DATALOG_RULES, "Parsing rules from resource: {}", resourcePath);
 		return parse(in);
 	}
 
@@ -111,16 +111,16 @@ public class StaticRules {
 	private void logParse() {
 		List<IRule> rules = parser.getRules();
 		Map<IPredicate, IRelation> facts = parser.getFacts();
-		_log.info(Markers.DATALOG_RULES, "Parsed {} rules and {} facts.", 
+		_log.debug(Markers.DATALOG_RULES, "Parsed {} rules and {} facts.", 
 			rules.size(), facts.size());
 		if( facts.size() > 0 && _log.isDebugEnabled(Markers.DATALOG_FACTS) ) {
 			for( Map.Entry<IPredicate, IRelation> entry: facts.entrySet() ) {
 				_log.debug(Markers.DATALOG_FACTS, "Parsed fact: {}{}", entry.getKey().getPredicateSymbol(), entry.getValue());
 			}
 		}
-		if( rules.size() > 0 && _log.isDebugEnabled(Markers.DATALOG_RULES) ) {
+		if( rules.size() > 0 && _log.isTraceEnabled(Markers.DATALOG_RULES) ) {
 			for( IRule rule: rules ) {
-				_log.debug(Markers.DATALOG_RULES, "Parsed rule: {}", rule);
+				_log.trace(Markers.DATALOG_RULES, "Parsed rule: {}", rule);
 			}
 		}
 	}

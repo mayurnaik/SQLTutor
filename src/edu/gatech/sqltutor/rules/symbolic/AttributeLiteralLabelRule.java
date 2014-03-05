@@ -49,6 +49,7 @@ public class AttributeLiteralLabelRule
 			);
 			
 			List<IVariable> bindings = new ArrayList<IVariable>(5);
+			_log.trace(Markers.DATALOG, "Evaluating query: {}", attributeNode);
 			IRelation results = kb.execute(attributeNode, bindings);
 			if( results.size() < 1 )
 				return false;
@@ -69,7 +70,7 @@ public class AttributeLiteralLabelRule
 			
 			if( !SymbolicUtil.replaceChild(parent, token, literal) )
 				throw new SQLTutorException("Replacement failed for token " + token + " from parent " + parent);
-			_log.info(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+			_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
 			return true;
 		} catch( EvaluationException e ) {
 			throw new SymbolicException(e);
