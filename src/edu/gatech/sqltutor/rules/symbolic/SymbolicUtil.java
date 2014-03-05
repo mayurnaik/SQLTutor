@@ -93,18 +93,4 @@ public class SymbolicUtil {
 			throw new SymbolicException(e);
 		}
 	}
-	
-	/**
-	 * Read off the symbolic state as a string.
-	 * <p>All leaf nodes must be literals, and the parents should be 
-	 * sequences, lists, or the root token.</p>.
-	 * 
-	 * @param root the root token
-	 * @return the string
-	 * @throws SymbolicException if the state cannot be read (e.g. because some leaf is non-literal)
-	 */
-	public static String readSymbolicLiterals(RootToken root) {
-		
-		return null; // FIXME implement
-	}
 }
