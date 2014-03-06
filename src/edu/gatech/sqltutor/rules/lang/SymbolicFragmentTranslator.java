@@ -44,12 +44,14 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.WhereLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicFragmentTranslator 
@@ -58,7 +60,7 @@ public class SymbolicFragmentTranslator
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
 	
 	// FIXME temp flag to enable non-logging debug output
-	private static final boolean DEBUG = true;
+	private static final boolean DUMP_DATALOG = false;
 	
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
@@ -143,7 +145,7 @@ public class SymbolicFragmentTranslator
 		symState.setKnowledgeBase(kb);
 		
 		// FIXME remove this eventually
-		if( DEBUG ) {
+		if( DUMP_DATALOG ) {
 			IrisUtil.dumpFacts(queryFacts);
 			symFacts.generateFacts(symbolic, false);
 			IrisUtil.dumpFacts(symFacts.getFacts());
@@ -284,7 +286,9 @@ public class SymbolicFragmentTranslator
 			new AttributeLiteralLabelRule(),
 			new TableEntityLiteralLabelRule(),
 			new SelectLabelRule(),
-			new NumberLiteralRule()
+			new NumberLiteralRule(),
+			new BinaryComparisonRule(),
+			new WhereLiteralRule()
 		);
 	}
 	
