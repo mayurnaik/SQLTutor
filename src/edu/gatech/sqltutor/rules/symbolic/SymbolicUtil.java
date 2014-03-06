@@ -59,17 +59,17 @@ public class SymbolicUtil {
 	 * @param parent the parent token
 	 * @param child  the child token
 	 * @param replacement the token to replace <code>child</code> with
-	 * @return <code>true</code> if the child was found and replaced, <code>false</code> otherwise
+	 * @throws SymbolicException if replacement failed, e.g. because <code>child</code> is not a child of <code>parent</code>
 	 */
-	public static boolean replaceChild(ISymbolicToken parent, ISymbolicToken child, ISymbolicToken replacement) {
+	public static void replaceChild(ISymbolicToken parent, ISymbolicToken child, ISymbolicToken replacement) {
 		List<ISymbolicToken> children = parent.getChildren();
 		for( int i = 0, ilen = children.size(); i < ilen; ++i ) {
 			if( children.get(i).equals(child) ) {
 				children.set(i, replacement);
-				return true;
+				return;
 			}
 		}
-		return false;
+		throw new SymbolicException("Failed to replace " + child + " with " + replacement + " in " + parent);
 	}
 	
 	/**

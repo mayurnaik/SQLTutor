@@ -9,7 +9,7 @@ public class NumberToken extends AbstractSymbolicToken implements ISymbolicToken
 	
 	public static enum NumericType {
 		GENERAL,
-		MONEY;
+		DOLLARS;
 		// TODO others?
 	}
 

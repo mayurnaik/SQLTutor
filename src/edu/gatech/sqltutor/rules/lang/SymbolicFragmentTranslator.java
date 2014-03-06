@@ -44,6 +44,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
@@ -282,7 +283,8 @@ public class SymbolicFragmentTranslator
 			// rewrite rules
 			new AttributeLiteralLabelRule(),
 			new TableEntityLiteralLabelRule(),
-			new SelectLabelRule()
+			new SelectLabelRule(),
+			new NumberLiteralRule()
 		);
 	}
 	
