@@ -46,6 +46,14 @@ public class BinaryComparisonToken
 				throw new SymbolicException("Unknown node type: " + nodeType);
 		}
 	}
+	
+	public String getOperator() {
+		return operator;
+	}
+	
+	public void setOperator(String operator) {
+		this.operator = operator;
+	}
 
 	@Override
 	public SymbolicType getType() {

@@ -134,7 +134,7 @@ public class SymbolicFragmentTranslator
 		
 		// create initial symbolic state
 		RootToken symbolic = makeSymbolic(sqlState);
-		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", symbolic);
+		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
 		SymbolicState symState = new SymbolicState(sqlState);
 		symState.setSymbolicFacts(symFacts);
@@ -177,7 +177,7 @@ public class SymbolicFragmentTranslator
 			}
 		}
 		
-		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", symbolic);
+		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
 		throw new SQLTutorException("FIXME: Not implemented.");
 	}

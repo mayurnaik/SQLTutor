@@ -19,7 +19,9 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.IObjectMapper;
@@ -143,8 +145,18 @@ public class SymbolicFacts extends DynamicFacts {
 		addFact(SymbolicPredicates.type, tokenId, tokenType);
 		
 		switch( tokenType ) {
-			case ATTRIBUTE: addAttributeFacts(tokenId, (AttributeToken)token); break;
-			case TABLE_ENTITY: addTableEntityFacts(tokenId, (TableEntityToken)token); break;
+			case ATTRIBUTE: 
+				addAttributeFacts(tokenId, (AttributeToken)token); 
+				break;
+			case TABLE_ENTITY: 
+				addTableEntityFacts(tokenId, (TableEntityToken)token); 
+				break;
+			case NUMBER: 
+				addNumberFacts(tokenId, (NumberToken)token); 
+				break;
+			case BINARY_COMPARISON: 
+				addBinaryComparisonFacts(tokenId, (BinaryComparisonToken)token); 
+				break; 
 			default: break;
 		}
 		
@@ -163,5 +175,13 @@ public class SymbolicFacts extends DynamicFacts {
 		Integer tableId = nodeMap.getObjectId(token.getTable());
 		addFact(SymbolicPredicates.refsTable, tokenId, tableId);
 	}
-
+	
+	private void addNumberFacts(Integer tokenId, NumberToken token) {
+		addFact(SymbolicPredicates.number, tokenId, token.getNumber());
+		addFact(SymbolicPredicates.numberType, tokenId, token.getNumericType());
+	}
+	
+	private void addBinaryComparisonFacts(Integer tokenId, BinaryComparisonToken token) {
+		addFact(SymbolicPredicates.binaryOperator, tokenId, token.getOperator());
+	}
 }

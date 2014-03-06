@@ -22,7 +22,16 @@ public class SymbolicPredicates {
 	public static final IPredicate refsAttribute = predicate("symRefsAttribute", 3);
 	
 	/** <code>(?token:int,?table:int)</code> */
-	public static final IPredicate refsTable = predicate("symRefsTable", 2); 
+	public static final IPredicate refsTable = predicate("symRefsTable", 2);
+	
+	/** <code>(?token:int,?number:number)</code> */
+	public static final IPredicate number = predicate("symNumber", 2);
+	
+	/** <code>(?token:int,?type:string/NumericType)</code>. */
+	public static final IPredicate numberType = predicate("symNumberType", 2);
+	
+	/** <code>(?token:int,?op:string)</code> */
+	public static final IPredicate binaryOperator = predicate("symBinaryOperator", 2); 
 	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2); 

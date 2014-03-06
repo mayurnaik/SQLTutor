@@ -13,7 +13,6 @@ import org.deri.iris.storage.IRelation;
 
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicUtil {
 	/**
@@ -92,5 +91,31 @@ public class SymbolicUtil {
 		} catch( EvaluationException e ) {
 			throw new SymbolicException(e);
 		}
+	}
+	
+	public static String prettyPrint(ISymbolicToken token) {
+		final int INDENT_LEVEL = 2;
+		
+		String asString = token.toString();
+		StringBuilder output = new StringBuilder((int)(asString.length() * 1.25));
+		int indent = 0;
+		for( int i = 0, ilen = asString.length(); i < ilen; ++i ) {
+			char c = asString.charAt(i);
+			if( c == '{' ) {
+				output.append('\n');
+				addIndent(output, indent);
+				indent += INDENT_LEVEL;
+			} else if( c == '}' ) {
+				indent -= INDENT_LEVEL;
+			}
+			output.append(c);
+		}
+		return output.toString();
+	}
+	
+	private static StringBuilder addIndent(StringBuilder builder, int num) {
+		while( num-- > 0 )
+			builder.append(' ');
+		return builder;
 	}
 }
