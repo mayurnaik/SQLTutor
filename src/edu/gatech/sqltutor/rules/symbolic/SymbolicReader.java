@@ -17,6 +17,11 @@ public class SymbolicReader {
 		readSequence(out, root);
 		out.append('.');
 		
+		// start with uppercase
+		char first = out.charAt(0);
+		if( Character.isLowerCase(first) )
+			out.setCharAt(0, Character.toUpperCase(first));
+		
 		return out.toString();
 	}
 	
