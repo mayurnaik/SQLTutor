@@ -11,6 +11,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -32,6 +33,11 @@ public class BinaryComparisonRule
 	);
 	
 	public BinaryComparisonRule() {
+		super(DefaultPrecedence.LOWERING);
+	}
+	
+	public BinaryComparisonRule(int precedence) {
+		super(precedence);
 	}
 
 	@Override
@@ -76,5 +82,4 @@ public class BinaryComparisonRule
 	
 	@Override
 	protected IQuery getQuery() { return QUERY; }
-
 }

@@ -12,6 +12,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
@@ -35,6 +36,11 @@ public class AttributeLiteralLabelRule
 	private Random random = new Random();
 	
 	public AttributeLiteralLabelRule() {
+		super(DefaultPrecedence.LOWERING);
+	}
+	
+	public AttributeLiteralLabelRule(int precedence) {
+		super(precedence);
 	}
 	
 	@Override
@@ -74,4 +80,9 @@ public class AttributeLiteralLabelRule
 	
 	@Override
 	protected IQuery getQuery() { return QUERY; }
+	
+	@Override
+	public int getPrecedence() {
+		return DefaultPrecedence.LOWERING;
+	}
 }

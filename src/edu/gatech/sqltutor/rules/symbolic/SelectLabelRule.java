@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -58,4 +59,9 @@ public class SelectLabelRule
 	
 	@Override
 	public IQuery getQuery() { return QUERY; }
+	
+	@Override
+	public int getPrecedence() {
+		return DefaultPrecedence.LOWERING;
+	}
 }

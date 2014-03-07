@@ -21,6 +21,10 @@ public abstract class StandardSymbolicRule extends AbstractSymbolicRule {
 	public StandardSymbolicRule() {
 	}
 	
+	public StandardSymbolicRule(int precedence) {
+		super(precedence);
+	}
+	
 	/**
 	 * Runs the query for this rule and calls {@link #handleResult(IRelation, RelationExtractor)} 
 	 * if the resulting relation is non-empty.

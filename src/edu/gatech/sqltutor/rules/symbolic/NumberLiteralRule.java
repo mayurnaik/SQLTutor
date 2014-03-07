@@ -12,6 +12,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -31,6 +32,11 @@ public class NumberLiteralRule
 	);
 
 	public NumberLiteralRule() {
+		super(DefaultPrecedence.LOWERING);
+	}
+	
+	public NumberLiteralRule(int precedence) {
+		super(precedence);
 	}
 	
 	@Override

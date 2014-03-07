@@ -11,14 +11,22 @@ import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.SymbolicState;
 
 public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
+	/** The symbolic state set during application. */
 	protected SymbolicState state;
+	
+	/** The rule's precedence. */
+	protected int precedence = DefaultPrecedence.FRAGMENT_REWRITE;
 
 	public AbstractSymbolicRule() {
 	}
 	
+	public AbstractSymbolicRule(int precedence) {
+		this.precedence = precedence;
+	}
+	
 	@Override
 	public int getPrecedence() {
-		return DefaultPrecedence.FRAGMENT_REWRITE;
+		return precedence;
 	}
 	
 	@Override
