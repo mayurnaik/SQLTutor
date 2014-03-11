@@ -94,7 +94,7 @@ public class UserBean implements Serializable {
 	 */
 	public boolean isDevUser() {
 		if(isLoggedIn()) {
-			Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will$", 
+			Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will|msweat$", 
 				Pattern.CASE_INSENSITIVE);
 			return devNames.matcher(username).matches();
 		}
