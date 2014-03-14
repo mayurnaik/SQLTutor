@@ -1,8 +1,13 @@
 
-ruleDefaultAttributeLabel(?entity,?attribute,?tableName,?colName) :-
+ruleDefaultAttributeLabel(?entity,?attribute, ?label) :-
+  erAttribute(?entity,?attribute),
+  ENTITY_LABEL_FORMAT(?attribute, ?label).
+  
+ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
   sqlColumnName(?colId,?colName),
   sqlTableAlias(?colId,?tableAlias),
   sqlTableAlias(?tableId,?tableAlias),
   sqlTableName(?tableId,?tableName),
   erTableRefsEntity(?tableName,?entity),
-  erAttributeMapsTo(?entity,?attribute,?tableName,?colName).
+  erAttributeMapsTo(?entity,?attribute,?tableName,?colName),
+  ENTITY_LABEL_FORMAT(?colName, ?label).

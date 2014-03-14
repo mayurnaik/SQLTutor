@@ -45,6 +45,7 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
+import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
@@ -288,7 +289,8 @@ public class SymbolicFragmentTranslator
 			new SelectLabelRule(),
 			new NumberLiteralRule(),
 			new BinaryComparisonRule(),
-			new WhereLiteralRule()
+			new WhereLiteralRule(),
+			new MergeCompositeAttributeRule()
 		);
 	}
 	

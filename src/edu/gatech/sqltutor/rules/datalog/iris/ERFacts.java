@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.er.ERCompositeAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.er.EREntity;
@@ -126,8 +127,17 @@ public class ERFacts extends DynamicFacts {
 	private void addAttribute(String parent, ERAttribute attr) {
 		String attrName = attr.getName();
 		addFact(ERPredicates.erAttribute, parent, attrName);
+		
 		if( attr.isKey() )
 			addFact(ERPredicates.erAttributeIsKey, parent, attrName);
+		
+		if( attr.isComposite() ) {
+			addFact(ERPredicates.erAttributeIsComposite, parent, attrName);
+			for( ERAttribute child: ((ERCompositeAttribute)attr).getAttributes() ) {
+				addFact(ERPredicates.erAttributeParent, parent, attrName, child.getName());
+			}
+		}
+		
 		DescriptionType dtype = attr.getDescribesEntity();
 		if( dtype != null && dtype != DescriptionType.NONE )
 			addFact(ERPredicates.erAttributeDescribes, parent, attrName, dtype.toString().toLowerCase(Locale.ENGLISH));

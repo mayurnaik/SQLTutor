@@ -27,6 +27,19 @@ public class ERPredicates {
 	 */
 	public static final IPredicate erAttributeIsKey = predicate("erAttributeIsKey", 2);
 	
+	/**
+	 * <code>erAttributeIsComposite(?parent:string,?attr:string)</code> =>
+	 *   <code>erAttribute(?parent,?attr)</code> is a key attribute.
+	 */	
+	public static final IPredicate erAttributeIsComposite = predicate("erAttributeIsComposite", 2); 
+	
+	/**
+	 * <code>erAttributeParent(?entity:string,?parent:string,?child:string)</code> =>
+	 *   <code>erAttribute(?entity,?parent)</code> is the parent of <code>erAttribute(?entity,?child)</code>.
+	 *   Implies <code>erAttributeIsComposite(?entity,?parent)</code>.
+	 */
+	public static final IPredicate erAttributeParent = predicate("erAttributeParent", 3); 
+	
 	/** <code>erAttributeDescribes(?ent,?attr,?type)</code> =>  
 	 * the attribute can be used to describe the entity, 
 	 * type indicates how, one of ('prepend', 'replace', ...?others?)

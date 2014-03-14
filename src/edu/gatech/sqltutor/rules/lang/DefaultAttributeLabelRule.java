@@ -22,12 +22,10 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
-import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.EntityLabelFormat;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
-import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 
 /**
@@ -43,8 +41,8 @@ public class DefaultAttributeLabelRule
 	
 	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
 	
-	// ruleDefaultAttributeLabel(?entity,?attribute,?tableName,?colName)
-	private static final IPredicate rulePredicate = IrisUtil.predicate("ruleDefaultAttributeLabel", 4);
+	// ruleDefaultAttributeLabel(?entity,?attribute,?label)
+	private static final IPredicate rulePredicate = IrisUtil.predicate("ruleDefaultAttributeLabel", 3);
 	
 	protected StaticRules rules = new StaticRules(DefaultAttributeLabelRule.class);	
 	
@@ -54,18 +52,16 @@ public class DefaultAttributeLabelRule
 	public boolean apply(SQLState state) {
 		this.state = state;
 		try {
-			boolean applied = queryForLabel(true) | queryForLabel(false);
+			boolean applied = queryForLabel();
 			return applied;
 		} finally {
 			this.state = null;
 		}
 	}
 	
-	private boolean queryForLabel(boolean useAttrName) {
-		String matchAttr = useAttrName ? "?attr" : "?cname";
+	private boolean queryForLabel() {
 		IQuery query = Factory.BASIC.createQuery(
-			literal(rulePredicate, "?ent", "?attr", "?tname", "?cname"),
-			literal(new EntityLabelFormat(matchAttr, "?label")),
+			literal(rulePredicate, "?ent", "?attr", "?label"),
 			literal(new EqualBuiltin(IrisUtil.asTerms("?rule", TERM_RULE_SOURCE))),
 			literal(false, LearnedPredicates.attributeLabel, "?ent", "?attr", "?label", "?rule")
 		);
