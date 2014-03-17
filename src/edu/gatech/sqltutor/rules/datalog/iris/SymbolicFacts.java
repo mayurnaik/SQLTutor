@@ -167,6 +167,8 @@ public class SymbolicFacts extends DynamicFacts {
 	
 	private void addAttributeFacts(Integer tokenId, AttributeToken token) {
 		ERAttribute attr = token.getAttribute();
+		if( attr == null )
+			throw new NullPointerException("No attr for token: " + token);
 		String[] parts = attr.getFullName().split("\\.");
 		addFact(SymbolicPredicates.refsAttribute, tokenId, parts[0], parts[parts.length-1]);
 	}

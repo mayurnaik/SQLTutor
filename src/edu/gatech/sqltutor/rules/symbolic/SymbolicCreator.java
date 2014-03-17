@@ -29,6 +29,7 @@ import com.akiban.sql.parser.ValueNode;
 import com.google.common.collect.Lists;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLMaps;
 import edu.gatech.sqltutor.rules.SQLState;
@@ -42,7 +43,6 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralsToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
@@ -96,7 +96,7 @@ public class SymbolicCreator {
 					fromTable.getOrigTableName().getTableName() + "." + resultColumn.getExpression().getColumnName();
 				ERAttribute erAttr = erMapping.getAttribute(attrName);
 				if( erAttr == null )
-					_log.warn("No attribute for name {}", attrName);
+					throw new SQLTutorException("No attribute for name " + attrName);
 				AttributeToken attr = new AttributeToken(erAttr);
 				attrList.addChild(attr);
 			}
@@ -104,7 +104,7 @@ public class SymbolicCreator {
 			seq.addChild(attrList);
 
 			// "of each" {entity}
-			LiteralsToken literals = new LiteralsToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
+			SequenceToken literals = new SequenceToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
 			LiteralToken of = new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
 			LiteralToken each = new LiteralToken("each", PartOfSpeech.DETERMINER);
 			literals.addChild(of);

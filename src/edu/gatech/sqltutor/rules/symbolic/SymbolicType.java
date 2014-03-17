@@ -7,7 +7,6 @@ public enum SymbolicType {
 	ROOT,
 	SELECT,
 	LITERAL,
-	LITERALS,
 	ATTRIBUTE,
 	ATTRIBUTE_LIST,
 	TABLE_ENTITY,

@@ -32,7 +32,6 @@ public class SymbolicReader {
 				out.append(((LiteralToken)token).getExpression());
 				break;
 			case ROOT:
-			case LITERALS:
 			case SEQUENCE: 
 				readSequence(out, token); 
 				break;
