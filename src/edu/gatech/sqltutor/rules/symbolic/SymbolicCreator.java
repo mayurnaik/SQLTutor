@@ -18,6 +18,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
@@ -164,6 +165,14 @@ public class SymbolicCreator {
 			default:
 				if( node instanceof NumericConstantNode ) {
 					token = new NumberToken((Number)((NumericConstantNode)node).getValue());
+				} else if ( node instanceof CharConstantNode ) {
+					token = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+					token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_LEFT));
+					token.addChild(new LiteralToken(
+						((CharConstantNode)node).getValue().toString(), 
+						PartOfSpeech.NOUN_PHRASE // FIXME part of speech not actually known
+					));
+					token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_RIGHT));
 				} else {
 					throw new SymbolicException("FIXME: Unhandled node type: " + node.getClass().getSimpleName());
 				}

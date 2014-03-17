@@ -83,6 +83,9 @@ public class SymbolicFragmentTranslator
 	
 	@Override
 	protected void computeTranslation() throws SQLTutorException {
+		this.result = null;
+		
+		long duration = -System.currentTimeMillis();
 		if( erDiagram == null ) throw new SQLTutorException("No ER diagram set.");
 		if( erMapping == null ) throw new SQLTutorException("No ER-relational mapping set.");
 		erMapping.setDiagram(erDiagram);
@@ -172,6 +175,8 @@ public class SymbolicFragmentTranslator
 				if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
 					String output = symReader.readSymbolicState(symbolic);
 					_log.info("Output: {}", output);
+					if( this.result == null || Math.random() < 0.5d )
+						this.result = output;
 				}
 				
 				// apply each rule as many times as possible
@@ -181,9 +186,13 @@ public class SymbolicFragmentTranslator
 			}
 		}
 		
+		duration += System.currentTimeMillis();
+		_log.info(Markers.METARULE, "Total translation time: {} ms", duration);
+		
 		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
-		throw new SQLTutorException("FIXME: Not implemented.");
+		if( this.result == null )
+			throw new SQLTutorException("No concrete translation was computed.");
 	}
 	
 	private IKnowledgeBase createSymbolicKnowledgeBase(Map<IPredicate, IRelation> queryFacts, 

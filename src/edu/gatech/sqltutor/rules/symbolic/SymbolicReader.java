@@ -54,12 +54,14 @@ public class SymbolicReader {
 	 * Reads the children with spaces separating any non-punctuation symbols.
 	 */
 	private void readSequence(StringBuilder out, ISymbolicToken token) {
-		boolean first = true;
+		boolean first = true, followsOpenQuote = false;
 		for( ISymbolicToken child: token.getChildren() ) {
-			if( !first && !PartOfSpeech.isPunctuation(child.getPartOfSpeech()) ) {
+			PartOfSpeech partOfSpeech = child.getPartOfSpeech();
+			if( !first && !followsOpenQuote && !PartOfSpeech.isPunctuation(partOfSpeech) ) {
 				out.append(' ');
 			}
 			first = false;
+			followsOpenQuote = (partOfSpeech == PartOfSpeech.QUOTE_LEFT);
 			
 			readToken(out, child);
 		}

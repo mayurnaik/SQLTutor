@@ -50,6 +50,8 @@ public enum PartOfSpeech {
 	WH_ADVERB("WRB"),
 	
 	//// PUNCTUATION
+	QUOTE_LEFT("``"),
+	QUOTE_RIGHT("''"),
 	COMMA(","),
 	PERIOD("."),
 	QUESTION_MARK("?"),
@@ -101,6 +103,8 @@ public enum PartOfSpeech {
 			case PERIOD:
 			case DOLLAR_SIGN:
 			case EXCLAMATION_POINT:
+			case QUOTE_LEFT:
+			case QUOTE_RIGHT:
 				return true;
 			default:
 				return false;
