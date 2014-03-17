@@ -85,7 +85,7 @@ public class DefaultAttributeLabelRule
 			ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent", result), ext.getTerm("?attr", result), 
 				ext.getTerm("?label", result), TERM_RULE_SOURCE);
 			state.addFact(LearnedPredicates.attributeLabel, fact);
-			_log.info(Markers.DATALOG_FACTS, "Added label fact: {}{}", LearnedPredicates.attributeLabel, fact);
+			_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", LearnedPredicates.attributeLabel, fact);
 		}
 		return true;			
 	}
