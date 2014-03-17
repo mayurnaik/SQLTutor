@@ -48,6 +48,7 @@ import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
 import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.SimplifyConjunctionsRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
@@ -299,7 +300,8 @@ public class SymbolicFragmentTranslator
 			new NumberLiteralRule(),
 			new BinaryComparisonRule(),
 			new WhereLiteralRule(),
-			new MergeCompositeAttributeRule()
+			new MergeCompositeAttributeRule(),
+			new SimplifyConjunctionsRule()
 		);
 	}
 	

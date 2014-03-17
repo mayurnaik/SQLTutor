@@ -1,0 +1,10 @@
+
+ruleSimplifyConjunctionsAndOr(?token,?type) :- symType(?token, ?type), ?type = 'AND'.
+ruleSimplifyConjunctionsAndOr(?token,?type) :- symType(?token, ?type), ?type = 'OR'.
+
+// parent and child of the same type
+ruleSimplifyConjunctions(?parent,?child,?pos,?type) :-
+  ruleSimplifyConjunctionsAndOr(?parent,?type),
+  ruleSimplifyConjunctionsAndOr(?child,?type),
+  symParentOf(?parent,?child,?pos).
+  
