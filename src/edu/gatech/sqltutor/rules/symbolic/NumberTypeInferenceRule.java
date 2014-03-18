@@ -68,17 +68,17 @@ public class NumberTypeInferenceRule
 			switch( attrType ) {
 				case DOLLARS: {
 					NumericType numType = NumericType.valueOf(ext.getString("?numType"));
-					if( numType != NumericType.DOLLARS ) {
-						NumberToken numToken = ext.getToken("?numToken");
-						
-						if( _log.isDebugEnabled(Markers.SYMBOLIC) ) {
-							_log.debug(Markers.SYMBOLIC, "Inferred type {} for token {} by comparison to {}", 
-								NumericType.DOLLARS, numToken, ext.getToken("?attrToken"));
-						}
-						
-						numToken.setNumericType(NumericType.DOLLARS);
-						return true;
+					if( numType == NumericType.DOLLARS )
+						return false;
+					NumberToken numToken = ext.getToken("?numToken");
+					
+					if( _log.isDebugEnabled(Markers.SYMBOLIC) ) {
+						_log.debug(Markers.SYMBOLIC, "Inferred type {} for token {} by comparison to {}", 
+							NumericType.DOLLARS, numToken, ext.getToken("?attrToken"));
 					}
+					
+					numToken.setNumericType(NumericType.DOLLARS);
+					return true;
 				}
 				default:
 					_log.warn(Markers.SYMBOLIC, "Unexpected attribute type {} in comparison {}", attrType, ext.getToken("?binop"));
