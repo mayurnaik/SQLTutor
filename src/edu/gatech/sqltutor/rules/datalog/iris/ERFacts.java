@@ -141,6 +141,8 @@ public class ERFacts extends DynamicFacts {
 		DescriptionType dtype = attr.getDescribesEntity();
 		if( dtype != null && dtype != DescriptionType.NONE )
 			addFact(ERPredicates.erAttributeDescribes, parent, attrName, dtype.toString().toLowerCase(Locale.ENGLISH));
+		
+		addFact(ERPredicates.erAttributeDataType, parent, attrName, attr.getDataType().toString());
 	}
 
 	private void addRelationshipEdge(String rel, Integer pos, ERRelationshipEdge edge) {

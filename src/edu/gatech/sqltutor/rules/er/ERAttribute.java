@@ -28,6 +28,9 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	@XStreamConverter(RelaxedEnumConverter.class)
 	private DescriptionType describesEntity;
 	
+	@XStreamConverter(RelaxedEnumConverter.class)
+	private ERAttributeDataType dataType;
+	
 	@XStreamOmitField
 	private ERNamedNode parent;
 	
@@ -87,6 +90,14 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	
 	public void setDescribesEntity(DescriptionType describesEntity) {
 		this.describesEntity = describesEntity;
+	}
+	
+	// treat null as UNKNOWN, but leave field null for serialization purposes (to avoid an empty tag)
+	public ERAttributeDataType getDataType() {
+		return dataType != null ? dataType : ERAttributeDataType.UNKNOWN;
+	}
+	public void setDataType(ERAttributeDataType dataType) {
+		this.dataType = dataType != ERAttributeDataType.UNKNOWN ? dataType : null;
 	}
 	
 	@Override

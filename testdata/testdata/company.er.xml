@@ -43,7 +43,7 @@
         </attribute>
         <attribute><name>Bdate</name></attribute>
         <attribute><name>Address</name></attribute>
-        <attribute><name>Salary</name></attribute>
+        <attribute><name>Salary</name><dataType>dollars</dataType></attribute>
         <attribute><name>Sex</name></attribute>
       </attributes>
       <type>PERSON</type>

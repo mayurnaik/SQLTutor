@@ -4,6 +4,8 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 
 import org.deri.iris.api.basics.IPredicate;
 
+import edu.gatech.sqltutor.rules.er.ERAttributeDataType;
+
 public class ERPredicates {
 // dynamically generated predicates 
 	/** <code>erEntity(?ent:string)</code> => <code>ent</code> names an entity. */
@@ -44,7 +46,13 @@ public class ERPredicates {
 	 * the attribute can be used to describe the entity, 
 	 * type indicates how, one of ('prepend', 'replace', ...?others?)
 	 */
-	public static final IPredicate erAttributeDescribes = predicate("erAttributeDescribes", 3); 
+	public static final IPredicate erAttributeDescribes = predicate("erAttributeDescribes", 3);
+	/** 
+	 * <code>erAttributeDataType(?ent,?attr,?dataType)</code> =>  
+	 * the attribute has a certain data type.
+	 * @see ERAttributeDataType
+	 */	
+	public static final IPredicate erAttributeDataType = predicate("erAttributeDataType", 3); 
 	
 	/**
 	 * <code>erRelationshipEdgeEntity(?rel:string,?n:int,?ent:string)</code> =><br />

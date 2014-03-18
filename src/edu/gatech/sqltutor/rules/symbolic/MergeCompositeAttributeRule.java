@@ -42,10 +42,7 @@ public class MergeCompositeAttributeRule
 	public MergeCompositeAttributeRule() { }
 
 	@Override
-	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		_log.info(Markers.SYMBOLIC, "Extractor variables: {}", ext.getVariables());
-		_log.info(Markers.SYMBOLIC, "Could apply to results: {}", relation);
-		
+	protected boolean handleResult(IRelation relation, RelationExtractor ext) {		
 		ITuple result = relation.get(0);
 		ext.setCurrentTuple(result);
 		

@@ -27,7 +27,7 @@ public class RelaxedEnumConverter extends ReflectionConverter implements Convert
 	public void marshal(Object original, HierarchicalStreamWriter writer, 
 			MarshallingContext context) {
 		String value = original.toString().toLowerCase(Locale.ENGLISH);
-		super.marshal(value, writer, context);
+		writer.setValue(value);
 	}
 	
 	@Override

@@ -12,7 +12,7 @@
   </appender>
      
   <appender name="debug.log" class="ch.qos.logback.core.FileAppender">
-    <file>${java.io.tmpdir}/sqltutor.datalog.log</file>
+    <file>${java.io.tmpdir}/sqltutor.log</file>
     <append>false</append>
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
