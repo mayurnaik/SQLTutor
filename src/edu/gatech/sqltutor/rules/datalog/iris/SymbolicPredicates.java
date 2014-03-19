@@ -31,7 +31,10 @@ public class SymbolicPredicates {
 	public static final IPredicate numberType = predicate("symNumberType", 2);
 	
 	/** <code>(?token:int,?op:string)</code> */
-	public static final IPredicate binaryOperator = predicate("symBinaryOperator", 2); 
+	public static final IPredicate binaryOperator = predicate("symBinaryOperator", 2);
+	
+	/** <code>(?token:int,?expr:string)</code> */
+	public static final IPredicate literalExpression = predicate("symLiteralExpression", 2); 
 	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2); 

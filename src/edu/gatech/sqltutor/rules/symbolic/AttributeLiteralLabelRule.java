@@ -21,6 +21,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 
 public class AttributeLiteralLabelRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
@@ -53,9 +54,12 @@ public class AttributeLiteralLabelRule
 		ISymbolicToken token = ext.getToken("?token", result);
 		ISymbolicToken parent = ext.getToken("?parent", result);
 		// FIXME what about multi-word labels like "Research Department"?
+		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+		seq.addChild(new LiteralToken("the", PartOfSpeech.DETERMINER));
 		LiteralToken literal = new LiteralToken(label, PartOfSpeech.NOUN_SINGULAR_OR_MASS);
+		seq.addChild(literal);
 		
-		SymbolicUtil.replaceChild(parent, token, literal);
+		SymbolicUtil.replaceChild(parent, token, seq);
 		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
 		return true;
 	}

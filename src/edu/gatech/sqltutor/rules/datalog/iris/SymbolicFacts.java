@@ -21,6 +21,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
@@ -156,7 +157,10 @@ public class SymbolicFacts extends DynamicFacts {
 				break;
 			case BINARY_COMPARISON: 
 				addBinaryComparisonFacts(tokenId, (BinaryComparisonToken)token); 
-				break; 
+				break;
+			case LITERAL:
+				addLiteralFacts(tokenId, (LiteralToken)token);
+				break;
 			default: break;
 		}
 		
@@ -165,6 +169,10 @@ public class SymbolicFacts extends DynamicFacts {
 		}
 	}
 	
+	private void addLiteralFacts(Integer tokenId, LiteralToken token) {
+		addFact(SymbolicPredicates.literalExpression, tokenId, token.getExpression());
+	}
+
 	private void addAttributeFacts(Integer tokenId, AttributeToken token) {
 		ERAttribute attr = token.getAttribute();
 		if( attr == null )

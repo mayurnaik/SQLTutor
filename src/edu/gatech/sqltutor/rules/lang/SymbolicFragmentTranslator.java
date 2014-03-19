@@ -45,6 +45,7 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
+import edu.gatech.sqltutor.rules.symbolic.DeterminerRedundancyRule;
 import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberTypeInferenceRule;
@@ -64,6 +65,7 @@ public class SymbolicFragmentTranslator
 	
 	// FIXME temp flag to enable non-logging debug output
 	private static final boolean DUMP_DATALOG = false;
+	private static final boolean DUMP_SYMBOLIC_REWRITES = true;
 	
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
@@ -170,6 +172,9 @@ public class SymbolicFragmentTranslator
 		for( ISymbolicTranslationRule metarule: 
 				Iterables.filter(translationRules, ISymbolicTranslationRule.class) ) {
 			while( metarule.apply(symState) ) {
+				if( DUMP_SYMBOLIC_REWRITES ) {
+					_log.info(Markers.METARULE, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
+				}
 				kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
 				symState.setKnowledgeBase(kb);
 				
@@ -186,6 +191,7 @@ public class SymbolicFragmentTranslator
 				_log.debug(Markers.METARULE, "Applied rule: {}", metarule);
 				_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
 			}
+			_log.info(Markers.METARULE, "Done with metarule: {}", metarule);
 		}
 		
 		duration += System.currentTimeMillis();
@@ -303,7 +309,8 @@ public class SymbolicFragmentTranslator
 			new WhereLiteralRule(),
 			new MergeCompositeAttributeRule(),
 			new SimplifyConjunctionsRule(),
-			new NumberTypeInferenceRule()
+			new NumberTypeInferenceRule(),
+			new DeterminerRedundancyRule()
 		);
 	}
 	

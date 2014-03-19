@@ -32,7 +32,7 @@ public class SymbolicFragmentTest {
 
 			{"SELECT E.first_name, E.last_name, S.first_name, S.last_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 
-			{"SELECT e.ssn FROM employee e"},
+			{"SELECT e.first_name, e.ssn FROM employee e"},
 
 			{"SELECT e.ssn, d.name FROM employee e, department d"},
 

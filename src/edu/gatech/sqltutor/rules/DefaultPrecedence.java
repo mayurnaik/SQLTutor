@@ -8,11 +8,14 @@ public class DefaultPrecedence {
 	public static final int FRAGMENT_REWRITE = 100;
 	
 	/** For rules that will perform simplification on the symbolic sentence structure. */
-	public static final int SIMPLIFYING = 150;
+	public static final int SIMPLIFYING_SYMBOLIC = 150;
 	
 	/** For rules that will add information to the symbolic sentence structure. */
 	public static final int FRAGMENT_ENHANCEMENT = 200;
 	
 	/** For rules that will lower to literal natural language. */
-	public static final int LOWERING = 10;
+	public static final int LOWERING = 50;
+	
+	/** For rules that simplified already-lowered state. */
+	public static final int SIMPLIFYING_LOWERED = 40;
 }

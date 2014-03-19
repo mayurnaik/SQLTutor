@@ -36,7 +36,6 @@ public class SymbolicReader {
 				readSequence(out, token); 
 				break;
 			case ATTRIBUTE_LIST:
-				out.append("the ");
 				// fall-through
 			case AND:
 				readConjunctedList(out, token, "and");
