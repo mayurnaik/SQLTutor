@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -65,7 +67,7 @@ public class SymbolicFragmentTranslator
 	
 	// FIXME temp flag to enable non-logging debug output
 	private static final boolean DUMP_DATALOG = false;
-	private static final boolean DUMP_SYMBOLIC_REWRITES = true;
+	private static final boolean DUMP_SYMBOLIC_REWRITES = false;
 	
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
@@ -145,7 +147,8 @@ public class SymbolicFragmentTranslator
 		
 		// create initial symbolic state
 		RootToken symbolic = makeSymbolic(sqlState);
-		_log.info(Markers.SYMBOLIC, "Symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
+//		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
+			_log.info(Markers.SYMBOLIC, "Initial symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
 		SymbolicState symState = new SymbolicState(sqlState);
 		symState.setSymbolicFacts(symFacts);
@@ -169,38 +172,59 @@ public class SymbolicFragmentTranslator
 		
 		// perform rewriting rules
 		SymbolicReader symReader = new SymbolicReader();
-		for( ISymbolicTranslationRule metarule: 
-				Iterables.filter(translationRules, ISymbolicTranslationRule.class) ) {
-			while( metarule.apply(symState) ) {
-				if( DUMP_SYMBOLIC_REWRITES ) {
-					_log.info(Markers.METARULE, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
+		List<ISymbolicTranslationRule> symbolicRules = getSymbolicMetarules();
+		// track states seen
+		HashSet<String> symbolicStates = new HashSet<String>();
+		symbolicStates.add(symbolic.toString());
+		boolean sawNewState = false;
+		
+		do {
+			sawNewState = false;
+			for( ISymbolicTranslationRule metarule: symbolicRules ) { 
+				while( metarule.apply(symState) ) {
+					if( DUMP_SYMBOLIC_REWRITES && _log.isDebugEnabled(Markers.SYMBOLIC)) {
+						_log.debug(Markers.SYMBOLIC, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
+					}
+					kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+					symState.setKnowledgeBase(kb);
+					
+					// FIXME non-determinism and final output checks
+					if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
+						String output = symReader.readSymbolicState(symbolic);
+						_log.info("Output: {}", output);
+						if( this.result == null || Math.random() < 0.5d )
+							this.result = output;
+					}
+					
+					// apply each rule as many times as possible
+					// FIXME non-determinism when precedences match?
+					_log.debug(Markers.METARULE, "Applied rule: {}", metarule);
+					_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
+					
+					if( symbolicStates.add(symbolic.toString()) )
+						sawNewState = true;
 				}
-				kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
-				symState.setKnowledgeBase(kb);
-				
-				// FIXME non-determinism and final output checks
-				if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
-					String output = symReader.readSymbolicState(symbolic);
-					_log.info("Output: {}", output);
-					if( this.result == null || Math.random() < 0.5d )
-						this.result = output;
-				}
-				
-				// apply each rule as many times as possible
-				// FIXME non-determinism when precedences match?
-				_log.debug(Markers.METARULE, "Applied rule: {}", metarule);
-				_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
+				_log.debug(Markers.METARULE, "Done with metarule: {}", metarule);
 			}
-			_log.info(Markers.METARULE, "Done with metarule: {}", metarule);
-		}
+		} while( sawNewState );
 		
 		duration += System.currentTimeMillis();
 		_log.info(Markers.METARULE, "Total translation time: {} ms", duration);
 		
 		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
+		_log.info(Markers.SYMBOLIC, "Saw {} total symbolic states.", symbolicStates.size());
+		
 		if( this.result == null )
 			throw new SQLTutorException("No concrete translation was computed.");
+	}
+	
+	private List<ISymbolicTranslationRule> getSymbolicMetarules() {
+		return ImmutableList.copyOf(Iterables.filter(translationRules, ISymbolicTranslationRule.class));
+	}
+	
+	private List<ISQLTranslationRule> getAnalysisMetarules() {
+		return ImmutableList.copyOf(Iterables.filter(translationRules, ISQLTranslationRule.class));
 	}
 	
 	private IKnowledgeBase createSymbolicKnowledgeBase(Map<IPredicate, IRelation> queryFacts, 

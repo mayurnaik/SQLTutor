@@ -34,6 +34,7 @@ symIsChunk('ADJP').
 symIsChunk('SBAR').
 symIsChunk('PRT').
 symIsChunk('INTJ').
+symIsChunk('QP').
 symIsChunk('S').
 
 
