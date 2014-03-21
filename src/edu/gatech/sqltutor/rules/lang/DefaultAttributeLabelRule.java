@@ -81,7 +81,6 @@ public class DefaultAttributeLabelRule
 		RelationExtractor ext = new RelationExtractor(bindings);
 		for( int i = 0; i < results.size(); ++i ) {
 			ITuple result = results.get(i);
-			
 			ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent", result), ext.getTerm("?attr", result), 
 				ext.getTerm("?label", result), TERM_RULE_SOURCE);
 			state.addFact(LearnedPredicates.attributeLabel, fact);

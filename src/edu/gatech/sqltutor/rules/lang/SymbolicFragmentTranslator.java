@@ -43,6 +43,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.AllAttributesLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
 import edu.gatech.sqltutor.rules.symbolic.DeterminerRedundancyRule;
@@ -302,6 +303,7 @@ public class SymbolicFragmentTranslator
 			
 			// rewrite rules
 			new AttributeLiteralLabelRule(),
+			new AllAttributesLiteralLabelRule(),
 			new TableEntityLiteralLabelRule(),
 			new SelectLabelRule(),
 			new NumberLiteralRule(),

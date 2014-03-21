@@ -18,6 +18,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
@@ -37,6 +38,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AllAttributesToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
@@ -92,12 +94,21 @@ public class SymbolicCreator {
 			// list of attributes
 			AttributeListToken attrList = new AttributeListToken();
 			for( ResultColumn resultColumn : resultColumns ) {
-				String attrName =
-					fromTable.getOrigTableName().getTableName() + "." + resultColumn.getExpression().getColumnName();
-				ERAttribute erAttr = erMapping.getAttribute(attrName);
-				if( erAttr == null )
-					throw new SQLTutorException("No attribute for name " + attrName);
-				AttributeToken attr = new AttributeToken(erAttr);
+				String attrName;
+				AttributeToken attr;
+				if(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN) {
+					// @see com.akiban.sql.parser.AllResultColumn.java
+					attr = new AllAttributesToken(fromTable.getOrigTableName().getTableName());
+				} else {
+					attrName =
+						fromTable.getOrigTableName().getTableName() + 
+						"." + resultColumn.getExpression().getColumnName();
+					ERAttribute erAttr = erMapping.getAttribute(attrName);
+					if( erAttr == null )
+						throw new SQLTutorException("No attribute for name " + attrName);
+					attr = new AttributeToken(erAttr);
+				}
+
 				attrList.addChild(attr);
 			}
 

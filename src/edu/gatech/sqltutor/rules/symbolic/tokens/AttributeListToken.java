@@ -23,6 +23,7 @@ public class AttributeListToken
 		switch( tok.getType() ) {
 			case ATTRIBUTE:
 			case LITERAL:
+			case ALL_ATTRIBUTES:
 				return true;
 			default:
 				return false;

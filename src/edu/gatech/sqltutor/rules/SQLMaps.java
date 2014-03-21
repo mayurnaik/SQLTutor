@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
+import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
@@ -94,7 +95,13 @@ public class SQLMaps {
 		
 		Multimap<FromTable, ResultColumn> fromToResult = LinkedListMultimap.create();
 		for( ResultColumn resultColumn: select.getResultColumns() ) {
-			String tableName = resultColumn.getTableName();
+			String tableName;
+			if(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN) {
+				// @see com.akiban.sql.parser.AllResultColumn.java
+				tableName = ((AllResultColumn)resultColumn).getFullTableName();
+			} else {
+				tableName = resultColumn.getTableName();
+			}
 			if( tableName == null ) {
 				_log.error("Result column does not have a table name: {}", resultColumn);
 				continue;
