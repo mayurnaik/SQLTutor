@@ -19,67 +19,41 @@ import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 
-public class AttributeLiteralLabelRule 
+public class AllAttributesLiteralLabelRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
-	private static final Logger _log = LoggerFactory.getLogger(AttributeLiteralLabelRule.class);
+	private static final Logger _log = LoggerFactory.getLogger(AllAttributesLiteralLabelRule.class);
 	
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		literal(SymbolicPredicates.parentOf, "?parent", "?token", "?pos"),
-		literal(SymbolicPredicates.type, "?token", "ATTRIBUTE"),
-		literal(SymbolicPredicates.refsAttribute, "?token", "?entity", "?attribute"),
-		literal(LearnedPredicates.attributeLabel, "?entity", "?attribute", "?label", "?source")
+		literal(SymbolicPredicates.type, "?token", "ALL_ATTRIBUTES")//,
 	); 
-
-	private Random random = new Random();
 	
-	public AttributeLiteralLabelRule() {
+	public AllAttributesLiteralLabelRule() {
 		super(DefaultPrecedence.LOWERING);
 	}
 	
-	public AttributeLiteralLabelRule(int precedence) {
+	public AllAttributesLiteralLabelRule(int precedence) {
 		super(precedence);
 	}
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		// FIXME need way to ensure all choices will be used eventually
-		int choices = countChoicesForAttribute(relation, ext);
-		ITuple result = relation.get(random.nextInt(choices));
-		
-		String label = ((IStringTerm)ext.getTerm("?label", result)).getValue();
+		ITuple result = relation.get(0);
 		ISymbolicToken token = ext.getToken("?token", result);
 		ISymbolicToken parent = ext.getToken("?parent", result);
 		// FIXME what about multi-word labels like "Research Department"?
 		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-		seq.addChild(new LiteralToken("the", PartOfSpeech.DETERMINER));
-		LiteralToken literal = new LiteralToken(label, token.getPartOfSpeech());
-		seq.addChild(literal);
+		seq.addChild(new LiteralToken("all", PartOfSpeech.DETERMINER));
+		seq.addChild(new LiteralToken("attributes", PartOfSpeech.NOUN_PLURAL));
 		
 		SymbolicUtil.replaceChild(parent, token, seq);
-		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, "attributes");
 		return true;
-	}
-
-	public int countChoicesForAttribute(IRelation results, RelationExtractor ext) {
-		if( results.size() < 1 )
-			return 0;
-		
-		String lastAttr = null;
-		int i, ilen;
-		for( i = 0, ilen = results.size(); i < ilen; ++i ) {
-			ITuple result = results.get(i);
-			String attr = ext.getTerm("?entity", result) + "." + ext.getTerm("?attribute", result);
-			if( lastAttr == null )
-				lastAttr = attr;
-			else if( !lastAttr.equals(attr) )
-				break;
-		}
-		
-		return i;
 	}
 	
 	@Override
