@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -96,21 +97,38 @@ public class SQLMaps {
 		Multimap<FromTable, ResultColumn> fromToResult = LinkedListMultimap.create();
 		for( ResultColumn resultColumn: select.getResultColumns() ) {
 			String tableName;
+			FromTable fromTable;
+			// @see com.akiban.sql.parser.AllResultColumn.java
 			if(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN) {
-				// @see com.akiban.sql.parser.AllResultColumn.java
+				// Asterisk detected:
 				tableName = ((AllResultColumn)resultColumn).getFullTableName();
+				if( tableName == null ) {
+					// It was not tied to a particular table:
+					Iterator<FromTable> iterator = tableAliases.values().iterator();
+					for( ; iterator.hasNext(); ) {
+						fromTable = iterator.next();
+						fromToResult.put(fromTable, resultColumn);
+					}
+				} else {
+					fromTable = tableAliases.get(tableName);
+					if( fromTable != null ) {
+						fromToResult.put(fromTable, resultColumn);
+					} else {
+						_log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
+					}
+				}
 			} else {
 				tableName = resultColumn.getTableName();
-			}
-			if( tableName == null ) {
-				_log.error("Result column does not have a table name: {}", resultColumn);
-				continue;
-			}
-			FromTable fromTable = tableAliases.get(tableName);
-			if( fromTable != null ) {
-				fromToResult.put(fromTable, resultColumn);
-			} else {
-				_log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
+				if( tableName == null ) {
+					_log.error("Result column does not have a table name: {}", resultColumn);
+					continue;
+				}
+				fromTable = tableAliases.get(tableName);
+				if( fromTable != null ) {
+					fromToResult.put(fromTable, resultColumn);
+				} else {
+					_log.error("No table is aliased by {} for col: {}", tableName, resultColumn);
+				}
 			}
 		}
 		return fromToResult;

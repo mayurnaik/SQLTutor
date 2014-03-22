@@ -44,11 +44,11 @@ public class SymbolicFragmentTest {
 
 			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary > 100000 AND S.salary < 1000000"},
 			
-			{"SELECT e.* FROM employee AS e"},
-			
 			// FIXME: what about "SELECT E.*, E.first_name" - should we delete E.first_name? 
 			// Or keep it to remove ambiguity (it should be printed twice)?
 			{"SELECT E.*, S.* FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
+			
+			{"SELECT * FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 		};
 		return Arrays.asList(queries);
 	}
