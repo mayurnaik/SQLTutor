@@ -18,7 +18,6 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
@@ -46,6 +45,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.OrToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
@@ -161,6 +161,9 @@ public class SymbolicCreator {
 		switch(nodeType) {
 			case NodeTypes.AND_NODE:
 				token = new AndToken();
+				break;
+			case NodeTypes.OR_NODE:
+				token = new OrToken();
 				break;
 			case NodeTypes.BINARY_EQUALS_OPERATOR_NODE:
 			case NodeTypes.BINARY_GREATER_EQUALS_OPERATOR_NODE:
