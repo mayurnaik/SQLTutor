@@ -1,0 +1,54 @@
+
+ruleRangeToBetween_isGreaterOp(?token) :- symBinaryOperator(?token, ">").
+ruleRangeToBetween_isGreaterOp(?token) :- symBinaryOperator(?token, ">=").
+ruleRangeToBetween_isLessOp(?token) :- symBinaryOperator(?token, "<").
+ruleRangeToBetween_isLessOp(?token) :- symBinaryOperator(?token, "<=").
+  
+// {attr} >/>= {num}
+ruleRangeToBetween_isAttributeGreater(?compareToken,?attrToken,?numToken) :-
+  symType(?compareToken, 'BINARY_COMPARISON'),
+  symParentOf(?compareToken, ?attrToken, 0),
+  symType(?attrToken, 'ATTRIBUTE'),
+  symParentOf(?compareToken, ?numToken, 1),
+  symType(?numToken, 'NUMBER'), 
+  ruleRangeToBetween_isGreaterOp(?compareToken).
+  
+// {num} </<= {attr}
+ruleRangeToBetween_isAttributeGreater(?compareToken,?attrToken,?numToken) :-
+  symType(?compareToken, 'BINARY_COMPARISON'),
+  symParentOf(?compareToken, ?attrToken, 1),
+  symType(?attrToken, 'ATTRIBUTE'),
+  symParentOf(?compareToken, ?numToken, 0),
+  symType(?numToken, 'NUMBER'), 
+  ruleRangeToBetween_isLessOp(?compareToken).
+  
+// {attr} </<= {num}
+ruleRangeToBetween_isAttributeLess(?compareToken,?attrToken,?numToken) :-
+  symType(?compareToken, 'BINARY_COMPARISON'),
+  symParentOf(?compareToken, ?attrToken, 0),
+  symType(?attrToken, 'ATTRIBUTE'),
+  symParentOf(?compareToken, ?numToken, 1),
+  symType(?numToken, 'NUMBER'), 
+  ruleRangeToBetween_isLessOp(?compareToken).
+  
+// {num} >/>= {attr}
+ruleRangeToBetween_isAttributeLess(?compareToken,?attrToken,?numToken) :-
+  symType(?compareToken, 'BINARY_COMPARISON'),
+  symParentOf(?compareToken, ?attrToken, 1),
+  symType(?attrToken, 'ATTRIBUTE'),
+  symParentOf(?compareToken, ?numToken, 0),
+  symType(?numToken, 'NUMBER'), 
+  ruleRangeToBetween_isGreaterOp(?compareToken).  
+  
+ruleRangeToBetween(?parent,?lowerCompare,?lowerAttr,?lowerNumber,?upperCompare,?upperAttr,?upperNumber) :-
+  // two comparisons defining a range
+  ruleRangeToBetween_isAttributeGreater(?lowerCompare, ?lowerAttr, ?lowerNumber),
+  ruleRangeToBetween_isAttributeLess(?upperCompare, ?upperAttr, ?upperNumber),
+  // referring to the same attribute
+  symRefsAttribute(?lowerAttr, ?entity, ?attribute),
+  symRefsAttribute(?upperAttr, ?entity, ?attribute),
+  // in a shared AND parent
+  symParentOf(?parent, ?lowerCompare, ?lowerPos),
+  symParentOf(?parent, ?upperCompare, ?upperPos),
+  symType(?parent, 'AND').
+  
