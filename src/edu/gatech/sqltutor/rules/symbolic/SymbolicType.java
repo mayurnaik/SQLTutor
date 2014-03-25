@@ -16,5 +16,6 @@ public enum SymbolicType {
 	OR,
 	SEQUENCE,
 	BINARY_COMPARISON,
-	NUMBER;
+	NUMBER,
+	BETWEEN;
 }

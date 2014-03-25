@@ -49,3 +49,43 @@ symNonLiteralLeaves(?id) :-
   symType(?id,?type),
   ?type != 'LITERAL'.
 
+// ?ancestor is the ancestor of ?descendent, at depth ?depth (base case, depth 1)
+symAncestorOf(?ancestor,?descendent,?depth) :-
+  symParentOf(?ancestor,?descendent,?pos),
+  ?depth = 1.
+  
+// ?ancestor is the ancestor of ?descendent, at depth ?depth (inductive case)  
+symAncestorOf(?ancestor,?descendent,?depth) :-
+  symParentOf(?ancestor,?token,?pos),
+  symAncestorOf(?token, ?descendent, ?depth2),
+  ?depth2 + 1 = ?depth.
+
+
+// token 1 and 2 have a common ancestor ?ancestor and depths 1 and 2, respectively
+symCommonAncestorDepth(?ancestor,?token1,?token2,?depth1,?depth2) :-
+  symAncestorOf(?ancestor,?token1,?depth1),
+  symAncestorOf(?ancestor,?token2,?depth2),
+  ?token1 != ?token2.
+  
+// token 1 and 2 have a common ancestor ?ancestor  
+symCommonAncestor(?ancestor,?token1,?token2) :- symCommonAncestor(?ancestor,?token1,?token2,?depth1,?depth2).
+  
+	
+symHasGreaterCommonAncestor(?ancestor,?token1,?token2) :-
+    // is a common ancestor
+	symCommonAncestorDepth(?ancestor,?token1,?token2,?depth1,?depth2),
+	// with another common ancestor of greater depth
+	symCommonAncestorDepth(?ancestor2,?token1,?token2,?depth3,?depth4),
+	?depth3 > ?depth1.
+	
+symHasLesserCommonAncestor(?ancestor,?token1,?token2) :-
+    // is a common ancestor
+	symCommonAncestorDepth(?ancestor,?token1,?token2,?depth1,?depth2),
+	// with another common ancestor of greater depth
+	symCommonAncestorDepth(?ancestor2,?token1,?token2,?depth3,?depth4),
+	?depth3 < ?depth1.
+
+symLeastCommonAncestor(?ancestor,?token1,?token2,?depth1,?depth2) :-
+    // is a common ancestor with none of greater depth
+	symCommonAncestorDepth(?ancestor,?token1,?token2,?depth1,?depth2),
+	not symHasLesserCommonAncestor(?ancestor,?token1,?token2).

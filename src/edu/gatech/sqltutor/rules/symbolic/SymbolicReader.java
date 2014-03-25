@@ -44,7 +44,7 @@ public class SymbolicReader {
 				readConjunctedList(out, token, "or");
 				break;
 			default:
-				throw new SymbolicException("Unhandled type " + type + " for token " + token);
+				throw new UnhandledSymbolicTypeException(type, "Unhandled type for token " + token);
 		}
 	}
 	

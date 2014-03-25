@@ -29,6 +29,7 @@ import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
@@ -47,17 +48,20 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.AllAttributesLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.BetweenLiteralsRule;
 import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
 import edu.gatech.sqltutor.rules.symbolic.DeterminerRedundancyRule;
 import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.NumberTypeInferenceRule;
+import edu.gatech.sqltutor.rules.symbolic.RangeToBetweenRule;
 import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.SimplifyConjunctionsRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
+import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
 import edu.gatech.sqltutor.rules.symbolic.WhereLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
@@ -191,10 +195,14 @@ public class SymbolicFragmentTranslator
 					
 					// FIXME non-determinism and final output checks
 					if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
-						String output = symReader.readSymbolicState(symbolic);
-						_log.info("Output: {}", output);
-						if( this.result == null || Math.random() < 0.5d )
-							this.result = output;
+						try {
+							String output = symReader.readSymbolicState(symbolic);
+							_log.info("Output: {}", output);
+							if( this.result == null || Math.random() < 0.5d )
+								this.result = output;
+						} catch ( UnhandledSymbolicTypeException e ) {
+							_log.warn("Could not read output due to unhandled type: {}", e.getSymbolicType());
+						}
 					}
 					
 					// apply each rule as many times as possible
@@ -336,7 +344,9 @@ public class SymbolicFragmentTranslator
 			new MergeCompositeAttributeRule(),
 			new SimplifyConjunctionsRule(),
 			new NumberTypeInferenceRule(),
-			new DeterminerRedundancyRule()
+			new DeterminerRedundancyRule(),
+			new RangeToBetweenRule(DefaultPrecedence.FRAGMENT_REWRITE*2),
+			new BetweenLiteralsRule()
 		);
 	}
 	

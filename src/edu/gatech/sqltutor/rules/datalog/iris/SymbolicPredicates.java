@@ -37,5 +37,23 @@ public class SymbolicPredicates {
 	public static final IPredicate literalExpression = predicate("symLiteralExpression", 2); 
 	
 	// for debugging, id => token.toString()
-	public static final IPredicate debugString = predicate("symDebugString", 2); 
+	public static final IPredicate debugString = predicate("symDebugString", 2);
+	
+// defined statically
+	/** <code>symAncestorOf(?ancestor:int,?descendent:int,?depth:int)</code> */
+	public static final IPredicate ancestorOf = predicate("symAncestorOf", 3);
+	/** <code>symCommonAncestorDepth(?ancestor:id,?token1:id,?token2:id,?depth1:int,?depth2:int)</code>
+	 * token 1 and 2 have a common ancestor ?ancestor and depths 1 and 2, respectively
+	 */
+	public static final IPredicate commonAncestorDepth = predicate("symCommonAncestorDepth", 5);
+	
+	/** <code>symCommonAncestor(?ancestor:id,?token1:id,?token2:id)</code>
+	 * token 1 and 2 have a common ancestor ?ancestor and depths 1 and 2, respectively
+	 */
+	public static final IPredicate commonAncestor = predicate("symCommonAncestor", 3);
+	
+	/**
+	 * <code>symLeastCommonAncestorDepth(?ancestor:id,?token1:id,?token2:id)</code>
+	 */
+	public static final IPredicate leastCommonAncestor = predicate("symLeastCommonAncestor", 3); 
 }

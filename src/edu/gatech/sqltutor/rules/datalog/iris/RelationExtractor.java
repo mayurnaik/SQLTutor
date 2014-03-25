@@ -44,11 +44,13 @@ public class RelationExtractor {
 	private IObjectMapper<QueryTreeNode> nodeMap;
 	private Map<String,Integer> varMap;
 	private ITuple currentTuple;
+	private List<IVariable> originalBindings;
 	
 	public RelationExtractor(List<IVariable> bindings) {
 		if( bindings == null )
 			throw new NullPointerException("bindings is null");
 		varMap = mapVariables(bindings);
+		originalBindings = bindings;
 	}
 	
 	private Map<String,Integer> mapVariables(List<IVariable> bindings) {
@@ -67,10 +69,8 @@ public class RelationExtractor {
 	 * Returns the set of mapped variables.
 	 * @return the set of mapped variables
 	 */
-	public Set<String> getVariables() {
-		if( varMap == null )
-			return Collections.emptySet();
-		return varMap.keySet();
+	public List<IVariable> getVariables() {
+		return originalBindings;
 	}
 	
 	/**
