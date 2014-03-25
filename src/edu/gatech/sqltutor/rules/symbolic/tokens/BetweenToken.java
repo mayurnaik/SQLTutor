@@ -1,7 +1,6 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class BetweenToken extends ChildContainerToken {
@@ -41,14 +40,7 @@ public class BetweenToken extends ChildContainerToken {
 	}
 	
 	@Override
-	protected void acceptOrThrow(ISymbolicToken token) {
-		int size = getChildren().size();
-		if( size >= 3 )
-			throw new SymbolicException("Only three children are allowed.");
-		SymbolicType childType = token.getType();
-		if( size == 0 )
-			return; // FIXME could restrict to attributes, but this is more flexible
-		if( childType != SymbolicType.NUMBER )
-			throw new SymbolicException("Second and third children must be numeric, not: " + token);
+	protected boolean canAcceptChild(ISymbolicToken tok) {
+		return tok != null && children.size() < 3;
 	}
 }

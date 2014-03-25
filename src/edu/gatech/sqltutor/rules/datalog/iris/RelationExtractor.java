@@ -1,10 +1,8 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.IConcreteTerm;

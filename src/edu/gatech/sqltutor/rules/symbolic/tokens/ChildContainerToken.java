@@ -1,7 +1,6 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 

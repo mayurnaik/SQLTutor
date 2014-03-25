@@ -2,7 +2,6 @@ package edu.gatech.sqltutor;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

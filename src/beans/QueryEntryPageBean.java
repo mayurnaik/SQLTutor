@@ -11,12 +11,9 @@ import javax.faces.bean.ViewScoped;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
-import objects.Question;
 import utilities.JDBC_Abstract_Connection;
 import utilities.JDBC_MySQL_Connection;
 import utilities.JDBC_PostgreSQL_Connection;
-
-import edu.gatech.sqltutor.IQueryTranslator;
 
 @ManagedBean
 @ViewScoped
