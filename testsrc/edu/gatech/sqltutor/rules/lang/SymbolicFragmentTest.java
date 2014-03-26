@@ -44,7 +44,7 @@ public class SymbolicFragmentTest {
 
 			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary > 100000 AND S.salary < 1000000"},
 
-			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND 100000 <= S.salary AND 1000000 >= S.salary"},
+			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary BETWEEN 100000 AND 1000000"},
 			
 			// FIXME: what about "SELECT E.*, E.first_name" - should we delete E.first_name? 
 			// Or keep it to remove ambiguity (it should be printed twice)?

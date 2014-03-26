@@ -26,6 +26,8 @@ import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.ValueNode;
+import com.akiban.sql.parser.ValueNodeList;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import edu.gatech.sqltutor.QueryUtils;
@@ -41,6 +43,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.AllAttributesToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.BetweenToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
@@ -173,6 +176,10 @@ public class SymbolicCreator {
 			case NodeTypes.BINARY_NOT_EQUALS_OPERATOR_NODE:
 				token = new BinaryComparisonToken(nodeType);
 				break;
+			case NodeTypes.BETWEEN_OPERATOR_NODE:
+				token = new BetweenToken();
+				childNodes = flattenBetweenNodeChildren(childNodes);
+				break;
 			case NodeTypes.COLUMN_REFERENCE:
 				token = createColumnReferenceToken((ColumnReference)node);
 				break;
@@ -230,5 +237,18 @@ public class SymbolicCreator {
 		
 		AttributeToken token = new AttributeToken(attr);
 		return token;
+	}
+	
+	private List<QueryTreeNode> flattenBetweenNodeChildren(List<QueryTreeNode> children) {
+		try {
+			QueryTreeNode leftSide = children.get(0);
+			ValueNodeList nodeList = (ValueNodeList)children.get(1);
+			return ImmutableList.<QueryTreeNode>builder().add(leftSide).addAll(nodeList).build();
+		} catch( IndexOutOfBoundsException e ) {
+			throw new SymbolicException("Unexpected number of children.", e);
+		} catch( ClassCastException e ) {
+			throw new SymbolicException("Expected ValueNodeList in second position.", e);
+		}
+		
 	}
 }
