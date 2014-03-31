@@ -156,7 +156,7 @@ public abstract class JDBC_Abstract_Connection {
 	/*
 	 * 
 	 */
-	public void log(String userQuery, String schemaName, String username) {
+	public void log(String sessionId, String ipAddress, String username, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) {
 		
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -164,11 +164,18 @@ public abstract class JDBC_Abstract_Connection {
 		try {
 			
 			connection = getConnection(DB_NAME_SYSTEM);
-			final String update = "INSERT INTO \"log\" (\"query\", \"schema\", \"user\") VALUES (?, ?, ?)";
+			final String update = "INSERT INTO \"log\" (\"session_id\", \"ip_address\", \"username\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			preparedStatement = connection.prepareStatement(update);
-			preparedStatement.setString(1, userQuery);
-			preparedStatement.setString(2, schemaName);
+			
+			preparedStatement.setString(1, sessionId);
+			preparedStatement.setString(2, ipAddress);
 			preparedStatement.setString(3, username);
+			preparedStatement.setString(4, schemaName);
+			preparedStatement.setString(5, question);
+			preparedStatement.setString(6, correctAnswer);
+			preparedStatement.setString(7, userQuery);
+			preparedStatement.setString(8, Boolean.toString(parsed));
+			preparedStatement.setString(9, Boolean.toString(correct));
 			preparedStatement.executeUpdate();
 			 
 		} catch (Exception e) {

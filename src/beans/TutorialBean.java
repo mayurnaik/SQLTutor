@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
@@ -12,6 +13,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
@@ -42,18 +45,19 @@ public class TutorialBean {
 	private QueryResult answerResult;
 	private QueryResult queryDiffResult;
 	private QueryResult answerDiffResult;
+	private final boolean nlpDisabled = true;
 
 	@PostConstruct
 	public void init() {
 		String[] schemaAttributes;
-		if(getUserBean().getSelectedSchema() != null) {
-			schemaAttributes = getUserBean().getSelectedSchema().split(" ");
-		} else {
+		//if(getUserBean().getSelectedSchema() != null) {
+		//	schemaAttributes = getUserBean().getSelectedSchema().split(" ");
+		//} else {
 			//default to company
 			schemaAttributes = new String[2];
 			schemaAttributes[0] = "PostgreSQL";
 			schemaAttributes[1] = "company";
-		}
+		//}
 		final String databaseConnector = schemaAttributes[0];
 		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
 			connection = new JDBC_PostgreSQL_Connection();
@@ -70,13 +74,34 @@ public class TutorialBean {
 	public void processSQL() {
 		try {
 			queryResult = connection.getQueryResult(selectedSchema, query);
-			feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
+			if(!nlpDisabled)
+				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
+			else 
+				feedbackNLP = "";
 			setResultSetDiffs();
 		} catch(SQLException e) {
-			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
-			resultSetFeedback = "Incorrect.";
+			//feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
+			//resultSetFeedback = "Incorrect";
+			resultSetFeedback = "Incorrect." + "Your query was malformed. Please try again.\n" + e.getMessage();
 		}
+		connection.log(getSessionId(), getIpAddress(), userBean.getUsername(), selectedSchema, 
+				questions.get(questionIndex), answers.get(questionIndex), query, isQueryMalformed(), getQueryIsCorrect());
 	} 
+	
+	public String getIpAddress() {
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+		String ipAddress = request.getHeader("X-FORWARDED-FOR");
+		if (ipAddress == null) {
+		    ipAddress = request.getRemoteAddr();
+		}
+		return ipAddress;
+	}
+	
+	public String getSessionId() {
+		FacesContext fCtx = FacesContext.getCurrentInstance();
+		HttpSession session = (HttpSession) fCtx.getExternalContext().getSession(false);
+		return session.getId();
+	}
 	
 	public void setResultSetDiffs() {
 		try {
@@ -184,15 +209,58 @@ public class TutorialBean {
 		if (selectedSchema.equalsIgnoreCase("company")) {
 			answers.clear();
 			questions.clear();
-			answers.add("SELECT id, first_name FROM employee, department");
-			answers.add("SELECT first_name, last_name FROM employee");
+
+			questions.add("Retrieve the salary of the employee(s) named 'Ahmad'.");
 			answers.add("SELECT salary FROM employee WHERE first_name = 'Ahmad'");
-			answers.add("SELECT first_name FROM employee ORDER BY first_name DESC");
+			
+			questions.add("Select all employee SSNs in the database.");
+			answers.add("SELECT ssn FROM employee");
+			
+			questions.add("Retrieve all distinct salary values.");
+			answers.add("SELECT DISTINCT salary FROM employee");
+			
+			questions.add("Retrieve the name of each employee.");
+			answers.add("SELECT first_name, last_name FROM employee");
+			
+			questions.add("Retrieve the birth date and address of the employee(s) whose name is ‘John B. Smith’.");
+			answers.add("SELECT birthdate, address FROM employee WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'");
+
+			questions.add("Retrieve the name and address of all employees who work for the ‘Research’ department.");
+			answers.add("SELECT first_name, last_name, address FROM employee, department WHERE name = 'Research' AND id = department_id");
+			
+			questions.add("For each employee, retrieve the employee’s first and last name and the first and last name of his or her immediate supervisor.");
+			answers.add("SELECT E.first_name, E.last_name, S.first_name, S.last_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn;");
+			
+			questions.add("Retrieve all employees whose address is in Houston, Texas.");
+			answers.add("SELECT first_name, last_name FROM employee WHERE address LIKE '%Houston, TX%'");
+			
+			questions.add("Retrieve all employees in department 5 whose salary is between $30,000 and $40,000.");
+			answers.add("SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND department_id = 5");
+			
+			questions.add("Retrieve the names of all employees who do not have supervisors.");
+			answers.add("SELECT first_name, last_name FROM employee WHERE manager_ssn IS NULL;");
+			
+			questions.add("Retrieve the last name of each employee and his or her supervisor.");
+			answers.add("SELECT E.last_name AS employee_name, S.last_name AS supervisor_name FROM employee AS E, employee AS S WHERE E.manager_SSN = S.SSN");
+			
+			questions.add("For every project located in ‘Stafford’, list the project number, the controlling department number, and the department manager’s last name, address, and birthdate.");
+			answers.add("SELECT project.id, department.id, last_name, address, birthdate FROM project, department, employee WHERE project.department_id = department.id AND department.manager_ssn = ssn AND location = 'Stafford'");
+			
+			questions.add("Retrieve the employees whose salary is greater than the salary of the manager of the department that the employee works for.");
+			answers.add("SELECT e.first_name, e.last_name FROM employee E, employee M, department D WHERE E.salary > M.salary AND E.department_id = D.id AND D.manager_ssn = M.ssn");
+			
+			questions.add("Retrieve the last name and first name of all employees who work on a project.");
+			answers.add("SELECT e.first_name, e.last_name FROM employee e, project p, works_on WHERE e.ssn=employee_ssn AND id = project_id");
+			
+			questions.add("Find the names of all employees who are directly supervised by ‘Franklin Wong’.");
+			answers.add("SELECT e.first_name, e.last_name FROM employee e, employee s WHERE s.first_name = 'Franklin' AND s.last_name = 'Wong' AND e.manager_ssn = s.ssn");
+
+			/*
 			Question question;
 			for(int i = 0; i < answers.size(); i++ ) {
 				question = new Question(answers.get(i), tables);
 				questions.add(question.getQuestion());
-			}
+			}*/
 		} else if (selectedSchema.equalsIgnoreCase("sales")) {
 			answers.clear();
 			questions.clear();
@@ -292,5 +360,16 @@ public class TutorialBean {
 
 	public String getUserFeedback() {
 		return userFeedback;
+	}
+	
+	public boolean isNlpDisabled() {
+		return nlpDisabled;
+	}
+	
+	public boolean isQueryMalformed() {
+		if(feedbackNLP.contains("malformed")) {
+			return true;
+		}
+		return false;
 	}
 }

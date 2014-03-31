@@ -14,7 +14,7 @@
 				<p:menuitem value="Query Entry" icon="ui-icon-arrow-1-e" action="QueryEntry.xhtml?faces-redirect=true" 
 					rendered="#{userBean.isLoggedIn()}"/>
 				<p:menuitem value="Tutorial" action="TutorialPage.xhtml?faces-redirect=true"
-					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
+					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
 				<p:menuitem value="NLP Feedback Sample" action="SampleNLPPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
 				<p:menuitem value="Dev Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
