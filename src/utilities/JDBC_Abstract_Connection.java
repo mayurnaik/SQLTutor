@@ -174,8 +174,8 @@ public abstract class JDBC_Abstract_Connection {
 			preparedStatement.setString(5, question);
 			preparedStatement.setString(6, correctAnswer);
 			preparedStatement.setString(7, userQuery);
-			preparedStatement.setString(8, Boolean.toString(parsed));
-			preparedStatement.setString(9, Boolean.toString(correct));
+			preparedStatement.setBoolean(8, parsed);
+			preparedStatement.setBoolean(9, correct);
 			preparedStatement.executeUpdate();
 			 
 		} catch (Exception e) {
