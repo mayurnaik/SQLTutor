@@ -31,14 +31,18 @@ SET default_with_oids = false;
 --
 -- Name: log; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
-
 CREATE TABLE log (
-    "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
-    query text NOT NULL,
-    schema character varying(100),
-    "user" character varying(255)
+  "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
+  query text NOT NULL,
+  schema character varying(100),
+  username character varying(255),
+  question character varying(255),
+  correct_answer character varying(255),
+  ip_address character varying(255),
+  session_id character varying(255),
+  parsed boolean,
+  correct boolean
 );
-
 
 ALTER TABLE public.log OWNER TO postgres;
 
