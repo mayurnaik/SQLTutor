@@ -53,10 +53,10 @@
 			</p:dataTable>
 			<h2>Feedback:</h2>
 			<ui:param name="queryIsCorrectFeedback" value="#{tutorialBean.resultSetFeedback}"/>
-			<ui:param name="queryisIncorrectFeedback" value="#{tutorialBean.resultSetFeedback} #{tutorialBean.feedbackNLP}"/>
-			<h:outputText id="resultSetFeedback" value="#{tutorialBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryisIncorrectFeedback}"
+			<ui:param name="queryIsIncorrectFeedback" value="#{tutorialBean.resultSetFeedback} #{tutorialBean.feedbackNLP}"/>
+			<h:outputText id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
 				style="width: 700px!important; display:block!important;" escape="false"/>
-			<br/>
+			<br/> <!--  value="#{tutorialBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
 			<h:outputText value="Your result should resemble this example:" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
 			<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
 			<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
@@ -74,10 +74,13 @@
 			<br/>
 			<br/>
 			<br/>
-			<h:outputText style="width: 700px!important; display:block!important;" escape="false" rendered="#{!tutorialBean.getQueryIsCorrect()}"
-				value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"/>
+			<h:outputText style="width: 700px!important; display:block!important;" escape="false" 
+				value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"
+				rendered="#{!tutorialBean.isNlpDisabled()}"/>
+				<!-- rendered="#{!tutorialBean.getQueryIsCorrect()}" -->
 			<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
-				rendered="#{!tutorialBean.getQueryIsCorrect()}" update=":feedbackForm:feedbackPanel"/>
+				rendered="#{!tutorialBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
+				<!--  #{!tutorialBean.getQueryIsCorrect()} -->
 		</div>
 	</h:form>
 	<p:dialog id="feedbackDialog" header="Anonymous Feedback" widgetVar="feedback_dlg" 
