@@ -24,11 +24,11 @@
   </context-param>
   <context-param>
     <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
-    <param-value>6LfU2-gSAAAAAN5ovSJs0f7i3FQaZWp7KCPooimH</param-value>
+    <param-value>6LdLIPESAAAAAJ_BhKLVD-Mfx2JgJQsMG4rSLmN5</param-value>
   </context-param>
   <context-param>
     <param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
-    <param-value>6LfU2-gSAAAAAOsDQn0-PgiyZ2uAHxg4hThzNnDJ</param-value>
+    <param-value>6LdLIPESAAAAAJ2YmGdJz5BdAWK-S_k63XDs6ich</param-value>
   </context-param>
   <resource-ref>
     <description>Connection Pool</description>
