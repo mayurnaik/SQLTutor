@@ -1,45 +1,26 @@
 
-// base case, two attributes of an entity in an attribute list
-ruleMergeCompositeAttributeBase(?attrList, ?attrToken1, ?attrPos1, ?attrToken2, ?attrPos2, 
-    ?tokenEntity, ?tokenAttribute1, ?tokenAttribute2) :-
-  // an attribute list
+// ?attrList has composite attribute ?entity.?composite child ?childAttr in token ?attrToken
+ruleMergeCompositeAttribute_compositeChild(?attrList, ?entity, ?composite, ?attrToken, ?childAttr) :-
+  // attribute list with attribute token child
   symType(?attrList, 'ATTRIBUTE_LIST'),
+  symParentOf(?attrList, ?attrToken, ?attrPos),
+  symType(?attrToken, 'ATTRIBUTE'),
+  // where attribute is child of composite attribute
+  symRefsAttribute(?attrToken, ?entity, ?childAttr),
+  erAttributeParent(?entity, ?composite, ?childAttr),
+  erAttributeIsComposite(?entity, ?composite).
+
+// ?attrList has at least one child of composite attribute ?entity.?composite  
+ruleMergeCompositeAttribute_hasCompositeChild(?attrList, ?entity, ?composite) :-
+  ruleMergeCompositeAttribute_compositeChild(?attrList, ?entity, ?composite, ?attrToken, ?childAttr).
   
-  // with two attribute token children
-  symParentOf(?attrList, ?attrToken1, ?attrPos1),
-  symType(?attrToken1, 'ATTRIBUTE'),
-  symParentOf(?attrList, ?attrToken2, ?attrPos2),
-  symType(?attrToken2, 'ATTRIBUTE'),
-  ?attrToken1 != ?attrToken2,
+// ?attrList has at least one, but not all of, the child attribute of composite attribute ?entity.?composite
+ruleMergeCompositeAttribute_hasIncompleteComposite(?attrList, ?entity, ?composite) :-
+  ruleMergeCompositeAttribute_hasCompositeChild(?attrList, ?entity, ?composite),
+  erAttributeParent(?entity, ?composite, ?childAttr),
+  not ruleMergeCompositeAttribute_compositeChild(?attrList, ?entity, ?composite, ?childToken, ?childAttr).
   
-  // referencing a pair of attributes with the same parent entity
-  symRefsAttribute(?attrToken1, ?tokenEntity, ?tokenAttribute1),
-  symRefsAttribute(?attrToken2, ?tokenEntity, ?tokenAttribute2).
-
-
-// two children attributes of a single composite attribute
-ruleMergeCompositeAttribute(?attrList, ?attrToken1, ?attrPos1, ?attrToken2, ?attrPos2, 
-    ?tokenEntity, ?tokenAttribute1, ?tokenAttribute2, ?parentAttr) :-
-  // pair of attributes
-  ruleMergeCompositeAttributeBase(?attrList, ?attrToken1, ?attrPos1, ?attrToken2, ?attrPos2, 
-    ?tokenEntity, ?tokenAttribute1, ?tokenAttribute2),
-  // (single ordering)
-  ?attrPos1 < ?attrPos2,
-			
-  // which are both children of the same composite attribute
-  erAttributeParent(?tokenEntity, ?parentAttr, ?tokenAttribute1),
-  erAttributeParent(?tokenEntity, ?parentAttr, ?tokenAttribute2),
-  erAttributeIsComposite(?tokenEntity, ?parentAttr). // implied by two cases above, but just in case
-
-// a composite attribute and one of it's children, where token1 is the composite
-ruleMergeCompositeAttribute(?attrList, ?attrToken1, ?attrPos1, ?attrToken2, ?attrPos2, 
-    ?tokenEntity, ?tokenAttribute1, ?tokenAttribute2, ?parentAttr) :-
-  // pair of attributes
-  ruleMergeCompositeAttributeBase(?attrList, ?attrToken1, ?attrPos1, ?attrToken2, ?attrPos2, 
-    ?tokenEntity, ?tokenAttribute1, ?tokenAttribute2),
-    
-  erAttributeIsComposite(?tokenEntity, ?parentAttr),
-  ?tokenAttribute1 = ?parentAttr,
-  erAttributeParent(?tokenEntity, ?parentAttr, ?tokenAttribute2).
-
-  
+// ?attrList has an attribute token for every child attribute of composite attribute ?entity.?composite
+ruleMergeCompositeAttribute_hasAllCompositeChildren(?attrList, ?entity, ?composite) :-
+  ruleMergeCompositeAttribute_hasCompositeChild(?attrList, ?entity, ?composite),
+  not ruleMergeCompositeAttribute_hasIncompleteComposite(?attrList, ?entity, ?composite).

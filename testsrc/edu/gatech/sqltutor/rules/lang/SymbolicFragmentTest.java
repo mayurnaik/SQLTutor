@@ -28,7 +28,7 @@ public class SymbolicFragmentTest {
 			
 			{"SELECT e.birthdate, e.address FROM employee e WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},
 
-			{"SELECT e.first_name, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id"},
+			{"SELECT e.first_name, e.middle_initial, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id"},
 
 			{"SELECT E.first_name, E.last_name, S.first_name, S.last_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 
@@ -36,7 +36,7 @@ public class SymbolicFragmentTest {
 
 			{"SELECT e.ssn, d.name FROM employee e, department d"},
 
-			{"SELECT ALL e.salary FROM employee e"},
+			{"SELECT ALL e.salary FROM employee e WHERE e.salary > 10000"},
 
 			{"SELECT DISTINCT e.salary FROM employee e"},
 			

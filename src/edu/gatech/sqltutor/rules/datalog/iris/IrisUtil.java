@@ -1,15 +1,20 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.deri.iris.EvaluationException;
+import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IAtom;
 import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
+import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
+import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.compiler.Parser;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
@@ -135,4 +140,21 @@ public class IrisUtil {
 			out.println(rule);
 		}
 	}
+	
+	public static void dumpQuery(IQuery q, IKnowledgeBase kb) { dumpQuery(q, kb, System.out); }
+	public static void dumpQuery(IQuery q, IKnowledgeBase kb, PrintStream out) {
+		ArrayList<IVariable> variableBindings = new ArrayList<IVariable>();
+		out.println("Evaluating: " + q);
+		try {
+			IRelation result = kb.execute(q, variableBindings);
+			out.println("Variables: " + variableBindings);
+			out.println("Results:");
+			for( int i = 0; i < result.size(); ++i ) {
+				out.println(result.get(i));
+			}
+		} catch( EvaluationException e ) {
+			e.printStackTrace(out);
+		}
+	}
+	
 }
