@@ -18,7 +18,8 @@ ruleAttributeDescribes(?table,?eq,?value,?type) :-
 // now propogate the generated facts to the learned label rule
 lrnTableLabel(?table,?label,?source) :-
   lrnTableLabel(?table, ?otherlabel, ?othersource),
-  ?source != ?othersource, ?source = 'DescribingAttributeLabelRule',
+  not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
+  STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
   ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'prepend',
   STRING_CONCAT(?value, ' ', ?temp),
@@ -26,7 +27,8 @@ lrnTableLabel(?table,?label,?source) :-
 
 lrnTableLabel(?table,?label,?source) :-
   lrnTableLabel(?table, ?label, ?othersource),
-  ?source != ?othersource, ?source = 'DescribingAttributeLabelRule',
+  not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
+  STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
   ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'replace',
   ?label = ?value.
