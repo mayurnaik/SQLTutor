@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.QueryTreeNode;
+import com.google.common.base.Joiner;
 
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
@@ -144,6 +145,8 @@ public class SymbolicFacts extends DynamicFacts {
 		addFact(SymbolicPredicates.partOfSpeech, tokenId, token.getPartOfSpeech().getTag());
 		SymbolicType tokenType = token.getType();
 		addFact(SymbolicPredicates.type, tokenId, tokenType);
+		addFact(SymbolicPredicates.provenance, tokenId, 
+			Joiner.on('|').join(token.getProvenance()));
 		
 		switch( tokenType ) {
 			case ATTRIBUTE: 

@@ -34,7 +34,13 @@ public class SymbolicPredicates {
 	public static final IPredicate binaryOperator = predicate("symBinaryOperator", 2);
 	
 	/** <code>(?token:int,?expr:string)</code> */
-	public static final IPredicate literalExpression = predicate("symLiteralExpression", 2); 
+	public static final IPredicate literalExpression = predicate("symLiteralExpression", 2);
+	
+	/** <code>(?token:id, ?provenance:string)</code> =>
+	 * Token <code>?token</code> has provenance <code>?provenance</code>, where 
+	 * <code>?provenance</code> is a regex of rule ids (e.g. <code>"RuleOne|RuleTwo"</code>). 
+	 */
+	public static final IPredicate provenance = predicate("symProvenance", 2); 
 	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2);

@@ -8,6 +8,7 @@ import org.deri.iris.api.basics.IRule;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.MetaruleUtils;
 import edu.gatech.sqltutor.rules.SymbolicState;
 
 public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
@@ -22,6 +23,11 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	
 	public AbstractSymbolicRule(int precedence) {
 		this.precedence = precedence;
+	}
+	
+	@Override
+	public String getRuleId() {
+		return MetaruleUtils.getDefaultRuleId(this.getClass());
 	}
 	
 	@Override

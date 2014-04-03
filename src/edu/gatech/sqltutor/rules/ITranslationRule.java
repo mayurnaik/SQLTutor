@@ -30,6 +30,12 @@ public interface ITranslationRule {
 	public int getType();
 	
 	/**
+	 * Returns a unique id for this rule.
+	 * @return the rule id
+	 */
+	public String getRuleId();
+	
+	/**
 	 * Returns a list of static datalog rules used by this meta-rule.
 	 * @return the static rules, which may be empty but should not be <code>null</code>
 	 */

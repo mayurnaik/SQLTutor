@@ -8,12 +8,18 @@ import org.deri.iris.api.basics.IRule;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.MetaruleUtils;
 import edu.gatech.sqltutor.rules.SQLState;
 
 public abstract class AbstractSQLRule implements ISQLTranslationRule {
 	protected SQLState state;
 
 	public AbstractSQLRule() {
+	}
+	
+	@Override
+	public String getRuleId() {
+		return MetaruleUtils.getDefaultRuleId(this.getClass());
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import java.util.List;
+import java.util.Set;
 
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -27,6 +28,13 @@ public interface ISymbolicToken {
 	 *                           does not permit the type of token <code>child</code> is 
 	 */
 	public void addChild(ISymbolicToken child);
+	
+	/**
+	 * Returns the (modifiable) provenance set of this token.
+	 * The set may be empty but should not be <code>null</code>.
+	 * @return the provenance set
+	 */
+	public Set<String> getProvenance();
 	
 	/**
 	 * Returns the part of speech associated with this fragment, 
