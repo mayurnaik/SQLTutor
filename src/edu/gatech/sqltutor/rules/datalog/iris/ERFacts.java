@@ -8,6 +8,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERCompositeAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
@@ -36,14 +37,14 @@ public class ERFacts extends DynamicFacts {
 			addEntity(entity);
 		for( ERRelationship rel: erDiagram.getRelationships() )
 			addRelationship(rel);
-		_log.info("er-diagram facts generated in {} ms.", duration += System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "er-diagram facts generated in {} ms.", duration += System.currentTimeMillis());
 	}
 	
 	public void generateFacts(ERMapping erMapping) {
 		long duration = -System.currentTimeMillis();
 		addAttributeMappings(erMapping);
 		addJoinMappings(erMapping);
-		_log.info("er-mapping facts generated in {} ms.", duration += System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "er-mapping facts generated in {} ms.", duration += System.currentTimeMillis());
 	}
 
 	private void addAttributeMappings(ERMapping erMapping) {

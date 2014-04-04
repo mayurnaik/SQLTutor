@@ -29,7 +29,6 @@ import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
-import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
@@ -46,23 +45,10 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.symbolic.AllAttributesLiteralLabelRule;
-import edu.gatech.sqltutor.rules.symbolic.AttributeLiteralLabelRule;
-import edu.gatech.sqltutor.rules.symbolic.BetweenLiteralsRule;
-import edu.gatech.sqltutor.rules.symbolic.BinaryComparisonRule;
-import edu.gatech.sqltutor.rules.symbolic.DeterminerRedundancyRule;
-import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
-import edu.gatech.sqltutor.rules.symbolic.NumberLiteralRule;
-import edu.gatech.sqltutor.rules.symbolic.NumberTypeInferenceRule;
-import edu.gatech.sqltutor.rules.symbolic.RangeToBetweenRule;
-import edu.gatech.sqltutor.rules.symbolic.SelectLabelRule;
-import edu.gatech.sqltutor.rules.symbolic.SimplifyConjunctionsRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
-import edu.gatech.sqltutor.rules.symbolic.TableEntityLiteralLabelRule;
 import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
-import edu.gatech.sqltutor.rules.symbolic.WhereLiteralRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicFragmentTranslator 
@@ -77,6 +63,7 @@ public class SymbolicFragmentTranslator
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
 	protected SymbolicFacts symFacts = new SymbolicFacts();
+	protected List<String> outputs;
 	
 	protected ERDiagram erDiagram;
 	protected ERMapping erMapping;
@@ -95,6 +82,7 @@ public class SymbolicFragmentTranslator
 	@Override
 	protected void computeTranslation() throws SQLTutorException {
 		this.result = null;
+		this.outputs = new ArrayList<String>();
 		
 		long duration = -System.currentTimeMillis();
 		if( erDiagram == null ) throw new SQLTutorException("No ER diagram set.");
@@ -197,6 +185,7 @@ public class SymbolicFragmentTranslator
 					if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
 						try {
 							String output = symReader.readSymbolicState(symbolic);
+							this.outputs.add(output);
 							_log.info("Output: {}", output);
 							if( this.result == null || Math.random() < 0.5d )
 								this.result = output;
@@ -218,7 +207,7 @@ public class SymbolicFragmentTranslator
 		} while( sawNewState );
 		
 		duration += System.currentTimeMillis();
-		_log.info(Markers.METARULE, "Total translation time: {} ms", duration);
+		_log.info(Markers.TIMERS, "Total translation time: {} ms", duration);
 		
 		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
@@ -245,12 +234,12 @@ public class SymbolicFragmentTranslator
 		
 		List<IRule> rules = staticRules;
 		
-		_log.info("KB creation prep in {} ms.", duration + System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "KB creation prep in {} ms.", duration + System.currentTimeMillis());
 		
 		try {
 			duration = -System.currentTimeMillis();
 			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
-			_log.info("KB creation in {} ms.", duration + System.currentTimeMillis());
+			_log.debug(Markers.TIMERS_FINE, "KB creation in {} ms.", duration + System.currentTimeMillis());
 			return kb;
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);
@@ -313,12 +302,12 @@ public class SymbolicFragmentTranslator
 		
 		List<IRule> rules = staticRules;
 		
-		_log.info("KB creation prep in {} ms.", duration + System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "KB creation prep in {} ms.", duration + System.currentTimeMillis());
 		
 		try {
 			duration = -System.currentTimeMillis();
 			IKnowledgeBase kb = KnowledgeBaseFactory.createKnowledgeBase(facts, rules);
-			_log.info("KB creation in {} ms.", duration + System.currentTimeMillis());
+			_log.debug(Markers.TIMERS_FINE, "KB creation in {} ms.", duration + System.currentTimeMillis());
 			return kb;
 		} catch( EvaluationException e ) {
 			throw new SQLTutorException(e);
@@ -326,28 +315,17 @@ public class SymbolicFragmentTranslator
 	}
 
 	private Collection<ITranslationRule> makeDefaultRules() {
-		return Arrays.<ITranslationRule>asList(
+		List<ISymbolicTranslationRule> symbolicRules = SymbolicUtil.loadSymbolicRules();
+		List<ITranslationRule> rules = new ArrayList<ITranslationRule>(symbolicRules.size() + 5);
+		rules.addAll(Arrays.<ITranslationRule>asList(
 			// analysis rules
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
-			new DescribingAttributeLabelRule(),
-			
-			// rewrite rules
-			new AttributeLiteralLabelRule(),
-			new AllAttributesLiteralLabelRule(),
-			new TableEntityLiteralLabelRule(),
-			new SelectLabelRule(),
-			new NumberLiteralRule(),
-			new BinaryComparisonRule(),
-			new WhereLiteralRule(),
-			new MergeCompositeAttributeRule(),
-			new SimplifyConjunctionsRule(),
-			new NumberTypeInferenceRule(),
-			new DeterminerRedundancyRule(),
-			new RangeToBetweenRule(DefaultPrecedence.FRAGMENT_REWRITE*2),
-			new BetweenLiteralsRule()
-		);
+			new DescribingAttributeLabelRule()
+		));
+		rules.addAll(symbolicRules);
+		return rules;
 	}
 	
 	private RootToken makeSymbolic(SQLState sqlState) {

@@ -5,6 +5,10 @@ import org.slf4j.MarkerFactory;
 
 /** Markers for log messages. */
 public class Markers {
+	public static final Marker TIMERS = MarkerFactory.getMarker("TIMERS");
+	public static final Marker TIMERS_FINE = MarkerFactory.getMarker("TIMERS_FINE");
+	static { TIMERS.add(TIMERS_FINE); }
+	
 	/** Related to datalog evaluation. */
 	public static final Marker DATALOG = MarkerFactory.getMarker("DATALOG");
 	public static final Marker DATALOG_FACTS = MarkerFactory.getMarker("DATALOG_FACT");

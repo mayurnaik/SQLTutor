@@ -22,6 +22,7 @@ import com.akiban.sql.parser.SelectNode;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
@@ -81,7 +82,7 @@ public class SQLFacts extends DynamicFacts {
 		
 		long duration = -System.currentTimeMillis();
 		addFacts(select);
-		_log.info("SQL fact generation took {} ms.", duration += System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "SQL fact generation took {} ms.", duration += System.currentTimeMillis());
 	}
 	
 	@Override

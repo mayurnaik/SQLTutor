@@ -17,6 +17,7 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.google.common.base.Joiner;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
@@ -71,7 +72,7 @@ public class SymbolicFacts extends DynamicFacts {
 		
 		long duration = -System.currentTimeMillis();
 		addFacts(root);
-		_log.info("Symbolic facts generation took {} ms.", duration += System.currentTimeMillis());
+		_log.debug(Markers.TIMERS_FINE, "Symbolic facts generation took {} ms.", duration += System.currentTimeMillis());
 	}
 	
 	@Override
