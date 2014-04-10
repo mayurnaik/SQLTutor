@@ -1,9 +1,25 @@
 
-ruleDefaultAttributeLabel(?entity,?attribute, ?label) :-
+
+// use user-specified label if given
+ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
+  erAttributeLabelSingular(?entity,?attribute,?label).
+  
+// if no user-specified label, use attribute and column names 
+ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
+  ruleDefaultAttributeLabel_attributeName(?entity,?attribute, ?label),
+  not erAttributeLabelSingular(?entity,?attribute,?otherlabel).
+
+ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
+  ruleDefaultAttributeLabel_columnName(?entity,?attribute, ?label),
+  not erAttributeLabelSingular(?entity,?attribute,?otherlabel).  
+
+// attribute name as label
+ruleDefaultAttributeLabel_attributeName(?entity,?attribute, ?label) :-
   erAttribute(?entity,?attribute),
   ENTITY_LABEL_FORMAT(?attribute, ?label).
   
-ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
+// column name as label
+ruleDefaultAttributeLabel_columnName(?entity,?attribute,?label) :-
   sqlColumnName(?colId,?colName),
   sqlTableAlias(?colId,?tableAlias),
   sqlTableAlias(?tableId,?tableAlias),

@@ -14,6 +14,7 @@ import edu.gatech.sqltutor.rules.er.ERCompositeAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.er.EREntity;
+import edu.gatech.sqltutor.rules.er.ERObjectMetadata;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERRelationship.ERRelationshipEdge;
@@ -108,6 +109,14 @@ public class ERFacts extends DynamicFacts {
 		addFact(ERPredicates.erEntityType, name, 
 			entity.getEntityType().toString().toLowerCase());
 		
+		ERObjectMetadata metadata = entity.getMetadata();
+		if( metadata != null ) {
+			if( metadata.getSingularLabel() != null )
+				addFact(ERPredicates.erEntityLabelSingular, name, metadata.getSingularLabel());
+			if( metadata.getPluralLabel() != null )
+				addFact(ERPredicates.erEntityLabelPlural, name, metadata.getPluralLabel());
+		}
+		
 		for( ERAttribute attr: entity.getAttributes() ) {
 			addAttribute(name, attr);
 		}
@@ -144,6 +153,14 @@ public class ERFacts extends DynamicFacts {
 			addFact(ERPredicates.erAttributeDescribes, parent, attrName, dtype.toString().toLowerCase(Locale.ENGLISH));
 		
 		addFact(ERPredicates.erAttributeDataType, parent, attrName, attr.getDataType().toString());
+		
+		ERObjectMetadata metadata = attr.getMetadata();
+		if( metadata != null ) {
+			if( metadata.getSingularLabel() != null )
+				addFact(ERPredicates.erAttributeLabelSingular, parent, attrName, metadata.getSingularLabel());
+			if( metadata.getPluralLabel() != null )
+				addFact(ERPredicates.erAttributeLabelSingular, parent, attrName, metadata.getPluralLabel());
+		}
 	}
 
 	private void addRelationshipEdge(String rel, Integer pos, ERRelationshipEdge edge) {

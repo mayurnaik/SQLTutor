@@ -10,6 +10,8 @@ public class EREntity extends AbstractERAttributeContainer {
 	@XStreamAsAttribute
 	private boolean isWeak = false;
 	
+	private ERObjectMetadata metadata;
+	
 	public EREntity(String name) {
 		super(name);
 	}
@@ -33,5 +35,13 @@ public class EREntity extends AbstractERAttributeContainer {
 	
 	public void setEntityType(EntityType type) {
 		this.type = type;
+	}
+	
+	public ERObjectMetadata getMetadata() {
+		return metadata;
+	}
+	
+	public void setMetadata(ERObjectMetadata metadata) {
+		this.metadata = metadata;
 	}
 }

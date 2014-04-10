@@ -31,6 +31,8 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	@XStreamConverter(RelaxedEnumConverter.class)
 	private ERAttributeDataType dataType;
 	
+	private ERObjectMetadata metadata;
+	
 	@XStreamOmitField
 	private ERNamedNode parent;
 	
@@ -98,6 +100,14 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	}
 	public void setDataType(ERAttributeDataType dataType) {
 		this.dataType = dataType != ERAttributeDataType.UNKNOWN ? dataType : null;
+	}
+	
+	public ERObjectMetadata getMetadata() {
+		return metadata;
+	}
+	
+	public void setMetadata(ERObjectMetadata metadata) {
+		this.metadata = metadata;
 	}
 	
 	@Override

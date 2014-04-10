@@ -23,6 +23,12 @@ public class ERPredicates {
 	
 	public static final IPredicate erEntityType = predicate("erEntityType", 2);
 	
+	/** <code>(?entity:string,?label:string)</code> => ?label is the user-specified singular label for ?entity */
+	public static final IPredicate erEntityLabelSingular = predicate("erEntityLabelSingular", 2);
+	
+	/** <code>(?entity:string,?label:string)</code> => ?label is the user-specified plural label for ?entity */
+	public static final IPredicate erEntityLabelPlural = predicate("erEntityLabelPlural", 2); 
+	
 	/**
 	 * <code>erAttributeIsKey(?parent:string,?attr:string)</code> =>
 	 *   <code>erAttribute(?parent,?attr)</code> is a key attribute.
@@ -47,12 +53,22 @@ public class ERPredicates {
 	 * type indicates how, one of ('prepend', 'replace', ...?others?)
 	 */
 	public static final IPredicate erAttributeDescribes = predicate("erAttributeDescribes", 3);
+	
 	/** 
 	 * <code>erAttributeDataType(?ent,?attr,?dataType)</code> =>  
 	 * the attribute has a certain data type.
 	 * @see ERAttributeDataType
 	 */	
-	public static final IPredicate erAttributeDataType = predicate("erAttributeDataType", 3); 
+	public static final IPredicate erAttributeDataType = predicate("erAttributeDataType", 3);
+
+	
+	/** <code>(?entity:string,?attr:string,?label:string)</code> => 
+	 * ?label is the user-specified singular label for ?entity.?attribute */
+	public static final IPredicate erAttributeLabelSingular = predicate("erAttributeLabelSingular", 3);
+	
+	/** <code>(?entity:string,?attr:string,?label:string)</code> => 
+	 * ?label is the user-specified plural label for ?entity.?attribute */
+	public static final IPredicate erAttributeLabelPlural = predicate("erAttributeLabelPlural", 3); 
 	
 	/**
 	 * <code>erRelationshipEdgeEntity(?rel:string,?n:int,?ent:string)</code> =><br />

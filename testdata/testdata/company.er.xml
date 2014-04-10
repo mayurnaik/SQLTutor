@@ -32,12 +32,21 @@
           <attributes id="12">
             <attribute id="13" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
               <name>Minit</name>
+              <metadata>
+                <singularLabel>middle initial</singularLabel>
+              </metadata>
             </attribute>
             <attribute id="14" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
               <name>Lname</name>
+              <metadata>
+                <singularLabel>last name</singularLabel>
+              </metadata>
             </attribute>
             <attribute id="15" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
               <name>Fname</name>
+              <metadata>
+                <singularLabel>first name</singularLabel>
+              </metadata>
             </attribute>
           </attributes>
         </attribute>
