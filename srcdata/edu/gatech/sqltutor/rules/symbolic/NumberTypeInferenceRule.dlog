@@ -1,0 +1,41 @@
+
+
+// all nested attribute tokens on side of comparison  
+ruleNumberTypeInference_attrTokens(?binop,?attrToken) :-
+  // {binop: {seq: ..., {attribute}, ...}, {number}}
+  symType(?binop, 'BINARY_COMPARISON'),
+  symParentOf(?binop, ?seqToken, ?seqPos),
+  symParentOf(?seqToken, ?attrToken, ?attrPos),
+  symType(?attrToken, 'ATTRIBUTE').
+  
+// non-unique nested attr token
+ruleNumberTypeInference_hasOtherAttrTokens(?binop,?attrToken) :-
+  ruleNumberTypeInference_attrTokens(?binop,?attrToken),
+  ruleNumberTypeInference_attrTokens(?binop,?otherToken),
+  ?attrToken != ?otherToken.
+
+// attr token is directly nested
+ruleNumberTypeInference_attrToken(?binop,?attrToken) :-
+  // {binop: {attribute}, {number}}
+  symType(?binop, 'BINARY_COMPARISON'),
+  symParentOf(?binop, ?attrToken, ?attrPos),
+  symType(?attrToken, 'ATTRIBUTE').
+  
+// or is nested with no other attr token siblings
+ruleNumberTypeInference_attrToken(?binop,?attrToken) :-
+  ruleNumberTypeInference_attrTokens(?binop,?attrToken),
+  not ruleNumberTypeInference_hasOtherAttrTokens(?binop,?attrToken).
+  
+ruleNumberTypeInference(?binop,?attrToken,?attrType,?numToken,?numType) :-
+  // bin. compare between attribute and number
+  ruleNumberTypeInference_attrToken(?binop,?attrToken),
+  symParentOf(?binop, ?numToken, ?numPos),
+  symType(?numToken, 'NUMBER'),
+  
+  // attribute has a datatype ?attrType
+  symRefsAttribute(?attrToken, ?entity, ?attr),
+  erAttributeDataType(?entity, ?attr, ?attrType),
+  
+  // number has a datatype ?numType
+  symNumberType(?numToken, ?numType).
+

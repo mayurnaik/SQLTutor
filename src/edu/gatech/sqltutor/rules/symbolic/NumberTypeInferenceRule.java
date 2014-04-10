@@ -2,7 +2,11 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.List;
+
+import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -11,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
-import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttributeDataType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
@@ -28,20 +32,10 @@ public class NumberTypeInferenceRule
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(NumberTypeInferenceRule.class);
 	
+	private static final StaticRules staticRules = new StaticRules(NumberTypeInferenceRule.class);
+	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleNumberTypeInference", 5);
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
-		// {binop: {attribute}, {number}}
-		literal(SymbolicPredicates.type, "?binop", SymbolicType.BINARY_COMPARISON),
-		literal(SymbolicPredicates.parentOf, "?binop", "?attrToken", "?attrPos"),
-		literal(SymbolicPredicates.type, "?attrToken", SymbolicType.ATTRIBUTE),
-		literal(SymbolicPredicates.parentOf, "?binop", "?numToken", "?numPos"),
-		literal(SymbolicPredicates.type, "?numToken", SymbolicType.NUMBER),
-		
-		// attribute has a datatype ?attrType
-		literal(SymbolicPredicates.refsAttribute, "?attrToken", "?entity", "?attr"),
-		literal(ERPredicates.erAttributeDataType, "?entity", "?attr", "?attrType"),
-		
-		// number has a datatype ?numType
-		literal(SymbolicPredicates.numberType, "?numToken", "?numType")
+		literal(PREDICATE, "?binop", "?attrToken", "?attrType", "?numToken", "?numType")
 	);
 
 	public NumberTypeInferenceRule() {
@@ -99,6 +93,11 @@ public class NumberTypeInferenceRule
 	
 	@Override
 	protected int getVariableEstimate() {
-		return 10;
+		return PREDICATE.getArity();
+	}
+	
+	@Override
+	public List<IRule> getDatalogRules() {
+		return staticRules.getRules();
 	}
 }
