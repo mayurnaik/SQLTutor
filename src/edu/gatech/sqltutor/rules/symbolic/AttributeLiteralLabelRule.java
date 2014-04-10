@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.List;
 import java.util.Random;
 
 import org.deri.iris.api.basics.IQuery;
@@ -49,18 +50,35 @@ public class AttributeLiteralLabelRule
 		// FIXME need way to ensure all choices will be used eventually
 		int choices = countChoicesForAttribute(relation, ext);
 		ITuple result = relation.get(random.nextInt(choices));
+		ext.setCurrentTuple(result);
 		
-		String label = ((IStringTerm)ext.getTerm("?label", result)).getValue();
-		ISymbolicToken token = ext.getToken("?token", result);
-		ISymbolicToken parent = ext.getToken("?parent", result);
+		String label = ext.getString("?label");
+		ISymbolicToken token = ext.getToken("?token");
+		ISymbolicToken parent = ext.getToken("?parent");
+		int pos = ext.getInteger("?pos");
+		
+		ISymbolicToken replacement;
+		
 		// FIXME what about multi-word labels like "Research Department"?
-		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-		seq.addChild(new LiteralToken("the", PartOfSpeech.DETERMINER));
 		LiteralToken literal = new LiteralToken(label, token.getPartOfSpeech());
-		seq.addChild(literal);
 		
-		SymbolicUtil.replaceChild(parent, token, seq);
-		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+		List<ISymbolicToken> siblings = parent.getChildren();
+		LiteralToken determiner = new LiteralToken("the", PartOfSpeech.DETERMINER); // FIXME "a/an"?
+		
+		if( parent.getType() == SymbolicType.ATTRIBUTE_LIST || pos == 0 ) {
+			SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+			seq.addChild(determiner);
+			seq.addChild(literal);
+			replacement = seq;
+		} else {
+			replacement = literal;
+			
+			_log.debug(Markers.SYMBOLIC, "Inserting {} in front of {}", determiner, parent);
+			siblings.add(0, determiner);
+		}
+		
+		SymbolicUtil.replaceChild(parent, token, replacement);
+		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, replacement);
 		return true;
 	}
 

@@ -55,7 +55,9 @@ public class SymbolicReader {
 		boolean first = true, followsOpenQuote = false;
 		for( ISymbolicToken child: token.getChildren() ) {
 			PartOfSpeech partOfSpeech = child.getPartOfSpeech();
-			if( !first && !followsOpenQuote && !PartOfSpeech.isPunctuation(partOfSpeech) ) {
+			if( !(first || followsOpenQuote || 
+					PartOfSpeech.isPunctuation(partOfSpeech) || 
+					partOfSpeech == PartOfSpeech.POSSESSIVE_ENDING) ) {
 				out.append(' ');
 			}
 			first = false;

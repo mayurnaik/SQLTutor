@@ -50,7 +50,7 @@ public class SymbolicFragmentTest {
 			// Or keep it to remove ambiguity (it should be printed twice)?
 			{"SELECT E.*, S.* FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 			
-			{"SELECT * FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
+			{"SELECT * FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND E.salary > 50000 AND S.salary > 100000"},
 		};
 		return Arrays.asList(queries);
 	}

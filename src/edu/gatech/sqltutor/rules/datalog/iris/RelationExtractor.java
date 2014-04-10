@@ -6,8 +6,10 @@ import java.util.Map;
 
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.IConcreteTerm;
+import org.deri.iris.api.terms.INumericTerm;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.IVariable;
+import org.deri.iris.storage.IRelation;
 
 import com.akiban.sql.parser.QueryTreeNode;
 
@@ -36,17 +38,37 @@ import edu.gatech.sqltutor.rules.util.IObjectMapper;
  * AttributeToken attrToken = ext.getToken("?attrToken"); // cast exception if not an AttributeToken
  * FromTable fromTable = ext.getNode("?fromTable"); // cast exception if not a FromTable
  * </pre></code>
+ * 
+ * Or you can have it hold the relation internally:
+ * <code><pre>
+ * RelationExtractor ext = new RelationExtractor(relation, bindings);
+ * // same as above
+ * while( ext.nextTuple() ) {
+ *  // same as above
+ * }
  */
 public class RelationExtractor {
+	/** Optional map for symbolic tokens. */
 	private IObjectMapper<ISymbolicToken> tokenMap;
+	/** Optional map for SQL AST nodes. */
 	private IObjectMapper<QueryTreeNode> nodeMap;
+	/** Map from variable name to position. */
 	private Map<String,Integer> varMap;
-	private ITuple currentTuple;
+	/** Original variable bindings. */
 	private List<IVariable> originalBindings;
 	
+	private int position = -1;
+	private IRelation relation;
+	private ITuple currentTuple;
+	
 	public RelationExtractor(List<IVariable> bindings) {
+		this(null, bindings);
+	}
+	
+	public RelationExtractor(IRelation relation, List<IVariable> bindings) {
 		if( bindings == null )
 			throw new NullPointerException("bindings is null");
+		this.relation = relation;
 		varMap = mapVariables(bindings);
 		originalBindings = bindings;
 	}
@@ -154,6 +176,17 @@ public class RelationExtractor {
 		return getString(var, currentTupleOrThrow());
 	}
 	
+	public Integer getInteger(String var, ITuple tuple) {
+		ITerm term = getTerm(var, tuple);
+		if( term instanceof INumericTerm )
+			return ((INumericTerm)term).getValue().intValueExact();
+		throw new SQLTutorException(var + " is not int type: " + term);
+	}
+	
+	public Integer getInteger(String var) {
+		return getInteger(var, currentTupleOrThrow());
+	}
+	
 	/**
 	 * Sets the node map so that <code>getNode</code> can be used.
 	 * @param nodeMap
@@ -182,5 +215,44 @@ public class RelationExtractor {
 		if( currentTuple == null )
 			throw new SQLTutorException("No current tuple.");
 		return currentTuple;
+	}
+	
+	public IRelation getRelation() {
+		return relation;
+	}
+	
+	public void setRelation(IRelation relation) {
+		this.relation = relation;
+		this.position = -1;
+	}
+	
+	public int getCurrentPosition() {
+		if( relation == null )
+			throw new IllegalStateException("No relation is associated.");
+		return this.position;
+	}
+	
+	public void setPosition(int position) {
+		if( relation == null )
+			throw new IllegalStateException("No relation is associated.");
+		if( position < 0 || position >= relation.size() )
+			throw new IllegalArgumentException("Position out of range: " + position);
+		this.position = position - 1;
+		nextTuple();
+	}
+	
+	/**
+	 * Advance the current position and set that as the current tuple.
+	 * @return <code>true</code> if there was another tuple
+	 * @throws IllegalStateException if no relation has been associated
+	 */
+	public boolean nextTuple() {
+		if( relation == null )
+			throw new IllegalStateException("No relation is associated.");
+		if( position == relation.size() )
+			return false;
+		ITuple tuple = relation.get(++position);
+		setCurrentTuple(tuple);
+		return true;
 	}
 }

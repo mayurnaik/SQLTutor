@@ -35,7 +35,9 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLMaps;
 import edu.gatech.sqltutor.rules.SQLState;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
+import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts.NodeMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -205,30 +207,22 @@ public class SymbolicCreator {
 	}
 	
 	private ISymbolicToken createColumnReferenceToken(ColumnReference colRef) {
-		Integer nodeId = sqlState.getSqlFacts().getNodeMap().getObjectId(colRef);
+		NodeMap nodeMap = sqlState.getSqlFacts().getNodeMap();
+		Integer nodeId = nodeMap.getObjectId(colRef);
 		IQuery query = Factory.BASIC.createQuery(
 			literal(SQLPredicates.columnName, nodeId, "?columnName"),
 			literal(SQLPredicates.tableAlias, nodeId, "?tableAlias"),
 			literal(SQLPredicates.tableAlias, "?tableId", "?tableAlias"),
 			literal(SQLPredicates.tableName, "?tableId", "?tableName")
 		);
-		List<IVariable> bindings = new ArrayList<IVariable>(4);
-		IKnowledgeBase kb = sqlState.getKnowledgeBase();
 		
-		IRelation relation = null;
-		try {
-			relation = kb.execute(query, bindings);
-		} catch( EvaluationException e ) {
-			throw new SymbolicException(e);
-		}
-		
+		RelationExtractor ext = IrisUtil.executeQuery(query, sqlState);
+		IRelation relation = ext.getRelation();
 		if( relation.size() != 1 )
 			throw new SymbolicException("Too many or too few results: " + relation);
+		ext.nextTuple();
 		
-		RelationExtractor ext = new RelationExtractor(bindings);
-		ITuple result = relation.get(0);
-		
-		String tableCol = ((IStringTerm)ext.getTerm("?tableName", result)).getValue() + "." + colRef.getColumnName();
+		String tableCol = ext.getString("?tableName") + "." + colRef.getColumnName();
 		ERMapping erMapping = sqlState.getErMapping();
 		
 		ERAttribute attr = erMapping.getAttribute(tableCol);
@@ -236,7 +230,15 @@ public class SymbolicCreator {
 			throw new SymbolicException("Could not get attribute for " + tableCol);
 		
 		AttributeToken token = new AttributeToken(attr);
-		return token;
+		
+		FromTable fromTable = this.sqlMaps.getTableAliases().get(ext.getString("?tableAlias"));
+		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+		seq.addChild(new TableEntityToken(fromTable));
+		seq.addChild(new LiteralToken("'s", PartOfSpeech.POSSESSIVE_ENDING));
+		seq.addChild(token);
+		
+		
+		return seq;
 	}
 	
 	private List<QueryTreeNode> flattenBetweenNodeChildren(List<QueryTreeNode> children) {

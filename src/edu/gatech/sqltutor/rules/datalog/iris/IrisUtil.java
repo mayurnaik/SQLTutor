@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -24,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.rules.SQLState;
+import edu.gatech.sqltutor.rules.SymbolicState;
 
 /** Static util functions for the IRIS reasoner. */
 public class IrisUtil {
@@ -41,6 +44,72 @@ public class IrisUtil {
 		p.getBuiltinRegister().registerBuiltin(new EntityLabelFormat(t1,t2));
 		return p;
 	}
+	
+	
+	/**
+	 * Executes a query and wraps the result, setting the node map.
+	 */
+	public static RelationExtractor executeQuery(IQuery query, IKnowledgeBase kb, SQLState sqlState) {
+		if( sqlState == null ) throw new NullPointerException("sqlFacts is null");
+		
+		RelationExtractor ext = executeQuery(query, kb);
+		ext.setNodeMap(sqlState.getSqlFacts().getNodeMap());
+		return ext;
+	}
+	
+	/**
+	 * Executes a query and wraps the result, setting the node map.
+	 */
+	public static RelationExtractor executeQuery(IQuery query, SQLState sqlState) {
+		if( sqlState == null ) throw new NullPointerException("sqlFacts is null");
+		
+		RelationExtractor ext = executeQuery(query, sqlState.getKnowledgeBase(), sqlState);
+		ext.setNodeMap(sqlState.getSqlFacts().getNodeMap());
+		return ext;
+	}
+	
+	/**
+	 * Executes a query and wraps the result, setting both node and token maps.
+	 */
+	public static RelationExtractor executeQuery(IQuery query, IKnowledgeBase kb, SymbolicState symState) {
+		if( symState == null ) throw new NullPointerException("symState is null");
+		
+		RelationExtractor ext = executeQuery(query, kb, symState.getSqlState());
+		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
+		return ext;
+	}
+	
+	/**
+	 * Executes a query and wraps the result, setting both node and token maps.
+	 */
+	public static RelationExtractor executeQuery(IQuery query, SymbolicState symState) {
+		if( symState == null ) throw new NullPointerException("symState is null");
+		
+		RelationExtractor ext = executeQuery(query, symState.getKnowledgeBase(), symState.getSqlState());
+		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
+		return ext;
+	}
+	
+	/**
+	 * Execute a query and wrap the result in a relation extractor, with no maps set.
+	 * @param query the query
+	 * @param kb    the knowledge base to use
+	 * @return the resulting relation extractor
+	 * @throws SQLTutorException if there is an error evaluating the query
+	 */
+	public static RelationExtractor executeQuery(IQuery query, IKnowledgeBase kb) {
+		if( query == null ) throw new NullPointerException("query is null");
+		if( kb == null ) throw new NullPointerException("kb is null");
+		try {
+			List<IVariable> bindings = new ArrayList<IVariable>();
+			IRelation relation = kb.execute(query, bindings);
+			RelationExtractor ext = new RelationExtractor(relation, bindings);
+			return ext;
+		} catch( EvaluationException e ) {
+			throw new SQLTutorException(e);
+		}
+	}
+	
 
 	/**
 	 * Attempt to convert a value to an equivalent <code>ITerm</code>.
