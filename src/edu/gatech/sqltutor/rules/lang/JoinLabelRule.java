@@ -6,6 +6,7 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.atteo.evo.inflector.English;
 import org.deri.iris.EvaluationException;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
@@ -136,10 +137,15 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			// generate facts for the labels
 			ITerm tref1 = ext.getTerm("?tref1", result),
 					tref2 = ext.getTerm("?tref2", result);
+			pkLabel = pkLabel.toLowerCase();
+			fkLabel = fkLabel.toLowerCase();
+			// FIXME allow plural overrides in ER
+			String pkPlural = English.plural(pkLabel), fkPlural = English.plural(fkLabel);
 			state.addFact(LearnedPredicates.tableLabel, asTuple(
-				tref1, pkLabel.toLowerCase(), TERM_RULE_SOURCE));
+				tref1, pkLabel, pkPlural, TERM_RULE_SOURCE));
 			state.addFact(LearnedPredicates.tableLabel, asTuple(
-				tref2, fkLabel.toLowerCase(), TERM_RULE_SOURCE));
+				tref2, fkLabel, fkPlural, TERM_RULE_SOURCE));
+			
 			state.addFact(LearnedPredicates.tableInRelationship, asTuple(
 				tref1, relationship, ext.getTerm("?pkPos", result), TERM_RULE_SOURCE));
 			state.addFact(LearnedPredicates.tableInRelationship, asTuple(
@@ -219,13 +225,17 @@ public class JoinLabelRule extends AbstractSQLRule implements ISQLTranslationRul
 			
 			// add label and relationship facts
 			// left edge
+			pkLabelLeft = pkLabelLeft.toLowerCase();
+			String pkLeftPlural = English.plural(pkLabelLeft); // FIXME allow user override in ER
 			state.addFact(LearnedPredicates.tableLabel,
-				asTuple(pkRefLeft, pkLabelLeft.toLowerCase(), TERM_RULE_SOURCE));
+				asTuple(pkRefLeft, pkLabelLeft, pkLeftPlural, TERM_RULE_SOURCE));
 			state.addFact(LearnedPredicates.tableInRelationship, 
 				asTuple(pkRefLeft, relationship, ZERO, TERM_RULE_SOURCE));
 			// right edge
+			pkLabelRight = pkLabelRight.toLowerCase();
+			String pkRightPlural = English.plural(pkLabelRight);
 			state.addFact(LearnedPredicates.tableLabel,
-				asTuple(pkRefRight, pkLabelRight.toLowerCase(), TERM_RULE_SOURCE));
+				asTuple(pkRefRight, pkLabelRight, pkRightPlural, TERM_RULE_SOURCE));
 			state.addFact(LearnedPredicates.tableInRelationship, 
 				asTuple(pkRefRight, relationship, ONE, TERM_RULE_SOURCE));
 		}

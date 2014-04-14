@@ -15,6 +15,7 @@ import com.akiban.sql.parser.SelectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
@@ -43,6 +44,13 @@ public class SQLState {
 	 * @param values
 	 */
 	public void addFact(IPredicate predicate, ITuple values) {
+		int arity = predicate.getArity(), nvals = values.size();
+		if( arity != nvals ) {
+			_log.error(Markers.DATALOG_FACTS, "Arity mismatch ({} vs {}) for predicate {} with vals: {}", 
+				arity, nvals, predicate, values);
+			throw new SQLTutorException("Length of values (" + nvals + ") does not match arity (" 
+				+ arity + ") of predicate " + predicate);
+		}
 		IRelation rel = ruleFacts.get(predicate);
 		if( rel == null )
 			ruleFacts.put(predicate, rel = IrisUtil.relation());

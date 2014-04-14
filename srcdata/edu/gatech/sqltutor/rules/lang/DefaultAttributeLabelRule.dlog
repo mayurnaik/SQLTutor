@@ -13,6 +13,12 @@ ruleDefaultAttributeLabel_attributeColumnReference(?tableId, ?colId, ?entity, ?a
 // there is at least one column referencing the given attribute
 ruleDefaultAttributeLabel_hasColumnReference(?entity, ?attribute) :-
   ruleDefaultAttributeLabel_attributeColumnReference(?tableId, ?colId, ?entity, ?attribute).
+  
+// there is a column reference or the attribute is composite
+ruleDefaultAttributeLabel_shouldLearn(?entity, ?attribute) :-
+  ruleDefaultAttributeLabel_hasColumnReference(?entity, ?attribute).
+ruleDefaultAttributeLabel_shouldLearn(?entity, ?attribute) :-
+  erAttributeIsComposite(?entity, ?attribute).
 
 ruleDefaultAttributeLabel_hasUserSingular(?entity,?attribute) :-
   erAttributeLabelSingular(?entity,?attribute,?label).
@@ -25,20 +31,20 @@ ruleDefaultAttributeLabel_hasUserPlural(?entity,?attribute) :-
 // has both specified, use those
 ruleDefaultAttributeLabel(?entity,?attribute,?singular,?plural) :-
   // only learn labels if there is some reference to the attribute
-  ruleDefaultAttributeLabel_hasColumnReference(?entity, ?attribute), 
+  ruleDefaultAttributeLabel_shouldLearn(?entity, ?attribute), 
   erAttributeLabelSingular(?entity,?attribute,?singular),
   erAttributeLabelPlural(?entity,?attribute,?plural).
   
 // has only singular form, inflect to get plural
 ruleDefaultAttributeLabel(?entity,?attribute,?singular,?plural) :-
-  ruleDefaultAttributeLabel_hasColumnReference(?entity, ?attribute), 
+  ruleDefaultAttributeLabel_shouldLearn(?entity, ?attribute), 
   erAttributeLabelSingular(?entity,?attribute,?singular),
   not ruleDefaultAttributeLabel_hasUserPlural(?entity,?attribute),
   PLURALIZE_TERM(?singular, ?plural).
   
 // has no user labels, use attribute name
 ruleDefaultAttributeLabel(?entity,?attribute,?singular,?plural) :-
-  ruleDefaultAttributeLabel_hasColumnReference(?entity, ?attribute),
+  ruleDefaultAttributeLabel_shouldLearn(?entity, ?attribute),
   erAttribute(?entity,?attribute),
   not ruleDefaultAttributeLabel_hasUserSingular(?entity,?attribute),
   not ruleDefaultAttributeLabel_hasUserPlural(?entity,?attribute),
@@ -53,33 +59,3 @@ ruleDefaultAttributeLabel(?entity,?attribute,?singular,?plural) :-
   sqlColumnName(?colId,?colName),
   ENTITY_LABEL_FORMAT(?colName, ?singular),
   PLURALIZE_TERM(?singular, ?plural).
-
-/*
-// use user-specified label if given
-ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
-  erAttributeLabelSingular(?entity,?attribute,?label).
-  
-// if no user-specified label, use attribute and column names 
-ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
-  ruleDefaultAttributeLabel_attributeName(?entity,?attribute, ?label),
-  not erAttributeLabelSingular(?entity,?attribute,?otherlabel).
-
-ruleDefaultAttributeLabel(?entity,?attribute,?label) :-
-  ruleDefaultAttributeLabel_columnName(?entity,?attribute, ?label),
-  not erAttributeLabelSingular(?entity,?attribute,?otherlabel).  
-
-// attribute name as label
-ruleDefaultAttributeLabel_attributeName(?entity,?attribute, ?label) :-
-  erAttribute(?entity,?attribute),
-  ENTITY_LABEL_FORMAT(?attribute, ?label).
-  
-// column name as label
-ruleDefaultAttributeLabel_columnName(?entity,?attribute,?label) :-
-  sqlColumnName(?colId,?colName),
-  sqlTableAlias(?colId,?tableAlias),
-  sqlTableAlias(?tableId,?tableAlias),
-  sqlTableName(?tableId,?tableName),
-  erTableRefsEntity(?tableName,?entity),
-  erAttributeMapsTo(?entity,?attribute,?tableName,?colName),
-  ENTITY_LABEL_FORMAT(?colName, ?label).
-  */

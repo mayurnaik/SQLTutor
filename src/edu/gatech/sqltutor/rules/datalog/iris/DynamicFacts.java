@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
+import edu.gatech.sqltutor.SQLTutorException;
+
 public abstract class DynamicFacts {
 	private static final Logger _log = LoggerFactory.getLogger(DynamicFacts.class);
 
@@ -28,6 +30,13 @@ public abstract class DynamicFacts {
 	}
 
 	protected void addFact(IPredicate pred, Object... vals) {
+		if( pred.getArity() != vals.length ) {
+			throw new SQLTutorException("Predicate arity mismatch: " + 
+				"pred=" + pred.getPredicateSymbol() + ", arity=" + pred.getArity() + 
+				", nVals=" + vals.length
+			);
+		}
+					
 		ITuple tuple = IrisUtil.asTuple(vals); 
 		IRelation rel = facts.get(pred);
 		if( rel == null )
