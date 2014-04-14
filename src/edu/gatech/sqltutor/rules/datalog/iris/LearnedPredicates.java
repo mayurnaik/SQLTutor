@@ -6,11 +6,11 @@ import org.deri.iris.api.basics.IPredicate;
 
 public class LearnedPredicates {
 	/** 
-	 * <code>(?tref:int,?label:string,?source:string)</code>
-	 * <p>Table <code>?tref</code> has label <code>?label</code>, learned 
-	 * from source <code>?source</code>.</p>
+	 * <code>(?tref:int,?label:string,?plural:string,?source:string)</code>
+	 * <p>Table <code>?tref</code> has labels <code>?label</code> (singular) 
+	 * and <code>?plural</code> (plural), from source(s) <code>?source</code>.</p>
 	 */
-	public static final IPredicate tableLabel = predicate("lrnTableLabel", 3);
+	public static final IPredicate tableLabel = predicate("lrnTableLabel", 4);
 	
 	/**
 	 * <code>(?tref:int,?relationship:string,?pos:int,?source:string)</code>
@@ -21,9 +21,9 @@ public class LearnedPredicates {
 	public static final IPredicate tableInRelationship = predicate("lrnTableInRelationship", 4); 
 	
 	/**
-	 * <code>(?entity:string,?attribute:string,?label:string,?source:string)</code>
-	 * <p>Attribute <code>?entity.?attribute</code> has label <code>?label</code>, 
-	 * learned from source <code>?source</code>.
+	 * <code>(?entity:string,?attribute:string,?label:string,?plural:string?source:string)</code>
+	 * <p>Attribute <code>?entity.?attribute</code>  has labels <code>?label</code> (singular) 
+	 * and <code>?plural</code> (plural), from source(s) <code>?source</code>.</p>
 	 */
-	public static final IPredicate attributeLabel = predicate("lrnAttributeLabel", 4); 
+	public static final IPredicate attributeLabel = predicate("lrnAttributeLabel", 5);
 }

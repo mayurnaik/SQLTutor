@@ -37,6 +37,11 @@ symIsChunk('INTJ').
 symIsChunk('QP').
 symIsChunk('S').
 
+symIsSingular('NN').
+symIsSingular('NNP').
+
+symIsPlural('NNS').
+symIsPlural('NNPS').
 
 // symbolic node ?id is a leaf node (has a parent but no children)
 symIsLeaf(?id) :- 

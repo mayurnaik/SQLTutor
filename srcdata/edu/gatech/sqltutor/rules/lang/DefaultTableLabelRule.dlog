@@ -1,0 +1,44 @@
+
+
+ruleDefaultTableLabel_hasUserSingular(?table,?entity) :-
+  sqlTableName(?table, ?tableName),
+  erTableRefsEntity(?tableName, ?entity),
+  erEntityLabelSingular(?entity, ?label).
+  
+ruleDefaultTableLabel_hasUserPlural(?table,?entity) :-
+  sqlTableName(?table, ?tableName),
+  erTableRefsEntity(?tableName, ?entity),
+  erEntityLabelPlural(?entity, ?label).
+  
+// has user-specified labels for singular and plural, use both
+ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  ruleDefaultTableLabel_hasUserSingular(?table,?entity),
+  ruleDefaultTableLabel_hasUserPlural(?table,?entity),
+  erEntityLabelSingular(?entity,?singular),
+  erEntityLabelPlural(?entity,?plural).
+  
+// has user-specified label for singular only, use that plus inflected plural
+ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  ruleDefaultTableLabel_hasUserSingular(?table,?entity),
+  not ruleDefaultTableLabel_hasUserPlural(?table,?entity),
+  erEntityLabelSingular(?entity,?singular),
+  PLURALIZE_TERM(?singular,?plural).
+  
+// has no user overrides, use table name
+ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  sqlTableName(?table,?tableName),
+  erTableRefsEntity(?tableName,?entity),
+  not ruleDefaultTableLabel_hasUserSingular(?table,?entity),
+  not ruleDefaultTableLabel_hasUserPlural(?table,?entity),
+  ENTITY_LABEL_FORMAT(?tableName,?singular),
+  PLURALIZE_TERM(?singular,?plural).
+  
+// has no user overrides, use entity name
+ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  sqlTableName(?table,?tableName),
+  erTableRefsEntity(?tableName,?entity),
+  not ruleDefaultTableLabel_hasUserSingular(?table,?entity),
+  not ruleDefaultTableLabel_hasUserPlural(?table,?entity),
+  ENTITY_LABEL_FORMAT(?entity,?singular),
+  PLURALIZE_TERM(?singular,?plural).
+

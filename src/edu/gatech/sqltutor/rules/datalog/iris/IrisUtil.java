@@ -16,6 +16,7 @@ import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.IVariable;
+import org.deri.iris.compiler.BuiltinRegister;
 import org.deri.iris.compiler.Parser;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
@@ -41,7 +42,9 @@ public class IrisUtil {
 		ITerm t5 = Factory.TERM.createVariable( "e" );
 		
 		Parser p = new Parser();
-		p.getBuiltinRegister().registerBuiltin(new EntityLabelFormat(t1,t2));
+		BuiltinRegister reg = p.getBuiltinRegister();
+		reg.registerBuiltin(new EntityLabelFormat(t1,t2));
+		reg.registerBuiltin(new PluralizeTermBuiltin(t1,t2));
 		return p;
 	}
 	
@@ -64,7 +67,6 @@ public class IrisUtil {
 		if( sqlState == null ) throw new NullPointerException("sqlFacts is null");
 		
 		RelationExtractor ext = executeQuery(query, sqlState.getKnowledgeBase(), sqlState);
-		ext.setNodeMap(sqlState.getSqlFacts().getNodeMap());
 		return ext;
 	}
 	

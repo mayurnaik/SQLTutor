@@ -2,23 +2,19 @@ package edu.gatech.sqltutor.rules.lang;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.deri.iris.EvaluationException;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
-import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.builtins.EqualBuiltin;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
@@ -41,10 +37,16 @@ public class DefaultAttributeLabelRule
 	
 	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
 	
-	// ruleDefaultAttributeLabel(?entity,?attribute,?label)
-	private static final IPredicate rulePredicate = IrisUtil.predicate("ruleDefaultAttributeLabel", 3);
+	// ruleDefaultAttributeLabel(?entity,?attribute,?singular,?plural)
+	private static final IPredicate rulePredicate = IrisUtil.predicate("ruleDefaultAttributeLabel", 4);
 	
-	protected StaticRules rules = new StaticRules(DefaultAttributeLabelRule.class);	
+	protected StaticRules rules = new StaticRules(DefaultAttributeLabelRule.class);
+
+	private static final IQuery QUERY = Factory.BASIC.createQuery(
+		literal(rulePredicate, "?ent", "?attr", "?singular", "?plural"),
+		literal(new EqualBuiltin(IrisUtil.asTerms("?rule", TERM_RULE_SOURCE))),
+		literal(false, LearnedPredicates.attributeLabel, "?ent", "?attr", "?singular", "?plural", "?rule")
+	);
 	
 	public DefaultAttributeLabelRule() { }
 	
@@ -52,41 +54,23 @@ public class DefaultAttributeLabelRule
 	public boolean apply(SQLState state) {
 		this.state = state;
 		try {
-			boolean applied = queryForLabel();
-			return applied;
+			RelationExtractor ext = IrisUtil.executeQuery(QUERY, state);
+			IRelation results = ext.getRelation();
+			if( results.size() == 0 )
+				return false;
+						
+			final boolean debug = _log.isDebugEnabled(Markers.DATALOG_FACTS);
+			while( ext.nextTuple() ) {
+				ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent"), ext.getTerm("?attr"), 
+					ext.getTerm("?singular"), ext.getTerm("?plural"), TERM_RULE_SOURCE);
+				state.addFact(LearnedPredicates.attributeLabel, fact);
+				if( debug )
+					_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", rulePredicate, fact);
+			}
+			return true;
 		} finally {
 			this.state = null;
 		}
-	}
-	
-	private boolean queryForLabel() {
-		IQuery query = Factory.BASIC.createQuery(
-			literal(rulePredicate, "?ent", "?attr", "?label"),
-			literal(new EqualBuiltin(IrisUtil.asTerms("?rule", TERM_RULE_SOURCE))),
-			literal(false, LearnedPredicates.attributeLabel, "?ent", "?attr", "?label", "?rule")
-		);
-
-		List<IVariable> bindings = new ArrayList<IVariable>(4);
-		IRelation results = null;
-		try {
-			_log.debug(Markers.DATALOG, "Evaluating query: {}", query);
-			results = state.getKnowledgeBase().execute(query, bindings);
-		} catch( EvaluationException e ) {
-			throw new SQLTutorException(e);
-		}
-		
-		if( results.size() < 1 )
-			return false;
-		
-		RelationExtractor ext = new RelationExtractor(bindings);
-		for( int i = 0; i < results.size(); ++i ) {
-			ITuple result = results.get(i);
-			ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent", result), ext.getTerm("?attr", result), 
-				ext.getTerm("?label", result), TERM_RULE_SOURCE);
-			state.addFact(LearnedPredicates.attributeLabel, fact);
-			_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", LearnedPredicates.attributeLabel, fact);
-		}
-		return true;			
 	}
 	
 	@Override

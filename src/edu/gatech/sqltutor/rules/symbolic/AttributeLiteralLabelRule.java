@@ -5,9 +5,10 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 import java.util.List;
 import java.util.Random;
 
+import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
+import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
-import org.deri.iris.api.terms.IStringTerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -16,9 +17,9 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
-import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
@@ -28,12 +29,12 @@ public class AttributeLiteralLabelRule
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(AttributeLiteralLabelRule.class);
 	
+	private static final StaticRules staticRules = new StaticRules(AttributeLiteralLabelRule.class);
+	
+	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleAttributeLiteralLabel", 7);
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
-		literal(SymbolicPredicates.parentOf, "?parent", "?token", "?pos"),
-		literal(SymbolicPredicates.type, "?token", "ATTRIBUTE"),
-		literal(SymbolicPredicates.refsAttribute, "?token", "?entity", "?attribute"),
-		literal(LearnedPredicates.attributeLabel, "?entity", "?attribute", "?label", "?source")
-	); 
+		literal(PREDICATE, "?parent", "?token", "?pos", "?entity", "?attribute", "?label", "?source")
+	);
 
 	private Random random = new Random();
 	
@@ -104,7 +105,12 @@ public class AttributeLiteralLabelRule
 	protected IQuery getQuery() { return QUERY; }
 	
 	@Override
-	public int getPrecedence() {
-		return DefaultPrecedence.LOWERING;
+	protected int getVariableEstimate() {
+		return PREDICATE.getArity();
+	}
+	
+	@Override
+	public List<IRule> getDatalogRules() {
+		return staticRules.getRules();
 	}
 }

@@ -249,7 +249,7 @@ public class RelationExtractor {
 	public boolean nextTuple() {
 		if( relation == null )
 			throw new IllegalStateException("No relation is associated.");
-		if( position == relation.size() )
+		if( position >= relation.size() - 1 )
 			return false;
 		ITuple tuple = relation.get(++position);
 		setCurrentTuple(tuple);

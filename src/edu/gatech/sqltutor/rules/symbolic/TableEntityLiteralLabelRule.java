@@ -31,7 +31,7 @@ public class TableEntityLiteralLabelRule
 		literal(SymbolicPredicates.parentOf, "?parent", "?token", "?pos"),
 		literal(SymbolicPredicates.type, "?token", SymbolicType.TABLE_ENTITY),
 		literal(SymbolicPredicates.refsTable, "?token", "?table"),
-		literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
+		literal(LearnedPredicates.tableLabel, "?table", "?label", "?plural", "?source")
 	); 
 
 	private Random random = new Random();
