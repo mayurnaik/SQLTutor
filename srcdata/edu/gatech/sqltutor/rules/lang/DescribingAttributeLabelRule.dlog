@@ -16,19 +16,21 @@ ruleAttributeDescribes(?table,?eq,?value,?type) :-
 //   generated fact to say ?table matched the rule with ?value and ?type
 
 // now propogate the generated facts to the learned label rule
-lrnTableLabel(?table,?label,?source) :-
-  lrnTableLabel(?table, ?otherlabel, ?othersource),
+lrnTableLabel(?table,?label, ?plural, ?source) :-
+  lrnTableLabel(?table, ?otherlabel, ?otherplural, ?othersource),
   not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
   STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
   ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'prepend',
   STRING_CONCAT(?value, ' ', ?temp),
-  STRING_CONCAT(?temp, ?otherlabel, ?label).
+  STRING_CONCAT(?temp, ?otherlabel, ?label),
+  STRING_CONCAT(?temp, ?otherplural, ?plural).
 
-lrnTableLabel(?table,?label,?source) :-
+lrnTableLabel(?table,?label, ?plural, ?source) :-
   lrnTableLabel(?table, ?label, ?othersource),
   not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
   STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
   ruleAttributeDescribesLabel(?table,?value,?type),
   ?type = 'replace',
-  ?label = ?value.
+  ?label = ?value,
+  PLURALIZE_TERM(?label, ?plural).
