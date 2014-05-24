@@ -82,10 +82,10 @@ public class TutorialBean {
 		} catch(SQLException e) {
 			//feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
 			//resultSetFeedback = "Incorrect";
-			resultSetFeedback = "Incorrect." + "Your query was malformed. Please try again.\n" + e.getMessage();
+			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
 		connection.log(getSessionId(), getIpAddress(), userBean.getUsername(), selectedSchema, 
-				questions.get(questionIndex), answers.get(questionIndex), query, isQueryMalformed(), getQueryIsCorrect());
+				questions.get(questionIndex), answers.get(questionIndex), query, !isQueryMalformed(), getQueryIsCorrect());
 	} 
 	
 	public String getIpAddress() {
@@ -127,7 +127,7 @@ public class TutorialBean {
 	public void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
 		
 		if(!queryResult.getColumns().containsAll(answerResult.getColumns()) || !answerResult.getColumns().containsAll(queryResult.getColumns())) {
-			resultSetFeedback = "Incorrect. Check your attributes.";
+			resultSetFeedback = "Incorrect.";
 		} else {
 			if(columnOrderMatters && rowOrderMatters) {
 				if(answerResult.equals(queryResult)) {
@@ -367,7 +367,7 @@ public class TutorialBean {
 	}
 	
 	public boolean isQueryMalformed() {
-		if(feedbackNLP.contains("malformed")) {
+		if(resultSetFeedback.toLowerCase().contains("malformed")) {
 			return true;
 		}
 		return false;
