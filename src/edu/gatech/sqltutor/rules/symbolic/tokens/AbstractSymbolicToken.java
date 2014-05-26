@@ -52,10 +52,28 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 		return provenance;
 	}
 	
-	protected String typeAndTag() { return getType() + "/" + getPartOfSpeech().getTag(); }
+	protected StringBuilder addTypeAndTag(StringBuilder b) {
+		b.append(getType()).append('/');
+		PartOfSpeech pos = getPartOfSpeech();
+		if( pos != null )
+			b.append(pos.getTag());
+		else
+			b.append("NULL");
+		return b;
+	}
+	
+	protected StringBuilder addPropertiesString(StringBuilder b) {
+		return b;
+	}
+	
+	protected String typeAndTag() {
+		return addTypeAndTag(new StringBuilder()).toString();
+	}
 	
 	@Override
 	public String toString() {
-		return "{" + typeAndTag() + "}";
+		StringBuilder b = new StringBuilder("{");
+		addPropertiesString(addTypeAndTag(b)).append('}');
+		return b.toString();
 	}
 }

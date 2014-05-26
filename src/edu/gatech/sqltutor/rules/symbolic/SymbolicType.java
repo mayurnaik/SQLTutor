@@ -17,5 +17,6 @@ public enum SymbolicType {
 	SEQUENCE,
 	BINARY_COMPARISON,
 	NUMBER,
-	BETWEEN;
+	BETWEEN,
+	SQL_AST;
 }

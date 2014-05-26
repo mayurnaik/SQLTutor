@@ -113,8 +113,8 @@ public abstract class ChildContainerToken
 	
 	@Override
 	public String toString() {
-		StringBuilder b = new StringBuilder("{").append(getType()).append('/')
-			.append(getPartOfSpeech().getTag()).append(": ");
+		StringBuilder b = new StringBuilder("{");
+		addPropertiesString(addTypeAndTag(b)).append(": ");
 		Joiner.on(", ").appendTo(b, children);
 		return b.append('}').toString();
 	}
