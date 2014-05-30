@@ -61,4 +61,20 @@ public class Utils {
 			return e;
 		}
 	}
+	
+	public static String escapeChars(String input, String chars) {
+		if( input == null ) return null;
+		if( chars == null ) return input;
+		
+		StringBuilder b = new StringBuilder(input.length());
+		for( int i = 0, ilen = input.length(); i < ilen; ++i ) {
+			char c = input.charAt(i);
+			if( chars.indexOf(c) > -1 )
+				b.append('\\');
+			b.append(c);
+		}
+		if( b.length() == input.length() )
+			return input;
+		return b.toString();
+	}
 }
