@@ -94,7 +94,10 @@ public enum PartOfSpeech {
 	
 	QUANTIFIER_PHRASE(true, "QP"),
 	
-	SENTENCE(true, "S");
+	SENTENCE(true, "S"),
+	
+	/** This is not a real part of speech, but stands in for unknown/null. */
+	UNKNOWN(true, "UNKNOWN");
 	
 	public static boolean isPunctuation(PartOfSpeech pos) {
 		if( pos == null ) throw new NullPointerException("pos is null");

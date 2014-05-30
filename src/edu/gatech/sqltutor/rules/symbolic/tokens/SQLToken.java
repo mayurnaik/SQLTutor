@@ -11,7 +11,7 @@ public class SQLToken extends ChildContainerToken
 	private QueryTreeNode astNode;
 	
 	public SQLToken(QueryTreeNode astNode) {
-		super((PartOfSpeech)null); // FIXME null ok?
+		super(PartOfSpeech.UNKNOWN);
 		this.astNode = astNode;
 	}
 	
