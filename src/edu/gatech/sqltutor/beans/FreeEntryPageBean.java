@@ -53,31 +53,11 @@ public class FreeEntryPageBean implements Serializable {
 
 	@PostConstruct
 	public void init() {
-		String[] databaseAttributes;
-		if(getUserBean().getSelectedSchema() != null) {
-			databaseAttributes = getUserBean().getSelectedSchema().split(" ");
-		} else {
-			return; //eventually redirect to session expired page.
-		}
-		final String databaseConnector = databaseAttributes[0];
-		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
-			connection = new JDBC_PostgreSQL_Connection();
-		} else if (databaseConnector.equalsIgnoreCase("MySQL")) {
-			connection = new JDBC_MySQL_Connection();
-		} else {
-			return; //eventually redirect to message about connector not being supported
-		}
-		selectedDatabase = databaseAttributes[1];
+		connection = new JDBC_PostgreSQL_Connection();
+		selectedDatabase = userBean.getSelectedSchema();
 		tables = connection.getTables(selectedDatabase);
 		
 		userQueries = connection.getUserQueries(selectedDatabase);
-	}
-	
-	public void devRedirect() throws IOException {
-        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		if (!userBean.isLoggedIn() || !userBean.isDevUser()) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-	    }
 	}
 	
 	public void addQuery() {

@@ -7,18 +7,18 @@
 <h:head>
 	<title>SQL Tutor</title>
 	<ui:insert name="menu">
-		<ui:include src="/samples/template-menubar.xhtml" />
+		<ui:include src="/Menubar.xhtml" />
 	</ui:insert>
 </h:head>
 <h:body style="height:1000px;width:1400px;margin-left:20px">
 	<h:form id="form">
 		<div style="position:absolute;width:700;height:500;top:auto;left:20">
 			<h2>Question:</h2>
-			<h:outputText id="question" value="#{tutorialBean.question}" />
+			<h:outputText id="question" value="#{tutorialPageBean.question}" />
 			<br/>
 			<h2>Database:</h2>
 			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200" 
-				value="#{tutorialBean.tables}">
+				value="#{tutorialPageBean.tables}">
 				<p:column headerText="Table Names" style="width:125px">
 					<h:outputText value="#{databaseTable.tableName}" />
 				</p:column>
@@ -29,21 +29,21 @@
 
 			<h2>Query input:</h2>
 			<p:inputTextarea rows="5" cols="30" id="query" reRender="results" style="resize:none"
-				autoResize="false" value="#{tutorialBean.query}" />
+				autoResize="false" value="#{tutorialPageBean.query}" />
 			<br/>
 			<p:commandButton id="try" value="Try Query"
-				action="#{tutorialBean.processSQL}" 
+				action="#{tutorialPageBean.processSQL}" 
 				update="form" />
 			<p:commandButton id="next" value="Next Question"
-				action="#{tutorialBean.nextQuestion}"
+				action="#{tutorialPageBean.nextQuestion}"
 				update="form"/>
 		</div>
 
 		<div style="position:absolute;width:700;height:500;top:auto;left:730">
 			<h2>Query Result:</h2>
 			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
-				value="#{tutorialBean.queryResult.data}" >
-				<p:columns value="#{tutorialBean.queryResult.columns}" style="white-space: normal;"
+				value="#{tutorialPageBean.queryResult.data}" >
+				<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
 					var="column" columnIndexVar="columnIndex">
 					<f:facet name="header">
 						#{column}
@@ -52,17 +52,17 @@
 				</p:columns>
 			</p:dataTable>
 			<h2>Feedback:</h2>
-			<ui:param name="queryIsCorrectFeedback" value="#{tutorialBean.resultSetFeedback}"/>
-			<ui:param name="queryIsIncorrectFeedback" value="#{tutorialBean.resultSetFeedback} #{tutorialBean.feedbackNLP}"/>
-			<h:outputText id="resultSetFeedback" value="#{tutorialBean.resultSetFeedback}"
+			<ui:param name="queryIsCorrectFeedback" value="#{tutorialPageBean.resultSetFeedback}"/>
+			<ui:param name="queryIsIncorrectFeedback" value="#{tutorialPageBean.resultSetFeedback} #{tutorialPageBean.feedbackNLP}"/>
+			<h:outputText id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}"
 				style="width: 700px!important; display:block!important;" escape="false"/>
-			<br/> <!--  value="#{tutorialBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
-			<h:outputText value="Your result should resemble this example:" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
-			<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialBean.getQueryIsCorrect()}"/>
+			<br/> <!--  value="#{tutorialPageBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
+			<h:outputText value="Your result should resemble this example:" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+			<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
 			<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 				<p:dataTable id="answerTable" var="row" scrollable="true" scrollHeight="200"
-					value="#{tutorialBean.answerResult.data}" >
-					<p:columns value="#{tutorialBean.answerResult.columns}" style="white-space: normal;"
+					value="#{tutorialPageBean.answerResult.data}" >
+					<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
 						var="column" columnIndexVar="columnIndex">
 						<f:facet name="header">
 							#{column}
@@ -76,11 +76,11 @@
 			<br/>
 			<h:outputText style="width: 700px!important; display:block!important;" escape="false" 
 				value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"
-				rendered="#{!tutorialBean.isNlpDisabled()}"/>
-				<!-- rendered="#{!tutorialBean.getQueryIsCorrect()}" -->
+				rendered="#{!tutorialPageBean.isNlpDisabled()}"/>
+				<!-- rendered="#{!tutorialPageBean.getQueryIsCorrect()}" -->
 			<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
-				rendered="#{!tutorialBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
-				<!--  #{!tutorialBean.getQueryIsCorrect()} -->
+				rendered="#{!tutorialPageBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
+				<!--  #{!tutorialPageBean.getQueryIsCorrect()} -->
 		</div>
 	</h:form>
 	<p:dialog id="feedbackDialog" header="Anonymous Feedback" widgetVar="feedback_dlg" 
@@ -89,13 +89,13 @@
 			<p:panel id="feedbackPanel">
 				<h:outputText value="Please rate our English generation:"/>
 				<br/><br/>
-				<h:outputText value="#{tutorialBean.feedbackNLP}"/>
+				<h:outputText value="#{tutorialPageBean.feedbackNLP}"/>
 				<br/><br/>
 				<p:rating/>
 				<br/><br/>
 				<h:outputText value="Also, please describe how we might improve our feedback generation:"/>
 				<p:inputTextarea rows="3" cols="44" id="source" style="resize:none" 
-					value="#{tutorialBean.userFeedback}" autoResize="false"/>
+					value="#{tutorialPageBean.userFeedback}" autoResize="false"/>
 				<p:messages id="feedbackMessages"/>
 			</p:panel>
 			<p:panel>
@@ -104,7 +104,7 @@
 			</p:panel>
 			<br/>
 			<p:commandButton id="submitFeedback" value="Submit Feedback" icon="ui-icon-check" style="margin:0"
-				action="#{tutorialBean.submitFeedback}" 
+				action="#{tutorialPageBean.submitFeedback}" 
 				update="feedbackPanel" oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()"/>	
 		</h:form>
 	</p:dialog>

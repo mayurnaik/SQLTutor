@@ -1,0 +1,59 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body style="height:1000px;width:1400px;margin-left:20px">
+		<h:form>
+			<div style="position:absolute;width:400;top:auto;left:20">
+				<p:commandButton id="databaseButton" value="Show Schema" />
+				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+						<p:dataTable var="databaseTable"
+							value="#{schemaInstancesPageBean.tables}">
+							<p:column headerText="Table Names">
+								<h:outputText value="#{databaseTable.tableName}" />
+							</p:column>
+							<p:column headerText="Column Names" width="400" style="white-space: normal;">
+								<h:outputText value="#{databaseTable.columns}" />
+							</p:column>
+						</p:dataTable>
+				</p:overlayPanel> 
+				<br/><br/>
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:24px"/>
+				<br/><br/>
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:24px"/>
+			</div>
+			<div style="position:absolute;width:1000;top:auto;left:420">
+		    	<p:messages />
+				<p:outputLabel value="Entry:"/>
+				<br/>
+				<p:inputTextarea rows="5" cols="30" id="query" reRender="results" style="resize:none"
+					autoResize="false" value="#{schemaInstancesPageBean.query}" />
+				<br/>
+				<p:commandButton id="try" value="Submit"
+					action="#{schemaInstancesPageBean.processSQL}" 
+					update="@form" />
+
+				<br/><br/>
+				<p:outputLabel value="Result Set:"/>
+				<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
+					value="#{schemaInstancesPageBean.queryResult.data}">
+					<p:columns value="#{schemaInstancesPageBean.queryResult.columns}" style="white-space: normal;"
+						var="column" columnIndexVar="columnIndex">
+						<f:facet name="header">
+							#{column}
+						</f:facet>
+						#{row[columnIndex]}
+					</p:columns>
+				</p:dataTable>
+			</div>
+		</h:form>
+	</h:body>
+</html>

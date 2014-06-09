@@ -30,22 +30,16 @@ public class UserBean implements Serializable {
 	private final String REGISTRATION_ERROR = "The username you entered is already registered.";
 	private String username;
 	private String password;
-	private boolean loggedIn;
+	private boolean loggedIn = false;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
-	private String selectedSchema;
+	private String selectedSchema = "company";
 
-	public UserBean() {
-		loggedIn = false;
-		selectedSchema = "PostgreSQL jobs";
-	}
-	
 	/** 
 	 * When the user submits his or her username, password, and Schema selection, this method will
 	 * verify the given credentials. These attributes are passed such that the username is not case-sensitive.
 	 * If the username is registered and the password does not match, an error message will display above the input
 	 * boxes. Otherwise, if the password did match, the 'loggedIn' attribute will be set to true and the user will be
-	 * allowed through to the tutorial page. If the username did not exist, the user will be registered and the method
-	 * will move on as if the credentials were correct.
+	 * allowed through to subsequent pages.
 	 */
 	public void login() throws IOException { 
 		String loginMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":loginForm:loginMessages").getClientId();
@@ -74,14 +68,14 @@ public class UserBean implements Serializable {
 	
 	/** 
 	 * Should the user end up on the login page after he has already logged in, this method will redirect
-	 * him or her to the Tutorial Page.
+	 * him or her to the Home Page.
 	 * 
 	 * @throws IOException		The IOException will be thrown by the redirect method if the URI is not valid.
 	 */
 	public void homepageRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
-        if(loggedIn && onRegistrationPage || !loggedIn && !onRegistrationPage) {
+        if(!(loggedIn ^ onRegistrationPage)) {
         	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
         }
 	}
@@ -94,11 +88,18 @@ public class UserBean implements Serializable {
 	 */
 	public boolean isDevUser() {
 		if(isLoggedIn()) {
-			Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will|msweat$", 
+			Pattern devNames = Pattern.compile("^dev|jake|mayur|sumit|will|msweat|ed|sham$", 
 				Pattern.CASE_INSENSITIVE);
 			return devNames.matcher(username).matches();
 		}
 		return false;
+	}
+	
+	public void devRedirect() throws IOException {
+        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		if (!isLoggedIn() || !isDevUser()) {
+	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+	    }
 	}
 	
 	/** 
@@ -120,11 +121,6 @@ public class UserBean implements Serializable {
 	 */
 	public String getSelectedSchema() {
 		return selectedSchema;
-	}
-	
-	public String getSelectedSchemaName() {
-		String[] selectedSchemaSplit = selectedSchema.split(" ");
-		return selectedSchemaSplit[1];
 	}
 
 	/** 

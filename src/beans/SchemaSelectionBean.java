@@ -20,30 +20,26 @@ import edu.gatech.sqltutor.DatabaseManager;
 public class SchemaSelectionBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
+	@ManagedProperty(value="#{userBean}")
+	private UserBean userBean;
+	
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
-	private List<SelectItem> schemas;
+	private List<SelectItem> schemas = new ArrayList<SelectItem>();
 	private String selectedSchema;
-
-	/** 
-	 * On initialization, the UserBean class will populate the selection list of databases.
-	 */
-	public SchemaSelectionBean() {
-		schemas = new ArrayList<SelectItem>();
-	}
 	
 	@PostConstruct
 	public void refreshList() {
 		try {
-			List<String> userSchemas = databaseManager.getUserSchemas();
+			List<String> userSchemas = databaseManager.getUserSchemas(getUserBean().isDevUser());
 			
 			SelectItemGroup postgres = new SelectItemGroup("PostgreSQL");
 			SelectItem[] schemaItems = new SelectItem[userSchemas.size()];
 			for( int i = 0; i < schemaItems.length; ++i ) {
 				String schema = userSchemas.get(i);
-				schemaItems[i] = new SelectItem("PostgreSQL " + schema, schema);
+				schemaItems[i] = new SelectItem(schema);
 			}
 			postgres.setSelectItems(schemaItems);
 			schemas.clear();
@@ -85,5 +81,13 @@ public class SchemaSelectionBean implements Serializable {
 
 	public String getSelectedSchema() {
 		return selectedSchema;
+	}
+
+	public UserBean getUserBean() {
+		return userBean;
+	}
+
+	public void setUserBean(UserBean userBean) {
+		this.userBean = userBean;
 	}
 }

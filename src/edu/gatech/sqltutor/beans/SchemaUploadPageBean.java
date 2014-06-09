@@ -2,7 +2,7 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 
 import javax.faces.application.FacesMessage;
@@ -15,7 +15,6 @@ import javax.faces.context.FacesContext;
 import org.primefaces.event.FileUploadEvent;
 
 import edu.gatech.sqltutor.DatabaseManager;
-
 import beans.UserBean;
 
 @ManagedBean
@@ -26,46 +25,43 @@ public class SchemaUploadPageBean implements Serializable {
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
 	
-	private String schemaName;
+	private String schemaDump;
 	
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
-
-	public SchemaUploadPageBean() {
-	}
-
-	// FIXME redundant with other dev-protected pages
-	public void devRedirect() throws IOException {
-      final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		if (!userBean.isLoggedIn() || !userBean.isDevUser()) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-	    }
-	}    
 	
-	public void handleFileUpload(FileUploadEvent event) {
+	public void addSchema() {
 		try {
-			String sqlDumpContents = new String(event.getFile().getContents(), "utf8");
-			
-			try {
-				databaseManager.addUserSchema(schemaName, sqlDumpContents);
-				
-				FacesMessage msg = new FacesMessage(
-					"Successfully added schema \"" + schemaName + "\"");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-			} catch( IllegalArgumentException e ) {
-				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					e.getMessage(), null);
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-			} catch( SQLException e ) {
-				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Database error creating the schema.", e.getMessage());
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+			String schemaName = databaseManager.addSchema(schemaDump);
+			userBean.setSelectedSchema(schemaName);
+	        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+			externalContext.redirect(externalContext.getRequestContextPath() + "/SchemaOptionsPage.jsf");
+		} catch ( IllegalArgumentException e) {
+			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				"Argument error.", e.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch ( SQLException e ) {
+			String detailedMessage = e.getMessage();
+			if(detailedMessage.contains("getNextException")) {
+				detailedMessage = e.getNextException().getMessage();
 			}
-		} catch( UnsupportedEncodingException e ) {
-			// UTF-8 is always supported by the standard
+			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				"Database error.", detailedMessage);
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch ( IOException e ) {
+			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				"IO error.", e.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null, msg);
 		}
 	}
-
+	
+	public void handleFileUpload(FileUploadEvent event) {
+		schemaDump = new String(event.getFile().getContents(), Charset.forName("UTF-8"));
+		final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+				"Successfully uploaded the file. Click submit to apply.", "");
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+	
 	public UserBean getUserBean() {
 		return userBean;
 	}
@@ -73,15 +69,7 @@ public class SchemaUploadPageBean implements Serializable {
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
 	}
-	
-	public String getSchemaName() {
-		return schemaName;
-	}
-	
-	public void setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
-	}
-	
+
 	public DatabaseManager getDatabaseManager() {
 		return databaseManager;
 	}

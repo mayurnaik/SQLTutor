@@ -3,6 +3,7 @@ package utilities;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 
@@ -21,8 +22,12 @@ public class JDBC_MySQL_Connection extends JDBC_Abstract_Connection {
 			System.out.println(e.getMessage());
 		}
 		try {
+			Properties properties = new Properties();
+			properties.setProperty("allowEncodingChanges", "true");
+			properties.setProperty("user", DB_MANAGER_USERNAME);
+			properties.setProperty("password", DB_PASSWORD);
 			connection = DriverManager.getConnection(
-                            DB_CONNECTION_STRING + databaseName, DB_MANAGER_USERNAME ,DB_PASSWORD);
+                            DB_CONNECTION_STRING + databaseName, properties);
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}

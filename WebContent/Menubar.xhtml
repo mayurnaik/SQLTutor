@@ -3,7 +3,6 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-	<!-- Tutorial, schema options, and NLP Feedback Sample should be rendered="#{userBean.isLoggedIn()}" -->
 	<h:form>
 		<p:menubar autoDisplay="false">
 			<p:menuitem>
@@ -11,15 +10,9 @@
 			</p:menuitem>
 			<p:submenu label="Navigation" icon="ui-icon-folder-open" style="margin-right:10px;"> 
 				<p:menuitem value="Home" icon="ui-icon-arrow-1-e" action="HomePage.xhtml?faces-redirect=true"/>
-				<p:menuitem value="Query Entry" icon="ui-icon-arrow-1-e" action="QueryEntry.xhtml?faces-redirect=true" 
-					rendered="#{userBean.isLoggedIn()}"/>
 				<p:menuitem value="Tutorial" action="TutorialPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
-				<p:menuitem value="NLP Feedback Sample" action="SampleNLPPage.xhtml?faces-redirect=true"
-					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
-				<p:menuitem value="Dev Query Entry" action="FreeEntryPage.xhtml?faces-redirect=true"
-					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
-				<p:menuitem value="Schema Upload" action="SchemaUploadPage.xhtml?faces-redirect=true" 
+				<p:menuitem value="Tutorial Setup" action="TutorialSetupPage.xhtml?faces-redirect=true"
 					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
 				<p:submenu label="Contact Us" icon="ui-icon-contact">
 					<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
@@ -29,7 +22,7 @@
 				</p:submenu>
 			</p:submenu>
 			<p:menuitem value="Schema Options" icon="ui-icon-disk" type="button" style="margin-right:20px"
-				onclick="PF('schema_dlg').show();" rendered="#{userBean.isDevUser()}"/>
+				onclick="PF('schema_dlg').show();" rendered="#{userBean.isLoggedIn()}"/>
 			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
 				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
 			<p:menuitem value="Logout" type="button" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
@@ -37,15 +30,15 @@
 			<p:menuitem value="Register" action="RegistrationPage.xhtml?faces-redirect=true" 
 				icon="ui-icon-arrowreturnthick-1-e" style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}"/>
 	        <f:facet name="options">  
-	        	<h:outputText rendered="#{userBean.isLoggedIn()}" value="Current schema: #{userBean.selectedSchemaName}"/> 
+	        	<h:outputText rendered="#{userBean.isLoggedIn()}" value="Current schema: #{userBean.selectedSchema}"/> 
 	        </f:facet>  
 		</p:menubar>
 	</h:form>
 	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
-		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchemaName)}" 
+		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchema)}" 
 		modal="true" width="350" resizable="false" appentTo="@(body)">
 		<h:form id="schemaForm">
-			<h:outputText value="Current schema: #{userBean.selectedSchemaName}"/>
+			<h:outputText value="Current schema: #{userBean.selectedSchema}"/>
 			<br/><br/>
 			<p:panel>
 				<h:panelGrid id="schemaGrid" columns="2">
@@ -85,7 +78,7 @@
 				</h:panelGrid>
 				<p:messages id="loginMessages"/>
 			</p:panel>
-			<!-- Temporarily disabling catcha. When re-enabled, disable 'alternativeButton'. -->
+			<!-- Temporarily disabling captcha. When re-enabled, disable 'alternativeButton'. -->
 			<ui:remove>
 			<p:captcha label="Captcha" theme="white" required="true" 
 				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/> 

@@ -1,0 +1,91 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body style="height:1000px;width:1400px;margin-left:20px">
+		<h:form>
+			<div style="position:absolute;width:400;top:auto;left:20">
+				<p:commandButton id="databaseButton" value="Show Schema" />
+				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+						<p:dataTable var="databaseTable"
+							value="#{schemaQuestionsPageBean.tables}">
+							<p:column headerText="Table Names">
+								<h:outputText value="#{databaseTable.tableName}" />
+							</p:column>
+							<p:column headerText="Column Names" width="400" style="white-space: normal;">
+								<h:outputText value="#{databaseTable.columns}" />
+							</p:column>
+						</p:dataTable>
+				</p:overlayPanel> 
+				<br/><br/>
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:24px"/>
+				<br/><br/>
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:24px"/>
+			</div>
+			<div style="position:absolute;width:1000;top:auto;left:420">
+			    	<p:messages />
+					<p:panelGrid columns="2">
+						<f:facet name="header">  
+						    <p:outputLabel value="Add Questions: " />
+						</f:facet>
+						
+						<h:outputLabel for="question" value="Question: " />
+						<p:inputTextarea rows="3" cols="35" id="question" style="resize:none"
+								value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
+						
+						<p:outputLabel for="answer" value="Query: " />
+						<p:inputTextarea rows="3" cols="35" id="answer" reRender="results"
+							autoResize="false" style="resize:none" 
+							value="#{schemaQuestionsPageBean.answer}"/>
+						
+						<f:facet name="footer">
+							<p:commandButton
+								action="#{schemaQuestionsPageBean.addQuestion}"
+								ajax="false"
+								value="Add" icon="ui-icon-check" style="margin:0"/>
+						</f:facet>
+					</p:panelGrid>
+					<br/>
+					<p:panelGrid columns="2">
+						<f:facet name="header">
+							<p:outputLabel value="Reorder/Delete Questions: " />
+						</f:facet>
+						<p:pickList value="#{schemaQuestionsPageBean.questionDualList}" 
+							var="question" converter="questionTupleConverter"
+							itemLabel="#{question.question}" itemValue="#{question}"
+							style="width:600"/>
+						<f:facet name="footer">
+							<p:commandButton id="reorderQuestionButton"
+								action="#{schemaQuestionsPageBean.reorderQuestions}"
+								ajax="false"
+								value="Reorder" icon="ui-icon-check" style="margin:0"/>
+							<p:commandButton id="deleteQuestionButton"
+								action="#{schemaQuestionsPageBean.deleteQuestions}"
+								ajax="false"
+								value="Delete" icon="ui-icon-check" style="margin:0"/>
+						</f:facet>
+						<p:column> 
+							<p:outputLabel value="To reorder, drag and drop selections 
+								within the left list then use the 'reorder' button. 
+								Only questions in the left list are affected. 
+								If any questions are in the right list when reordering takes place, 
+								those questions will retain their old positions 
+								(please avoid this, as it may result in duplicate positions)."/>
+							<br/><br/>
+							<p:outputLabel value="To delete, drag and drop selections in 
+								the left list over into to the right list. Then use the 
+								'delete' button (CAN NOT BE UNDONE). "/>
+						</p:column>
+					</p:panelGrid>
+				</div>
+		</h:form>
+	</h:body>
+</html>

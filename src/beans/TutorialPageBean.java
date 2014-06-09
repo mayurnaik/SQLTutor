@@ -2,6 +2,8 @@ package beans;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -19,6 +21,7 @@ import javax.servlet.http.HttpSession;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
+import objects.QuestionTuple;
 import utilities.JDBC_Abstract_Connection;
 import utilities.JDBC_MySQL_Connection;
 import utilities.JDBC_PostgreSQL_Connection;
@@ -26,16 +29,24 @@ import utilities.JDBC_PostgreSQL_Connection;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
+import edu.gatech.sqltutor.DatabaseManager;
+
 @ManagedBean
 @ViewScoped
-public class TutorialBean {
+public class TutorialPageBean {
+	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
+	
+	
+	@ManagedProperty(value="#{databaseManager}")
+	private DatabaseManager databaseManager;
+	
 	private JDBC_Abstract_Connection connection;
 	private String selectedSchema;
 	private List<DatabaseTable> tables;
 	private List<String> questions = new ArrayList<String>();
-	private List<String> answers = new ArrayList<String>();
+	private HashMap<String, String> answers = new HashMap<String, String>();
 	private int questionIndex;
 	private String query;
 	private String feedbackNLP;
@@ -49,24 +60,8 @@ public class TutorialBean {
 
 	@PostConstruct
 	public void init() {
-		String[] schemaAttributes;
-		//if(getUserBean().getSelectedSchema() != null) {
-		//	schemaAttributes = getUserBean().getSelectedSchema().split(" ");
-		//} else {
-			//default to company
-			schemaAttributes = new String[2];
-			schemaAttributes[0] = "PostgreSQL";
-			schemaAttributes[1] = "company";
-		//}
-		final String databaseConnector = schemaAttributes[0];
-		if(databaseConnector.equalsIgnoreCase("PostgreSQL")) {	
-			connection = new JDBC_PostgreSQL_Connection();
-		} else if (databaseConnector.equalsIgnoreCase("MySQL")) {
-			connection = new JDBC_MySQL_Connection();
-		} else {
-			return; //eventually redirect to message about connector not being supported
-		}
-		selectedSchema = schemaAttributes[1];
+		connection = new JDBC_PostgreSQL_Connection();
+		selectedSchema = userBean.getSelectedSchema();
 		tables = connection.getTables(selectedSchema);
 		setQuestionsAndAnswers();
 	}
@@ -80,12 +75,10 @@ public class TutorialBean {
 				feedbackNLP = "";
 			setResultSetDiffs();
 		} catch(SQLException e) {
-			//feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
-			//resultSetFeedback = "Incorrect";
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
 		connection.log(getSessionId(), getIpAddress(), userBean.getUsername(), selectedSchema, 
-				questions.get(questionIndex), answers.get(questionIndex), query, !isQueryMalformed(), getQueryIsCorrect());
+				questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 	} 
 	
 	public String getIpAddress() {
@@ -105,7 +98,7 @@ public class TutorialBean {
 	
 	public void setResultSetDiffs() {
 		try {
-			answerResult = connection.getQueryResult(selectedSchema, answers.get(questionIndex));
+			answerResult = connection.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)));
 			queryDiffResult = new QueryResult(queryResult);
 			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
 			queryDiffResult.getData().removeAll(answerResult.getData());
@@ -113,7 +106,7 @@ public class TutorialBean {
 			answerDiffResult.getColumns().removeAll(queryResult.getColumns());
 			answerDiffResult.getData().removeAll(queryResult.getData());
 			
-			if (answers.get(questionIndex).toLowerCase().contains(" order by ")) {
+			if (getAnswers().get(questions.get(questionIndex)).toLowerCase().contains(" order by ")) {
 				compareQueries(false, true); 
 			} else {
 				compareQueries(false, false); 
@@ -137,8 +130,8 @@ public class TutorialBean {
 					//FIXME perhaps more specific feedback? different row data/order, order by? conditionals? different attributes?
 				}
 			} else if(columnOrderMatters && !rowOrderMatters) {
-				String queryDiffAnswer = query + " EXCEPT " + answers.get(questionIndex) + ";";
-				String answerDiffQuery = answers.get(questionIndex) + " EXCEPT " + query + ";";
+				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
+				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
 				try {
 					queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
 					answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
@@ -205,76 +198,32 @@ public class TutorialBean {
 	}
 	
 	public void setQuestionsAndAnswers() {
-		// currently hard coded answers (which get converted to questions). This will be phased out.
-		if (selectedSchema.equalsIgnoreCase("company")) {
-			answers.clear();
-			questions.clear();
-
-			questions.add("Retrieve the salary of the employee(s) named 'Ahmad'.");
-			answers.add("SELECT salary FROM employee WHERE first_name = 'Ahmad'");
-			
-			questions.add("Select all employee SSNs in the database.");
-			answers.add("SELECT ssn FROM employee");
-			
-			questions.add("Retrieve all distinct salary values.");
-			answers.add("SELECT DISTINCT salary FROM employee");
-			
-			questions.add("Retrieve the name of each employee.");
-			answers.add("SELECT first_name, last_name FROM employee");
-			
-			questions.add("Retrieve the birth date and address of the employee(s) whose name is ‘John B. Smith’.");
-			answers.add("SELECT birthdate, address FROM employee WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'");
-
-			questions.add("Retrieve the name and address of all employees who work for the ‘Research’ department.");
-			answers.add("SELECT first_name, last_name, address FROM employee, department WHERE name = 'Research' AND id = department_id");
-			
-			questions.add("For each employee, retrieve the employee’s first and last name and the first and last name of his or her immediate supervisor.");
-			answers.add("SELECT E.first_name, E.last_name, S.first_name, S.last_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn;");
-			
-			questions.add("Retrieve all employees whose address is in Houston, Texas.");
-			answers.add("SELECT first_name, last_name FROM employee WHERE address LIKE '%Houston, TX%'");
-			
-			questions.add("Retrieve all employees in department 5 whose salary is between $30,000 and $40,000.");
-			answers.add("SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND department_id = 5");
-			
-			questions.add("Retrieve the names of all employees who do not have supervisors.");
-			answers.add("SELECT first_name, last_name FROM employee WHERE manager_ssn IS NULL;");
-			
-			questions.add("Retrieve the last name of each employee and his or her supervisor.");
-			answers.add("SELECT E.last_name AS employee_name, S.last_name AS supervisor_name FROM employee AS E, employee AS S WHERE E.manager_SSN = S.SSN");
-			
-			questions.add("For every project located in ‘Stafford’, list the project number, the controlling department number, and the department manager’s last name, address, and birthdate.");
-			answers.add("SELECT project.id, department.id, last_name, address, birthdate FROM project, department, employee WHERE project.department_id = department.id AND department.manager_ssn = ssn AND location = 'Stafford'");
-			
-			questions.add("Retrieve the employees whose salary is greater than the salary of the manager of the department that the employee works for.");
-			answers.add("SELECT e.first_name, e.last_name FROM employee E, employee M, department D WHERE E.salary > M.salary AND E.department_id = D.id AND D.manager_ssn = M.ssn");
-			
-			questions.add("Retrieve the last name and first name of all employees who work on a project.");
-			answers.add("SELECT e.first_name, e.last_name FROM employee e, project p, works_on WHERE e.ssn=employee_ssn AND id = project_id");
-			
-			questions.add("Find the names of all employees who are directly supervised by ‘Franklin Wong’.");
-			answers.add("SELECT e.first_name, e.last_name FROM employee e, employee s WHERE s.first_name = 'Franklin' AND s.last_name = 'Wong' AND e.manager_ssn = s.ssn");
-
-			/*
-			Question question;
-			for(int i = 0; i < answers.size(); i++ ) {
-				question = new Question(answers.get(i), tables);
-				questions.add(question.getQuestion());
-			}*/
-		} else if (selectedSchema.equalsIgnoreCase("sales")) {
-			answers.clear();
-			questions.clear();
-			answers.add("SELECT NAME, REP_OFFICE FROM salesreps");
-			Question question;
-			for(int i = 0; i < answers.size(); i++ ) {
-				question = new Question(answers.get(i), tables);
-				questions.add(question.getQuestion());
+		List<QuestionTuple> questionTuples = null;
+		try {
+			questionTuples = getDatabaseManager().getQuestions(selectedSchema);
+		} catch (SQLException e) {
+			e.getNextException().printStackTrace();
+		}
+		
+		if(questionTuples.isEmpty()) {
+			questions.add("There are no questions available for this schema.");
+		} else {
+			HashMap<String, Boolean> options = null;
+			try {
+				options = getDatabaseManager().getOptions(selectedSchema);
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-		} else {	// just a place holder for every other schema.
-			answers.clear();
-			questions.clear();
-			answers.add("");
-			questions.add("");
+			
+			for(QuestionTuple question : questionTuples) {
+				questions.add(question.getQuestion());
+				getAnswers().put(question.getQuestion(), question.getAnswer());
+			}
+			
+			if(!options.get("in_order_questions")) {
+				Collections.shuffle(questions, new Random(System.nanoTime()));
+			}
+			
 		}
 	}
 	
@@ -305,10 +254,6 @@ public class TutorialBean {
 
 	public QueryResult getQueryResult() {
 		return queryResult;
-	}
-
-	public List<String> getAnswers() {
-		return answers;
 	}
 
 	public UserBean getUserBean() {
@@ -371,5 +316,21 @@ public class TutorialBean {
 			return true;
 		}
 		return false;
+	}
+
+	public HashMap<String, String> getAnswers() {
+		return answers;
+	}
+
+	public void setAnswers(HashMap<String, String> answers) {
+		this.answers = answers;
+	}
+
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+
+	public void setDatabaseManager(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 }

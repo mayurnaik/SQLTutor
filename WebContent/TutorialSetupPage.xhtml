@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/Menubar.xhtml" />
+	</ui:insert>
+</h:head>
+<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:form>
+		<h1>As an admin, you have the following options to customize the tutorial page:</h1>
+		<h:link value="Upload a new schema" outcome="SchemaUploadPage" style="font-size:24px"/>
+		<br/><br/>
+		
+		<h:outputText value="This schema will not be available for use until it 
+		is set as &quot;Visible to users&quot;. This option is found on the schema's 
+		option page (see below). The database instance used to check student
+		answers will be empty by default, therefore it will need to be populated on
+		the schema's option page as well (under the &quot;Instances&quot; tab)."/>
+		<br/><br/>
+		
+		<h:link value="Modify an existing schema's options" outcome="SchemaOptionsPage" 
+			style="font-size:24px"/>
+		<br/><br/>
+		
+		<h:outputText value="These options include instance and question/answer population."/>
+	</h:form>
+</h:body>
+</html>

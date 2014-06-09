@@ -1,5 +1,6 @@
 package utilities;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -17,7 +18,9 @@ import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.entities.UserQuery;
 
 
-public abstract class JDBC_Abstract_Connection {
+public abstract class JDBC_Abstract_Connection implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	protected final String DB_NAME_SYSTEM = "sqltutor";
 	protected final String DB_NAME_SCHEMAS = "sqltutorschemas";
 	protected final String DB_MANAGER_USERNAME = "DB_Manager";
