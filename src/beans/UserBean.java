@@ -50,6 +50,7 @@ public class UserBean implements Serializable {
 			return;
 		} 
 		loggedIn = true;
+		selectedSchema = "company";
 		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
 	}

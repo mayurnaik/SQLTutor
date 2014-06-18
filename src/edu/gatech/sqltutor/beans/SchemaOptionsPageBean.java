@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -10,7 +11,9 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 
 import objects.DatabaseTable;
 import utilities.JDBC_Abstract_Connection;
@@ -61,10 +64,10 @@ public class SchemaOptionsPageBean implements Serializable {
 		try {
 			if(deleteThisSchema) {
 				databaseManager.deleteSchema(userBean.getSelectedSchema());
-				userBean.setSelectedSchema("company");
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Successfully deleted the schema. Please refresh or navigate to another page.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+				userBean.setSelectedSchema("company"); //TODO: may need to set a warning that company is the default schema
+
+				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+				externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialSetupPage.jsf");
 			} else {
 				databaseManager.setOptions(userBean.getSelectedSchema(), visibleToUsers, inOrderQuestions);
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -72,6 +75,8 @@ public class SchemaOptionsPageBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(null, msg);
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}	
 	}

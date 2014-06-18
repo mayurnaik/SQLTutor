@@ -90,32 +90,20 @@ public class DatabaseManager implements Serializable {
 		Connection conn = null;
 		Connection optionsConn = null;
 		try {
+			ArrayList<String> schemas = new ArrayList<String>();
+			String query = dev ? "SELECT schema FROM schema_options;" : 
+				"SELECT schema FROM schema_options WHERE visible_to_users;";
+			
 			optionsConn = dataSource.getConnection();
 			Statement statement = optionsConn.createStatement();
-			statement.execute("SELECT schema, visible_to_users FROM schema_options");
+			statement.execute(query);
 			ResultSet resultSet = statement.getResultSet();
-			HashMap<String, Boolean> visibleSchemaOption = new HashMap<String, Boolean>();
+			
 			while(resultSet.next()) {
-				visibleSchemaOption.put(resultSet.getString(1), resultSet.getBoolean(2));
+				schemas.add(resultSet.getString(1));
 			}
 			statement.close();
 			
-			conn = userDataSource.getConnection();
-			
-			ArrayList<String> schemas = new ArrayList<String>();
-			
-			DatabaseMetaData meta = conn.getMetaData();
-			ResultSet rs = meta.getSchemas();
-			while( rs.next() ) {
-				String schema = rs.getString(1);
-				if( !("public".equals(schema) || 
-						"information_schema".equals(schema) || 
-						"pg_catalog".equals(schema)) ) {
-					if(dev || visibleSchemaOption.get(schema)) {
-						schemas.add(schema);
-					}
-				}
-			}
 			return schemas;
 		} finally {
 			Utils.tryClose(conn);

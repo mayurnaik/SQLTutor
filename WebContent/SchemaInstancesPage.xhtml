@@ -28,18 +28,22 @@
 				<br/><br/>
 				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:24px"/>
 				<br/><br/>
+				<p:outputLabel value="Schema Instances" style="font-size:24px"/>
+				<br/><br/>
 				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:24px"/>
 			</div>
 			<div style="position:absolute;width:1000;top:auto;left:420">
 		    	<p:messages />
-				<p:outputLabel value="Entry:"/>
-				<br/>
+				<p:outputLabel value="There is currently only one instance per schema."/>
+				<br/><br/>
+				<p:outputLabel value="Use this text entry box to manipulate the instance:" />
+				<br/><br/>
 				<p:inputTextarea rows="5" cols="30" id="query" reRender="results" style="resize:none"
 					autoResize="false" value="#{schemaInstancesPageBean.query}" />
 				<br/>
 				<p:commandButton id="try" value="Submit"
 					action="#{schemaInstancesPageBean.processSQL}" 
-					update="@form" />
+					ajax="false"/>
 
 				<br/><br/>
 				<p:outputLabel value="Result Set:"/>

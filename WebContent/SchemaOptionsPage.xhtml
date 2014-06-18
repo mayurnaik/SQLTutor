@@ -26,6 +26,8 @@
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
+				<p:outputLabel value="Schema Options" style="font-size:24px"/>
+				<br/><br/>
 				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:24px"/>
 				<br/><br/>
 				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:24px"/>
@@ -49,7 +51,7 @@
 						<td>
 						<p:commandButton
 							action="#{schemaOptionsPageBean.submit}"
-							update="@form"
+							ajax="false"
 							value="Submit" icon="ui-icon-check" style="margin:0"/>
 						</td>
 					</tr>

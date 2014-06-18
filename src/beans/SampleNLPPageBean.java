@@ -44,7 +44,7 @@ public class SampleNLPPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query);
+			queryResult = connection.getQueryResult(selectedDatabase, query, userBean.isDevUser());
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			feedbackNLP = "Corresponding question: \n" + nlp;

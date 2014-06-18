@@ -50,8 +50,8 @@
 				</h:panelGrid>
 			</p:panel>
 			<br/><br/>
-			<p:commandButton value="Submit" update="schemaForm" 
-				action="#{userBean.setSelectedSchema(schemaSelectionBean.selectedSchema)}"
+			<p:commandButton value="Submit" ajax="false" 
+				action="#{schemaSelectionBean.submit}"
 				oncomplete="PF('schema_dlg').hide()"   
 				style="float:right">
 			</p:commandButton>

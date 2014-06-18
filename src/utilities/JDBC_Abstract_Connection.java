@@ -334,9 +334,10 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 		return null;
 	}
 	
-	public QueryResult getQueryResult(String schemaName, String query) throws SQLException {
+	public QueryResult getQueryResult(String schemaName, String query, boolean dev) throws SQLException {
 		// FIXME want to have this connection made by a user with read only if possible.
-		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_READONLY_USERNAME);
+		Connection connection = getConnection(DB_NAME_SCHEMAS, 
+				dev ? DB_MANAGER_USERNAME : DB_READONLY_USERNAME);
 		Statement statement = connection.createStatement();
 		statement.execute("set search_path to '" + schemaName + "'");
 		ResultSet resultSet = statement.executeQuery(query);

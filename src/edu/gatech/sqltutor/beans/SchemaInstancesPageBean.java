@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -11,7 +12,9 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.primefaces.model.DualListModel;
 
@@ -43,7 +46,6 @@ public class SchemaInstancesPageBean implements Serializable {
 	private String query;
 	private QueryResult queryResult;
 	
-	
 	@PostConstruct
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
@@ -53,12 +55,17 @@ public class SchemaInstancesPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedSchema, query);
+			queryResult = connection.getQueryResult(selectedSchema, query, userBean.isDevUser());
 		} catch(SQLException e) {
 			queryResult = null;
+			String message = e.getMessage();
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					e.getMessage(), "");
+					message, "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
+			
+			if(message.equals("No results were returned by the query.")) {
+				tables = connection.getTables(selectedSchema);
+			}
 		}
 	} 
 

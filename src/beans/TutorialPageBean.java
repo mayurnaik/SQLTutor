@@ -68,7 +68,7 @@ public class TutorialPageBean {
 
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedSchema, query);
+			queryResult = connection.getQueryResult(selectedSchema, query, userBean.isDevUser());
 			if(!nlpDisabled)
 				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			else 
@@ -98,7 +98,7 @@ public class TutorialPageBean {
 	
 	public void setResultSetDiffs() {
 		try {
-			answerResult = connection.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)));
+			answerResult = connection.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isDevUser());
 			queryDiffResult = new QueryResult(queryResult);
 			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
 			queryDiffResult.getData().removeAll(answerResult.getData());
@@ -133,8 +133,8 @@ public class TutorialPageBean {
 				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
 				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
 				try {
-					queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer);
-					answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery);
+					queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isDevUser());
+					answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery, userBean.isDevUser());
 					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
 						resultSetFeedback = "Correct.";
 					} else {

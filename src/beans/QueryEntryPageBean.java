@@ -41,7 +41,7 @@ public class QueryEntryPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query);
+			queryResult = connection.getQueryResult(selectedDatabase, query, userBean.isDevUser());
 			queryMalformed = false;
 		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
