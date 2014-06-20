@@ -68,7 +68,7 @@ public class ParseTest {
 			{"SELECT D.name, E.last_name, E.first_name, P.name FROM department D, employee E, works_on W, project P " +
 				"WHERE D.id = E.department_id AND E.SSN = W.employee_SSN AND W.project_id = P.id ORDER BY D.name, E.last_name, E.first_name"},
 			
-			// p116
+			// p117
 			{"SELECT first_name, last_name FROM employee WHERE manager_ssn IS NULL;"},
 			
 			// p118

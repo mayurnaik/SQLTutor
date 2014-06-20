@@ -64,7 +64,7 @@
     </entity>
     <entity id="entityProject" isWeak="false">
       <name>Project</name>
-      <attributes id="16">
+      <attributes id="17">
         <attribute id="19" isKey="true">
           <name>Name</name>
         </attribute>
