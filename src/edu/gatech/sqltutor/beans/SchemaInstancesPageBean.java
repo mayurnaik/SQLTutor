@@ -16,6 +16,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.primefaces.context.RequestContext;
 import org.primefaces.model.DualListModel;
 
 import objects.DatabaseTable;
@@ -40,6 +41,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	private JDBC_Abstract_Connection connection;
 	
 	private List<DatabaseTable> tables;
+	private HashMap<String, QueryResult> tableData;
 	
 	private String selectedSchema;
 
@@ -50,22 +52,52 @@ public class SchemaInstancesPageBean implements Serializable {
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
 		connection = new JDBC_PostgreSQL_Connection();
+		setupTables();
+	}
+	
+	public void setupTables() {
 		tables = connection.getTables(selectedSchema);
+
+		List<String> tableNames = new ArrayList<String>();
+		
+		for(DatabaseTable table : tables) {
+			tableNames.add(table.getTableName());
+		}
+		
+		try {
+			setTableData(connection.getAllData(selectedSchema, tableNames));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void processSQL() {
 		try {
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			if(!hasPermissions) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You do not have permissions for this schema.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
 			queryResult = connection.getQueryResult(selectedSchema, query, userBean.isDevUser());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();
+			
+			if(message.equals("No results were returned by the query.")) {
+				RequestContext requestContext = RequestContext.getCurrentInstance();  
+				requestContext.execute("window.location.replace(window.location.href);");
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						message, "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					message, "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
-			
-			if(message.equals("No results were returned by the query.")) {
-				tables = connection.getTables(selectedSchema);
-			}
 		}
 	} 
 
@@ -107,5 +139,13 @@ public class SchemaInstancesPageBean implements Serializable {
 
 	public void setQueryResult(QueryResult queryResult) {
 		this.queryResult = queryResult;
+	}
+
+	public HashMap<String, QueryResult> getTableData() {
+		return tableData;
+	}
+
+	public void setTableData(HashMap<String, QueryResult> tableData) {
+		this.tableData = tableData;
 	}
 }

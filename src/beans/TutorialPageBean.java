@@ -77,7 +77,7 @@ public class TutorialPageBean {
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
-		connection.log(getSessionId(), getIpAddress(), userBean.getUsername(), selectedSchema, 
+		connection.log(getSessionId(), getIpAddress(), userBean.getEmail(), selectedSchema, 
 				questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 	} 
 	

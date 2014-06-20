@@ -13,6 +13,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
+import org.primefaces.event.ReorderEvent;
 import org.primefaces.model.DualListModel;
 
 import objects.DatabaseTable;
@@ -44,7 +45,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 	private String answer;
 	
 	private List<QuestionTuple> questions;
-	private DualListModel<QuestionTuple> questionDualList;
+	private List<QuestionTuple> selectedQuestions;
 	
 	
 	@PostConstruct
@@ -59,16 +60,24 @@ public class SchemaQuestionsPageBean implements Serializable {
 	public void setupQuestionList() {
 		try {
 			questions = databaseManager.getQuestions(selectedSchema);
-			questionDualList = new DualListModel<QuestionTuple>(questions, new ArrayList<QuestionTuple>());
+			selectedQuestions = new ArrayList<QuestionTuple>();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void reorderQuestions() {
 		try {
-			databaseManager.reorderQuestions(questionDualList.getSource());
-			setupQuestionList();
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			if(!hasPermissions) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You do not have permissions for this schema.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
+			databaseManager.reorderQuestions(questions);
+			
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully reordered the questions.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -78,14 +87,22 @@ public class SchemaQuestionsPageBean implements Serializable {
 	}
 	
 	public void deleteQuestions() {
-		if(questionDualList.getTarget().isEmpty()) {
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You must select questions to be deleted.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
-			return;
-		}
 		try {
-			databaseManager.deleteQuestions(questionDualList.getTarget());
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			if(!hasPermissions) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You do not have permissions for this schema.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
+			if(selectedQuestions.isEmpty()) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You must select questions to be deleted.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			databaseManager.deleteQuestions(selectedQuestions);
 			setupQuestionList();
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully deleted the questions.", "");
@@ -97,6 +114,14 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void addQuestion() {
 		try {
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			if(!hasPermissions) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You do not have permissions for this schema.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
 			databaseManager.addQuestion(selectedSchema, getQuestion(), getAnswer());
 			setupQuestionList();
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -155,11 +180,11 @@ public class SchemaQuestionsPageBean implements Serializable {
 		this.questions = questions;
 	}
 
-	public DualListModel<QuestionTuple> getQuestionDualList() {
-		return questionDualList;
+	public List<QuestionTuple> getSelectedQuestions() {
+		return selectedQuestions;
 	}
 
-	public void setQuestionDualList(DualListModel<QuestionTuple> questionDualList) {
-		this.questionDualList = questionDualList;
+	public void setSelectedQuestions(List<QuestionTuple> selectedQuestions) {
+		this.selectedQuestions = selectedQuestions;
 	}
 }

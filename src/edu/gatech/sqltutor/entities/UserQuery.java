@@ -26,7 +26,7 @@ public class UserQuery implements Serializable {
 //	@NotNull
 	private UserBean user;
 	
-	private String username;
+	private String email;
 	
 //	@NotNull
 	private String query;
@@ -59,12 +59,6 @@ public class UserQuery implements Serializable {
 	
 	public UserBean getUser() {
 		return user;
-	}
-
-	public String getUsername() { return username; }
-	
-	public void setUsername(String username) {
-		this.username = username;
 	}
 	
 	public void setUser(UserBean user) {
@@ -121,6 +115,14 @@ public class UserQuery implements Serializable {
 
 	public String getSource() {
 		return source;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 	

@@ -62,6 +62,14 @@ public class SchemaOptionsPageBean implements Serializable {
 	
 	public void submit() {
 		try {
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			if(!hasPermissions) {
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"You do not have permissions for this schema.", "");
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+			
 			if(deleteThisSchema) {
 				databaseManager.deleteSchema(userBean.getSelectedSchema());
 				userBean.setSelectedSchema("company"); //TODO: may need to set a warning that company is the default schema

@@ -5,44 +5,50 @@
 	xmlns:p="http://primefaces.org/ui">
 	<h:form>
 		<p:menubar autoDisplay="false">
-			<p:menuitem>
-				<p:outputLabel value="SQL Tutor" style="margin-right:40px; margin-left:20px" />
-			</p:menuitem>
-			<p:submenu label="Navigation" icon="ui-icon-folder-open" style="margin-right:10px;"> 
-				<p:menuitem value="Home" icon="ui-icon-arrow-1-e" action="HomePage.xhtml?faces-redirect=true"/>
-				<p:menuitem value="Tutorial" action="TutorialPage.xhtml?faces-redirect=true"
-					icon="ui-icon-arrow-1-e" rendered="#{userBean.isLoggedIn()}" />
-				<p:menuitem value="Tutorial Setup" action="TutorialSetupPage.xhtml?faces-redirect=true"
-					icon="ui-icon-arrow-1-e" rendered="#{userBean.isDevUser()}" />
-				<p:submenu label="Contact Us" icon="ui-icon-contact">
-					<p:menuitem value="Sumit Gulwani" icon="ui-icon-mail-closed" onclick="location.href='mailto:sumitg@microsoft.com'"/>
-					<p:menuitem value="Mayur Naik" icon="ui-icon-mail-closed" onclick="location.href='mailto:naik@cc.gatech.edu'"/>
-					<p:menuitem value="Jake Cobb" icon="ui-icon-mail-closed" onclick="location.href='mailto:jake.cobb@gatech.edu'"/>
-					<p:menuitem value="Will Holton" icon="ui-icon-mail-closed" onclick="location.href='mailto:wholton@gatech.edu'"/>
-				</p:submenu>
-			</p:submenu>
-			<p:menuitem value="Schema Options" icon="ui-icon-disk" type="button" style="margin-right:20px"
-				onclick="PF('schema_dlg').show();" rendered="#{userBean.isLoggedIn()}"/>
-			<p:menuitem value="Login" onclick="PF('login_dlg').show();" type="button" icon="ui-icon-arrowreturnthick-1-e"
-				style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}" />
-			<p:menuitem value="Logout" type="button" icon="ui-icon-arrowreturnthick-1-w" ajax="false"
-				style="margin-right:20px" rendered="#{userBean.isLoggedIn()}" action="#{userBean.setLoggedIn(false)}" />
-			<p:menuitem value="Register" action="RegistrationPage.xhtml?faces-redirect=true" 
-				icon="ui-icon-arrowreturnthick-1-e" style="margin-right:20px" rendered="#{!userBean.isLoggedIn()}"/>
+			<p:menuitem value="Home" icon="ui-icon-arrow-1-e" 
+				action="HomePage.xhtml?faces-redirect=true"
+				style="margin-right:20px"/>
+			<p:menuitem value="Tutorial" 
+				action="TutorialPage.xhtml?faces-redirect=true"
+				icon="ui-icon-arrow-1-e" 
+				rendered="#{userBean.isLoggedIn()}"
+				style="margin-right:20px"/>
+			<p:menuitem value="Tutorial Setup" 
+				action="TutorialSetupPage.xhtml?faces-redirect=true"
+				icon="ui-icon-arrow-1-e" 
+				rendered="#{userBean.isDevUser()}"
+				style="margin-right:20px"/>
+			<p:menuitem value="Schema Options" icon="ui-icon-disk" 
+				type="button" style="margin-right:20px"
+				onclick="PF('schema_dlg').show();" 
+				rendered="#{userBean.isLoggedIn()}"/>
+			<p:menuitem value="Login" onclick="PF('login_dlg').show();" 
+				type="button" icon="ui-icon-arrowreturnthick-1-e"
+				style="margin-right:20px" 
+				rendered="#{!userBean.isLoggedIn()}" />
+			<p:menuitem value="Logout" type="button" 
+				icon="ui-icon-arrowreturnthick-1-w" ajax="false"
+				style="margin-right:20px" 
+				rendered="#{userBean.isLoggedIn()}" 
+				action="#{userBean.setLoggedIn(false)}" />
+			<p:menuitem value="Contact Us" icon="ui-icon-mail-closed" 
+				onclick="location.href='mailto:sql-tutor@googlegroups.com'"
+				style="margin-right:20px" />
 	        <f:facet name="options">  
-	        	<h:outputText rendered="#{userBean.isLoggedIn()}" value="Current schema: #{userBean.selectedSchema}"/> 
+	        	<h:outputText rendered="#{userBean.isLoggedIn()}" 
+	        	value="Current schema: #{userBean.selectedSchema}"/> 
 	        </f:facet>  
 		</p:menubar>
 	</h:form>
-	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="location.reload();"
+	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" onHide="window.location.replace(window.location.href);"
 		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchema)}" 
 		modal="true" width="350" resizable="false" appentTo="@(body)">
 		<h:form id="schemaForm">
-			<h:outputText value="Current schema: #{userBean.selectedSchema}"/>
+			<h:outputText style="font-size:16px" value="Current schema: #{userBean.selectedSchema}"/>
 			<br/><br/>
 			<p:panel>
 				<h:panelGrid id="schemaGrid" columns="2">
-					<h:outputText value="Please select a schema:" />
+					<p:outputLabel for="schema" style="font-size:16px" value="Please select a schema:" />
 					<p:selectOneMenu id="schema" value="#{schemaSelectionBean.selectedSchema}" effect="fade">
 						<f:selectItems value="#{schemaSelectionBean.schemas}" itemValue="#{schemaSelectionBean.schemas}"
 							itemLabel="#{schemaSelectionBean.schemas}" />
@@ -62,22 +68,32 @@
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
 		<h:form id="loginForm">
 			<p:panel id="loginPanel">
+				<p:messages id="loginMessages"/>
 				<h:panelGrid id="loginGrid" columns="3">
-					<h:outputLabel for="username" value="Username: " />
-					<p:inputText id="username" required="true" requiredMessage="Please input your username."
-						label="Username" value="#{userBean.username}">
-						<f:validateLength minimum="3" maximum="12" />
+					<h:outputLabel style="font-size:16px" for="email" value="Email: " />
+					<p:inputText id="email" required="true"
+						requiredMessage="Please enter your email address."
+						validatorMessage="Invalid email format."
+						value="#{userBean.email}">
+		  				<f:validateRegex
+							pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
 					</p:inputText>
 					<br/>
-					<h:outputLabel for="password" value="Password: " />
+					
+					<h:outputLabel style="font-size:16px" for="password" value="Password: " />
 					<p:password id="password" required="true" label="Password"
 						requiredMessage="Please input your password." value="#{userBean.password}">
 						<f:validateLength minimum="3" maximum="12" />
 					</p:password>
 					<br/>
 				</h:panelGrid>
-				<p:messages id="loginMessages"/>
+				<p:commandButton id="alternativeButton" 
+					value="Submit" update="loginPanel" 
+					action="#{userBean.login()}"/>
+				<h:link value="Register" outcome="RegistrationPage"
+					style="float: right; margin-top:10px"/>
 			</p:panel>
+			<br/>
 			<!-- Temporarily disabling captcha. When re-enabled, disable 'alternativeButton'. -->
 			<ui:remove>
 			<p:captcha label="Captcha" theme="white" required="true" 
@@ -85,7 +101,8 @@
 			<p:commandButton value="Submit" update="loginPanel" action="#{userBean.login}" 
 				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
 			</ui:remove>
-			<p:commandButton id="alternativeButton" value="Submit" update="loginPanel" action="#{userBean.login()}"/>
+			<h:link value="Forgot Password?" outcome="PasswordRecoveryPage"
+				style="font-size:16px"/>
 		</h:form>
 	</p:dialog>
 </html>

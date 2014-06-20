@@ -1,6 +1,8 @@
 package utilities;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -10,7 +12,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import objects.DatabaseTable;
 import objects.QueryResult;
@@ -49,15 +53,15 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 			Long id = query.getId();
 			if( id == null ) {
 				final String INSERT = "INSERT INTO query " + 
-					"(username, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
+					"(email, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
 				statement = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
 			} else {
 				final String UPDATE = 
-						"UPDATE query SET username=?, schema=?, sql=?, user_description=?, source=?, created=? WHERE id=?";
+						"UPDATE query SET email=?, schema=?, sql=?, user_description=?, source=?, created=? WHERE id=?";
 				statement = conn.prepareStatement(UPDATE);
 				statement.setLong(7, id);
 			}
-			statement.setString(1, query.getUsername());
+			statement.setString(1, query.getEmail());
 			statement.setString(2, query.getSchema());
 			statement.setString(3, query.getQuery());
 			statement.setString(4, query.getUserDescription());
@@ -101,7 +105,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 				UserQuery query = new UserQuery();
 				query.setId(result.getLong("id"));
 				// FIXME the bean?
-				query.setUsername(result.getString("username"));
+				query.setEmail(result.getString("email"));
 				query.setSchema(result.getString("schema"));
 				query.setQuery(result.getString("sql"));
 				query.setUserDescription(result.getString("user_description"));
@@ -137,7 +141,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 				UserQuery query = new UserQuery();
 				query.setId(result.getLong("id"));
 				// FIXME the bean?
-				query.setUsername(result.getString("username"));
+				query.setEmail(result.getString("email"));
 				query.setSchema(result.getString("schema"));
 				query.setQuery(result.getString("sql"));
 				query.setUserDescription(result.getString("user_description"));
@@ -159,7 +163,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 	/*
 	 * 
 	 */
-	public void log(String sessionId, String ipAddress, String username, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) {
+	public void log(String sessionId, String ipAddress, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) {
 		
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -167,12 +171,12 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 		try {
 			
 			connection = getConnection(DB_NAME_SYSTEM);
-			final String update = "INSERT INTO \"log\" (\"session_id\", \"ip_address\", \"username\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			final String update = "INSERT INTO \"log\" (\"session_id\", \"ip_address\", \"email\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			preparedStatement = connection.prepareStatement(update);
 			
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, ipAddress);
-			preparedStatement.setString(3, username);
+			preparedStatement.setString(3, email);
 			preparedStatement.setString(4, schemaName);
 			preparedStatement.setString(5, question);
 			preparedStatement.setString(6, correctAnswer);
@@ -194,7 +198,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 	/*
 	 * 
 	 */
-	public boolean isPasswordCorrect(String username, String attemptedPassword) {
+	public boolean isPasswordCorrect(String email, String attemptedPassword) {
 
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -204,10 +208,10 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 			connection = getConnection(DB_NAME_SYSTEM);
 			
 			// get the user's encryption salt
-			String query = "SELECT \"salt\", \"password\" FROM \"user\" WHERE \"username\" = ?";
+			String query = "SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?";
 			
 			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, username);
+			preparedStatement.setString(1, email);
 			resultSet = preparedStatement.executeQuery();
 			
 			if (resultSet.next()) {
@@ -233,7 +237,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 	/*
 	 * 
 	 */
-	public boolean isUsernameRegistered(String username) {
+	public boolean isUsernameRegistered(String email) {
 		
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -241,10 +245,10 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 
 		try {
 			connection = getConnection(DB_NAME_SYSTEM);
-			final String query = "SELECT 1 FROM \"user\" WHERE \"username\" = ?";
+			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
 			
 			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, username);
+			preparedStatement.setString(1, email);
 			resultSet = preparedStatement.executeQuery();
 
 			if (resultSet.next()) {
@@ -266,7 +270,7 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 	/*
 	 * 
 	 */
-	public void registerUser(String username, String password) {
+	public void registerUser(String email, String password) throws SQLException {
 		
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -275,24 +279,32 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 			
 			connection = getConnection(DB_NAME_SYSTEM);
 			
-			final String update = "INSERT INTO \"user\" (\"username\", \"password\", \"salt\") VALUES (?, ?, ?)";
+			final String update = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\") VALUES (?, ?, ?)";
 			
 			preparedStatement = connection.prepareStatement(update);
 			
 			// generate the user's encryption salt and password
-			byte[] salt = PasswordHasher.generateSalt();
-			byte[] encryptedPassword = PasswordHasher.getEncryptedPassword(password, salt);
+			byte[] salt = null;
+			try {
+				salt = PasswordHasher.generateSalt();
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
+			byte[] encryptedPassword = null;
+			try {
+				encryptedPassword = PasswordHasher.getEncryptedPassword(password, salt);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				e.printStackTrace();
+			}
 			
-			preparedStatement.setString(1, username);
-			preparedStatement.setBytes(2, encryptedPassword);
-			preparedStatement.setBytes(3, salt);
+			preparedStatement.setBytes(1, encryptedPassword);
+			preparedStatement.setBytes(2, salt);
+			preparedStatement.setString(3, email);
 			
 			preparedStatement.executeUpdate();
 
-		} catch (Exception e) {
-			
-			System.err.println("Exception: " + e.getMessage());
-			
 		} finally {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
@@ -371,5 +383,39 @@ public abstract class JDBC_Abstract_Connection implements Serializable {
 		statement.executeQuery(query);
 		Utils.tryClose(connection);
 		Utils.tryClose(statement);
+	}
+
+	public HashMap<String, QueryResult> getAllData(String schemaName, List<String> tables) throws SQLException {
+		Connection connection = getConnection(DB_NAME_SCHEMAS, DB_MANAGER_USERNAME);
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = null;
+		
+		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
+		
+		statement.execute("set search_path to '" + schemaName + "'");
+		for(String tableName : tables) {
+			resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
+			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+			int columnCount = resultSetMetaData.getColumnCount();
+			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
+			ArrayList<String> columnNames = new ArrayList<String>();
+			for(int i = 1; i <=  columnCount; i++) {
+				columnNames.add(resultSetMetaData.getColumnName(i));
+			}
+			while(resultSet.next()) {
+				ArrayList<String> rowData = new ArrayList<String>();
+				for (int i = 1; i <= columnCount; i++) {
+					rowData.add(resultSet.getString(i));
+				}
+				queryData.add(rowData);
+			}
+			// return the query result object
+			allData.put(tableName, new QueryResult(columnNames, queryData));
+		} 
+		
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+		Utils.tryClose(statement);
+		return allData;
 	}
 }

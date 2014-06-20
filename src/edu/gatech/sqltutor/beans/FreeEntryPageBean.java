@@ -84,7 +84,7 @@ public class FreeEntryPageBean implements Serializable {
 				return;
 			}
 			UserQuery userQuery = new UserQuery();
-			userQuery.setUsername(userBean.getUsername());
+			userQuery.setEmail(userBean.getEmail());
 			userQuery.setTime(new Date());
 			userQuery.setQuery(query);
 			userQuery.setSchema(selectedDatabase);
@@ -120,7 +120,7 @@ public class FreeEntryPageBean implements Serializable {
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
-			userQuery.setUsername(userBean.getUsername());
+			userQuery.setEmail(userBean.getEmail());
 			userQuery.setTime(new Date());
 			userQuery.setQuery(query);
 			userQuery.setNaturalLanguage(nlp);

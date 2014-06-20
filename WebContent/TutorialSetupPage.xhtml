@@ -12,22 +12,30 @@
 </h:head>
 <h:body style="height:1000px;width:1400px;margin-left:20px">
 	<h:form>
-		<h1>As an admin, you have the following options to customize the tutorial page:</h1>
-		<h:link value="Upload a new schema" outcome="SchemaUploadPage" style="font-size:24px"/>
-		<br/><br/>
+		<p:panel >
+			<f:facet name="header">
+				<p:outputLabel style="font-weight:bold;font-size:20px" 
+					value="As an admin, you have the following options to customize the tutorial page:"/>
+			</f:facet>
+			
+			<h:link value="Upload a new schema" outcome="SchemaUploadPage" style="font-size:18px"/>
+			<br/><br/>
 		
-		<h:outputText value="This schema will not be available for use until it 
-		is set as &quot;Visible to users&quot;. This option is found on the schema's 
-		option page (see below). The database instance used to check student
-		answers will be empty by default, therefore it will need to be populated on
-		the schema's option page as well (under the &quot;Instances&quot; tab)."/>
-		<br/><br/>
+			<p:outputLabel style="font-size:16px" 
+			value="This schema will not be available for use until it 
+				is set as &quot;Visible to users&quot;. This option is found on the schema's 
+				option page (see below). The database instance used to check student
+				answers will be empty by default, therefore it will need to be populated on
+				the schema's option page as well (under the &quot;Instances&quot; tab)."/>
+			<br/><br/>
 		
-		<h:link value="Modify an existing schema's options" outcome="SchemaOptionsPage" 
-			style="font-size:24px"/>
-		<br/><br/>
-		
-		<h:outputText value="These options include instance and question/answer population."/>
+			<h:link value="Modify an existing schema's options" outcome="SchemaOptionsPage" 
+				style="font-size:18px"/>
+			<br/><br/>
+			
+			<p:outputLabel style="font-size:16px" 
+				value="These options include instance and question/answer population."/>
+		</p:panel>
 	</h:form>
 </h:body>
 </html>

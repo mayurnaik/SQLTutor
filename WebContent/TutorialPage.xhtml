@@ -12,88 +12,125 @@
 </h:head>
 <h:body style="height:1000px;width:1400px;margin-left:20px">
 	<h:form id="form">
-		<div style="position:absolute;width:700;height:500;top:auto;left:20">
-			<h2>Question:</h2>
-			<h:outputText id="question" value="#{tutorialPageBean.question}" />
+		<div style="position:absolute;width:600;height:500;top:auto;left:20">
+			<p:panel >
+				<f:facet name="header">
+					<p:outputLabel style="font-weight:bold; font-size:20px"
+						value="Question"/>
+				</f:facet>
+				<p:outputLabel style="font-size:16px" 
+					id="question" value="#{tutorialPageBean.question}" />
+			</p:panel>
 			<br/>
-			<h2>Database:</h2>
-			<p:dataTable var="databaseTable" scrollable="true" scrollHeight="200" 
-				value="#{tutorialPageBean.tables}">
-				<p:column headerText="Table Names" style="width:125px">
-					<h:outputText value="#{databaseTable.tableName}" />
-				</p:column>
-				<p:column headerText="Column Names" style="white-space: normal;width:375px">
-					<h:outputText value="#{databaseTable.columns}" />
-				</p:column>
-			</p:dataTable>
 
-			<h2>Query input:</h2>
-			<p:inputTextarea rows="5" cols="30" id="query" reRender="results" style="resize:none"
-				autoResize="false" value="#{tutorialPageBean.query}" />
+			<p:panel >
+				<f:facet name="header">
+					<p:outputLabel style="font-weight:bold; font-size:20px"
+						value="Database"/>
+				</f:facet>
+				<p:dataTable var="databaseTable" scrollable="true" style="height:300"
+					resizableColumns="true" 
+					value="#{tutorialPageBean.tables}">
+					<p:column headerText="Table Names" style="font-size:16px">
+						<p:outputLabel style="font-size:16px" value="#{databaseTable.tableName}" />
+					</p:column>
+					<p:column headerText="Column Names" style="white-space: normal;font-size:16px;width:60%">
+						<p:outputLabel style="font-size:16px" value="#{databaseTable.columns}" />
+					</p:column>
+				</p:dataTable>
+			</p:panel>
 			<br/>
-			<p:commandButton id="try" value="Try Query"
-				action="#{tutorialPageBean.processSQL}" 
-				update="form" />
-			<p:commandButton id="next" value="Next Question"
-				action="#{tutorialPageBean.nextQuestion}"
-				update="form"/>
+			
+			<p:panel >
+				<f:facet name="header">
+					<p:outputLabel style="font-weight:bold; font-size:20px"
+						value="Query Input"/>
+				</f:facet>
+				<p:inputTextarea rows="5" cols="65" id="query" reRender="results" style="resize:none"
+					autoResize="false" value="#{tutorialPageBean.query}" />
+				<f:facet name="footer">
+					<p:commandButton id="try" value="Try Query"
+						action="#{tutorialPageBean.processSQL}" 
+						update="form" />
+					<p:commandButton id="next" value="Next Question"
+						action="#{tutorialPageBean.nextQuestion}"
+						update="form"/>
+				</f:facet>
+			</p:panel>
 		</div>
 
-		<div style="position:absolute;width:700;height:500;top:auto;left:730">
-			<h2>Query Result:</h2>
-			<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
-				value="#{tutorialPageBean.queryResult.data}" >
-				<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
-					var="column" columnIndexVar="columnIndex">
-					<f:facet name="header">
-						#{column}
-					</f:facet>
-					#{row[columnIndex]}
-				</p:columns>
-			</p:dataTable>
-			<h2>Feedback:</h2>
-			<ui:param name="queryIsCorrectFeedback" value="#{tutorialPageBean.resultSetFeedback}"/>
-			<ui:param name="queryIsIncorrectFeedback" value="#{tutorialPageBean.resultSetFeedback} #{tutorialPageBean.feedbackNLP}"/>
-			<h:outputText id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}"
-				style="width: 700px!important; display:block!important;" escape="false"/>
-			<br/> <!--  value="#{tutorialPageBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
-			<h:outputText value="Your result should resemble this example:" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
-			<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
-			<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
-				<p:dataTable id="answerTable" var="row" scrollable="true" scrollHeight="200"
-					value="#{tutorialPageBean.answerResult.data}" >
-					<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
+		<div style="position:absolute;width:790;height:500;top:auto;left:630">
+			<p:panel >
+				<f:facet name="header">
+					<p:outputLabel style="font-weight:bold; font-size:20px"
+						value="Query Result"/>
+				</f:facet>
+				<p:dataTable id="resultsTable" var="row" scrollable="true" style="height:300"
+					value="#{tutorialPageBean.queryResult.data}" resizableColumns="true"> 
+					<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
 						var="column" columnIndexVar="columnIndex">
 						<f:facet name="header">
-							#{column}
+							<p:outputLabel style="font-weight:bold; font-size:16px"
+								value="#{column}"/>
 						</f:facet>
-						#{row[columnIndex]}
+						<p:outputLabel style="font-size:16px"
+								value="#{row[columnIndex]}"/>
 					</p:columns>
 				</p:dataTable>
-			</p:overlayPanel>
+			</p:panel>
 			<br/>
-			<br/>
-			<br/>
-			<h:outputText style="width: 700px!important; display:block!important;" escape="false" 
-				value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"
-				rendered="#{!tutorialPageBean.isNlpDisabled()}"/>
-				<!-- rendered="#{!tutorialPageBean.getQueryIsCorrect()}" -->
-			<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
-				rendered="#{!tutorialPageBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
-				<!--  #{!tutorialPageBean.getQueryIsCorrect()} -->
+			
+			<p:panel >
+				<f:facet name="header">
+					<p:outputLabel style="font-weight:bold; font-size:20px"
+						value="Feedback"/>
+				</f:facet>
+				<ui:param name="queryIsCorrectFeedback" value="#{tutorialPageBean.resultSetFeedback}"/>
+				<ui:param name="queryIsIncorrectFeedback" value="#{tutorialPageBean.resultSetFeedback} #{tutorialPageBean.feedbackNLP}"/>
+				<p:outputLabel id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}"
+					style="width: 700px!important; display:block!important; font-size:16px" escape="false"/>
+				<br/> <!--  value="#{tutorialPageBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
+				<p:outputLabel style="font-size:16px" 
+					value="Your result should resemble this example:" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+				<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+				<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
+					<p:dataTable id="answerTable" var="row" scrollable="true" scrollHeight="200"
+						value="#{tutorialPageBean.answerResult.data}" >
+						<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
+							var="column" columnIndexVar="columnIndex">
+							<f:facet name="header">
+								#{column}
+							</f:facet>
+							#{row[columnIndex]}
+						</p:columns>
+					</p:dataTable>
+				</p:overlayPanel>
+				<br/>
+				<br/>
+				<br/>
+				<p:outputLabel style="width: 700px!important; display:block!important;font-size:16px" escape="false" 
+					value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"
+					rendered="#{!tutorialPageBean.isNlpDisabled()}"/>
+					<!-- rendered="#{!tutorialPageBean.getQueryIsCorrect()}" -->
+				<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
+					rendered="#{!tutorialPageBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
+					<!--  #{!tutorialPageBean.getQueryIsCorrect()} -->
+			</p:panel>
 		</div>
 	</h:form>
 	<p:dialog id="feedbackDialog" header="Anonymous Feedback" widgetVar="feedback_dlg" 
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
 		<h:form id="feedbackForm">
 			<p:panel id="feedbackPanel">
-				<h:outputText value="Please rate our English generation:"/>
+				<p:outputLabel value="Please rate our English generation:"
+					style="font-size:16px"/>
 				<br/><br/>
-				<h:outputText value="#{tutorialPageBean.feedbackNLP}"/>
+				<p:outputLabel style="font-size:16px" value="#{tutorialPageBean.feedbackNLP}"/>
 				<br/><br/>
 				<p:rating/>
 				<br/><br/>
-				<h:outputText value="Also, please describe how we might improve our feedback generation:"/>
+				<p:outputLabel style="font-size:16px"
+					value="Also, please describe how we might improve our feedback generation:"/>
 				<p:inputTextarea rows="3" cols="44" id="source" style="resize:none" 
 					value="#{tutorialPageBean.userFeedback}" autoResize="false"/>
 				<p:messages id="feedbackMessages"/>

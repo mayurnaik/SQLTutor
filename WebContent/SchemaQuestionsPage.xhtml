@@ -18,33 +18,33 @@
 						<p:dataTable var="databaseTable"
 							value="#{schemaQuestionsPageBean.tables}">
 							<p:column headerText="Table Names">
-								<h:outputText value="#{databaseTable.tableName}" />
+								<h:outputText style="font-size:16px" value="#{databaseTable.tableName}" />
 							</p:column>
-							<p:column headerText="Column Names" width="400" style="white-space: normal;">
-								<h:outputText value="#{databaseTable.columns}" />
+							<p:column headerText="Column Names" style="white-space: normal;">
+								<h:outputText style="font-size:16px" value="#{databaseTable.columns}" />
 							</p:column>
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
-				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:24px"/>
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:18px"/>
 				<br/><br/>
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:24px"/>
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:18px"/>
 				<br/><br/>
-				<p:outputLabel value="Schema Questions" style="font-size:24px"/>
+				<h:outputText style="font-size:18px;style-weight:bold" value="Schema Questions"/>
 			</div>
 			<div style="position:absolute;width:1000;top:auto;left:420">
 			    	<p:messages />
 					<p:panelGrid columns="2">
 						<f:facet name="header">  
-						    <p:outputLabel value="Add Questions: " />
+						    <h:outputText style="font-size:20px;style-weight:bold" value="Add Questions:" />
 						</f:facet>
 						
-						<h:outputLabel for="question" value="Question: " />
-						<p:inputTextarea rows="3" cols="35" id="question" style="resize:none"
+						<p:outputLabel style="font-size:16" for="question" value="In English: " />
+						<p:inputTextarea rows="3" cols="105" id="question" style="resize:none"
 								value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
 						
-						<p:outputLabel for="answer" value="Query: " />
-						<p:inputTextarea rows="3" cols="35" id="answer" reRender="results"
+						<p:outputLabel style="font-size:16" for="answer" value="In SQL: " />
+						<p:inputTextarea rows="3" cols="105" id="answer" reRender="results"
 							autoResize="false" style="resize:none" 
 							value="#{schemaQuestionsPageBean.answer}"/>
 						
@@ -55,38 +55,42 @@
 								value="Add" icon="ui-icon-check" style="margin:0"/>
 						</f:facet>
 					</p:panelGrid>
-					<br/>
-					<p:panelGrid columns="2">
+					<br/><br/>
+					
+					<p:panelGrid columns="1" >
 						<f:facet name="header">
-							<p:outputLabel value="Reorder/Delete Questions: " />
-						</f:facet>
-						<p:pickList value="#{schemaQuestionsPageBean.questionDualList}" 
-							var="question" converter="questionTupleConverter"
-							itemLabel="#{question.question}" itemValue="#{question}"
-							style="width:600"/>
+					    	<h:outputText style="font-size:20px;style-weight:bold" value="Reorder/Delete Questions:" />
+					    </f:facet>
+					    <p:dataTable var="question" value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
+					    	resizableColumns="true" scrollWidth="90%" scrollHeight="90%"
+								style="width:100%;height:300"
+					    	selectionMode="multiple" selection="#{schemaQuestionsPageBean.selectedQuestions}" rowKey="#{question}">
+					        <p:ajax event="rowReorder" />
+					        <p:column headerText="English Question">
+					            <h:outputText style="font-size:16;white-space: normal;" value="#{question.question}" />
+					        </p:column>
+					 
+					        <p:column headerText="SQL Answer">
+					            <h:outputText style="font-size:16;white-space: normal;" value="#{question.answer}" />
+					        </p:column>
+					    </p:dataTable>
 						<f:facet name="footer">
 							<p:commandButton id="reorderQuestionButton"
 								action="#{schemaQuestionsPageBean.reorderQuestions}"
 								ajax="false"
-								value="Reorder" icon="ui-icon-check" style="margin:0"/>
+								value="Reorder" icon="ui-icon-check" style="margin-right:10"/>
 							<p:commandButton id="deleteQuestionButton"
 								action="#{schemaQuestionsPageBean.deleteQuestions}"
 								ajax="false"
-								value="Delete" icon="ui-icon-check" style="margin:0"/>
+								value="Delete" icon="ui-icon-check"/>
 						</f:facet>
-						<p:column> 
-							<p:outputLabel value="To reorder, drag and drop selections 
-								within the left list then use the 'reorder' button. 
-								Only questions in the left list are affected. 
-								If any questions are in the right list when reordering takes place, 
-								those questions will retain their old positions 
-								(please avoid this, as it may result in duplicate positions)."/>
-							<br/><br/>
-							<p:outputLabel value="To delete, drag and drop selections in 
-								the left list over into to the right list. Then use the 
-								'delete' button (CAN NOT BE UNDONE). "/>
-						</p:column>
 					</p:panelGrid>
+					<br/>
+					<h:outputText style="font-size:16" value="To reorder, drag and drop then click the Reorder button." />
+					<br/>
+					<h:outputText style="font-size:16" value="To delete, select question(s) then click the Delete button (CAN NOT BE UNDONE)." />
+					<br/>
+					<h:outputText style="font-size:16" value="The columns are resizable." />
 				</div>
 		</h:form>
 	</h:body>

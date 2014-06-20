@@ -51,7 +51,7 @@ sqlNodeHasType(9, 'FromBaseTable').
 sqlNodeHasType(10, 'FromBaseTable').
 sqlNodeHasType(11, 'AndNode').
 sqlNodeHasType(16, 'BinaryRelationalOperatorNode').
-sqlNodeHasType(17, 'ColumnReference').
+sqlNodeHasType(16, 'ColumnReference').
 sqlNodeHasType(18, 'NumericConstantNode').
 sqlNodeHasType(19, 'BinaryRelationalOperatorNode').
 sqlNodeHasType(20, 'ColumnReference').
@@ -99,7 +99,7 @@ sqlTableAlias(5, 'e').
 sqlTableAlias(7, 's').
 sqlTableAlias(9, 'e').
 sqlTableAlias(10, 's').
-sqlTableAlias(17, 's').
+sqlTableAlias(16, 's').
 sqlTableAlias(20, 's').
 erAttribute('Department', 'Name').
 erAttribute('Department', 'Number').
@@ -187,7 +187,7 @@ sqlParentOf(8, 9).
 sqlParentOf(8, 10).
 sqlParentOf(11, 16).
 sqlParentOf(11, 19).
-sqlParentOf(16, 17).
+sqlParentOf(16, 16).
 sqlParentOf(16, 18).
 sqlParentOf(19, 20).
 sqlParentOf(19, 21).
@@ -204,7 +204,7 @@ symIsPronoun('WP$').
 sqlColumnName(3, 'first_name').
 sqlColumnName(5, 'last_name').
 sqlColumnName(7, 'salary').
-sqlColumnName(17, 'salary').
+sqlColumnName(16, 'salary').
 sqlColumnName(20, 'salary').
 symIsAdjective('JJ').
 symIsAdjective('JJR').
@@ -225,7 +225,7 @@ symParentOf(6, 13, 1).
 symParentOf(6, 14, 2).
 symParentOf(9, 15, 0).
 symParentOf(9, 16, 1).
-symParentOf(10, 17, 0).
+symParentOf(10, 16, 0).
 symParentOf(10, 18, 1).
 symParentOf(12, 19, 0).
 symParentOf(13, 20, 0).
@@ -250,7 +250,7 @@ symType(13, 'LITERALS').
 symType(14, 'TABLE_ENTITY').
 symType(15, 'ATTRIBUTE').
 symType(16, 'ATTRIBUTE').
-symType(17, 'LITERAL').
+symType(16, 'LITERAL').
 symType(18, 'LITERAL').
 symType(19, 'ATTRIBUTE').
 symType(20, 'LITERAL').
@@ -272,7 +272,7 @@ symPartOfSpeech(13, 'PP').
 symPartOfSpeech(14, 'NN').
 symPartOfSpeech(15, 'NN').
 symPartOfSpeech(16, 'NN').
-symPartOfSpeech(17, 'IN').
+symPartOfSpeech(16, 'IN').
 symPartOfSpeech(18, 'DT').
 symPartOfSpeech(19, 'NN').
 symPartOfSpeech(20, 'IN').
@@ -313,4 +313,4 @@ lrnTableLabel(?table, ?label, ?source) :- lrnTableLabel(?table, ?label, ?otherso
 symIsLeaf(?id) :- symParentOf(?parent, ?id, ?pos), !symParentOf(?id, ?child, ?pos2).
 symNonLiteralLeaves(?id) :- symIsLeaf(?id), symType(?id, ?type), NOT_EQUAL(?type, 'LITERAL').
 
-?-?nodeId=17,sqlNodeHasType(?nodeId, 'ColumnReference'),sqlColumnName(?nodeId,?cname),sqlTableAlias(?nodeId,?talias),sqlTableAlias(?tid,?talias),sqlTableName(?tid,?tname).
+?-?nodeId=16,sqlNodeHasType(?nodeId, 'ColumnReference'),sqlColumnName(?nodeId,?cname),sqlTableAlias(?nodeId,?talias),sqlTableAlias(?tid,?talias),sqlTableName(?tid,?tname).

@@ -18,44 +18,38 @@
 						<p:dataTable var="databaseTable"
 							value="#{schemaOptionsPageBean.tables}">
 							<p:column headerText="Table Names">
-								<h:outputText value="#{databaseTable.tableName}" />
+								<h:outputText style="font-size:16px" value="#{databaseTable.tableName}" />
 							</p:column>
-							<p:column headerText="Column Names" width="400" style="white-space: normal;">
-								<h:outputText value="#{databaseTable.columns}" />
+							<p:column headerText="Column Names" style="white-space: normal;">
+								<h:outputText style="font-size:16px"  value="#{databaseTable.columns}" />
 							</p:column>
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
-				<p:outputLabel value="Schema Options" style="font-size:24px"/>
+				<h:outputText value="Schema Options" style="font-weight:bold;font-size:18px"/>
 				<br/><br/>
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:24px"/>
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:18px"/>
 				<br/><br/>
-				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:24px"/>
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:18px"/>
 			</div>
 			<div style="position:absolute;width:1000;top:auto;left:420">
 		    	<p:messages />
-				<table>  
-				    <tr>  
-				        <td><p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.visibleToUsers}"/></td>  
-				        <td><p:outputLabel for="check1" value="Visible to users"/></td>  
-				    </tr>  
-				    <tr>  
-				        <td><p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.inOrderQuestions}"/></td>  
-				        <td><p:outputLabel for="check2" value="In order questions"/></td>  
-				    </tr>  
-				    <tr>  
-				        <td><p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/></td>  
-				        <td><p:outputLabel for="check3" value="Delete this schema (CANNOT BE UNDONE)"/></td>  
-				    </tr>
-				    <tr>   
-						<td>
+				<p:panelGrid columns="2">  
+				    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.visibleToUsers}"/>
+				    <h:outputText style="font-size:16px" value="Visible to users"/> 
+				    
+				    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.inOrderQuestions}"/> 
+				    <h:outputText style="font-size:16px" value="In order questions"/>
+
+					<p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/> 
+				    <h:outputText style="font-size:16px" value="Delete this schema (CANNOT BE UNDONE)"/>  
+					<f:facet name="footer">  
 						<p:commandButton
 							action="#{schemaOptionsPageBean.submit}"
 							ajax="false"
 							value="Submit" icon="ui-icon-check" style="margin:0"/>
-						</td>
-					</tr>
-				</table> 
+					</f:facet>
+				</p:panelGrid> 
 			</div>  
 		</h:form>
 	</h:body>

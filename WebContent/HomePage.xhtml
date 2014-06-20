@@ -9,16 +9,19 @@
 		<ui:include src="/Menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body style="height:1000px;width:1400px;margin-left:20px">
+<h:body style="height:1000px;width:1800px;margin-left:20px">
 	<h:form>
-		<h2>Welcome to SQL Tutor.</h2>
-		<h:outputText value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/><p/>
-		<h:outputText rendered="#{userBean.isLoggedIn()}" value="Please use the navigation tool above to try things out, and feel free to email us with any feedback on the site."/>
-		<h:outputText rendered="#{!userBean.isLoggedIn()}" value="Try out SQL Tutor by registering or simply logging in with our guest account (username: guest, password: guest)."/>
-		<br/><br/>
-		<p:galleria value="#{featureGalleriaBean.images}" var="image" panelWidth="900" panelHeight="435">  
-		    <p:graphicImage value="/images/features-galleria/#{image}"/>  
-		</p:galleria>  
+		<p:panel style="width:1000">
+			<f:facet name="header">
+				<h:outputText style="font-weight:bold; font-size:20px"
+					value="Welcome to SQL Tutor." />
+			</f:facet>
+			<h:outputText style="font-size:16px"
+				value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/>
+			<p/>
+			<h:outputText style="font-size:16px"
+				rendered="#{userBean.isLoggedIn()}" value="Please use the menubar above to navigate and try things out, and feel free to email us with any feedback on the site."/>
+		</p:panel>
 	</h:form>
 </h:body>
 </html>
