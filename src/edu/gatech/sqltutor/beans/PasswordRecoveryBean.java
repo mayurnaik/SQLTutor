@@ -49,8 +49,7 @@ public class PasswordRecoveryBean implements Serializable {
 			String subject = "[SQL-Tutor] Password Recovery - Do Not Reply";
 			String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
 					+ "Go to this URL to reset your password: https://sqltutor.cc.gatech.edu/PasswordRecoveredPage.jsf?u=" + getEmail() + "&i=" + uuid.toString()
-					+ " \n\nDo not reply or send future correspondence to this email address. Please go to our site and click the "
-					+ "\"Contact Us\" button for the appropriate contact address.";
+					+ " \n\nDo not reply or send future correspondence to this email address. Please send any concerns to \"sql-tutor@googlegroups.com\".";
 			
 			Emailer.getInstance().sendMessage(to, subject, message);
 		} catch (MessagingException e) {
