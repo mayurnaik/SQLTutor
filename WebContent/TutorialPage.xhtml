@@ -3,147 +3,95 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
-<h:head>
-	<title>SQL Tutor</title>
-	<ui:insert name="menu">
-		<ui:include src="/Menubar.xhtml" />
-	</ui:insert>
-</h:head>
-<h:body style="height:1000px;width:1400px;margin-left:20px">
-	<h:form id="form">
-		<div style="position:absolute;width:600;height:500;top:auto;left:20">
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-weight:bold; font-size:20px"
-						value="Question"/>
-				</f:facet>
-				<p:outputLabel style="font-size:16px" 
-					id="question" value="#{tutorialPageBean.question}" />
-			</p:panel>
-			<br/>
+	<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:form>
+			<div class="left">
+				<p:panel style="max-height:19%;" header="Question" styleClass="panel">
+					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
+				</p:panel>
+				
+				<div class="seperator"/>
+				
+				<p:panel style="max-height:30%;" header="Database: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
+					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
+						resizableColumns="true" 
+						style="height:30%"
+						scrollWidth="100%"
+						scrollable="true">
+						<p:column headerText="Table Names" >
+							<p:outputLabel value="#{databaseTable.tableName}" />
+						</p:column>
+						<p:column headerText="Column Names" style="white-space: normal;">
+							<p:outputLabel value="#{databaseTable.columns}" />
+						</p:column>
+					</p:dataTable>
+				</p:panel>
+				
+				<div class="seperator"/>
+				
+				<p:panel style="max-height:29%;" header="Query Input" styleClass="panel">
+					<p:inputTextarea rows="12" id="query" reRender="results" style="width:100%;resize:none"
+						autoResize="false" value="#{tutorialPageBean.query}" />
 
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-weight:bold; font-size:20px"
-						value="Database"/>
-				</f:facet>
-				<p:dataTable var="databaseTable" scrollable="true" style="height:300"
-					resizableColumns="true" 
-					value="#{tutorialPageBean.tables}">
-					<p:column headerText="Table Names" style="font-size:16px">
-						<p:outputLabel style="font-size:16px" value="#{databaseTable.tableName}" />
-					</p:column>
-					<p:column headerText="Column Names" style="white-space: normal;font-size:16px;width:60%">
-						<p:outputLabel style="font-size:16px" value="#{databaseTable.columns}" />
-					</p:column>
-				</p:dataTable>
-			</p:panel>
-			<br/>
-			
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-weight:bold; font-size:20px"
-						value="Query Input"/>
-				</f:facet>
-				<p:inputTextarea rows="5" cols="65" id="query" reRender="results" style="resize:none"
-					autoResize="false" value="#{tutorialPageBean.query}" />
-				<f:facet name="footer">
 					<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
-						update="form" />
+						update="@form" styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"
-						update="form"/>
-				</f:facet>
-			</p:panel>
-		</div>
-
-		<div style="position:absolute;width:790;height:500;top:auto;left:630">
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-weight:bold; font-size:20px"
-						value="Query Result"/>
-				</f:facet>
-				<p:dataTable id="resultsTable" var="row" scrollable="true" style="height:300"
-					value="#{tutorialPageBean.queryResult.data}" resizableColumns="true"> 
-					<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
-						var="column" columnIndexVar="columnIndex">
-						<f:facet name="header">
-							<p:outputLabel style="font-weight:bold; font-size:16px"
-								value="#{column}"/>
-						</f:facet>
-						<p:outputLabel style="font-size:16px"
-								value="#{row[columnIndex]}"/>
-					</p:columns>
-				</p:dataTable>
-			</p:panel>
-			<br/>
-			
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-weight:bold; font-size:20px"
-						value="Feedback"/>
-				</f:facet>
-				<ui:param name="queryIsCorrectFeedback" value="#{tutorialPageBean.resultSetFeedback}"/>
-				<ui:param name="queryIsIncorrectFeedback" value="#{tutorialPageBean.resultSetFeedback} #{tutorialPageBean.feedbackNLP}"/>
-				<p:outputLabel id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}"
-					style="width: 700px!important; display:block!important; font-size:16px" escape="false"/>
-				<br/> <!--  value="#{tutorialPageBean.getQueryIsCorrect() ? queryIsCorrectFeedback : queryIsIncorrectFeedback}" -->
-				<p:outputLabel style="font-size:16px" 
-					value="Your result should resemble this example:" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
-				<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
-				<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
-					<p:dataTable id="answerTable" var="row" scrollable="true" scrollHeight="200"
-						value="#{tutorialPageBean.answerResult.data}" >
-						<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
+						update="@form" styleClass="panelbutton"/>
+				</p:panel>
+			</div>
+	
+			<div class="middle"/>
+	
+			<div class="right">
+				<p:panel style="max-height:60%" header="Query Result" styleClass="panel">
+					<p:dataTable id="resultsTable" var="row" value="#{tutorialPageBean.queryResult.data}"
+						resizableColumns="true"
+						style="height:60%"
+						scrollWidth="100%"
+						scrollable="true">
+						<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
 							var="column" columnIndexVar="columnIndex">
 							<f:facet name="header">
-								#{column}
+								<p:outputLabel value="#{column}"/>
 							</f:facet>
-							#{row[columnIndex]}
+							<p:outputLabel value="#{row[columnIndex]}"/>
 						</p:columns>
 					</p:dataTable>
-				</p:overlayPanel>
-				<br/>
-				<br/>
-				<br/>
-				<p:outputLabel style="width: 700px!important; display:block!important;font-size:16px" escape="false" 
-					value="Did this feedback help you? Did the question that we determined you meant to answer make sense? Please leave us anonymous feedback:"
-					rendered="#{!tutorialPageBean.isNlpDisabled()}"/>
-					<!-- rendered="#{!tutorialPageBean.getQueryIsCorrect()}" -->
-				<p:commandButton icon="ui-icon-check" onclick="PF('feedback_dlg').show();" value="Submit Feedback" 
-					rendered="#{!tutorialPageBean.isNlpDisabled()}" update=":feedbackForm:feedbackPanel"/>
-					<!--  #{!tutorialPageBean.getQueryIsCorrect()} -->
-			</p:panel>
-		</div>
-	</h:form>
-	<p:dialog id="feedbackDialog" header="Anonymous Feedback" widgetVar="feedback_dlg" 
-		modal="true" width="400" resizable="false" appendTo="@(body)">  
-		<h:form id="feedbackForm">
-			<p:panel id="feedbackPanel">
-				<p:outputLabel value="Please rate our English generation:"
-					style="font-size:16px"/>
-				<br/><br/>
-				<p:outputLabel style="font-size:16px" value="#{tutorialPageBean.feedbackNLP}"/>
-				<br/><br/>
-				<p:rating/>
-				<br/><br/>
-				<p:outputLabel style="font-size:16px"
-					value="Also, please describe how we might improve our feedback generation:"/>
-				<p:inputTextarea rows="3" cols="44" id="source" style="resize:none" 
-					value="#{tutorialPageBean.userFeedback}" autoResize="false"/>
-				<p:messages id="feedbackMessages"/>
-			</p:panel>
-			<p:panel>
-				<p:captcha label="Captcha" theme="white" required="true" 
-					requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/>
-			</p:panel>
-			<br/>
-			<p:commandButton id="submitFeedback" value="Submit Feedback" icon="ui-icon-check" style="margin:0"
-				action="#{tutorialPageBean.submitFeedback}" 
-				update="feedbackPanel" oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()"/>	
+				</p:panel>
+				
+				<div class="seperator"/>
+				
+				<p:panel header="Feedback" styleClass="panel">
+					<p:outputLabel id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
+					<br/>
+					
+					<p:outputLabel value="Your result should resemble this example:" 
+						rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
+						<p:dataTable id="answerTable" var="row" scrollable="true" 
+							value="#{tutorialPageBean.answerResult.data}" >
+							<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
+								var="column" columnIndexVar="columnIndex">
+								<f:facet name="header">
+									#{column}
+								</f:facet>
+								#{row[columnIndex]}
+							</p:columns>
+						</p:dataTable>
+					</p:overlayPanel>
+				</p:panel>
+			</div>		
 		</h:form>
-	</p:dialog>
-</h:body>
+	</h:body>
 </html>

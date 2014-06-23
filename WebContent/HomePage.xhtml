@@ -3,25 +3,27 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<h:head>
-	<title>SQL Tutor</title>
-	<ui:insert name="menu">
-		<ui:include src="/Menubar.xhtml" />
-	</ui:insert>
-</h:head>
-<h:body style="height:1000px;width:1800px;margin-left:20px">
-	<h:form>
-		<p:panel style="width:1000">
-			<f:facet name="header">
-				<h:outputText style="font-weight:bold; font-size:20px"
-					value="Welcome to SQL Tutor." />
-			</f:facet>
-			<h:outputText style="font-size:16px"
-				value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/>
-			<p/>
-			<h:outputText style="font-size:16px"
-				rendered="#{userBean.isLoggedIn()}" value="Please use the menubar above to navigate and try things out, and feel free to email us with any feedback on the site."/>
-		</p:panel>
-	</h:form>
-</h:body>
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form>
+			<p:panel header="Welcome to SQL Tutor" styleClass="panel">
+				<h:outputText 
+					value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/>
+				<p/>
+				
+				<h:outputText
+					value="Please use the menubar above to navigate and try things out, and feel free to send any questions and suggestions to "/>
+				<h:outputLink value="mailto:sql-tutor@googlegroups.com">
+					<h:outputText value="sql-tutor@googlegroups.com"/>
+				</h:outputLink>
+				<h:outputText value="."/>
+			</p:panel>
+		</h:form>
+	</h:body>
 </html>

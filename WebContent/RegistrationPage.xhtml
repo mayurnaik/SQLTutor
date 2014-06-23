@@ -3,46 +3,50 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
-<h:head>
-	<title>SQL Tutor</title>
-	<ui:insert name="menu">
-		<ui:include src="/Menubar.xhtml" />
-	</ui:insert>
-</h:head>
-<h:body style="height:1000px;width:1400px;margin-left:20px">
-	<h:form id="registrationForm">
-		<p:panel id="panel" header="Register">
-			<p:focus context="panel" />
-			<h:panelGrid columns="2">
-				<p:outputLabel style="font-size:16px" for="email" value="Email:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;" />
-				<p:inputText id="email" required="true"
-					requiredMessage="Please enter your email address."
-					validatorMessage="Invalid email format."
-					value="#{userBean.email}">
-		  			<f:validateRegex
-						pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-				</p:inputText>
+	<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form id="registrationForm">
+			<p:panel header="Register" styleClass="panel">
+				<h:outputText value="Any field marked with an asterkisk (*) is required."/>
+				<br/><br/>
 				
-				<p:outputLabel style="font-size:16px" for="password" value="Password:&#160;" />
-				<p:password id="password" required="true"
-					value="#{userBean.password}" label="Password 1" feedback="true"
-					requiredMessage="Please enter your password."
-					validatorMessage="Password length must be length greater than 2 and less than 13, and both entries must match."
-					match="password2">
-					<f:validateLength minimum="3" maximum="12" />
-				</p:password>
+				<h:panelGrid columns="2">
+					<p:outputLabel for="email" value="*Email:" />
+					<p:inputText required="true" id="email"
+						requiredMessage="Please enter your email address."
+						validatorMessage="Invalid email format."
+						value="#{userBean.email}">
+			  			<f:validateRegex
+							pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+					</p:inputText>
+					
+					<p:outputLabel value="*Password:" for="password"/>
+					<p:password required="true" id="password"
+						value="#{userBean.password}" label="Password 1" feedback="true"
+						requiredMessage="Please enter your password."
+						validatorMessage="Password length must be length greater than 2 and less than 13, and both entries must match."
+						match="password2">
+						<f:validateLength minimum="3" maximum="12" />
+					</p:password>
+					
+					<p:outputLabel value="*(again)" for="again" />
+					<p:password required="true" label="Password 2" id="again"
+						value="#{userBean.password}" 
+						requiredMessage="Please enter your password (again)."/>
+				</h:panelGrid>
 				
-				<p:outputLabel style="font-size:16px" for="password2" value="(again)&#160;&#160;&#160;&#160;&#160;&#160;&#160;" />
-				<p:password id="password2" required="true" label="Password 2"
-					value="#{userBean.password}" 
-					requiredMessage="Please enter your password (again)."/>
+				<p:captcha id="captcha" label="Captcha" required="true" secure="true" theme="white"/>   
 				
-			</h:panelGrid>
-			<p:captcha id="captcha" label="Captcha" required="true" secure="true" theme="white"/>   
-			<p:commandButton value="Submit" ajax="false" action="#{userBean.register}" />
-		</p:panel>
-		<p:messages id="registrationMessages"/>
-	</h:form>
-</h:body>
+				<p:commandButton value="Submit" ajax="false" action="#{userBean.register}" styleClass="panelbutton"/>
+			</p:panel>
+			<p:messages id="registrationMessages"/>
+		</h:form>
+	</h:body>
 </html>

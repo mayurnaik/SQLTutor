@@ -10,85 +10,89 @@
 			<ui:include src="/Menubar.xhtml" />
 		</ui:insert>
 	</h:head>
-	<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form>
-			<div style="position:absolute;width:400;top:auto;left:20">
+			<div class="left2">
 				<p:commandButton id="databaseButton" value="Show Schema" />
-				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
 						<p:dataTable var="databaseTable"
-							value="#{schemaInstancesPageBean.tables}">
-							<p:column headerText="Table Names" style="font-size:16px">
-								<p:outputLabel style="font-size:16px" value="#{databaseTable.tableName}" />
+							value="#{schemaQuestionsPageBean.tables}"
+							resizableColumns="true"
+							style="height:30%"
+							scrollWidth="100%"
+							scrollable="true">
+							<p:column headerText="Table Names">
+								<p:outputLabel value="#{databaseTable.tableName}" />
 							</p:column>
 							<p:column headerText="Column Names" style="white-space: normal;">
-								<h:outputText style="font-size:16" value="#{databaseTable.columns}" />
+								<h:outputText value="#{databaseTable.columns}" />
 							</p:column>
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
-				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:18px"/>
+				
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" />
 				<br/><br/>
-				<h:outputText style="font-size:18" value="Schema Instances" />
+				
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" disabled="true"/>
 				<br/><br/>
-				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:18px"/>			
+				
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage"/>			
 			</div>
-			<div style="position:absolute;width:1000;top:auto;left:420">
+			
+			<div class="middle"/>
+			
+			<div class="right2">
 		    	<p:messages />
 		    	
-		 		<p:panel >
-					<f:facet name="header">
-						<h:outputText style="font-size:16" value="Use this to view the instance's data. Columns are resizable."/>
-					</f:facet>
-					
-				    <p:tabView value="#{schemaInstancesPageBean.tables}" var="table" scrollable="true"
+		 		<p:panel classStyle="panel" header="Instance Data View" style="max-height:30%">
+				    <p:tabView value="#{schemaInstancesPageBean.tables}" var="table"
 				    	dynamic="true">
-				        <p:tab id="tab" title="#{table.tableName}">
-							<p:dataTable id="data" var="row" scrollable="true" scrollWidth="90%" scrollHeight="90%"
-								style="width:1000;height:300"
+				        <p:tab title="#{table.tableName}" >
+							<p:dataTable var="row" 
 								value="#{schemaInstancesPageBean.tableData[table.tableName].data}" 
-								resizableColumns="true">
+								resizableColumns="true"
+								style="height:30%"
+								scrollWidth="100%"
+								scrollable="true">
 								<p:columns value="#{schemaInstancesPageBean.tableData[table.tableName].columns}" style="white-space: normal;"
 									var="column" columnIndexVar="columnIndex">
 									<f:facet name="header">
-										<p:outputLabel style="font-weight:bold; font-size:16px"
-											value="#{column}"/>
+										<p:outputLabel value="#{column}"/>
 									</f:facet>
-									<p:outputLabel style="font-size:16px"
-											value="#{row[columnIndex]}"/>
+									<p:outputLabel value="#{row[columnIndex]}"/>
 								</p:columns>
 							</p:dataTable>
 				        </p:tab>
 				    </p:tabView>
 				</p:panel>
-				<br/><br/>
+				<br/>
 				
-				<p:panel >
-					<f:facet name="header">
-						<h:outputText style="font-size:16" value="Use this text entry box to alter and query the instance:" />
-					</f:facet>
-					<p:inputTextarea rows="5" cols="115" id="query" reRender="results" style="resize:none"
+				<p:panel classStyle="panel" header="Use this text entry box to alter and query the instance:">
+					<p:inputTextarea rows="5" style="resize:none; width: 100%"
 						autoResize="false" value="#{schemaInstancesPageBean.query}" />
 					<br/>
+					
 					<p:commandButton id="try" value="Submit"
 						action="#{schemaInstancesPageBean.processSQL}"
 						ajax="false"
-						style="margin-top:5"/>
-	
+						styleClass="panelbutton"/>
 					<br/><br/>
-					<p:panel >
-						<f:facet name="header">
-							<p:outputLabel for="resultsTable" style="font-size:20;font-weight:bold" value="Result Set:"/>
-						</f:facet>
-						<p:dataTable id="resultsTable" var="row" scrollable="true" scrollHeight="200"
+					
+					<p:panel header="Result Set" styleClass="panel" style="width:100%">
+						
+						<p:dataTable id="resultsTable" var="row" 
+							resizableColumns="true"
+							style="height:30%;"
+							scrollable="true"
 							value="#{schemaInstancesPageBean.queryResult.data}">
 							<p:columns value="#{schemaInstancesPageBean.queryResult.columns}" style="white-space: normal;"
 								var="column" columnIndexVar="columnIndex">
 								<f:facet name="header">
-									<h:outputText style="font-weight:bold; font-size:16px"
-										value="#{column}"/>
+									<h:outputText value="#{column}"/>
 								</f:facet>
-								<h:outputText style="font-size:16px"
-										value="#{row[columnIndex]}"/>
+								<h:outputText value="#{row[columnIndex]}"/>
 							</p:columns>
 						</p:dataTable>
 					</p:panel>

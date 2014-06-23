@@ -10,46 +10,61 @@
 			<ui:include src="/Menubar.xhtml" />
 		</ui:insert>
 	</h:head>
-	<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:body>
 		<h:form>
-			<div style="position:absolute;width:400;top:auto;left:20">
+			<h:outputStylesheet library="css" name="styles.css"/>
+			<div class="left2">
 				<p:commandButton id="databaseButton" value="Show Schema" />
-				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+					<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
 						<p:dataTable var="databaseTable"
-							value="#{schemaOptionsPageBean.tables}">
+							value="#{schemaQuestionsPageBean.tables}"
+							resizableColumns="true"
+							style="height:30%"
+							scrollWidth="100%"
+							scrollable="true">
 							<p:column headerText="Table Names">
-								<h:outputText style="font-size:16px" value="#{databaseTable.tableName}" />
+								<h:outputText value="#{databaseTable.tableName}" />
 							</p:column>
 							<p:column headerText="Column Names" style="white-space: normal;">
-								<h:outputText style="font-size:16px"  value="#{databaseTable.columns}" />
+								<h:outputText value="#{databaseTable.columns}" />
 							</p:column>
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
-				<h:outputText value="Schema Options" style="font-weight:bold;font-size:18px"/>
+				
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" disabled="true" />
 				<br/><br/>
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:18px"/>
+				
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
 				<br/><br/>
-				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" style="font-size:18px"/>
+				
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" />
 			</div>
-			<div style="position:absolute;width:1000;top:auto;left:420">
+			
+			<div class="middle"/>
+			
+			<div class="right2">
 		    	<p:messages />
-				<p:panelGrid columns="2">  
-				    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.visibleToUsers}"/>
-				    <h:outputText style="font-size:16px" value="Visible to users"/> 
-				    
-				    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.inOrderQuestions}"/> 
-				    <h:outputText style="font-size:16px" value="In order questions"/>
-
-					<p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/> 
-				    <h:outputText style="font-size:16px" value="Delete this schema (CANNOT BE UNDONE)"/>  
-					<f:facet name="footer">  
-						<p:commandButton
-							action="#{schemaOptionsPageBean.submit}"
-							ajax="false"
-							value="Submit" icon="ui-icon-check" style="margin:0"/>
-					</f:facet>
-				</p:panelGrid> 
+		    	<p:panel header="Schema Options" styleClass="panel">
+					<p:panelGrid columns="2"> 
+					    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.visibleToUsers}"/>
+					    <h:outputText value="Visible to users"/> 
+					    
+					    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.inOrderQuestions}"/> 
+					    <h:outputText value="In order questions"/>
+	
+						<p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/> 
+					    <p:column>	
+					    	<h:outputText value="Delete this schema "/>  
+					    	<h:outputText value="(cannot be undone)" styleClass="warning"/>  
+					    </p:column>
+					</p:panelGrid> 
+					
+					<p:commandButton
+						action="#{schemaOptionsPageBean.submit}"
+						ajax="false" styleClass="panelbutton"
+						value="Submit" icon="ui-icon-check"/>
+				</p:panel>
 			</div>  
 		</h:form>
 	</h:body>

@@ -10,68 +10,51 @@
 		<ui:include src="/Menubar.xhtml" />
 	</ui:insert>
 </h:head>
-<h:body style="height:1000px;width:1400px;margin-left:20px">
-	<h:form id="schemaUploadForm" enctype="multipart/form-data">  
-		<div style="position:absolute;width:375;height:400;top:auto;left:20">
-			<p:panelGrid columns="2">
-				<f:facet name="header">  
-				    <p:outputLabel style="font-size:20px;font-weight:bold" 
-				    	value="Upload Schema"/>
-				</f:facet>
-				<p:outputLabel style="font-size:20px;font-weight:bold" for="schemaFile" value="Schema file: " />
-				
-				<p:fileUpload id="schemaFile" mode="advanced" label="Choose Schema"
-					auto="true" sizeLimit="1048576" allowTypes="/(\.|\/)(sql)$/" 
-					fileUploadListener="#{schemaUploadPageBean.handleFileUpload}"/>  
-				<f:facet name="footer">
-					<p:commandButton id="schemaUploadButton"
-						action="#{schemaUploadPageBean.addSchema}"
-						update="schemaUploadForm"
-						value="Submit" icon="ui-icon-check" style="margin:0"/>
-				</f:facet> 
-			</p:panelGrid>
-			<p:messages id="messages" showDetail="true" autoUpdate="true"/>
-		</div>
-		<div style="position:absolute;width:400;height:400;top:auto;left:675">
-			<p:panel >
-				<f:facet name="header">
-					<p:outputLabel style="font-size:20px;font-weight:bold"
-						value="Example applicable .sql file:"/>
-				</f:facet>
-				
-				<p:outputLabel value="CREATE SCHEMA business_trip"
-					style="font-size:16px"/>
-				<br/><br/>
-				<p:outputLabel value="
-					CREATE TABLE salesperson (
-						SSN integer PRIMARY KEY, 
-						name text, 
-						start_year smallint, 
-						dept_no integer
-					)"
-					style="font-size:16px"/> 
-				<br/><br/>
-				<p:outputLabel value="
-					CREATE TABLE trip (
-						SSN integer references salesperson(SSN), 
-						from_city text, 
-						to_city text, 
-						departure_date date, 
-						return_date date, 
-						trip_id integer PRIMARY KEY
-					)"
-					style="font-size:16px"/> 
-				<br/><br/>
-				<p:outputLabel value="
-					CREATE TABLE expense (
-						trip_id integer references trip(trip_id), 
-						account_id integer, 
-						amount integer,
-						PRIMARY KEY(trip_id, account_id)
-					);" 
-					style="font-size:16px"/> 
-			</p:panel>
-		</div>
+<h:body>
+	<h:outputStylesheet library="css" name="styles.css"/>
+	<h:form enctype="multipart/form-data">  
+		<p:messages id="messages" showDetail="true" autoUpdate="true"/>
+		<p:panel header="Upload Schema" styleClass="panel">
+			<p:fileUpload id="schemaFile" mode="advanced" label="Choose Schema"
+				auto="true" sizeLimit="1048576" allowTypes="/(\.|\/)(sql)$/" 
+				fileUploadListener="#{schemaUploadPageBean.handleFileUpload}"/> 
+			
+			<p:commandButton 
+				action="#{schemaUploadPageBean.addSchema}"
+				update="@form" styleClass="panelbutton"
+				value="Submit" icon="ui-icon-check"/>
+		</p:panel>
+		<br/>
+		
+		<p:panel header="Example Applicable .sql File" styleClass="panel" >
+			<p:outputLabel value="CREATE SCHEMA business_trip"/>
+			<br/><br/>
+			<p:outputLabel value="
+				CREATE TABLE salesperson (
+					SSN integer PRIMARY KEY, 
+					name text, 
+					start_year smallint, 
+					dept_no integer
+				)"/> 
+			<br/><br/>
+			<p:outputLabel value="
+				CREATE TABLE trip (
+					SSN integer references salesperson(SSN), 
+					from_city text, 
+					to_city text, 
+					departure_date date, 
+					return_date date, 
+					trip_id integer PRIMARY KEY
+				)"/> 
+			<br/><br/>
+			<p:outputLabel value="
+				CREATE TABLE expense (
+					trip_id integer references trip(trip_id), 
+					account_id integer, 
+					amount integer,
+					PRIMARY KEY(trip_id, account_id)
+				);" /> 
+		</p:panel>
 	</h:form>
 </h:body>
 </html>

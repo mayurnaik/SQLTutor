@@ -6,91 +6,95 @@
 	<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
 	<h:head>
 		<title>SQL Tutor</title>
+		<h:outputStylesheet library="css" name="styles.css"/>
 		<ui:insert name="menu">
 			<ui:include src="/Menubar.xhtml" />
 		</ui:insert>
 	</h:head>
-	<h:body style="height:1000px;width:1400px;margin-left:20px">
+	<h:body>
 		<h:form>
-			<div style="position:absolute;width:400;top:auto;left:20">
+			<div class="left2">
 				<p:commandButton id="databaseButton" value="Show Schema" />
-				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade"> 
+				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
 						<p:dataTable var="databaseTable"
-							value="#{schemaQuestionsPageBean.tables}">
+							value="#{schemaQuestionsPageBean.tables}"
+							resizableColumns="true"
+							style="height:30%"
+							scrollWidth="100%"
+							scrollable="true">
 							<p:column headerText="Table Names">
-								<h:outputText style="font-size:16px" value="#{databaseTable.tableName}" />
+								<h:outputText value="#{databaseTable.tableName}" />
 							</p:column>
 							<p:column headerText="Column Names" style="white-space: normal;">
-								<h:outputText style="font-size:16px" value="#{databaseTable.columns}" />
+								<h:outputText value="#{databaseTable.columns}" />
 							</p:column>
 						</p:dataTable>
 				</p:overlayPanel> 
 				<br/><br/>
-				<h:link value="Schema Options" outcome="SchemaOptionsPage" style="font-size:18px"/>
+				
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" />
 				<br/><br/>
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" style="font-size:18px"/>
+				
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
 				<br/><br/>
-				<h:outputText style="font-size:18px;style-weight:bold" value="Schema Questions"/>
+				
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" disabled="true"/>
 			</div>
-			<div style="position:absolute;width:1000;top:auto;left:420">
+			
+			<div class="middle"/>
+			
+			<div class="right2">
 			    	<p:messages />
-					<p:panelGrid columns="2">
-						<f:facet name="header">  
-						    <h:outputText style="font-size:20px;style-weight:bold" value="Add Questions:" />
-						</f:facet>
+			    	
+					<p:panel style="max-height:30%" header="Add Questions" styleClass="panel">
+						<p:outputLabel for="question" value="In English: " />
+						<p:inputTextarea rows="5" id="question" style="resize:none;width:100%;"
+							value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
 						
-						<p:outputLabel style="font-size:16" for="question" value="In English: " />
-						<p:inputTextarea rows="3" cols="105" id="question" style="resize:none"
-								value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
-						
-						<p:outputLabel style="font-size:16" for="answer" value="In SQL: " />
-						<p:inputTextarea rows="3" cols="105" id="answer" reRender="results"
-							autoResize="false" style="resize:none" 
+						<p:outputLabel for="answer" value="In SQL: " />
+						<p:inputTextarea id="answer" rows="5" 
+							autoResize="false" style="resize:none;width:100%;" 
 							value="#{schemaQuestionsPageBean.answer}"/>
 						
-						<f:facet name="footer">
-							<p:commandButton
-								action="#{schemaQuestionsPageBean.addQuestion}"
-								ajax="false"
-								value="Add" icon="ui-icon-check" style="margin:0"/>
-						</f:facet>
-					</p:panelGrid>
-					<br/><br/>
+						<p:commandButton
+							action="#{schemaQuestionsPageBean.addQuestion}"
+							ajax="false"
+							value="Add" icon="ui-icon-check" styleClass="panelbutton"/>
+					</p:panel>
+					<br/>
 					
-					<p:panelGrid columns="1" >
-						<f:facet name="header">
-					    	<h:outputText style="font-size:20px;style-weight:bold" value="Reorder/Delete Questions:" />
-					    </f:facet>
+					<p:panel style="max-height:70%" styleClass="panel" header="Reorder/Delete Questions">
+						<h:outputText value="To reorder, drag and drop then click the Reorder button." />
+						<br/>
+						<h:outputText value="To delete, select question(s) then click the Delete button " />
+						<h:outputText value="(cannot be undone)" styleClass="warning"/>  
+						<h:outputText value="." />  
+						<br/><br/>
 					    <p:dataTable var="question" value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
-					    	resizableColumns="true" scrollWidth="90%" scrollHeight="90%"
-								style="width:100%;height:300"
+					    	resizableColumns="true"
+							style="height:50%"
+							scrollWidth="100%"
+							scrollable="true"
 					    	selectionMode="multiple" selection="#{schemaQuestionsPageBean.selectedQuestions}" rowKey="#{question}">
 					        <p:ajax event="rowReorder" />
 					        <p:column headerText="English Question">
-					            <h:outputText style="font-size:16;white-space: normal;" value="#{question.question}" />
+					            <h:outputText style="white-space: normal;" value="#{question.question}" />
 					        </p:column>
 					 
 					        <p:column headerText="SQL Answer">
-					            <h:outputText style="font-size:16;white-space: normal;" value="#{question.answer}" />
+					            <h:outputText value="#{question.answer}" />
 					        </p:column>
 					    </p:dataTable>
-						<f:facet name="footer">
-							<p:commandButton id="reorderQuestionButton"
-								action="#{schemaQuestionsPageBean.reorderQuestions}"
-								ajax="false"
-								value="Reorder" icon="ui-icon-check" style="margin-right:10"/>
-							<p:commandButton id="deleteQuestionButton"
-								action="#{schemaQuestionsPageBean.deleteQuestions}"
-								ajax="false"
-								value="Delete" icon="ui-icon-check"/>
-						</f:facet>
-					</p:panelGrid>
-					<br/>
-					<h:outputText style="font-size:16" value="To reorder, drag and drop then click the Reorder button." />
-					<br/>
-					<h:outputText style="font-size:16" value="To delete, select question(s) then click the Delete button (CAN NOT BE UNDONE)." />
-					<br/>
-					<h:outputText style="font-size:16" value="The columns are resizable." />
+					    
+						<p:commandButton id="reorderQuestionButton"
+							action="#{schemaQuestionsPageBean.reorderQuestions}"
+							ajax="false"
+							value="Reorder" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+						<p:commandButton id="deleteQuestionButton"
+							action="#{schemaQuestionsPageBean.deleteQuestions}"
+							ajax="false" styleClass="panelbutton" 
+							value="Delete" icon="ui-icon-check"/>
+					</p:panel>
 				</div>
 		</h:form>
 	</h:body>
