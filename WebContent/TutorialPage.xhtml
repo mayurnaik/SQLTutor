@@ -14,16 +14,16 @@
 	<h:body>
 		<h:form>
 			<div class="left">
-				<p:panel style="max-height:19%;" header="Question" styleClass="panel">
+				<p:panel header="Question" styleClass="panel">
 					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
 				</p:panel>
 				
 				<div class="seperator"/>
 				
-				<p:panel style="max-height:30%;" header="Database: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
+				<p:panel header="Schema: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
 					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
 						resizableColumns="true" 
-						style="height:30%"
+						style="height:30% !important"
 						scrollWidth="100%"
 						scrollable="true">
 						<p:column headerText="Table Names" >
@@ -37,7 +37,7 @@
 				
 				<div class="seperator"/>
 				
-				<p:panel style="max-height:29%;" header="Query Input" styleClass="panel">
+				<p:panel header="Query Input" styleClass="panel">
 					<p:inputTextarea rows="12" id="query" reRender="results" style="width:100%;resize:none"
 						autoResize="false" value="#{tutorialPageBean.query}" />
 
@@ -53,10 +53,10 @@
 			<div class="middle"/>
 	
 			<div class="right">
-				<p:panel style="max-height:60%" header="Query Result" styleClass="panel">
+				<p:panel header="Query Result" styleClass="panel">
 					<p:dataTable id="resultsTable" var="row" value="#{tutorialPageBean.queryResult.data}"
 						resizableColumns="true"
-						style="height:60%"
+						style="height:60% !important"
 						scrollWidth="100%"
 						scrollable="true">
 						<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
@@ -75,7 +75,7 @@
 					<p:outputLabel id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
 					<br/>
 					
-					<p:outputLabel value="Your result should resemble this example:" 
+					<p:outputLabel value="Your result should resemble this example: " 
 						rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
 					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 

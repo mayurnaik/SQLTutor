@@ -14,31 +14,33 @@
 		<h:form>
 			<h:outputStylesheet library="css" name="styles.css"/>
 			<div class="left2">
-				<p:commandButton id="databaseButton" value="Show Schema" />
-					<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
-						<p:dataTable var="databaseTable"
-							value="#{schemaQuestionsPageBean.tables}"
-							resizableColumns="true"
-							style="height:30%"
-							scrollWidth="100%"
-							scrollable="true">
-							<p:column headerText="Table Names">
-								<h:outputText value="#{databaseTable.tableName}" />
-							</p:column>
-							<p:column headerText="Column Names" style="white-space: normal;">
-								<h:outputText value="#{databaseTable.columns}" />
-							</p:column>
-						</p:dataTable>
-				</p:overlayPanel> 
-				<br/><br/>
-				
-				<h:link value="Schema Options" outcome="SchemaOptionsPage" disabled="true" />
-				<br/><br/>
-				
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
-				<br/><br/>
-				
-				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" />
+				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedSchema}&quot;">
+					<p:commandButton id="databaseButton" value="Show Schema" styleClass="panelbutton"/>
+						<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
+							<p:dataTable var="databaseTable"
+								value="#{schemaQuestionsPageBean.tables}"
+								resizableColumns="true"
+								style="height:30%"
+								scrollWidth="100%"
+								scrollable="true">
+								<p:column headerText="Table Names">
+									<h:outputText value="#{databaseTable.tableName}" />
+								</p:column>
+								<p:column headerText="Column Names" style="white-space: normal;">
+									<h:outputText value="#{databaseTable.columns}" />
+								</p:column>
+							</p:dataTable>
+					</p:overlayPanel> 
+					<br/><br/>
+					
+					<h:link value="Schema Options" outcome="SchemaOptionsPage" disabled="true"/>
+					<br/><br/>
+					
+					<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
+					<br/><br/>
+					
+					<h:link value="Schema Questions" outcome="SchemaQuestionsPage" />
+				</p:panel>
 			</div>
 			
 			<div class="middle"/>

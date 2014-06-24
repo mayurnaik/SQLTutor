@@ -14,31 +14,33 @@
 	<h:body>
 		<h:form>
 			<div class="left2">
-				<p:commandButton id="databaseButton" value="Show Schema" />
-				<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
-						<p:dataTable var="databaseTable"
-							value="#{schemaQuestionsPageBean.tables}"
-							resizableColumns="true"
-							style="height:30%"
-							scrollWidth="100%"
-							scrollable="true">
-							<p:column headerText="Table Names">
-								<h:outputText value="#{databaseTable.tableName}" />
-							</p:column>
-							<p:column headerText="Column Names" style="white-space: normal;">
-								<h:outputText value="#{databaseTable.columns}" />
-							</p:column>
-						</p:dataTable>
-				</p:overlayPanel> 
-				<br/><br/>
-				
-				<h:link value="Schema Options" outcome="SchemaOptionsPage" />
-				<br/><br/>
-				
-				<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
-				<br/><br/>
-				
-				<h:link value="Schema Questions" outcome="SchemaQuestionsPage" disabled="true"/>
+				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedSchema}&quot;">
+					<p:commandButton id="databaseButton" value="Show Schema" />
+					<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50% !important"> 
+							<p:dataTable var="databaseTable"
+								value="#{schemaQuestionsPageBean.tables}"
+								resizableColumns="true"
+								style="height:30% !important"
+								scrollWidth="100% !important"
+								scrollable="true">
+								<p:column headerText="Table Names">
+									<h:outputText value="#{databaseTable.tableName}" />
+								</p:column>
+								<p:column headerText="Column Names" style="white-space: normal;">
+									<h:outputText value="#{databaseTable.columns}" />
+								</p:column>
+							</p:dataTable>
+					</p:overlayPanel> 
+					<br/><br/>
+					
+					<h:link value="Schema Options" outcome="SchemaOptionsPage" />
+					<br/><br/>
+					
+					<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
+					<br/><br/>
+					
+					<h:link value="Schema Questions" outcome="SchemaQuestionsPage" disabled="true"/>
+				</p:panel>
 			</div>
 			
 			<div class="middle"/>
@@ -46,14 +48,14 @@
 			<div class="right2">
 			    	<p:messages />
 			    	
-					<p:panel style="max-height:30%" header="Add Questions" styleClass="panel">
+					<p:panel header="Add Questions" styleClass="panel">
 						<p:outputLabel for="question" value="In English: " />
-						<p:inputTextarea rows="5" id="question" style="resize:none;width:100%;"
+						<p:inputTextarea rows="5" id="question" style="resize:none;width:100% !important;"
 							value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
 						
 						<p:outputLabel for="answer" value="In SQL: " />
 						<p:inputTextarea id="answer" rows="5" 
-							autoResize="false" style="resize:none;width:100%;" 
+							autoResize="false" style="resize:none;width:100% !important;" 
 							value="#{schemaQuestionsPageBean.answer}"/>
 						
 						<p:commandButton
@@ -63,7 +65,7 @@
 					</p:panel>
 					<br/>
 					
-					<p:panel style="max-height:70%" styleClass="panel" header="Reorder/Delete Questions">
+					<p:panel styleClass="panel" header="Reorder/Delete Questions">
 						<h:outputText value="To reorder, drag and drop then click the Reorder button." />
 						<br/>
 						<h:outputText value="To delete, select question(s) then click the Delete button " />
@@ -72,7 +74,7 @@
 						<br/><br/>
 					    <p:dataTable var="question" value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
 					    	resizableColumns="true"
-							style="height:50%"
+							style="height:50% !important"
 							scrollWidth="100%"
 							scrollable="true"
 					    	selectionMode="multiple" selection="#{schemaQuestionsPageBean.selectedQuestions}" rowKey="#{question}">
