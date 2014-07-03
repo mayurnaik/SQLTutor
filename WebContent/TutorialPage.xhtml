@@ -14,11 +14,6 @@
 	<h:body>
 		<h:form>
 			<div class="left">
-				<p:panel header="Question" styleClass="panel">
-					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
-				</p:panel>
-				
-				<div class="seperator"/>
 				
 				<p:panel header="Schema: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
 					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
@@ -33,6 +28,12 @@
 							<p:outputLabel value="#{databaseTable.columns}" />
 						</p:column>
 					</p:dataTable>
+				</p:panel>
+				
+				<div class="seperator"/>
+				
+				<p:panel header="Question" styleClass="panel">
+					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
 				</p:panel>
 				
 				<div class="seperator"/>

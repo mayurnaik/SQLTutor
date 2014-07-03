@@ -2,17 +2,20 @@ package beans;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 
+import edu.gatech.sqltutor.DatabaseManager;
 import utilities.Emailer;
-import utilities.JDBC_PostgreSQL_Connection;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -27,9 +30,10 @@ import java.util.regex.Pattern;
 @SessionScoped
 public class UserBean implements Serializable {
 	private static final long serialVersionUID = 1L;
+
+	@ManagedProperty(value="#{databaseManager}")
+	private DatabaseManager databaseManager;
 	
-	/** CONNECTION will be used to connect to the 'Users' PostgreSQL database for user name and password verification. */
-	private static final JDBC_PostgreSQL_Connection CONNECTION = new JDBC_PostgreSQL_Connection();
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
 	private static final String REGISTRATION_ERROR = "The email you entered is already registered.";
@@ -48,26 +52,38 @@ public class UserBean implements Serializable {
 	 */
 	public void login() throws IOException { 
 		String loginMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":loginForm:loginMessages").getClientId();
-		if(!CONNECTION.isUsernameRegistered(email.toLowerCase()) || 
-				!CONNECTION.isPasswordCorrect(email.toLowerCase(), password)) {
-			
-			FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, null));
-			return;
+		try {
+			if(!getDatabaseManager().isUsernameRegistered(email.toLowerCase()) || 
+					!getDatabaseManager().isPasswordCorrect(email.toLowerCase(), password)) {
+				
+				FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, null));
+				return;
+			}
+
+			loggedIn = true;
+			selectedSchema = "company";
+			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} 
-		loggedIn = true;
-		selectedSchema = "company";
-		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
 	}
 
 	public void register() throws IOException {
 		String registrationMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":registrationForm:registrationMessages").getClientId();
-		if(CONNECTION.isUsernameRegistered(email.toLowerCase())) {
-			FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
-			return;
-		} 
 		try {
-			CONNECTION.registerUser(email.toLowerCase(), password);
+			if(getDatabaseManager().isUsernameRegistered(email.toLowerCase())) {
+				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
+				return;
+			}
+			getDatabaseManager().registerUser(email.toLowerCase(), password);
 			loggedIn = true;
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
@@ -78,6 +94,12 @@ public class UserBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, msg, null));
 			}
 			System.out.println(e.getMessage());
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -165,5 +187,13 @@ public class UserBean implements Serializable {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+
+	public void setDatabaseManager(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 }

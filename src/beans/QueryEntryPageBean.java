@@ -9,11 +9,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
+import edu.gatech.sqltutor.DatabaseManager;
 import objects.DatabaseTable;
 import objects.QueryResult;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_MySQL_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
 
 @ManagedBean
 @ViewScoped
@@ -22,7 +20,10 @@ public class QueryEntryPageBean implements Serializable {
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	private JDBC_Abstract_Connection connection;
+	
+	@ManagedProperty(value="#{databaseManager}")
+	private DatabaseManager databaseManager;
+	
 	private String selectedDatabase;
 	private List<DatabaseTable> tables;
 	private String query;
@@ -32,16 +33,20 @@ public class QueryEntryPageBean implements Serializable {
 
 	@PostConstruct
 	public void init() {
-		connection = new JDBC_PostgreSQL_Connection();
 		selectedDatabase = userBean.getSelectedSchema();
-		tables = connection.getTables(selectedDatabase);
+		try {
+			tables = getDatabaseManager().getTables(selectedDatabase);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		setPrepopulatedQuery();
 		queryMalformed = false;
 	}
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query, userBean.isDevUser());
+			queryResult = getDatabaseManager().getQueryResult(selectedDatabase, query, userBean.isDevUser());
 			queryMalformed = false;
 		} catch(SQLException e) {
 			feedbackNLP = "Your query was malformed. Please try again.\n" + e.getMessage();
@@ -99,5 +104,13 @@ public class QueryEntryPageBean implements Serializable {
 		if(queryResult != null && queryResult.getColumns().size() > 8)
 			return true;
 		return false;
+	}
+
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+
+	public void setDatabaseManager(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 }

@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form>
+			<p:panel header="Terms of Service" styleClass="panel">
+				<h:outputText value=
+				"By accessing this web site, you are agreeing to be bound by these web site Terms and Conditions of 
+				Use, all applicable laws and regulations, and agree that you are responsible for compliance with any 
+				applicable local laws. If you do not agree with any of these terms, you are prohibited from using or 
+				accessing this site. The materials contained in this web site are protected by applicable copyright 
+				and trade mark law."/>
+				<p/>
+				
+				<h:outputText value=
+				"The materials on SQL Tutor's web site are provided &quot;as is&quot;. SQL Tutor makes no warranties, 
+				expressed or implied, and hereby disclaims and negates all other warranties, including without 
+				limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, 
+				or non-infringement of intellectual property or other violation of rights. Further, SQL Tutor does 
+				not warrant or make any representations concerning the accuracy, likely results, or reliability of 
+				the use of the materials on its Internet web site or otherwise relating to such materials or on any 
+				sites linked to this site."/>
+				<p/>
+				
+				<h:outputText value=
+				"In no event shall SQL Tutor or its suppliers be liable for any damages (including, without limitation, damages 
+				for loss of data or profit, or due to business interruption) arising out of the use or inability to use the 
+				materials on SQL Tutor's Internet site, even if SQL Tutor or a SQL Tutor authorized representative has been 
+				notified orally or in writing of the possibility of such damage. Because some jurisdictions do not allow 
+				limitations on implied warranties, or limitations of liability for consequential or incidental damages, these 
+				limitations may not apply to you."/>
+				<p/>
+				
+				<h:outputText value=
+				"SQL Tutor may revise these terms of use for its web site at any time without notice. By using this 
+				web site you are agreeing to be bound by the then current version of these Terms and Conditions of 
+				Use."/>
+				<p/>
+			</p:panel>
+		</h:form>
+	</h:body>
+</html>

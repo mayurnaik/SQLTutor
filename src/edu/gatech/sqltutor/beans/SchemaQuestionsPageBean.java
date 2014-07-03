@@ -19,8 +19,6 @@ import org.primefaces.model.DualListModel;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.QuestionTuple;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 
@@ -34,8 +32,6 @@ public class SchemaQuestionsPageBean implements Serializable {
 	
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
-	
-	private JDBC_Abstract_Connection connection;
 	
 	private List<DatabaseTable> tables;
 	
@@ -51,8 +47,12 @@ public class SchemaQuestionsPageBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
-		connection = new JDBC_PostgreSQL_Connection();
-		tables = connection.getTables(selectedSchema);
+		try {
+			tables = databaseManager.getTables(selectedSchema);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		setupQuestionList();
 	}

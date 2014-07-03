@@ -22,9 +22,6 @@ import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
 import objects.QuestionTuple;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_MySQL_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -42,7 +39,6 @@ public class TutorialPageBean {
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
 	
-	private JDBC_Abstract_Connection connection;
 	private String selectedSchema;
 	private List<DatabaseTable> tables;
 	private List<String> questions = new ArrayList<String>();
@@ -60,15 +56,19 @@ public class TutorialPageBean {
 
 	@PostConstruct
 	public void init() {
-		connection = new JDBC_PostgreSQL_Connection();
 		selectedSchema = userBean.getSelectedSchema();
-		tables = connection.getTables(selectedSchema);
+		try {
+			tables = databaseManager.getTables(selectedSchema);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		setQuestionsAndAnswers();
 	}
 
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedSchema, query, userBean.isDevUser());
+			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isDevUser());
 			if(!nlpDisabled)
 				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			else 
@@ -77,8 +77,14 @@ public class TutorialPageBean {
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
-		connection.log(getSessionId(), getIpAddress(), userBean.getEmail(), selectedSchema, 
-				questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
+		
+		try {
+			databaseManager.log(getSessionId(), getIpAddress(), userBean.getEmail(), selectedSchema, 
+					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	} 
 	
 	public String getIpAddress() {
@@ -98,7 +104,7 @@ public class TutorialPageBean {
 	
 	public void setResultSetDiffs() {
 		try {
-			answerResult = connection.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isDevUser());
+			answerResult = databaseManager.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isDevUser());
 			queryDiffResult = new QueryResult(queryResult);
 			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
 			queryDiffResult.getData().removeAll(answerResult.getData());
@@ -133,8 +139,8 @@ public class TutorialPageBean {
 				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
 				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
 				try {
-					queryDiffResult = connection.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isDevUser());
-					answerDiffResult = connection.getQueryResult(selectedSchema, answerDiffQuery, userBean.isDevUser());
+					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isDevUser());
+					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isDevUser());
 					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
 						resultSetFeedback = "Correct.";
 					} else {

@@ -22,8 +22,7 @@ import org.primefaces.model.DualListModel;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.QuestionTuple;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
+
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 
@@ -37,9 +36,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
-	
-	private JDBC_Abstract_Connection connection;
-	
+
 	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
 	
@@ -51,12 +48,16 @@ public class SchemaInstancesPageBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
-		connection = new JDBC_PostgreSQL_Connection();
 		setupTables();
 	}
 	
 	public void setupTables() {
-		tables = connection.getTables(selectedSchema);
+		try {
+			tables = databaseManager.getTables(selectedSchema);
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
 		List<String> tableNames = new ArrayList<String>();
 		
@@ -65,7 +66,7 @@ public class SchemaInstancesPageBean implements Serializable {
 		}
 		
 		try {
-			setTableData(connection.getAllData(selectedSchema, tableNames));
+			setTableData(databaseManager.getAllData(selectedSchema, tableNames));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -74,6 +75,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	public void processSQL() {
 		try {
 			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -81,7 +83,7 @@ public class SchemaInstancesPageBean implements Serializable {
 				return;
 			}
 			
-			queryResult = connection.getQueryResult(selectedSchema, query, userBean.isDevUser());
+			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isDevUser());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();

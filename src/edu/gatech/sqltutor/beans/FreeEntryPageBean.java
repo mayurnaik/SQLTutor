@@ -17,9 +17,6 @@ import javax.faces.context.FacesContext;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_MySQL_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
 import beans.UserBean;
 
 import com.akiban.sql.StandardException;
@@ -27,6 +24,7 @@ import com.akiban.sql.parser.SQLParser;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 
+import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.entities.UserQuery;
@@ -38,7 +36,10 @@ public class FreeEntryPageBean implements Serializable {
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	private JDBC_Abstract_Connection connection;
+
+	@ManagedProperty(value="#{databaseManager}")
+	private DatabaseManager databaseManager;
+	
 	private String selectedDatabase;
 	private List<DatabaseTable> tables;
 	private String query;
@@ -53,11 +54,20 @@ public class FreeEntryPageBean implements Serializable {
 
 	@PostConstruct
 	public void init() {
-		connection = new JDBC_PostgreSQL_Connection();
 		selectedDatabase = userBean.getSelectedSchema();
-		tables = connection.getTables(selectedDatabase);
+		try {
+			tables = getDatabaseManager().getTables(selectedDatabase);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		userQueries = connection.getUserQueries(selectedDatabase);
+		try {
+			userQueries = getDatabaseManager().getUserQueries(selectedDatabase);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void addQuery() {
@@ -76,7 +86,7 @@ public class FreeEntryPageBean implements Serializable {
 				return;
 			}
 			try {
-				connection.verifyQuery(selectedDatabase, query);
+				getDatabaseManager().verifyQuery(selectedDatabase, query);
 			} catch(SQLException e) {
 				FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Query was malformed.\n" + e.getMessage(), null);
@@ -91,7 +101,12 @@ public class FreeEntryPageBean implements Serializable {
 			userQuery.setUserDescription(userDescription);
 			userQuery.setSource(source);
 			
-			connection.saveUserQuery(userQuery);
+			try {
+				getDatabaseManager().saveUserQuery(userQuery);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			userQueries.add(userQuery);
 			
 			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -116,7 +131,7 @@ public class FreeEntryPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query, userBean.isDevUser());
+			queryResult = getDatabaseManager().getQueryResult(selectedDatabase, query, userBean.isDevUser());
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
@@ -193,5 +208,13 @@ public class FreeEntryPageBean implements Serializable {
 
 	public String getSource() {
 		return source;
+	}
+
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+
+	public void setDatabaseManager(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 }

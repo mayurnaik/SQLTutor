@@ -1,0 +1,43 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form>
+			<p:panel header="Privacy Statement" styleClass="panel">
+				<h:outputText value=
+					"We are committed to protecting your privacy. This privacy statement explains many of the data 
+					collection and use practices of SQL Tutor."/>
+				<br/>
+				<br/>
+				
+				<h:outputText value=
+					"Some information we collect may be used for further research, in collaboration with other 
+					researchers. Specifically, the information we collect from you can be used to analyze and improve 
+					SQL Tutor, for further research on querying languages and education, and to publish statistical 
+					information and results. We log technical data, specifically relating to the use and results of SQL
+					Tutor, but do not log any identifying data."/>
+				<br/>
+				<br/>
+				
+				<h:outputText value=
+					"We will not publish any data about individual users."/>
+				<br/>
+				<br/>
+
+				<h:outputText value=
+					"In order to access certain SQL Tutor online services, you will be asked to enter your 
+					e-mail address and a password. We will not share your email and password with any third 
+					parties, nor will we publish this information in any way."/>
+			</p:panel>
+		</h:form>
+	</h:body>
+</html>

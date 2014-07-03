@@ -7,15 +7,17 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.management.openmbean.InvalidKeyException;
 import javax.servlet.http.HttpServletRequest;
 
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 import utilities.Emailer;
-import utilities.JDBC_PostgreSQL_Connection;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -43,6 +45,7 @@ public class PasswordRecoveryBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(null, msg);
 				return;
 			}
+			
 			UUID uuid = UUID.randomUUID();
 			databaseManager.addPasswordChangeRequest(getEmail(), uuid);
 			String to = getEmail(); 
@@ -52,25 +55,39 @@ public class PasswordRecoveryBean implements Serializable {
 					+ " \n\nDo not reply or send future correspondence to this email address. Please send any concerns to \"sql-tutor@googlegroups.com\".";
 			
 			Emailer.getInstance().sendMessage(to, subject, message);
+			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"The password request has been sent to your email.", "");
+			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (MessagingException e) {
 			e.printStackTrace();
 		} catch(SQLException e) {
 			e.printStackTrace();
+		} catch(InvalidKeySpecException e) {
+			e.printStackTrace();
+		} catch(NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
-		
-		final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				"The password request has been sent to your email.", "");
-		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 	
 	public void invalidRedirect() {
-		if(!databaseManager.getPasswordChangeRequest(getEmail(), id)) {
-			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-	        try {
-				externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-			} catch (IOException e) {
-				e.printStackTrace();
+		try {
+			if(!databaseManager.getPasswordChangeRequest(getEmail(), id)) {
+				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+			    try {
+					externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -78,15 +95,20 @@ public class PasswordRecoveryBean implements Serializable {
 		try {
 			databaseManager.changePassword(getEmail(), getPassword());
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-	        try {
-				externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Your password has been changed.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch(SQLException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

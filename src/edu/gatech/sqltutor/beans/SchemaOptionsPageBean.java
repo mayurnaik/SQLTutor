@@ -16,8 +16,6 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 import objects.DatabaseTable;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 
@@ -32,8 +30,6 @@ public class SchemaOptionsPageBean implements Serializable {
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
 	
-	private JDBC_Abstract_Connection connection;
-	
 	private List<DatabaseTable> tables;
 	
 	private String selectedSchema;
@@ -46,8 +42,7 @@ public class SchemaOptionsPageBean implements Serializable {
 	public void init() {
 		try {
 			selectedSchema = userBean.getSelectedSchema();
-			connection = new JDBC_PostgreSQL_Connection();
-			tables = connection.getTables(selectedSchema);
+			tables = databaseManager.getTables(selectedSchema);
 			
 			HashMap<String, Boolean> options = 
 					databaseManager.getOptions(selectedSchema);

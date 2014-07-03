@@ -12,10 +12,7 @@ import javax.faces.bean.ViewScoped;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.Question;
-import utilities.JDBC_Abstract_Connection;
-import utilities.JDBC_MySQL_Connection;
-import utilities.JDBC_PostgreSQL_Connection;
-
+import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.IQueryTranslator;
 
 @ManagedBean
@@ -25,7 +22,10 @@ public class SampleNLPPageBean implements Serializable {
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	private JDBC_Abstract_Connection connection;
+	
+	@ManagedProperty(value="#{databaseManager}")
+	private DatabaseManager databaseManager;
+
 	private String selectedDatabase;
 	private List<DatabaseTable> tables;
 	private String query;
@@ -35,16 +35,20 @@ public class SampleNLPPageBean implements Serializable {
 
 	@PostConstruct
 	public void init() {
-		connection = new JDBC_PostgreSQL_Connection();
 		selectedDatabase = userBean.getSelectedSchema();
-		tables = connection.getTables(selectedDatabase);
+		try {
+			tables = getDatabaseManager().getTables(selectedDatabase);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		setPrepopulatedQuery();
 		queryMalformed = false;
 	}
 	
 	public void processSQL() {
 		try {
-			queryResult = connection.getQueryResult(selectedDatabase, query, userBean.isDevUser());
+			queryResult = getDatabaseManager().getQueryResult(selectedDatabase, query, userBean.isDevUser());
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			feedbackNLP = "Corresponding question: \n" + nlp;
@@ -99,5 +103,13 @@ public class SampleNLPPageBean implements Serializable {
 	
 	public boolean getQueryMalformed() {
 		return queryMalformed;
+	}
+
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+
+	public void setDatabaseManager(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 }
