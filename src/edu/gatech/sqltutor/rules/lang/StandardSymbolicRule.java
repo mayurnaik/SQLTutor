@@ -40,8 +40,9 @@ public abstract class StandardSymbolicRule extends AbstractSymbolicRule {
 				return false;
 			
 			RelationExtractor ext = new RelationExtractor(bindings);
-			ext.setNodeMap(state.getSqlState().getSqlFacts().getNodeMap());
+//			ext.setNodeMap(state.getSqlState().getSqlFacts().getNodeMap());
 			ext.setTokenMap(state.getSymbolicFacts().getTokenMap());
+			ext.setRelation(relation);
 			
 			return handleResult(relation, ext);
 		} catch( EvaluationException e ) {

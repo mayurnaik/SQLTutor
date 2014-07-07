@@ -14,6 +14,8 @@ public interface ITranslationRule {
 	public static final int TYPE_SQL = 1;
 	public static final int TYPE_SYMBOLIC = 2;
 	
+	public boolean apply(SymbolicState state);
+	
 	/** 
 	 * Returns the precedence of this rule.  
 	 * Rules should be applied in order of precedence.

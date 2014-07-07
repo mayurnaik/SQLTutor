@@ -24,6 +24,7 @@ public class SQLNounToken extends SQLToken implements INounToken {
 	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
+		b = super.addPropertiesString(b);
 		b.append(", singular=\"").append(Utils.escapeChars(singular, "\""))
 			.append("\", plural=\"").append(Utils.escapeChars(plural, "\""))
 			.append("\"");

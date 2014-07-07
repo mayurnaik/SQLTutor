@@ -67,3 +67,11 @@ sqlExplicitJoined(?t1,?t2) :-
 sqlJoined(?t1,?t2) :- sqlImplicitJoined(?t1,?t2).
 sqlJoined(?t1,?t2) :- sqlExplicitJoined(?t1,?t2).
 
+sqlColumnTableName(?colId, ?tableName) :-
+  sqlNodeHasType(?colId, 'ColumnReference'),
+  sqlNodeHasType(?tableId, 'FromBaseTable'),
+  sqlTableAlias(?colId, ?tableAlias),
+  sqlTableAlias(?tableId, ?tableAlias),
+  sqlTableName(?tableId, ?tableName).
+
+

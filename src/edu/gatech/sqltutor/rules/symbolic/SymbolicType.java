@@ -18,5 +18,6 @@ public enum SymbolicType {
 	BINARY_COMPARISON,
 	NUMBER,
 	BETWEEN,
-	SQL_AST;
+	SQL_AST,
+	IN_RELATIONSHIP;
 }

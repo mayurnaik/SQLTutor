@@ -1,6 +1,11 @@
 
 //// HELPER RULES
 
+ruleDefaultAttributeLabel_colNeedsLabel(?col) :-  
+  sqlNodeHasType(?col, 'ColumnReference'),
+  symSingularLabel(?col, ?singular),
+  ?singular = "".
+
 // table.column references entity.attribute
 ruleDefaultAttributeLabel_attributeColumnReference(?tableId, ?colId, ?entity, ?attribute) :-
   sqlColumnName(?colId,?colName),

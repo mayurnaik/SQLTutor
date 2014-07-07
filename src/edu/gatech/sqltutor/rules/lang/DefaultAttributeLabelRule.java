@@ -15,9 +15,8 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.gatech.sqltutor.rules.ISQLTranslationRule;
+import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.datalog.iris.EntityLabelFormat;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
@@ -30,7 +29,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
  * are first processed by {@link EntityLabelFormat}.
  */
 public class DefaultAttributeLabelRule 
-		extends AbstractSQLRule implements ISQLTranslationRule {
+		extends StandardSymbolicRule implements ISymbolicTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(DefaultAttributeLabelRule.class);
 	
 	public static final String RULE_SOURCE = DefaultAttributeLabelRule.class.getSimpleName();
@@ -51,26 +50,21 @@ public class DefaultAttributeLabelRule
 	public DefaultAttributeLabelRule() { }
 	
 	@Override
-	public boolean apply(SQLState state) {
-		this.state = state;
-		try {
-			RelationExtractor ext = IrisUtil.executeQuery(QUERY, state);
-			IRelation results = ext.getRelation();
-			if( results.size() == 0 )
-				return false;
-						
-			final boolean debug = _log.isDebugEnabled(Markers.DATALOG_FACTS);
-			while( ext.nextTuple() ) {
-				ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent"), ext.getTerm("?attr"), 
-					ext.getTerm("?singular"), ext.getTerm("?plural"), TERM_RULE_SOURCE);
-				state.addFact(LearnedPredicates.attributeLabel, fact);
-				if( debug )
-					_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", rulePredicate, fact);
-			}
-			return true;
-		} finally {
-			this.state = null;
+	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		final boolean debug = _log.isDebugEnabled(Markers.DATALOG_FACTS);
+		while( ext.nextTuple() ) {
+			ITuple fact = IrisUtil.asTuple(ext.getTerm("?ent"), ext.getTerm("?attr"), 
+				ext.getTerm("?singular"), ext.getTerm("?plural"), TERM_RULE_SOURCE);
+			state.addFact(LearnedPredicates.attributeLabel, fact);
+			if( debug )
+				_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", rulePredicate, fact);
 		}
+		return true;
+	}
+	
+	@Override
+	protected IQuery getQuery() {
+		return QUERY;
 	}
 	
 	@Override

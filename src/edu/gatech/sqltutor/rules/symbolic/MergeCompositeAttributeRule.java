@@ -64,7 +64,7 @@ public class MergeCompositeAttributeRule
 		AttributeListToken attrList = ext.getToken("?attrList");
 		// replacing with the composite
 		String parentFullName = ext.getString("?entity") + "." + ext.getString("?composite");
-		ERDiagram erDiagram = state.getSqlState().getErDiagram();
+		ERDiagram erDiagram = state.getErDiagram();
 		ERAttribute composite = erDiagram.getAttribute(parentFullName);
 		if( composite == null )
 			throw new SQLTutorException("Could not find parent attribute: " + parentFullName);

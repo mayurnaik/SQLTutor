@@ -11,9 +11,7 @@ import org.deri.iris.EvaluationException;
 import org.deri.iris.KnowledgeBaseFactory;
 import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IPredicate;
-import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
-import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,6 @@ import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
-import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
@@ -46,6 +43,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicCreatorNew;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
@@ -81,6 +79,7 @@ public class SymbolicFragmentTranslator
 	
 	@Override
 	protected void computeTranslation() throws SQLTutorException {
+		final boolean SYM_DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
 		this.result = null;
 		this.outputs = new ArrayList<String>();
 		
@@ -99,54 +98,71 @@ public class SymbolicFragmentTranslator
 		erFacts.generateFacts(erDiagram);
 		erFacts.generateFacts(erMapping);
 		
+		// parse query
 		StatementNode statement = parseQuery();
 		SelectNode select = QueryUtils.extractSelectNode(statement);
-		
-		SQLState sqlState = new SQLState();
-		sqlState.setErDiagram(erDiagram);
-		sqlState.setErMapping(erMapping);
-		sqlState.setAst(select);
-		sqlState.setSqlFacts(sqlFacts);
-		sqlState.setErFacts(erFacts);
+
+		// create initial symbolic state
+		RootToken symbolic = new SymbolicCreatorNew(select).makeSymbolic();
+		SymbolicState symState = new SymbolicState();
+		symState.setErDiagram(erDiagram);
+		symState.setErMapping(erMapping);
+		symState.setErFacts(erFacts);
+		symState.setSymbolicFacts(symFacts);
+		buildMaps();
 		loadStaticRules();
+
+		Map<IPredicate, IRelation> queryFacts = makeFacts(symState);
+//		symFacts.setNodeMap(sqlFacts.getNodeMap());
+		IKnowledgeBase kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+		symState.setKnowledgeBase(kb);
 		
-		IKnowledgeBase kb = createSQLKnowledgeBase(select, sqlState);
-		sqlState.setKnowledgeBase(kb);
+//		SQLState sqlState = new SQLState();
+//		sqlState.setErDiagram(erDiagram);
+//		sqlState.setErMapping(erMapping);
+//		sqlState.setAst(select);
+//		sqlState.setSqlFacts(sqlFacts);
+//		sqlState.setErFacts(erFacts);
+//		loadStaticRules();
+		
+		
+//		IKnowledgeBase kb = createSQLKnowledgeBase(select, sqlState);
+//		sqlState.setKnowledgeBase(kb);
 		
 		sortRules();
 		
-		// apply analysis rules to discover new facts
-		for( ISQLTranslationRule sqlRule: 
-				Iterables.filter(translationRules, ISQLTranslationRule.class) ) {
-			while( sqlRule.apply(sqlState) ) {
-				kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
-				sqlState.setKnowledgeBase(kb);
-				
-				// apply each rule as many times as possible
-				// FIXME non-determinism when precedences match?
-				_log.debug(Markers.METARULE, "Applied rule: {}", sqlRule);
-			}
-			
-		}
+//		// apply analysis rules to discover new facts
+//		for( ISQLTranslationRule sqlRule: 
+//				Iterables.filter(translationRules, ISQLTranslationRule.class) ) {
+//			while( sqlRule.apply(sqlState) ) {
+//				kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
+//				sqlState.setKnowledgeBase(kb);
+//				
+//				// apply each rule as many times as possible
+//				// FIXME non-determinism when precedences match?
+//				_log.debug(Markers.METARULE, "Applied rule: {}", sqlRule);
+//			}
+//			
+//		}
 		
 		if( _log.isInfoEnabled() )
 			_log.info("statement: {}", QueryUtils.nodeToString(statement));
 		
-		// all non-symbolic facts and rules are now frozen
-		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
-		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
-		staticRules.addAll(SymbolicRules.getInstance().getRules());
-		symFacts.setNodeMap(sqlFacts.getNodeMap());
-		
-		// create initial symbolic state
-		RootToken symbolic = makeSymbolic(sqlState);
+//		// all non-symbolic facts and rules are now frozen
+//		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
+//		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
+//		staticRules.addAll(SymbolicRules.getInstance().getRules());
+//		symFacts.setNodeMap(sqlFacts.getNodeMap());
+//		
+//		// create initial symbolic state
+//		RootToken symbolic = makeSymbolic(sqlState);
 //		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
 			_log.info(Markers.SYMBOLIC, "Initial symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
-		SymbolicState symState = new SymbolicState(sqlState);
-		symState.setSymbolicFacts(symFacts);
-		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
-		symState.setKnowledgeBase(kb);
+//		SymbolicState symState = new SymbolicState(sqlState);
+//		symState.setSymbolicFacts(symFacts);
+//		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+//		symState.setKnowledgeBase(kb);
 		
 		// FIXME remove this eventually
 		if( DUMP_DATALOG ) {
@@ -154,13 +170,6 @@ public class SymbolicFragmentTranslator
 			symFacts.generateFacts(symbolic, false);
 			IrisUtil.dumpFacts(symFacts.getFacts());
 			IrisUtil.dumpRules(staticRules);
-			
-			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(LearnedPredicates.tableLabel, "?table", "?label", "?source")
-			));
-			dumpQuery(kb, Factory.BASIC.createQuery(
-				IrisUtil.literal(LearnedPredicates.tableInRelationship, "?tref","?rel","?pos","?source")
-			));
 		}
 		
 		// perform rewriting rules
@@ -175,10 +184,12 @@ public class SymbolicFragmentTranslator
 			sawNewState = false;
 			for( ISymbolicTranslationRule metarule: symbolicRules ) { 
 				while( metarule.apply(symState) ) {
-					if( DUMP_SYMBOLIC_REWRITES && _log.isDebugEnabled(Markers.SYMBOLIC)) {
+					if( DUMP_SYMBOLIC_REWRITES && SYM_DEBUG) {
 						_log.debug(Markers.SYMBOLIC, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
 					}
-					kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
+					@SuppressWarnings("unchecked")
+					Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symState.getRuleFacts());
+					kb = createSymbolicKnowledgeBase(/*queryFacts*/facts, symbolic);
 					symState.setKnowledgeBase(kb);
 					
 					// FIXME non-determinism and final output checks
@@ -196,7 +207,7 @@ public class SymbolicFragmentTranslator
 					
 					// apply each rule as many times as possible
 					// FIXME non-determinism when precedences match?
-					_log.debug(Markers.METARULE, "Applied rule: {}", metarule);
+					_log.info(Markers.METARULE, "Applied rule: {}", metarule);
 					_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
 					
 					if( symbolicStates.add(symbolic.toString()) )
@@ -230,6 +241,7 @@ public class SymbolicFragmentTranslator
 
 		long duration = -System.currentTimeMillis();
 		symFacts.generateFacts(symbolic, false);
+		@SuppressWarnings("unchecked")
 		Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symFacts.getFacts());
 		
 		List<IRule> rules = staticRules;
@@ -245,18 +257,6 @@ public class SymbolicFragmentTranslator
 			throw new SQLTutorException(e);
 		}
 	}
-
-	private static void dumpQuery(IKnowledgeBase kb, IQuery q) {
-		try {
-			IRelation rel = kb.execute(q);
-			System.out.println(q);
-			for( int i = 0; i < rel.size(); ++i ) {
-				System.out.println(rel.get(i));
-			}
-		} catch( EvaluationException e ) {
-			e.printStackTrace();
-		}
-	}
 	
 	private List<IRule> staticRules;
 	private void loadStaticRules() {
@@ -266,6 +266,7 @@ public class SymbolicFragmentTranslator
 		staticRules = Lists.newArrayList();
 		staticRules.addAll(sqlRules.getRules());
 		staticRules.addAll(erRules.getRules());
+		staticRules.addAll(SymbolicRules.getInstance().getRules());
 		for( ITranslationRule rule: translationRules ) {
 			staticRules.addAll(rule.getDatalogRules());
 		}
@@ -295,6 +296,24 @@ public class SymbolicFragmentTranslator
 		return facts;
 	}
 	
+	protected Map<IPredicate, IRelation> makeFacts(SymbolicState state) {
+		SQLRules sqlRules = SQLRules.getInstance();
+		ERRules erRules = ERRules.getInstance();
+		SymbolicRules symRules = SymbolicRules.getInstance();
+		
+		@SuppressWarnings("unchecked")
+		Map<IPredicate, IRelation> facts = mergeFacts(		
+			sqlFacts.getFacts(),
+			sqlRules.getFacts(),
+			erFacts.getFacts(),
+			erRules.getFacts(),
+			symRules.getFacts()
+//			state.getRuleFacts()
+		);
+		return facts;
+		
+	}
+	
 	protected IKnowledgeBase createSQLKnowledgeBase(SelectNode select, SQLState state) {
 		long duration = -System.currentTimeMillis();
 		sqlFacts.generateFacts(select, true);
@@ -319,20 +338,21 @@ public class SymbolicFragmentTranslator
 		List<ITranslationRule> rules = new ArrayList<ITranslationRule>(symbolicRules.size() + 5);
 		rules.addAll(Arrays.<ITranslationRule>asList(
 			// analysis rules
-			new JoinLabelRule(),
+//			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
-			new DescribingAttributeLabelRule()
+			new DefaultColumnLabelRule()
+//			new DescribingAttributeLabelRule()
 		));
 		rules.addAll(symbolicRules);
 		return rules;
 	}
 	
-	private RootToken makeSymbolic(SQLState sqlState) {
-		this.buildMaps();
-		return new SymbolicCreator(sqlState, sqlMaps).makeSymbolic();
-	}
-	
+//	private RootToken makeSymbolic(SQLState sqlState) {
+//		this.buildMaps();
+//		return new SymbolicCreator(sqlState, sqlMaps).makeSymbolic();
+//	}
+//	
 	@Override
 	public void clearResult() {
 		super.clearResult();

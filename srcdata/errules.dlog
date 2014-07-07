@@ -35,3 +35,6 @@ erLookupJoinKeyPair(?rel, ?pos, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'lookup_table'),
   erJoinPK(?rel, ?pos, ?pktable, ?pkattr),
   erJoinFK(?rel, ?pos, ?fktable, ?fkattr).
+  
+erAttributeHasPluralLabel(?ent, ?attr) :- erAttributeLabelPlural(?ent, ?attr, ?plural).
+

@@ -11,6 +11,10 @@ public class TableEntityToken extends AbstractSymbolicToken implements ISymbolic
 	/** The referenced table. */
 	protected FromTable table;
 	
+	protected String id;
+	protected String singular;
+	protected String plural;
+	
 	public TableEntityToken(TableEntityToken token) {
 		super(token);
 		this.table = token.table;

@@ -13,19 +13,27 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.BinaryOperatorNode;
+import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.ConstantNode;
+import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.google.common.base.Joiner;
 
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.IObjectMapper;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
@@ -134,8 +142,12 @@ public class SymbolicFacts extends DynamicFacts {
 			addLocalFacts(tokenId, token);
 			
 			int i = 0;
+			final boolean isParentAST = token instanceof SQLToken;
 			for( ISymbolicToken child: token.getChildren() ) {
 				Integer childId = tokenMap.getObjectId(child);
+				// TODO sql phase unified with symbolic, generate sql facts to avoid updating datalog for now
+				if( isParentAST && child instanceof SQLToken )
+					addFact(SQLPredicates.parentOf, tokenId, childId);
 				addFact(SymbolicPredicates.parentOf, tokenId, childId, i++);
 				worklist.addLast(child);
 			}
@@ -148,6 +160,9 @@ public class SymbolicFacts extends DynamicFacts {
 		addFact(SymbolicPredicates.type, tokenId, tokenType);
 		addFact(SymbolicPredicates.provenance, tokenId, 
 			Joiner.on('|').join(token.getProvenance()));
+		
+		if( token instanceof INounToken )
+			addNounFacts(tokenId, (INounToken)token);
 		
 		switch( tokenType ) {
 			case ATTRIBUTE: 
@@ -165,6 +180,10 @@ public class SymbolicFacts extends DynamicFacts {
 			case LITERAL:
 				addLiteralFacts(tokenId, (LiteralToken)token);
 				break;
+			case SQL_AST:
+				// unification of sql/symbolic phases
+				addSQLFacts(tokenId, (SQLToken)token);
+				break;
 			default: break;
 		}
 		
@@ -173,6 +192,16 @@ public class SymbolicFacts extends DynamicFacts {
 		}
 	}
 	
+	private void addNounFacts(Integer tokenId, INounToken token) {
+		String singular = token.getSingularLabel();
+		String plural = token.getPluralLabel();
+		
+		if( singular == null ) singular = "";
+		if( plural == null ) plural = "";
+		addFact(SymbolicPredicates.singularLabel, tokenId, singular);
+		addFact(SymbolicPredicates.pluralLabel, tokenId, plural);
+	}
+
 	private void addLiteralFacts(Integer tokenId, LiteralToken token) {
 		addFact(SymbolicPredicates.literalExpression, tokenId, token.getExpression());
 	}
@@ -197,5 +226,45 @@ public class SymbolicFacts extends DynamicFacts {
 	
 	private void addBinaryComparisonFacts(Integer tokenId, BinaryComparisonToken token) {
 		addFact(SymbolicPredicates.binaryOperator, tokenId, token.getOperator());
+	}
+	
+	// FIXME migrated from SQLFacts for sql/symbolic phase unification
+	private void addSQLFacts(Integer nodeId, SQLToken token) {
+		QueryTreeNode node = token.getAstNode();
+		String nodeType = node.getClass().getName().replaceAll("^.*\\.", "");
+		addFact(SQLPredicates.nodeHasType, nodeId, nodeType);
+		
+		if( node instanceof ColumnReference )
+			addColumnReferenceFacts(nodeId, (ColumnReference)node);
+		if( node instanceof BinaryOperatorNode )
+			addBinopFacts(nodeId, (BinaryOperatorNode)node);
+		if( node instanceof FromBaseTable )
+			addTableFacts(nodeId, (FromBaseTable)node);
+		if( node instanceof ConstantNode )
+			addConstantFacts(nodeId, (ConstantNode)node);
+		
+		if( _log.isDebugEnabled() ) {
+			// gen facts to make debugging easier
+			addFact(SQLPredicates.nodeDebugString, nodeId, QueryUtils.nodeToString(node));
+		}
+	}
+	
+	private void addBinopFacts(Integer nodeId, BinaryOperatorNode binop) {
+		String op = binop.getOperator();
+		addFact(SQLPredicates.operator, nodeId, op);
+	}
+	
+	private void addTableFacts(Integer nodeId, FromBaseTable table) {
+		addFact(SQLPredicates.tableName, nodeId, table.getOrigTableName().getTableName());
+		addFact(SQLPredicates.tableAlias, nodeId, table.getExposedName());
+	}
+	
+	private void addColumnReferenceFacts(Integer nodeId, ColumnReference col) {
+		addFact(SQLPredicates.tableAlias, nodeId, col.getTableName());
+		addFact(SQLPredicates.columnName, nodeId, col.getColumnName());
+	}
+	
+	private void addConstantFacts(Integer nodeId, ConstantNode constant) {
+		addFact(SQLPredicates.literalValue, nodeId, constant.getValue());
 	}
 }

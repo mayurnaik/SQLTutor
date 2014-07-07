@@ -1,0 +1,34 @@
+// there is a SQL token for a column without a current label
+ruleDefaultColumnLabel_needsLabel(?col) :-
+  sqlNodeHasType(?col, 'ColumnReference'),
+  symSingularLabel(?col, ?singular),
+  ?singular = "".
+  
+// plural label is given by user
+ruleDefaultColumnLabel_entityPlural(?ent,?attr,?plural) :-
+  erAttributeLabelPlural(?ent,?attr,?plural).
+// or derived from singular label
+ruleDefaultColumnLabel_entityPlural(?ent,?attr,?plural) :-
+  erAttributeLabelSingular(?ent,?attr,?singular),
+  not erAttributeHasPluralLabel(?ent, ?attr),
+  PLURALIZE_TERM(?singular, ?plural).
+
+ruleDefaultColumnLabel_entityLabels(?col,?singular,?plural) :-
+  ruleDefaultColumnLabel_needsLabel(?col),
+  sqlColumnTableName(?col, ?tableName),
+  sqlColumnName(?col, ?colName),
+  erAttributeMapsTo(?ent,?attr,?tableName,?colName),
+  erAttributeLabelSingular(?ent,?attr,?singular),
+  ruleDefaultColumnLabel_entityPlural(?ent,?attr,?plural).
+  
+ruleDefaultColumnLabel_hasEntityLabels(?col) :- ruleDefaultColumnLabel_entityLabels(?col,?singular,?plural).
+
+ruleDefaultColumnLabel(?col,?singular,?plural) :- 
+  ruleDefaultColumnLabel_entityLabels(?col,?singular,?plural).
+ 
+ruleDefaultColumnLabel(?col,?singular,?plural) :-
+  ruleDefaultColumnLabel_needsLabel(?col),
+  not ruleDefaultColumnLabel_hasEntityLabels(?col),
+  sqlColumnName(?col, ?colName),
+  ENTITY_LABEL_FORMAT(?colName, ?singular),
+  PLURALIZE_TERM(?singular,?plural).

@@ -36,6 +36,12 @@ public class SymbolicPredicates {
 	/** <code>(?token:int,?expr:string)</code> */
 	public static final IPredicate literalExpression = predicate("symLiteralExpression", 2);
 	
+	/** <code>(?token:int,?label:string)</code> */
+	public static final IPredicate singularLabel = predicate("symSingularLabel", 2);
+	
+	/** <code>(?token:int,?label:string)</code> */
+	public static final IPredicate pluralLabel = predicate("symPluralLabel", 2);
+	
 	/** <code>(?token:id, ?provenance:string)</code> =>
 	 * Token <code>?token</code> has provenance <code>?provenance</code>, where 
 	 * <code>?provenance</code> is a regex of rule ids (e.g. <code>"RuleOne|RuleTwo"</code>). 
