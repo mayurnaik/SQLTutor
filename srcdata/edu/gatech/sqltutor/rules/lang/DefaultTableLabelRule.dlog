@@ -1,4 +1,11 @@
 
+// there is a SQL token for a table without a current label
+ruleDefaultTableLabel_needsLabel(?table) :-
+  sqlNodeHasType(?table, 'FromBaseTable'),
+  symSingularLabel(?table, ?singular),
+  ?singular = "".
+  
+ruleDefaultTableLabel_hasEntityRef(?tableName) :- erTableRefsEntity(?tableName,?entity).
 
 ruleDefaultTableLabel_hasUserSingular(?table,?entity) :-
   sqlTableName(?table, ?tableName),
@@ -12,6 +19,7 @@ ruleDefaultTableLabel_hasUserPlural(?table,?entity) :-
   
 // has user-specified labels for singular and plural, use both
 ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  ruleDefaultTableLabel_needsLabel(?table),
   ruleDefaultTableLabel_hasUserSingular(?table,?entity),
   ruleDefaultTableLabel_hasUserPlural(?table,?entity),
   erEntityLabelSingular(?entity,?singular),
@@ -19,22 +27,23 @@ ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
   
 // has user-specified label for singular only, use that plus inflected plural
 ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+  ruleDefaultTableLabel_needsLabel(?table),
   ruleDefaultTableLabel_hasUserSingular(?table,?entity),
   not ruleDefaultTableLabel_hasUserPlural(?table,?entity),
   erEntityLabelSingular(?entity,?singular),
   PLURALIZE_TERM(?singular,?plural).
   
-// has no user overrides, use table name
-ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+// has no user overrides or entity map, use table name
+ruleDefaultTableLabel(?table,?singular,?plural) :-
+  ruleDefaultTableLabel_needsLabel(?table),
   sqlTableName(?table,?tableName),
-  erTableRefsEntity(?tableName,?entity),
-  not ruleDefaultTableLabel_hasUserSingular(?table,?entity),
-  not ruleDefaultTableLabel_hasUserPlural(?table,?entity),
+  not ruleDefaultTableLabel_hasEntityRef(?tableName),
   ENTITY_LABEL_FORMAT(?tableName,?singular),
   PLURALIZE_TERM(?singular,?plural).
   
 // has no user overrides, use entity name
-ruleDefaultTableLabel(?table,?entity,?singular,?plural) :-
+ruleDefaultTableLabel(?table,?singular,?plural) :-
+  ruleDefaultTableLabel_needsLabel(?table),
   sqlTableName(?table,?tableName),
   erTableRefsEntity(?tableName,?entity),
   not ruleDefaultTableLabel_hasUserSingular(?table,?entity),
