@@ -341,8 +341,8 @@ public class SymbolicFragmentTranslator
 //			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
-			new DefaultColumnLabelRule()
-//			new DescribingAttributeLabelRule()
+			new DefaultColumnLabelRule(),
+			new DescribingAttributeLabelRule()
 		));
 		rules.addAll(symbolicRules);
 		return rules;

@@ -5,11 +5,12 @@
 // erAttributeDescribes(?ent,?attr,?type) =>  the attribute can be used to describe the entity
 //   type indicates how, one of ('prepend', 'replace', ...?others?)
 
-ruleAttributeDescribes(?table,?eq,?value,?type) :- 
+ruleAttributeDescribes(?table,?eq,?value,?type,?eqParent) :- 
   erAttributeDescribes(?ent,?attr,?type),
   erAttributeMapsTo(?ent,?attr,?tablename,?col),
   sqlTableName(?table, ?tablename),
-  sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), ?op = '='.
+  sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), ?op = '=',
+  sqlParentOf(?eqParent,?eq).
 
 
 // ruleAttributeDescribesLabel(?table,?value,?type).

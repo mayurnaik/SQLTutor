@@ -70,28 +70,29 @@ public class IrisUtil {
 		return ext;
 	}
 	
-	/**
-	 * Executes a query and wraps the result, setting both node and token maps.
-	 */
-	public static RelationExtractor executeQuery(IQuery query, IKnowledgeBase kb, SymbolicState symState) {
-		if( symState == null ) throw new NullPointerException("symState is null");
-		
-		RelationExtractor ext = executeQuery(query, kb, symState.getSqlState());
-		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
-		return ext;
-	}
+//	/**
+//	 * Executes a query and wraps the result, setting both node and token maps.
+//	 */
+//	public static RelationExtractor executeQuery(IQuery query, IKnowledgeBase kb, SymbolicState symState) {
+//		if( symState == null ) throw new NullPointerException("symState is null");
+//		
+//		RelationExtractor ext = executeQuery(query, kb, symState.getSqlState());
+//		ext.setNodeMap(symState.get);
+//		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
+//		return ext;
+//	}
 	
-	/**
-	 * Executes a query and wraps the result, setting both node and token maps.
-	 */
-	public static RelationExtractor executeQuery(IQuery query, SymbolicState symState) {
-		if( symState == null ) throw new NullPointerException("symState is null");
-		
-		RelationExtractor ext = executeQuery(query, symState.getKnowledgeBase(), symState.getSqlState());
-		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
-		return ext;
-	}
-	
+//	/**
+//	 * Executes a query and wraps the result, setting both node and token maps.
+//	 */
+//	public static RelationExtractor executeQuery(IQuery query, SymbolicState symState) {
+//		if( symState == null ) throw new NullPointerException("symState is null");
+//		
+//		RelationExtractor ext = executeQuery(query, symState.getKnowledgeBase(), symState.getSqlState());
+//		ext.setTokenMap(symState.getSymbolicFacts().getTokenMap());
+//		return ext;
+//	}
+//	
 	/**
 	 * Execute a query and wrap the result in a relation extractor, with no maps set.
 	 * @param query the query
