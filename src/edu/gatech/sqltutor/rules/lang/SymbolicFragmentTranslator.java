@@ -338,7 +338,7 @@ public class SymbolicFragmentTranslator
 		List<ITranslationRule> rules = new ArrayList<ITranslationRule>(symbolicRules.size() + 5);
 		rules.addAll(Arrays.<ITranslationRule>asList(
 			// analysis rules
-//			new JoinLabelRule(),
+			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
 			new DefaultColumnLabelRule(),

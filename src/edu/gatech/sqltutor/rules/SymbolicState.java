@@ -12,6 +12,8 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.BinaryOperatorNode;
+import com.akiban.sql.parser.QueryTreeNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -21,8 +23,11 @@ import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 
 public class SymbolicState {
 	private static final Logger _log = LoggerFactory.getLogger(SymbolicState.class);
@@ -40,6 +45,39 @@ public class SymbolicState {
 	private List<IRule> rules = Lists.newArrayList();
 	
 	public SymbolicState() { }
+	
+	public void deleteNode(ISymbolicToken node) {
+		ISymbolicToken parent = getParent(node);
+		if( parent == null )
+			throw new SymbolicException("Cannot delete parentless node: " + node);
+		List<ISymbolicToken> siblings = parent.getChildren();
+		
+		// for SQL tokens, we may need to fix dangling operators, e.g. (<node> AND <other>) OR <other2>
+		if( parent instanceof SQLToken ) {
+			SQLToken sqlParent = (SQLToken)parent;
+			QueryTreeNode astNode = sqlParent.getAstNode();
+			if( astNode instanceof BinaryOperatorNode ) {
+				int eqPos = siblings.indexOf(node);
+				ISymbolicToken sibling;
+				if( eqPos == 0 )
+					sibling = siblings.get(1);
+				else if( eqPos == 1 )
+					sibling = siblings.get(0);
+				else
+					throw new SymbolicException("Expected two children in: " + parent);
+				
+				ISymbolicToken grandParent = getParent(parent);
+				SymbolicUtil.replaceChild(grandParent, parent, sibling);
+				_log.debug(Markers.SYMBOLIC, "Deleted {} in {}", parent, grandParent);
+			}
+		}
+		siblings.remove(node);
+		_log.debug(Markers.SYMBOLIC, "Deleted node {}", node);
+	}
+	
+	public ISymbolicToken getParent(ISymbolicToken child) {
+		return symbolicFacts.getParent(child, knowledgeBase);
+	}
 	
 	/**
 	 * Add a new metarule-generated fact.

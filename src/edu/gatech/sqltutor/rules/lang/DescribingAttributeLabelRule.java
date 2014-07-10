@@ -13,16 +13,11 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akiban.sql.parser.BinaryOperatorNode;
-import com.akiban.sql.parser.QueryTreeNode;
-
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
-import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.util.NLUtil;
@@ -51,8 +46,7 @@ public class DescribingAttributeLabelRule
 			// FIXME needs to handle cscopes / {TABLE_ENTITY}
 			// and should insert {IS} token, simplifying if possible
 			SQLNounToken fromTable = ext.getToken("?table");
-			SQLToken binop = ext.getToken("?eq"),
-					parent = ext.getToken("?eqParent");
+			SQLToken binop = ext.getToken("?eq");
 			String value = ext.getString("?value"),
 				type = ext.getString("?type");
 			
@@ -73,26 +67,9 @@ public class DescribingAttributeLabelRule
 			fromTable.setPluralLabel(plural);
 			
 			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Updated labels in: {}", fromTable);
-			
+
 			// delete the comparison
-			QueryTreeNode parentNode = parent.getAstNode();
-			if( parentNode instanceof BinaryOperatorNode ) {
-				List<ISymbolicToken> siblings = parent.getChildren();
-				int eqPos = siblings.indexOf(binop);
-				ISymbolicToken sibling;
-				if( eqPos == 0 )
-					sibling = siblings.get(1);
-				else if( eqPos == 1 )
-					sibling = siblings.get(0);
-				else
-					throw new SymbolicException("Expected two children in: " + parent);
-				
-				ISymbolicToken grandParent = state.getSymbolicFacts().getParent(parent, 
-					state.getKnowledgeBase());
-				SymbolicUtil.replaceChild(grandParent, parent, sibling);
-				if( DEBUG )
-					_log.debug(Markers.SYMBOLIC, "Deleted {} in {}", parent, grandParent);
-			}
+			state.deleteNode(binop);
 		}
 		
 		return true;
