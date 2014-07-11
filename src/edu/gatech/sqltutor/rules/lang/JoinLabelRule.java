@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.lang;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IPredicate;
@@ -13,8 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
+import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SymbolicState;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -169,5 +172,10 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 	@Override
 	public List<IRule> getDatalogRules() {
 		return staticRules.getRules();
+	}
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.SQL_ANALYSIS);
 	}
 }

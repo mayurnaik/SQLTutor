@@ -1,6 +1,7 @@
 package edu.gatech.sqltutor.rules.lang;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IRule;
@@ -10,6 +11,7 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.MetaruleUtils;
 import edu.gatech.sqltutor.rules.SymbolicState;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 
 public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	/** The symbolic state set during application. */
@@ -18,7 +20,7 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	/** The rule's precedence. */
 	protected int precedence = DefaultPrecedence.FRAGMENT_REWRITE;
 	
-	protected int phases = ITranslationRule.ALL_PHASES;
+	protected EnumSet<TranslationPhase> phases = getDefaultPhases();
 
 	public AbstractSymbolicRule() {
 	}
@@ -38,19 +40,16 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	}
 	
 	@Override
-	public int getPhases() {
+	public EnumSet<TranslationPhase> getPhases() {
 		return phases;
 	}
 	
 	@Override
-	public void setPhases(int phases) {
-		if( phases == ITranslationRule.PHASE_USE_DEFAULT )
-			this.phases = getDefaultPhases();
-		else
-			this.phases = phases;
+	public void setPhases(EnumSet<TranslationPhase> phases) {
+		this.phases = phases != null ? phases : getDefaultPhases();
 	}
 	
-	protected int getDefaultPhases() { return ITranslationRule.ALL_PHASES; }
+	protected EnumSet<TranslationPhase> getDefaultPhases() { return EnumSet.allOf(TranslationPhase.class); }
 	
 	@Override
 	public int getType() {

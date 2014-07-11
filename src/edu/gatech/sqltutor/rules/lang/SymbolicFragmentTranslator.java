@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -27,12 +29,12 @@ import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;
-import edu.gatech.sqltutor.rules.ISQLTranslationRule;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SQLState;
 import edu.gatech.sqltutor.rules.SymbolicState;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.ERFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
@@ -42,7 +44,6 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreatorNew;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
@@ -174,48 +175,51 @@ public class SymbolicFragmentTranslator
 		
 		// perform rewriting rules
 		SymbolicReader symReader = new SymbolicReader();
-		List<ISymbolicTranslationRule> symbolicRules = getSymbolicMetarules();
+//		List<ISymbolicTranslationRule> symbolicRules = getSymbolicMetarules();
 		// track states seen
 		HashSet<String> symbolicStates = new HashSet<String>();
 		symbolicStates.add(symbolic.toString());
 		boolean sawNewState = false;
 		
-		do {
-			sawNewState = false;
-			for( ISymbolicTranslationRule metarule: symbolicRules ) { 
-				while( metarule.apply(symState) ) {
-					if( DUMP_SYMBOLIC_REWRITES && SYM_DEBUG) {
-						_log.debug(Markers.SYMBOLIC, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
-					}
-					@SuppressWarnings("unchecked")
-					Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symState.getRuleFacts());
-					kb = createSymbolicKnowledgeBase(/*queryFacts*/facts, symbolic);
-					symState.setKnowledgeBase(kb);
-					
-					// FIXME non-determinism and final output checks
-					if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
-						try {
-							String output = symReader.readSymbolicState(symbolic);
-							this.outputs.add(output);
-							_log.info("Output: {}", output);
-							if( this.result == null || Math.random() < 0.5d )
-								this.result = output;
-						} catch ( UnhandledSymbolicTypeException e ) {
-							_log.warn("Could not read output due to unhandled type: {}", e.getSymbolicType());
+		for( TranslationPhase phase: EnumSet.allOf(TranslationPhase.class)) {
+			List<ITranslationRule> phaseRules = getPhaseRules(phase);
+			do {
+				sawNewState = false;
+				for( ITranslationRule metarule: phaseRules ) { 
+					while( metarule.apply(symState) ) {
+						if( DUMP_SYMBOLIC_REWRITES && SYM_DEBUG) {
+							_log.debug(Markers.SYMBOLIC, "Transformed symbolic state:\n{}", SymbolicUtil.prettyPrint(symbolic));
 						}
+						@SuppressWarnings("unchecked")
+						Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symState.getRuleFacts());
+						kb = createSymbolicKnowledgeBase(/*queryFacts*/facts, symbolic);
+						symState.setKnowledgeBase(kb);
+						
+						// FIXME non-determinism and final output checks
+						if( SymbolicUtil.areAllLeavesLiterals(kb) ) {
+							try {
+								String output = symReader.readSymbolicState(symbolic);
+								this.outputs.add(output);
+								_log.info("Output: {}", output);
+								if( this.result == null || Math.random() < 0.5d )
+									this.result = output;
+							} catch ( UnhandledSymbolicTypeException e ) {
+								_log.warn("Could not read output due to unhandled type: {}", e.getSymbolicType());
+							}
+						}
+						
+						// apply each rule as many times as possible
+						// FIXME non-determinism when precedences match?
+						_log.info(Markers.METARULE, "Applied rule: {}", metarule);
+						_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
+						
+						if( symbolicStates.add(symbolic.toString()) )
+							sawNewState = true;
 					}
-					
-					// apply each rule as many times as possible
-					// FIXME non-determinism when precedences match?
-					_log.info(Markers.METARULE, "Applied rule: {}", metarule);
-					_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
-					
-					if( symbolicStates.add(symbolic.toString()) )
-						sawNewState = true;
+					_log.debug(Markers.METARULE, "Done with metarule: {}", metarule);
 				}
-				_log.debug(Markers.METARULE, "Done with metarule: {}", metarule);
-			}
-		} while( sawNewState );
+			} while( sawNewState );
+		}
 		
 		duration += System.currentTimeMillis();
 		_log.info(Markers.TIMERS, "Total translation time: {} ms", duration);
@@ -228,13 +232,21 @@ public class SymbolicFragmentTranslator
 			throw new SQLTutorException("No concrete translation was computed.");
 	}
 	
-	private List<ISymbolicTranslationRule> getSymbolicMetarules() {
-		return ImmutableList.copyOf(Iterables.filter(translationRules, ISymbolicTranslationRule.class));
+	private List<ITranslationRule> getPhaseRules(final TranslationPhase phase) {
+		return ImmutableList.copyOf(Iterables.filter(translationRules, new Predicate<ITranslationRule>() {
+			public boolean apply(ITranslationRule rule) {
+				return rule.getPhases().contains(phase);
+			}
+		}));
 	}
 	
-	private List<ISQLTranslationRule> getAnalysisMetarules() {
-		return ImmutableList.copyOf(Iterables.filter(translationRules, ISQLTranslationRule.class));
-	}
+//	private List<ISymbolicTranslationRule> getSymbolicMetarules() {
+//		return ImmutableList.copyOf(Iterables.filter(translationRules, ISymbolicTranslationRule.class));
+//	}
+//	
+//	private List<ISQLTranslationRule> getAnalysisMetarules() {
+//		return ImmutableList.copyOf(Iterables.filter(translationRules, ISQLTranslationRule.class));
+//	}
 	
 	private IKnowledgeBase createSymbolicKnowledgeBase(Map<IPredicate, IRelation> queryFacts, 
 			RootToken symbolic) {

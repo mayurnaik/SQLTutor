@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IRule;
@@ -13,14 +14,6 @@ import org.deri.iris.api.basics.IRule;
 public interface ITranslationRule {
 	public static final int TYPE_SQL = 1;
 	public static final int TYPE_SYMBOLIC = 2;
-
-	public static final int PHASE_SQL_ANALYSIS = 1 << 0;
-	public static final int PHASE_TRANSFORMATION = 1 << 1;
-	public static final int PHASE_LOWERING = 1 << 2;
-	// convienence
-	public static final int PHASE_USE_DEFAULT = -1;
-	public static final int ALL_PHASES = 
-		PHASE_SQL_ANALYSIS | PHASE_TRANSFORMATION | PHASE_LOWERING;
 	
 	public boolean apply(SymbolicState state);
 	
@@ -35,13 +28,13 @@ public interface ITranslationRule {
 	 * Returns the phases the rule should operate in.
 	 * @return the phases as a bit vector
 	 */
-	public int getPhases();
+	public EnumSet<TranslationPhase> getPhases();
 	
 	/**
 	 * Overrides the default phases this rule should operate in.
-	 * @param phase
+	 * @param phases the phases to use or <code>null</code> to use the default
 	 */
-	public void setPhases(int phase);
+	public void setPhases(EnumSet<TranslationPhase> phases);
 	
 	/**
 	 * Returns the type of this translation rule, for determining 
