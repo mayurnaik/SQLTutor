@@ -47,7 +47,7 @@ public class SymbolicState {
 	public SymbolicState() { }
 	
 	public void deleteNode(ISymbolicToken node) {
-		ISymbolicToken parent = getParent(node);
+		ISymbolicToken parent = node.getParent();
 		if( parent == null )
 			throw new SymbolicException("Cannot delete parentless node: " + node);
 		List<ISymbolicToken> siblings = parent.getChildren();
@@ -66,17 +66,13 @@ public class SymbolicState {
 				else
 					throw new SymbolicException("Expected two children in: " + parent);
 				
-				ISymbolicToken grandParent = getParent(parent);
+				ISymbolicToken grandParent = parent.getParent();
 				SymbolicUtil.replaceChild(grandParent, parent, sibling);
 				_log.debug(Markers.SYMBOLIC, "Deleted {} in {}", parent, grandParent);
 			}
 		}
 		siblings.remove(node);
 		_log.debug(Markers.SYMBOLIC, "Deleted node {}", node);
-	}
-	
-	public ISymbolicToken getParent(ISymbolicToken child) {
-		return symbolicFacts.getParent(child, knowledgeBase);
 	}
 	
 	/**

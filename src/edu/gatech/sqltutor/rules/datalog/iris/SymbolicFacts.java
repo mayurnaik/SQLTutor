@@ -110,7 +110,9 @@ public class SymbolicFacts extends DynamicFacts {
 	 * @throws SQLTutorException if <code>child</code> is not mapped, 
 	 *                           the query fails to evaluate,
 	 *                           or the parent is not unique
+	 * @deprecated Use {@link ISymbolicToken#getParent()} instead.
 	 */
+	@Deprecated
 	public ISymbolicToken getParent(ISymbolicToken child, IKnowledgeBase kb) {
 		Integer childId = tokenMap.getObjectId(child);
 		

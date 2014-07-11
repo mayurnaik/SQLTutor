@@ -30,6 +30,25 @@ public interface ISymbolicToken {
 	public void addChild(ISymbolicToken child);
 	
 	/**
+	 * Removes a child token.
+	 * @param child the child to remove
+	 * @return whether the child was removed
+	 */
+	public boolean removeChild(ISymbolicToken child);
+	
+	/**
+	 * Returns the token's parent.
+	 * @return the token's parent
+	 */
+	public ISymbolicToken getParent();
+	
+	/**
+	 * Sets the token's parent.
+	 * @param parent the token's parent
+	 */
+	public void setParent(ISymbolicToken parent);
+	
+	/**
 	 * Returns the (modifiable) provenance set of this token.
 	 * The set may be empty but should not be <code>null</code>.
 	 * @return the provenance set

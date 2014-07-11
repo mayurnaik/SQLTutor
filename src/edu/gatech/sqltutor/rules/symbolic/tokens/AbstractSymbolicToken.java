@@ -2,7 +2,6 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +11,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 public abstract class AbstractSymbolicToken implements ISymbolicToken {
 	protected Set<String> provenance = new LinkedHashSet<String>();
 	
+	protected ISymbolicToken parent;
 	protected PartOfSpeech partOfSpeech;
 	
 	protected AbstractSymbolicToken(ISymbolicToken toCopy) {
@@ -48,8 +48,23 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 	}
 	
 	@Override
+	public boolean removeChild(ISymbolicToken child) {
+		return false;
+	}
+	
+	@Override
 	public Set<String> getProvenance() {
 		return provenance;
+	}
+	
+	@Override
+	public ISymbolicToken getParent() {
+		return parent;
+	}
+	
+	@Override
+	public void setParent(ISymbolicToken parent) {
+		this.parent = parent;	
 	}
 	
 	protected StringBuilder addTypeAndTag(StringBuilder b) {

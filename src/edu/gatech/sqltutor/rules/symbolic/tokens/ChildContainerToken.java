@@ -38,11 +38,15 @@ public abstract class ChildContainerToken
 		if( token == null ) throw new NullPointerException("token is null");
 		acceptOrThrow(token);
 		children.add(token);
+		token.setParent(this);
 	}
 	
 	public boolean removeChild(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
-		return children.remove(token);
+		boolean result = children.remove(token);
+		if( result )
+			token.setParent(null);
+		return result;
 	}
 	
 	/**
@@ -62,6 +66,8 @@ public abstract class ChildContainerToken
 			if( token.equals(original) ) {
 				int index = iter.previousIndex();
 				children.set(index, replacement);
+				token.setParent(null);
+				replacement.setParent(this);
 				return true;
 			}
 		}
@@ -79,8 +85,7 @@ public abstract class ChildContainerToken
 		if( tokens == null ) throw new NullPointerException("tokens is null");
 		children.clear();
 		for( ISymbolicToken token: tokens ) {
-			acceptOrThrow(token);
-			children.add(token);
+			this.addChild(token);
 		}
 	}
 	

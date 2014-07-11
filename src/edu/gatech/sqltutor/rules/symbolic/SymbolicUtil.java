@@ -111,8 +111,11 @@ public class SymbolicUtil {
 	public static void replaceChild(ISymbolicToken parent, ISymbolicToken child, ISymbolicToken replacement) {
 		List<ISymbolicToken> children = parent.getChildren();
 		for( int i = 0, ilen = children.size(); i < ilen; ++i ) {
-			if( children.get(i).equals(child) ) {
+			ISymbolicToken token = children.get(i);
+			if( token.equals(child) ) {
+				token.setParent(null);
 				children.set(i, replacement);
+				replacement.setParent(parent);
 				return;
 			}
 		}

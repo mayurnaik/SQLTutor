@@ -17,6 +17,8 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	
 	/** The rule's precedence. */
 	protected int precedence = DefaultPrecedence.FRAGMENT_REWRITE;
+	
+	protected int phases = ITranslationRule.ALL_PHASES;
 
 	public AbstractSymbolicRule() {
 	}
@@ -34,6 +36,21 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	public int getPrecedence() {
 		return precedence;
 	}
+	
+	@Override
+	public int getPhases() {
+		return phases;
+	}
+	
+	@Override
+	public void setPhases(int phases) {
+		if( phases == ITranslationRule.PHASE_USE_DEFAULT )
+			this.phases = getDefaultPhases();
+		else
+			this.phases = phases;
+	}
+	
+	protected int getDefaultPhases() { return ITranslationRule.ALL_PHASES; }
 	
 	@Override
 	public int getType() {

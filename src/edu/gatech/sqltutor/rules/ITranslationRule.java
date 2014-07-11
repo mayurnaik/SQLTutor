@@ -13,6 +13,14 @@ import org.deri.iris.api.basics.IRule;
 public interface ITranslationRule {
 	public static final int TYPE_SQL = 1;
 	public static final int TYPE_SYMBOLIC = 2;
+
+	public static final int PHASE_SQL_ANALYSIS = 1 << 0;
+	public static final int PHASE_TRANSFORMATION = 1 << 1;
+	public static final int PHASE_LOWERING = 1 << 2;
+	// convienence
+	public static final int PHASE_USE_DEFAULT = -1;
+	public static final int ALL_PHASES = 
+		PHASE_SQL_ANALYSIS | PHASE_TRANSFORMATION | PHASE_LOWERING;
 	
 	public boolean apply(SymbolicState state);
 	
@@ -22,6 +30,18 @@ public interface ITranslationRule {
 	 * @return the precedence.
 	 */
 	public int getPrecedence();
+	
+	/**
+	 * Returns the phases the rule should operate in.
+	 * @return the phases as a bit vector
+	 */
+	public int getPhases();
+	
+	/**
+	 * Overrides the default phases this rule should operate in.
+	 * @param phase
+	 */
+	public void setPhases(int phase);
 	
 	/**
 	 * Returns the type of this translation rule, for determining 
