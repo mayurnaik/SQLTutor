@@ -7,7 +7,8 @@ import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
-public class TableEntityToken extends AbstractSymbolicToken implements ISymbolicToken {
+public class TableEntityToken extends AbstractSymbolicToken
+		implements ISymbolicToken, INounToken {
 	/** The referenced table. */
 	protected FromTable table;
 	
@@ -54,11 +55,32 @@ public class TableEntityToken extends AbstractSymbolicToken implements ISymbolic
 	public void setTable(FromTable table) {
 		this.table = table;
 	}
+
+	@Override
+	public String getSingularLabel() {
+		return singular;
+	}
+
+	@Override
+	public String getPluralLabel() {
+		return plural;
+	}
+
+	@Override
+	public void setSingularLabel(String label) {
+		this.singular = label;
+	}
+
+	@Override
+	public void setPluralLabel(String label) {
+		this.plural = label;
+	}
 	
 	@Override
-	public String toString() {
-		if( table == null )
-			return super.toString();
-		return "{" + typeAndTag() + ", table=" + QueryUtils.nodeToString(table) + "}"; 
+	protected StringBuilder addPropertiesString(StringBuilder b) {
+		b.append(", table=").append(QueryUtils.nodeToString(table))
+			.append(", singular=").append(singular)
+			.append(", plural=").append(plural);
+		return b;
 	}
 }

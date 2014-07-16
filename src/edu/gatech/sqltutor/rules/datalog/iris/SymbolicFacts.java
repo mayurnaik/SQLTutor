@@ -32,10 +32,8 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
-import edu.gatech.sqltutor.rules.util.IObjectMapper;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
 
 /** Fact generator for symbolic state. */
@@ -69,7 +67,6 @@ public class SymbolicFacts extends DynamicFacts {
 	}
 	
 	protected TokenMap tokenMap = new TokenMap();
-	protected IObjectMapper<QueryTreeNode> nodeMap;
 	
 	public SymbolicFacts() { }
 	
@@ -92,15 +89,7 @@ public class SymbolicFacts extends DynamicFacts {
 	public TokenMap getTokenMap() {
 		return tokenMap;
 	}
-	
-	public IObjectMapper<QueryTreeNode> getNodeMap() {
-		return nodeMap;
-	}
-	
-	public void setNodeMap(IObjectMapper<QueryTreeNode> nodeMap) {
-		this.nodeMap = nodeMap;
-	}
-	
+
 	/**
 	 * Get the parent of <code>child</code>, evaluated using the knowledge base.
 	 * 
@@ -217,8 +206,11 @@ public class SymbolicFacts extends DynamicFacts {
 	}
 	
 	private void addTableEntityFacts(Integer tokenId, TableEntityToken token) {
-		Integer tableId = nodeMap.getObjectId(token.getTable());
-		addFact(SymbolicPredicates.refsTable, tokenId, tableId);
+//		Integer tableId = nodeMap.getObjectId(token.getTable());
+//		addFact(SymbolicPredicates.refsTable, tokenId, tableId);
+		// FIXME for now we'll map all these facts to the same id and pretend it refs itself
+		addFact(SymbolicPredicates.refsTable, tokenId, tokenId);
+		addTableFacts(tokenId, (FromBaseTable)token.getTable());
 	}
 	
 	private void addNumberFacts(Integer tokenId, NumberToken token) {

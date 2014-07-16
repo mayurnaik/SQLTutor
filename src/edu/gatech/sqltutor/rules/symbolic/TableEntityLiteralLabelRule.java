@@ -2,15 +2,9 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
-import java.util.List;
-import java.util.Random;
+import java.util.EnumSet;
 
-import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.api.basics.IRule;
-import org.deri.iris.api.basics.ITuple;
-import org.deri.iris.api.terms.IStringTerm;
-import org.deri.iris.api.terms.concrete.IIntegerTerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -19,24 +13,20 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
-import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
-import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 public class TableEntityLiteralLabelRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(TableEntityLiteralLabelRule.class);
-	private static final StaticRules staticRules = new StaticRules(TableEntityLiteralLabelRule.class);
-	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleTableEntityLiteralLabel", 6);
 	
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
-		literal(PREDICATE, "?parent","?token","?pos","?table","?label","?source")
+		literal(SymbolicPredicates.type, "?tableEntity", SymbolicType.TABLE_ENTITY)
 	);
-	
-	private Random random = new Random();
 	
 	public TableEntityLiteralLabelRule() {
 		super(DefaultPrecedence.LOWERING);
@@ -48,49 +38,42 @@ public class TableEntityLiteralLabelRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		// FIXME need way to ensure all choices will be used eventually
-		int choices = countChoicesForTable(relation, ext);
-		ITuple result = relation.get(random.nextInt(choices));
-		
-		String label = ((IStringTerm)ext.getTerm("?label", result)).getValue();
-		ISymbolicToken token = ext.getToken("?token", result);
-		ISymbolicToken parent = ext.getToken("?parent", result);
-		// FIXME what about multi-word labels like "Research Department"?
-		LiteralToken literal = new LiteralToken(label, token.getPartOfSpeech());
-		
-		SymbolicUtil.replaceChild(parent, token, literal);
-		_log.info(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
-		return true;
-	}
-	
-	public int countChoicesForTable(IRelation results, RelationExtractor ext) {
-		if( results.size() < 1 )
-			return 0;
-		
-		int lastTable = -1;
-		int i, ilen;
-		for( i = 0, ilen = results.size(); i < ilen; ++i ) {
-			ITuple result = results.get(i);
-			Integer tableId = ((IIntegerTerm)ext.getTerm("?table", result)).getValue().intValueExact();
-			if( lastTable == -1 )
-				lastTable = tableId;
-			else if( lastTable != tableId )
+		// FIXME need to account for context, for now just substitute the labels
+		boolean applied = false;
+		while( ext.nextTuple() ) {
+			TableEntityToken token = ext.getToken("?tableEntity");
+			PartOfSpeech pos = token.getPartOfSpeech();
+			String label = null;
+			switch(pos) {
+			case NOUN_SINGULAR_OR_MASS:
+				label = token.getSingularLabel();
 				break;
+			case NOUN_PLURAL:
+				label = token.getPluralLabel();
+				break;
+			default:
+				break;
+			}
+			if( label != null ) {
+				LiteralToken literal = new LiteralToken(label, pos);
+				SymbolicUtil.replaceChild(token.getParent(), token, literal);
+				_log.info(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+				applied = true;
+			}
 		}
-		
-		return i;
+		return applied;
 	}
 	
 	@Override
 	protected IQuery getQuery() { return QUERY; }
 	
 	@Override
-	public List<IRule> getDatalogRules() {
-		return staticRules.getRules();
+	protected int getVariableEstimate() {
+		return 1;
 	}
 	
 	@Override
-	protected int getVariableEstimate() {
-		return PREDICATE.getArity();
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.LOWERING);
 	}
 }

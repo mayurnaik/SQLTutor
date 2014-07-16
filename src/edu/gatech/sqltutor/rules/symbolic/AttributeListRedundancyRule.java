@@ -63,9 +63,10 @@ public class AttributeListRedundancyRule
 			ISymbolicToken seq2 = ext.getToken("?seq2");
 			seq2.getChildren().remove(attrList2);
 			_log.info(Markers.SYMBOLIC, "Deleted {} from {}", attrList2, seq2);
+			return true;
 		}
 		
-		return true;
+		return false;
 	}
 
 	@Override

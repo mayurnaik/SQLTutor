@@ -183,6 +183,7 @@ public class SymbolicFragmentTranslator
 		
 		for( TranslationPhase phase: EnumSet.allOf(TranslationPhase.class)) {
 			List<ITranslationRule> phaseRules = getPhaseRules(phase);
+			_log.info("Entering phase {} with {} rules active.", phase, phaseRules.size());
 			do {
 				sawNewState = false;
 				for( ITranslationRule metarule: phaseRules ) { 
@@ -354,7 +355,9 @@ public class SymbolicFragmentTranslator
 			new DefaultTableLabelRule(),
 			new DefaultAttributeLabelRule(),
 			new DefaultColumnLabelRule(),
-			new DescribingAttributeLabelRule()
+			new DescribingAttributeLabelRule(),
+			// transformation
+			new TransformationRule()
 		));
 		rules.addAll(symbolicRules);
 		return rules;
