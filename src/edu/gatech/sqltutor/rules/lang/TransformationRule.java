@@ -12,6 +12,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
@@ -20,6 +21,7 @@ import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultColumn;
+import com.akiban.sql.parser.TableName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -87,7 +89,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 		
 		root.addChild(new SelectToken());
 		
-		addResultColumnsAndTables2(root, resultColumns, fromList);
+		addResultColumnsAndTables(root, resultColumns, fromList);
 		if( selectChildren.size() >= 3 )
 			addWhereClause(root, (SQLToken)selectChildren.get(2));
 		
@@ -97,18 +99,30 @@ public class TransformationRule extends StandardSymbolicRule implements
 		return true;
 	}
 	
-	private List<SQLToken> getResultColumnsForTableAlias2(String tableAlias, SQLToken resultColumns) {
+	private String getTableName(ResultColumn col) {
+		String tableName = col.getTableName();
+		// bad implementation keeps table name differently in AllResultColumn subclass
+		if( col instanceof AllResultColumn ) {
+			TableName tableNameObj = col.getTableNameObject();
+			if( tableNameObj != null )
+				tableName = tableNameObj.getTableName();
+		}
+		return tableName;
+	}
+	
+	private List<SQLToken> getResultColumnsForTableAlias(String tableAlias, SQLToken resultColumns) {
 		List<SQLToken> columns = new ArrayList<SQLToken>();
 		for( ISymbolicToken childToken: resultColumns.getChildren() ) {
 			SQLToken child = (SQLToken)childToken;
 			ResultColumn colRef = (ResultColumn)child.getAstNode();
-			if( tableAlias.equals(colRef.getTableName()) )
+			String columnTableName = getTableName(colRef);
+			if( tableAlias.equals(columnTableName) )
 				columns.add(child);
 		}
 		return columns;
 	}
 	
-	private void addResultColumnsAndTables2(RootToken root, 
+	private void addResultColumnsAndTables(RootToken root, 
 			SQLToken resultColumns, SQLToken fromList) {
 		ERMapping erMapping = state.getErMapping();
 		
@@ -120,7 +134,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			FromBaseTable fromTable = (FromBaseTable)tableToken.getAstNode();
 			
 			String tableAlias = fromTable.getExposedName();
-			List<SQLToken> columnTokens = getResultColumnsForTableAlias2(tableAlias, resultColumns);
+			List<SQLToken> columnTokens = getResultColumnsForTableAlias(tableAlias, resultColumns);
 			if( columnTokens.size() == 0 )
 				continue;
 			
