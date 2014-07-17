@@ -19,6 +19,7 @@ import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.util.ColumnReferenceResolver;
+import edu.gatech.sqltutor.rules.util.StarColumnSplitter;
 
 /**
  * Base class for query translators.  Maintains the query and 
@@ -65,6 +66,8 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 				throw new SQLTutorException("Wrong query type for: " + query, e);
 			}
 		
+			// preprocessing steps, split '*' and *.* columns
+			new StarColumnSplitter().split(select);
 			// resolve any implicit column references
 			new ColumnReferenceResolver(tables).resolve(select);
 			
