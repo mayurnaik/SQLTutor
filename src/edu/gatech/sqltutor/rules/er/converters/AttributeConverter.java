@@ -1,6 +1,5 @@
 package edu.gatech.sqltutor.rules.er.converters;
 
-import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
@@ -13,15 +12,13 @@ import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERCompositeAttribute;
 
 public class AttributeConverter extends ReflectionConverter {
-	private Converter defaultConverter;
-	
 	public AttributeConverter(Mapper mapper,
 			ReflectionProvider reflectionProvider) {
 		super(mapper, reflectionProvider);
-		defaultConverter = new ReflectionConverter(mapper, reflectionProvider);
 	}
-	
+
 	@Override
+	@SuppressWarnings("rawtypes")
 	public boolean canConvert(Class type) {
 		return ERAttribute.class.isAssignableFrom(type);
 	}

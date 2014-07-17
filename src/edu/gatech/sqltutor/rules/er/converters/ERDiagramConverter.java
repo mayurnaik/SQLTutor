@@ -17,7 +17,7 @@ import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.er.ERNamedNode;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 
-@SuppressWarnings({"unchecked","rawtypes"})
+@SuppressWarnings({"rawtypes"})
 public class ERDiagramConverter extends ReflectionConverter implements
 		Converter {
 	public ERDiagramConverter(Mapper mapper,

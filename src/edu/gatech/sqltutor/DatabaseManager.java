@@ -1,7 +1,6 @@
 package edu.gatech.sqltutor;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -10,6 +9,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -23,24 +23,19 @@ import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.context.FacesContext;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import edu.gatech.sqltutor.entities.UserQuery;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.QuestionTuple;
-
-import java.sql.PreparedStatement;
-
 import utilities.PasswordHasher;
 import utilities.ScriptRunner;
+import edu.gatech.sqltutor.entities.UserQuery;
 
 @ManagedBean(name="databaseManager", eager=true)
 @ApplicationScoped

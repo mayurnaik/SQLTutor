@@ -75,7 +75,6 @@ public class ERSerializerTest {
 		
 		System.out.println(xml);
 
-		@SuppressWarnings("unused")
 		ERDiagram reloaded = (ERDiagram)serializer.deserialize(xml);
 		
 		System.out.println("Reloaded successfully.");

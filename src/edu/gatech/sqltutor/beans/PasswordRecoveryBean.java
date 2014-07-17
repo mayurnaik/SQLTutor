@@ -1,5 +1,12 @@
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
+import java.util.UUID;
+
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -7,20 +14,10 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
-import javax.management.openmbean.InvalidKeyException;
-import javax.servlet.http.HttpServletRequest;
 
+import utilities.Emailer;
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
-import utilities.Emailer;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.sql.SQLException;
-import java.util.UUID;
-import java.util.regex.Pattern;
 
 @ManagedBean
 @SessionScoped

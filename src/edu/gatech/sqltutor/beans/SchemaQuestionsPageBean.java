@@ -3,7 +3,6 @@ package edu.gatech.sqltutor.beans;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -13,11 +12,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
-import org.primefaces.event.ReorderEvent;
-import org.primefaces.model.DualListModel;
-
 import objects.DatabaseTable;
-import objects.QueryResult;
 import objects.QuestionTuple;
 import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;

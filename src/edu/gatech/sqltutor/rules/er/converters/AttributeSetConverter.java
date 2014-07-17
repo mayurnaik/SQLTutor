@@ -23,6 +23,7 @@ public class AttributeSetConverter extends ReflectionConverter implements
 	}
 
 	@Override
+	@SuppressWarnings("rawtypes")
 	public boolean canConvert(Class type) {
 		return ERAttributeSet.class.equals(type);
 	}

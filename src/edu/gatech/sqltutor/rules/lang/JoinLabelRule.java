@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
-import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.TranslationPhase;

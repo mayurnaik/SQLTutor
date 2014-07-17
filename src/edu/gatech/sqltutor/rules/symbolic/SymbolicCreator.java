@@ -2,17 +2,11 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.deri.iris.EvaluationException;
-import org.deri.iris.api.IKnowledgeBase;
 import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.api.basics.ITuple;
-import org.deri.iris.api.terms.IStringTerm;
-import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
