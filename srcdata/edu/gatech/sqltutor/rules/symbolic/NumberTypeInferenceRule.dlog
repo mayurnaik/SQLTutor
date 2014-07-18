@@ -5,54 +5,28 @@ ruleNumberTypeInference_binop(?binop) :-
 ruleNumberTypeInference_number(?num) :-
   sqlNodeHasType(?num, 'NumericConstantNode').
   
-ruleNumberTypeInference(?binop, ?attrType, ?num) :-
-  ruleNumberTypeInference_binop(?binop),
-  sqlParentOf(?binop, ?col),
-  sqlParentOf(?binop, ?num),
+// column and number are direct children of a binary operator
+ruleNumberTypeInference_colAndNum(?binop, ?col, ?num) :-
+  sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode'),
   ruleNumberTypeInference_number(?num),
+  sqlNodeHasType(?col, 'ColumnReference'),
+  sqlParentOf(?binop,?col),
+  sqlParentOf(?binop,?num).
+  
+// for BETWEEN, column is a child and the number node is nested
+ruleNumberTypeInference_colAndNum(?binop, ?col, ?num) :-
+  sqlNodeHasType(?binop, 'BetweenOperatorNode'),
+  ruleNumberTypeInference_number(?num),
+  sqlNodeHasType(?col, 'ColumnReference'),
+  sqlParentOf(?binop,?col),
+  sqlParentOf(?binop,?valList),
+  sqlNodeHasType(?valList, 'ValueNodeList'),
+  sqlParentOf(?valList, ?num).
+  
+  
+ruleNumberTypeInference(?binop, ?attrType, ?num) :-
+  ruleNumberTypeInference_colAndNum(?binop, ?col, ?num),
   sqlColumnInfo(?col, ?tableAlias, ?tableName, ?colName),
   erAttributeMapsTo(?parent,?attr,?tableName,?colName),
   erAttributeDataType(?parent,?attr,?attrType).
   
-/*
-
-// all nested attribute tokens on side of comparison  
-ruleNumberTypeInference_attrTokens(?binop,?attrToken) :-
-  // {binop: {seq: ..., {attribute}, ...}, {number}}
-  symType(?binop, 'BINARY_COMPARISON'),
-  symParentOf(?binop, ?seqToken, ?seqPos),
-  symParentOf(?seqToken, ?attrToken, ?attrPos),
-  symType(?attrToken, 'ATTRIBUTE').
-  
-// non-unique nested attr token
-ruleNumberTypeInference_hasOtherAttrTokens(?binop,?attrToken) :-
-  ruleNumberTypeInference_attrTokens(?binop,?attrToken),
-  ruleNumberTypeInference_attrTokens(?binop,?otherToken),
-  ?attrToken != ?otherToken.
-
-// attr token is directly nested
-ruleNumberTypeInference_attrToken(?binop,?attrToken) :-
-  // {binop: {attribute}, {number}}
-  symType(?binop, 'BINARY_COMPARISON'),
-  symParentOf(?binop, ?attrToken, ?attrPos),
-  symType(?attrToken, 'ATTRIBUTE').
-  
-// or is nested with no other attr token siblings
-ruleNumberTypeInference_attrToken(?binop,?attrToken) :-
-  ruleNumberTypeInference_attrTokens(?binop,?attrToken),
-  not ruleNumberTypeInference_hasOtherAttrTokens(?binop,?attrToken).
-  
-ruleNumberTypeInference(?binop,?attrToken,?attrType,?numToken,?numType) :-
-  // bin. compare between attribute and number
-  ruleNumberTypeInference_attrToken(?binop,?attrToken),
-  symParentOf(?binop, ?numToken, ?numPos),
-  symType(?numToken, 'NUMBER'),
-  
-  // attribute has a datatype ?attrType
-  symRefsAttribute(?attrToken, ?entity, ?attr),
-  erAttributeDataType(?entity, ?attr, ?attrType),
-  
-  // number has a datatype ?numType
-  symNumberType(?numToken, ?numType).
-
-*/
