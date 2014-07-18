@@ -47,9 +47,7 @@ public class AttributeListRedundancyRule
 	}
 
 	@Override
-	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		_log.info(Markers.SYMBOLIC, "Got relation: {}", relation);
-		
+	protected boolean handleResult(IRelation relation, RelationExtractor ext) {		
 		ITuple result = relation.get(0);
 		ext.setCurrentTuple(result);
 		ISymbolicToken attrList1 = ext.getToken("?attrList1");
@@ -62,7 +60,7 @@ public class AttributeListRedundancyRule
 		if(attrBag1.equals(attrBag2)) {
 			ISymbolicToken seq2 = ext.getToken("?seq2");
 			seq2.getChildren().remove(attrList2);
-			_log.info(Markers.SYMBOLIC, "Deleted {} from {}", attrList2, seq2);
+			_log.debug(Markers.SYMBOLIC, "Deleted {} from {}", attrList2, seq2);
 			return true;
 		}
 		

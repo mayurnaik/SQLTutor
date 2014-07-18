@@ -49,6 +49,7 @@ public class DefaultColumnLabelRule extends StandardSymbolicRule implements
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		final boolean DEBUG = _log.isDebugEnabled(Markers.METARULE);
 		while( ext.nextTuple() ) {
 			INounToken token = ext.getToken("?col");
 			String singular = ext.getString("?singular"),
@@ -56,7 +57,7 @@ public class DefaultColumnLabelRule extends StandardSymbolicRule implements
 			token.setSingularLabel(singular);
 			token.setPluralLabel(plural);
 			
-			_log.info(Markers.METARULE, "Updated labels for token: {}", token);
+			if( DEBUG ) _log.debug(Markers.METARULE, "Updated labels for token: {}", token);
 		}
 		return true;
 	}

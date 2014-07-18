@@ -22,7 +22,7 @@
   </appender>
   
   <logger name="org.deri" level="INFO" />
-  <logger name="edu.gatech.sqltutor" level="DEBUG" />
+  <logger name="edu.gatech.sqltutor" level="INFO" />
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />

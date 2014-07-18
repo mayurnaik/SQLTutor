@@ -66,7 +66,8 @@ public class SymbolicCreatorNew {
 				tokens.push(childToken);
 			}
 		}
-		_log.info(Markers.SYMBOLIC, "Symbolic state directly from AST: {}", SymbolicUtil.prettyPrint(selectToken));
+		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
+			_log.debug(Markers.SYMBOLIC, "Symbolic state directly from AST: {}", SymbolicUtil.prettyPrint(selectToken));
 		
 		root.addChild(selectToken);
 		

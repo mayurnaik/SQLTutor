@@ -59,7 +59,7 @@ public class DeterminerRedundancyRule
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		_log.info(Markers.SYMBOLIC, "Got relation: {}", relation);
+		_log.trace(Markers.SYMBOLIC, "Got relation: {}", relation);
 		
 		ITuple result = relation.get(0);
 		ext.setCurrentTuple(result);
@@ -68,7 +68,7 @@ public class DeterminerRedundancyRule
 		ISymbolicToken determiner2 = ext.getToken("?det2");
 		
 		sequence2.getChildren().remove(determiner2);
-		_log.info(Markers.SYMBOLIC, "Deleted {} from {}", determiner2, sequence2);
+		_log.debug(Markers.SYMBOLIC, "Deleted {} from {}", determiner2, sequence2);
 		
 		return true;
 	}

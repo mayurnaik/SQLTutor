@@ -57,7 +57,7 @@ public class TableEntityLiteralLabelRule
 			if( label != null ) {
 				LiteralToken literal = new LiteralToken(label, pos);
 				SymbolicUtil.replaceChild(token.getParent(), token, literal);
-				_log.info(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+				_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
 				applied = true;
 			}
 		}

@@ -114,56 +114,14 @@ public class SymbolicFragmentTranslator
 		loadStaticRules();
 
 		Map<IPredicate, IRelation> queryFacts = makeFacts(symState);
-//		symFacts.setNodeMap(sqlFacts.getNodeMap());
 		IKnowledgeBase kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
 		symState.setKnowledgeBase(kb);
-		
-//		SQLState sqlState = new SQLState();
-//		sqlState.setErDiagram(erDiagram);
-//		sqlState.setErMapping(erMapping);
-//		sqlState.setAst(select);
-//		sqlState.setSqlFacts(sqlFacts);
-//		sqlState.setErFacts(erFacts);
-//		loadStaticRules();
-		
-		
-//		IKnowledgeBase kb = createSQLKnowledgeBase(select, sqlState);
-//		sqlState.setKnowledgeBase(kb);
-		
 		sortRules();
-		
-//		// apply analysis rules to discover new facts
-//		for( ISQLTranslationRule sqlRule: 
-//				Iterables.filter(translationRules, ISQLTranslationRule.class) ) {
-//			while( sqlRule.apply(sqlState) ) {
-//				kb = createSQLKnowledgeBase(select, sqlState); // regenerate as update may be destructive
-//				sqlState.setKnowledgeBase(kb);
-//				
-//				// apply each rule as many times as possible
-//				// FIXME non-determinism when precedences match?
-//				_log.debug(Markers.METARULE, "Applied rule: {}", sqlRule);
-//			}
-//			
-//		}
 		
 		if( _log.isInfoEnabled() )
 			_log.info("statement: {}", QueryUtils.nodeToString(statement));
-		
-//		// all non-symbolic facts and rules are now frozen
-//		Map<IPredicate, IRelation> queryFacts = makeFacts(sqlState);
-//		queryFacts.putAll(SymbolicRules.getInstance().getFacts());
-//		staticRules.addAll(SymbolicRules.getInstance().getRules());
-//		symFacts.setNodeMap(sqlFacts.getNodeMap());
-//		
-//		// create initial symbolic state
-//		RootToken symbolic = makeSymbolic(sqlState);
-//		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
-			_log.info(Markers.SYMBOLIC, "Initial symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
-		
-//		SymbolicState symState = new SymbolicState(sqlState);
-//		symState.setSymbolicFacts(symFacts);
-//		kb = createSymbolicKnowledgeBase(queryFacts, symbolic);
-//		symState.setKnowledgeBase(kb);
+		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
+			_log.debug(Markers.SYMBOLIC, "Initial symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
 		// FIXME remove this eventually
 		if( DUMP_DATALOG ) {
@@ -175,7 +133,6 @@ public class SymbolicFragmentTranslator
 		
 		// perform rewriting rules
 		SymbolicReader symReader = new SymbolicReader();
-//		List<ISymbolicTranslationRule> symbolicRules = getSymbolicMetarules();
 		// track states seen
 		HashSet<String> symbolicStates = new HashSet<String>();
 		symbolicStates.add(symbolic.toString());
@@ -211,13 +168,13 @@ public class SymbolicFragmentTranslator
 						
 						// apply each rule as many times as possible
 						// FIXME non-determinism when precedences match?
-						_log.info(Markers.METARULE, "Applied rule: {}", metarule);
+						_log.debug(Markers.METARULE, "Applied rule: {}", metarule.getRuleId());
 						_log.trace(Markers.SYMBOLIC, "New symbolic state: {}", symbolic);
 						
 						if( symbolicStates.add(symbolic.toString()) )
 							sawNewState = true;
 					}
-					_log.debug(Markers.METARULE, "Done with metarule: {}", metarule);
+					_log.debug(Markers.METARULE, "Done with metarule: {}", metarule.getRuleId());
 				}
 			} while( sawNewState );
 		}
@@ -225,7 +182,8 @@ public class SymbolicFragmentTranslator
 		duration += System.currentTimeMillis();
 		_log.info(Markers.TIMERS, "Total translation time: {} ms", duration);
 		
-		_log.info(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
+		if( SYM_DEBUG )
+			_log.debug(Markers.SYMBOLIC, "Final symbolic state: {}", SymbolicUtil.prettyPrint(symbolic));
 		
 		_log.info(Markers.SYMBOLIC, "Saw {} total symbolic states.", symbolicStates.size());
 		
@@ -240,14 +198,6 @@ public class SymbolicFragmentTranslator
 			}
 		}));
 	}
-	
-//	private List<ISymbolicTranslationRule> getSymbolicMetarules() {
-//		return ImmutableList.copyOf(Iterables.filter(translationRules, ISymbolicTranslationRule.class));
-//	}
-//	
-//	private List<ISQLTranslationRule> getAnalysisMetarules() {
-//		return ImmutableList.copyOf(Iterables.filter(translationRules, ISQLTranslationRule.class));
-//	}
 	
 	private IKnowledgeBase createSymbolicKnowledgeBase(Map<IPredicate, IRelation> queryFacts, 
 			RootToken symbolic) {
@@ -363,11 +313,6 @@ public class SymbolicFragmentTranslator
 		return rules;
 	}
 	
-//	private RootToken makeSymbolic(SQLState sqlState) {
-//		this.buildMaps();
-//		return new SymbolicCreator(sqlState, sqlMaps).makeSymbolic();
-//	}
-//	
 	@Override
 	public void clearResult() {
 		super.clearResult();

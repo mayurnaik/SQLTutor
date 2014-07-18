@@ -44,15 +44,15 @@ public class SelectLabelRule
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		ITuple result = relation.get(0);
 		
-		ISymbolicToken select = ext.getToken("?token", result);//symbolicFacts.getTokenMap().getMappedObject(result.get(0));
-		ISymbolicToken parent = ext.getToken("?parent", result);//symbolicFacts.getParent(select, kb);
+		ISymbolicToken select = ext.getToken("?token", result);
+		ISymbolicToken parent = ext.getToken("?parent", result);
 		
 		// FIXME non-determinism so that all choices are used eventually
 		String replacement = LITERAL_CHOICES.get(random.nextInt(LITERAL_CHOICES.size()));
 		LiteralToken literal = new LiteralToken(replacement, PartOfSpeech.VERB_BASE_FORM);
 		
 		SymbolicUtil.replaceChild(parent, select, literal);
-		_log.info(Markers.SYMBOLIC, "Replaced token {} with {}", select, literal);
+		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", select, literal);
 		
 		return true;
 	}
