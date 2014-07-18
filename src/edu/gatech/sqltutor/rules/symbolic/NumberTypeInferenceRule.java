@@ -2,6 +2,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IPredicate;
@@ -15,13 +16,15 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttributeDataType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
-import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken.NumericType;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 
 /**
  * If a numeric constant is compared with an attribute of a 
@@ -33,9 +36,9 @@ public class NumberTypeInferenceRule
 	private static final Logger _log = LoggerFactory.getLogger(NumberTypeInferenceRule.class);
 	
 	private static final StaticRules staticRules = new StaticRules(NumberTypeInferenceRule.class);
-	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleNumberTypeInference", 5);
+	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleNumberTypeInference", 3);
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
-		literal(PREDICATE, "?binop", "?attrToken", "?attrType", "?numToken", "?numType")
+		literal(PREDICATE, "?binop", "?attrType", "?numToken")
 	);
 
 	public NumberTypeInferenceRule() {
@@ -49,40 +52,36 @@ public class NumberTypeInferenceRule
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {		
 		boolean applied = false;
-		for( int i = 0, ilen = relation.size(); i < ilen; ++i ) {
-			ext.setCurrentTuple(relation.get(i));
-			applied |= handleResultTuple(ext);
-		}
+		while( ext.nextTuple() )
+			applied |= handleNextResult(ext);
 		return applied;
 	}
 	
-	private boolean handleResultTuple(RelationExtractor ext) {
-		try {
-			ERAttributeDataType attrType = ERAttributeDataType.valueOf(ext.getString("?attrType"));
-			switch( attrType ) {
-				case DOLLARS: {
-					NumericType numType = NumericType.valueOf(ext.getString("?numType"));
-					if( numType == NumericType.DOLLARS )
-						return false;
-					NumberToken numToken = ext.getToken("?numToken");
-					
-					if( _log.isDebugEnabled(Markers.SYMBOLIC) ) {
-						_log.debug(Markers.SYMBOLIC, "Inferred type {} for token {} by comparison to {}", 
-							NumericType.DOLLARS, numToken, ext.getToken("?attrToken"));
-					}
-					
-					numToken.setNumericType(NumericType.DOLLARS);
-					return true;
-				}
-				default:
-					_log.warn(Markers.SYMBOLIC, "Unexpected attribute type {} in comparison {}", attrType, ext.getToken("?binop"));
-					// fall through
-				case NUMBER:
-				case UNKNOWN:
-					return false;
+	private boolean handleNextResult(RelationExtractor ext) {
+		SQLToken binop = ext.getToken("?binop");
+		SQLNumberToken numToken = ext.getToken("?numToken");
+		
+		ERAttributeDataType attrType = ERAttributeDataType.valueOf(ext.getString("?attrType"));
+		switch( attrType ) {
+		case DOLLARS: {
+			NumericType numType = numToken.getNumericType();
+			if( numType == NumericType.DOLLARS )
+				return false;
+			
+			if( _log.isDebugEnabled(Markers.SYMBOLIC) ) {
+				_log.debug(Markers.SYMBOLIC, "Inferred type {} for token {} by comparison in {}", 
+					NumericType.DOLLARS, numToken, binop);
 			}
-		} catch( RuntimeException e ) {
-			throw new SymbolicException(e);
+			
+			numToken.setNumericType(NumericType.DOLLARS);
+			return true;
+		}
+		default:
+			_log.warn(Markers.SYMBOLIC, "Unexpected attribute type {} in comparison {}", attrType, ext.getToken("?binop"));
+			// fall through
+		case NUMBER:
+		case UNKNOWN:
+			return false;
 		}
 	}
 
@@ -99,5 +98,10 @@ public class NumberTypeInferenceRule
 	@Override
 	public List<IRule> getDatalogRules() {
 		return staticRules.getRules();
+	}
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.SQL_ANALYSIS);
 	}
 }

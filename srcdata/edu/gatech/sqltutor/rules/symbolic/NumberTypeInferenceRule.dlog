@@ -1,4 +1,20 @@
 
+// in case we need to expand concrete types
+ruleNumberTypeInference_binop(?binop) :-
+  sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode').
+ruleNumberTypeInference_number(?num) :-
+  sqlNodeHasType(?num, 'NumericConstantNode').
+  
+ruleNumberTypeInference(?binop, ?attrType, ?num) :-
+  ruleNumberTypeInference_binop(?binop),
+  sqlParentOf(?binop, ?col),
+  sqlParentOf(?binop, ?num),
+  ruleNumberTypeInference_number(?num),
+  sqlColumnInfo(?col, ?tableAlias, ?tableName, ?colName),
+  erAttributeMapsTo(?parent,?attr,?tableName,?colName),
+  erAttributeDataType(?parent,?attr,?attrType).
+  
+/*
 
 // all nested attribute tokens on side of comparison  
 ruleNumberTypeInference_attrTokens(?binop,?attrToken) :-
@@ -39,3 +55,4 @@ ruleNumberTypeInference(?binop,?attrToken,?attrType,?numToken,?numType) :-
   // number has a datatype ?numType
   symNumberType(?numToken, ?numType).
 
+*/

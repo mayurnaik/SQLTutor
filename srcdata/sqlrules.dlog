@@ -75,3 +75,9 @@ sqlColumnTableName(?colId, ?tableName) :-
   sqlTableName(?tableId, ?tableName).
 
 
+sqlColumnInfo(?colId, ?tableAlias, ?tableName, ?colName) :-
+  sqlColumnTableName(?colId, ?tableName),
+  sqlColumnName(?colId, ?colName),
+  sqlTableAlias(?coldId, ?tableAlias).
+
+

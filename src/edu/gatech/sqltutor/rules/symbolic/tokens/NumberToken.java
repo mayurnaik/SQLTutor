@@ -16,6 +16,7 @@ public class NumberToken extends AbstractSymbolicToken implements ISymbolicToken
 	public NumberToken(NumberToken toCopy) {
 		super(toCopy);
 		this.number = toCopy.number;
+		this.numericType = toCopy.numericType;
 	}
 
 	public NumberToken(Number number) {

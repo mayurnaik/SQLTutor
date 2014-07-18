@@ -51,6 +51,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.OrToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
@@ -231,7 +232,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 				break;
 			default:
 				if( node instanceof NumericConstantNode ) {
-					token = new NumberToken((Number)((NumericConstantNode)node).getValue());
+					NumberToken numToken;
+					token = numToken = new NumberToken((Number)((NumericConstantNode)node).getValue());
+					numToken.setNumericType(((SQLNumberToken)sqlToken).getNumericType());
 				} else if ( node instanceof CharConstantNode ) {
 					token = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
 					token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_LEFT));

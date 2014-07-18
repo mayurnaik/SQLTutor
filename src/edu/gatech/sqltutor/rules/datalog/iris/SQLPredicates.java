@@ -29,6 +29,10 @@ public class SQLPredicates {
 	/** For debugging only. */
 	public static final IPredicate nodeDebugString = create("sqlNodeDebugString");
 	
+	// defined statically
+	/** <code>(?colId:int,?tableAlias:string,?tableName:string,?colName:string)</code> */
+	public static final IPredicate columnInfo = create("sqlColumnInfo", 4);
+	
 	private static IPredicate create(String symbol, int arity) {
 		return Factory.BASIC.createPredicate(symbol, arity);
 	}

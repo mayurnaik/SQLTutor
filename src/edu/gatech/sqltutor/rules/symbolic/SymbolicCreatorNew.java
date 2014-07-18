@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
+import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
 
@@ -16,6 +17,7 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 
@@ -55,6 +57,8 @@ public class SymbolicCreatorNew {
 				SQLToken childToken;
 				if( childNode instanceof ColumnReference || childNode instanceof FromTable ) {
 					childToken = new SQLNounToken(childNode);
+				} else if ( childNode instanceof NumericConstantNode ) {
+					childToken = new SQLNumberToken(childNode);
 				} else {
 					childToken = new SQLToken(childNode);
 				}
