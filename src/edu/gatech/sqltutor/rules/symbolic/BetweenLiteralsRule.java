@@ -2,6 +2,8 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.EnumSet;
+
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
@@ -62,6 +65,11 @@ public class BetweenLiteralsRule extends StandardSymbolicRule implements ISymbol
 		SymbolicUtil.replaceChild(parent, between, seq);
 		
 		return true;
+	}
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.LOWERING);
 	}
 
 }

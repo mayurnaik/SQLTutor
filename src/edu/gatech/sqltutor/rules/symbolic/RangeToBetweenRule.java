@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IPredicate;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
@@ -86,5 +88,10 @@ public class RangeToBetweenRule
 	@Override
 	protected int getVariableEstimate() {
 		return PREDICATE.getArity();
+	}
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.LOWERING);
 	}
 }

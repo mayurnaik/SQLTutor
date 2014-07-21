@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.EvaluationException;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
@@ -114,4 +116,9 @@ public class MergeCompositeAttributeRule
 	
 	@Override
 	protected int getVariableEstimate() { return 3; }
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.LOWERING);
+	}
 }

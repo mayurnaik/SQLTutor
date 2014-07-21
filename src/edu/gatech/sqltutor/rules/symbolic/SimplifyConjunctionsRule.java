@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IPredicate;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
@@ -80,5 +82,10 @@ public class SimplifyConjunctionsRule
 	@Override
 	public List<IRule> getDatalogRules() {
 		return staticRules.getRules();
+	}
+	
+	@Override
+	protected EnumSet<TranslationPhase> getDefaultPhases() {
+		return EnumSet.of(TranslationPhase.LOWERING);
 	}
 }
