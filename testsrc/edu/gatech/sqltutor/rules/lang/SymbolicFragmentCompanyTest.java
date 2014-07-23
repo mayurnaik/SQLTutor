@@ -3,9 +3,6 @@ package edu.gatech.sqltutor.rules.lang;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -13,13 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.TestConst;
-import edu.gatech.sqltutor.rules.er.ERDiagram;
-import edu.gatech.sqltutor.rules.er.ERSerializer;
-import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
 @RunWith(Parameterized.class)
-public class SymbolicFragmentTest {
-	private static final Logger _log = LoggerFactory.getLogger(SymbolicFragmentTest.class);
+public class SymbolicFragmentCompanyTest extends SymbolicFragmentTestBase {
+	private static final Logger _log = LoggerFactory.getLogger(SymbolicFragmentCompanyTest.class);
 	
 	@Parameters
 	public static Collection<Object[]> parameters() {
@@ -55,42 +49,22 @@ public class SymbolicFragmentTest {
 		return Arrays.asList(queries);
 	}
 	
-	private String query;
-	private ERDiagram companyDiagram;
-	private ERMapping companyMapping;
-	private SymbolicFragmentTranslator translator;
+	public SymbolicFragmentCompanyTest(String query) {
+		super(query);
+	}
 	
-	public SymbolicFragmentTest(String query) {
-		this.query = query;
+	@Override
+	protected Logger getLogger() { 
+		return _log; 
 	}
-
-	@Before
-	public void setUp() throws Exception {
-		Class<?> c = SymbolicFragmentTest.class;
-		ERSerializer serializer = new ERSerializer();
-		companyDiagram = (ERDiagram)serializer.deserialize(
-			c.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM));
-		companyMapping = (ERMapping)serializer.deserialize(
-			c.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING));
-		
-		translator = new SymbolicFragmentTranslator();
-		translator.setQuery(query);
-		translator.setERDiagram(companyDiagram);
-		translator.setERMapping(companyMapping);
+	
+	@Override
+	protected String getERDiagramResource() {
+		return TestConst.Resources.COMPANY_DIAGRAM;
 	}
-
-	@After
-	public void tearDown() throws Exception {
-		companyDiagram = null;
-		companyMapping = null;
-		translator = null;
-	}
-
-	@Test
-	public void testTranslation() {
-		_log.info("Query: " + query);
-		
-		String result = translator.getTranslation();
-		_log.info("Result: " + result);
+	
+	@Override
+	protected String getERMappingResource() {
+		return TestConst.Resources.COMPANY_MAPPING;
 	}
 }
