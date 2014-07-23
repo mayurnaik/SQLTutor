@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<erdiagram>
+	<entities>
+		<entity id="entitySalesperson">
+			<name>Salesperson</name>
+			<attributes>
+        		<attribute isKey="true">
+          			<name>SSN</name>
+        		</attribute>
+        		<attribute>
+        			<name>name</name>
+        		</attribute>
+        		<attribute>
+        			<name>start year</name>
+        		</attribute>
+        		<attribute>
+        			<name>department number</name>
+        		</attribute>
+      		</attributes>
+      		<type>PERSON</type>
+    	</entity>
+    	<entity id="entityTrip">
+      		<name>Trip</name>
+      		<attributes>
+        		<attribute isKey="true">
+          			<name>id</name>
+        		</attribute>
+        		<attribute>
+          			<name>return date</name>
+            	</attribute>
+            	<attribute>
+              		<name>departure date</name>
+            	</attribute>
+            	<attribute>
+              		<name>origin</name>
+            	</attribute>
+            	<attribute>
+              		<name>destination</name>
+            	</attribute>
+			</attributes>
+      		<type>THING</type>
+    	</entity>
+    	<entity id="entityExpense" isWeak="true">
+	    	<name>Expense</name>
+	    	<attributes>
+	    		<attribute isKey="true">
+	    			<name>account number</name>
+	    		</attribute>
+	    		<attribute>
+	    			<name>amount</name>
+	    		</attribute>
+	    	</attributes>
+	    	<type>THING</type>
+	    </entity>
+	</entities>
+	<relationships>
+    	<relationship>
+      		<name>takes</name>
+      		<attributes/>
+      		<leftEdge>
+        		<entity reference="entitySalesperson"/>
+        		<constraint>
+          			<label>salesperson</label>
+          			<cardinality>1</cardinality>
+        		</constraint>
+      		</leftEdge>
+      		<rightEdge>
+        		<entity reference="entityTrip"/>
+		        <constraint>
+		          <label>Trip</label>
+		          <cardinality>N</cardinality>
+		        </constraint>
+		  	</rightEdge>
+    	</relationship>
+    	<relationship isIdentifying="true">
+      		<name>incurs</name>
+      		<attributes/>
+      		<leftEdge>
+        		<entity reference="entityTrip"/>
+		        <constraint>
+		          <label>Trip</label>
+		          <cardinality>1</cardinality>
+		        </constraint>
+		    </leftEdge>
+      		<rightEdge>
+		        <entity reference="entityExpense"/>
+		        <constraint>
+		          <label>Expense</label>
+		          <cardinality>N</cardinality>
+		        </constraint>
+			</rightEdge>
+    	</relationship>
+  	</relationships>
+</erdiagram>

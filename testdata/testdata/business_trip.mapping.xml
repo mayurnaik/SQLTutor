@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<ermapping>
+	<attribute-map>
+    	<entry>
+      		<attribute>salesperson.SSN</attribute>
+      		<column>salesperson.SSN</column>
+    	</entry>
+	    <entry>
+	      <attribute>salesperson.Name</attribute>
+	      <column>salesperson.name</column>
+	    </entry>
+	    <entry>
+	      <attribute>salesperson.start year</attribute>
+	      <column>salesperson.start_year</column>
+	    </entry>
+	    <entry>
+	      <attribute>salesperson.department number</attribute>
+	      <column>salesperson.dept_no</column>
+	    </entry>
+	    <entry>
+	      <attribute>trip.origin</attribute>
+	      <column>trip.from_city</column>
+	    </entry>
+	    <entry>
+	      <attribute>trip.destination</attribute>
+	      <column>trip.to_city</column>
+	    </entry>
+	    <entry>
+	      <attribute>trip.departure date</attribute>
+	      <column>trip.departure_date</column>
+	    </entry>
+	    <entry>
+	      <attribute>trip.return date</attribute>
+	      <column>trip.return_date</column>
+	    </entry>
+	    <entry>
+	      <attribute>trip.id</attribute>
+	      <column>trip.trip_id</column>
+	    </entry>
+	    <entry>
+	      <attribute>expense.amount</attribute>
+	      <column>expense.amount</column>
+	    </entry>
+	    <entry>
+	    	<attribute>expense.account id</attribute>
+	    	<column>expense.account_id</column>
+	    </entry>
+  	</attribute-map>
+  	<join-map>
+    	<entry>
+      		<relationship>takes</relationship>
+	      	<join type="foreign_key">
+		        <keyPair>
+		          <primary>salesperson.ssn</primary>
+		          <foreign>trip.ssn</foreign>
+		        </keyPair>
+	      	</join>
+	    </entry>
+	    <entry>
+			<relationship>incurs</relationship>
+			<join type="foreign_key">
+		        <leftKeyPair>
+		          	<primary>trip.id</primary>
+		          	<foreign>expense.trip_id</foreign>
+		        </leftKeyPair>
+      		</join>
+	    </entry>
+  	</join-map>
+</ermapping>
