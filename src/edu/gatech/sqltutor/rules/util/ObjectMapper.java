@@ -28,8 +28,9 @@ public abstract class ObjectMapper<T> implements IObjectMapper<T> {
 	public Integer getObjectId(T obj) {
 		if( obj == null ) throw new NullPointerException("obj is null");
 		Integer id = objectIds.inverse().get(obj);
-		if( id == null )
+		if( id == null ) {
 			throw new SQLTutorException("No id mapped to object: " + objectToString(obj));
+		}
 		return id;
 	}
 	
@@ -54,11 +55,12 @@ public abstract class ObjectMapper<T> implements IObjectMapper<T> {
 	}
 	
 	@Override
-	public void mapObject(T obj) {
+	public Integer mapObject(T obj) {
 		if( obj == null ) throw new NullPointerException("obj is null");
 		Integer id = objectIds.inverse().get(obj);
 		if( id == null )
-			objectIds.put(nextId++, obj);
+			objectIds.put(id = nextId++, obj);
+		return id;
 	}
 	
 	@Override

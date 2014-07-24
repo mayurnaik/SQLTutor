@@ -3,12 +3,15 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class SQLToken extends ChildContainerToken 
 		implements ISymbolicToken {
 	private QueryTreeNode astNode;
+	
+	private QueryTreeNode conjunctScope;
 	
 	public SQLToken(QueryTreeNode astNode) {
 		super(PartOfSpeech.UNKNOWN);
@@ -33,10 +36,20 @@ public class SQLToken extends ChildContainerToken
 		this.astNode = astNode;
 	}
 	
+	public QueryTreeNode getConjunctScope() {
+		return conjunctScope;
+	}
+	
+	public void setConjunctScope(QueryTreeNode conjunctScope) {
+		this.conjunctScope = conjunctScope;
+	}
+	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
+		super.addPropertiesString(b);
 		b.append(", astNode=[").append(astNode.getClass().getSimpleName())
-			.append("] ").append(QueryUtils.nodeToString(astNode));
+			.append("] ").append(QueryUtils.nodeToString(astNode))
+			.append(", cscope=").append(Utils.ellided(QueryUtils.nodeToString(conjunctScope)));
 		return b;
 	}
 }

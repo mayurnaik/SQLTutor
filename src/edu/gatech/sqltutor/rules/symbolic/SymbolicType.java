@@ -11,6 +11,7 @@ public enum SymbolicType {
 	ALL_ATTRIBUTES,
 	ATTRIBUTE_LIST,
 	TABLE_ENTITY,
+	TABLE_ENTITY_REF,
 	WHERE,
 	AND,
 	OR,

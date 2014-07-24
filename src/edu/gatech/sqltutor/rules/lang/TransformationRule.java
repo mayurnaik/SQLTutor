@@ -81,6 +81,10 @@ public class TransformationRule extends StandardSymbolicRule implements
 		ext.nextTuple(); // just one result
 		
 		RootToken root = ext.getToken("?root");
+		
+		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
+			_log.debug(Markers.SYMBOLIC, "State before transformation:\n{}", SymbolicUtil.prettyPrint(root));
+		
 		SQLToken select = ext.getToken("?select");
 		root.getChildren().clear(); // delete existing children
 		

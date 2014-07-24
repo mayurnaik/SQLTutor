@@ -9,7 +9,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
  */
 public class InRelationshipToken extends AbstractSymbolicToken implements
 		ISymbolicToken {
-	private TableEntityToken entity1, entity2;
+	private TableEntityToken leftEntity, rightEntity;
 	private ERRelationship relationship;
 
 	public InRelationshipToken(InRelationshipToken toCopy) {
@@ -23,6 +23,14 @@ public class InRelationshipToken extends AbstractSymbolicToken implements
 	public InRelationshipToken() {
 		super(PartOfSpeech.VERB_PHRASE);
 	}
+	
+	public InRelationshipToken(TableEntityToken leftEntity, TableEntityToken rightEntity, 
+			ERRelationship relationship) {
+		this();
+		this.leftEntity = leftEntity;
+		this.rightEntity = rightEntity;
+		this.relationship = relationship;
+	}
 
 	@Override
 	public SymbolicType getType() {
@@ -31,9 +39,32 @@ public class InRelationshipToken extends AbstractSymbolicToken implements
 	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
-		b.append(", e1=").append(entity1).append(", e2=").append(entity2)
+		b.append(", e1=").append(leftEntity).append(", e2=").append(rightEntity)
 			.append(", rel=").append(relationship);
 		return b;
 	}
-	
+
+	public TableEntityToken getLeftEntity() {
+		return leftEntity;
+	}
+
+	public void setLeftEntity(TableEntityToken leftEntity) {
+		this.leftEntity = leftEntity;
+	}
+
+	public TableEntityToken getRightEntity() {
+		return rightEntity;
+	}
+
+	public void setRightEntity(TableEntityToken rightEntity) {
+		this.rightEntity = rightEntity;
+	}
+
+	public ERRelationship getRelationship() {
+		return relationship;
+	}
+
+	public void setRelationship(ERRelationship relationship) {
+		this.relationship = relationship;
+	}
 }

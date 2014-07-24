@@ -58,6 +58,13 @@ public class SymbolicPredicates {
 	 */
 	public static final IPredicate provenance = predicate("symProvenance", 2); 
 	
+	/**
+	 * <code>(?token:id, ?cscope:id)</code> =>
+	 * Token <code>?token</code> has conjunct-scope <code>?cscope</code>.
+	 * Use {@link SymbolicFacts#getScopeMap()} to resolve conjunct-scope references.
+	 */
+	public static final IPredicate conjunctScope = predicate("symConjunctScope", 2);
+	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2);
 	

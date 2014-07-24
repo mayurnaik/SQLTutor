@@ -146,6 +146,7 @@ public class QueryUtils {
 	}
 	
 	public static String nodeToString(QueryTreeNode node) {
+		if( node == null ) return null;
 		try {
 			return new NodeToString().toString(node);
 		} catch( StandardException e ) {

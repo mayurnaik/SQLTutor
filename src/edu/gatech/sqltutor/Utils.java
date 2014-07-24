@@ -77,4 +77,30 @@ public class Utils {
 			return input;
 		return b.toString();
 	}
+	
+	
+	public static String ellided(String input) { return ellided(input, true); }
+	public static String ellided(String input, boolean trailing) {
+		return ellided(input, 20, trailing);
+	}
+	
+	public static String ellided(String input, int maxLen, boolean trailing) {
+		if( maxLen < 4 )
+			throw new IllegalArgumentException("maxLen should be at least 4");
+		if( input == null )
+			return null;
+		
+		final int length = input.length();
+		if( input.length() <= maxLen )
+			return input;
+		
+		int toKeep = maxLen - 3;
+		if( trailing )
+			return input.substring(0, toKeep) + "...";
+		
+		int half = toKeep / 2;
+		String first = input.substring(0, half);
+		String last = input.substring(length - half - (toKeep & 1));
+		return first + "..." + last;
+	}
 }

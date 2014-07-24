@@ -35,8 +35,9 @@ public interface IObjectMapper<T> {
 	 * Assign an id to <code>obj</code>.  If obj is already mapped, 
 	 * the original id should be preserved.
 	 * @param obj the object to map
+	 * @return the object's id
 	 */
-	public void mapObject(T obj);
+	public Integer mapObject(T obj);
 	
 	/**
 	 * Maps a set of objects rooted at <code>root</code>.  

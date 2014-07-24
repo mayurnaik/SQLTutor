@@ -59,6 +59,7 @@ public class SymbolicFragmentTranslator
 	private static final boolean DUMP_DATALOG = false;
 	private static final boolean DUMP_SYMBOLIC_REWRITES = false;
 	
+	protected SymbolicState symState;
 	protected ERFacts erFacts = new ERFacts();
 	protected SQLFacts sqlFacts = new SQLFacts();
 	protected SymbolicFacts symFacts = new SymbolicFacts();
@@ -105,7 +106,8 @@ public class SymbolicFragmentTranslator
 
 		// create initial symbolic state
 		RootToken symbolic = new SymbolicCreatorNew(select).makeSymbolic();
-		SymbolicState symState = new SymbolicState();
+		symState = new SymbolicState();
+		symState.setRootToken(symbolic);
 		symState.setErDiagram(erDiagram);
 		symState.setErMapping(erMapping);
 		symState.setErFacts(erFacts);
@@ -126,7 +128,7 @@ public class SymbolicFragmentTranslator
 		// FIXME remove this eventually
 		if( DUMP_DATALOG ) {
 			IrisUtil.dumpFacts(queryFacts);
-			symFacts.generateFacts(symbolic, false);
+			symState.generateFacts();
 			IrisUtil.dumpFacts(symFacts.getFacts());
 			IrisUtil.dumpRules(staticRules);
 		}
@@ -159,7 +161,6 @@ public class SymbolicFragmentTranslator
 								String output = symReader.readSymbolicState(symbolic);
 								this.outputs.add(output);
 								_log.info("Output: {}", output);
-//								if( this.result == null || Math.random() < 0.5d )
 								// always use latest output
 								this.result = output;
 							} catch ( UnhandledSymbolicTypeException e ) {
@@ -204,7 +205,8 @@ public class SymbolicFragmentTranslator
 			RootToken symbolic) {
 
 		long duration = -System.currentTimeMillis();
-		symFacts.generateFacts(symbolic, false);
+//		symFacts.generateFacts(symbolic, false);
+		symState.generateFacts();
 		@SuppressWarnings("unchecked")
 		Map<IPredicate, IRelation> facts = mergeFacts(queryFacts, symFacts.getFacts());
 		
@@ -301,6 +303,8 @@ public class SymbolicFragmentTranslator
 		List<ISymbolicTranslationRule> symbolicRules = SymbolicUtil.loadSymbolicRules();
 		List<ITranslationRule> rules = new ArrayList<ITranslationRule>(symbolicRules.size() + 5);
 		rules.addAll(Arrays.<ITranslationRule>asList(
+			// preprocessing
+			new ConjunctScopeComputationRule(),
 			// analysis rules
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),

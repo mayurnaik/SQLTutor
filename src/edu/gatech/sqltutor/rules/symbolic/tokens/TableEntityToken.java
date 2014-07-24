@@ -1,8 +1,10 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import com.akiban.sql.parser.FromTable;
+import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -12,6 +14,9 @@ public class TableEntityToken extends AbstractSymbolicToken
 		implements ISymbolicToken, INounToken {
 	/** The referenced table. */
 	protected FromTable table;
+	
+	/** The conjunct scope of this token. */
+	protected QueryTreeNode cscope;
 	
 	protected String id;
 	protected String singular;
@@ -94,11 +99,20 @@ public class TableEntityToken extends AbstractSymbolicToken
 		this.cardinality = cardinality;
 	}
 	
+	public QueryTreeNode getCScope() {
+		return cscope;
+	}
+	
+	public void setCScope(QueryTreeNode cscope) {
+		this.cscope = cscope;
+	}
+	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
 		super.addPropertiesString(b);
 		b.append(", id=").append(id)
 			.append(", table=").append(QueryUtils.nodeToString(table))
+			.append(", cscope=").append(Utils.ellided(QueryUtils.nodeToString(cscope)))
 			.append(", singular=").append(singular)
 			.append(", plural=").append(plural)
 			.append(", card=");

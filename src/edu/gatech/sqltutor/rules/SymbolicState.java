@@ -75,6 +75,10 @@ public class SymbolicState {
 		_log.debug(Markers.SYMBOLIC, "Deleted node {}", node);
 	}
 	
+	public void generateFacts() {
+		symbolicFacts.generateFacts(rootToken, extraTokens, false);
+	}
+	
 	/**
 	 * Add a new metarule-generated fact.
 	 * 
@@ -162,5 +166,13 @@ public class SymbolicState {
 
 	public void setErFacts(ERFacts erFacts) {
 		this.erFacts = erFacts;
+	}
+
+	public List<ISymbolicToken> getExtraTokens() {
+		return extraTokens;
+	}
+
+	public void setExtraTokens(List<ISymbolicToken> extraTokens) {
+		this.extraTokens = extraTokens;
 	}
 }

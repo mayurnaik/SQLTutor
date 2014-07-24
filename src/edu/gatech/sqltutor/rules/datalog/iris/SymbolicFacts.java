@@ -1,23 +1,19 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
-import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
-
+import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 
-import org.deri.iris.EvaluationException;
-import org.deri.iris.api.IKnowledgeBase;
-import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.factory.Factory;
-import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.BinaryOperatorNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
+import com.akiban.sql.parser.SelectNode;
 import com.google.common.base.Joiner;
 
 import edu.gatech.sqltutor.QueryUtils;
@@ -35,6 +31,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
+import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 
 /** Fact generator for symbolic state. */
 public class SymbolicFacts extends DynamicFacts {
@@ -65,18 +62,52 @@ public class SymbolicFacts extends DynamicFacts {
 			}
 		}
 	}
+
+	/** A mapping of ids to query tree nodes. Used for conjunct scopes. */
+	public static class NodeMap extends ObjectMapper<QueryTreeNode> {
+		@Override
+		public void mapObjects(QueryTreeNode root) {
+			if( !(root instanceof SelectNode) )
+				throw new SQLTutorException("Root node should be select node.");
+			clearMap();
+			try {
+				// assign ids to all nodes, from the top down
+				root.accept(new ParserVisitorAdapter() {
+					@Override
+					public QueryTreeNode visit(QueryTreeNode node) throws StandardException {
+						mapObject(node);
+						return node;
+					}
+				});
+			} catch( StandardException e ) {
+				throw new SQLTutorException(e);
+			}
+		}
+		
+		@Override
+		protected String objectToString(QueryTreeNode obj) {
+			if( obj == null ) return "null";
+			return QueryUtils.nodeToString(obj);
+		}
+	}
 	
 	protected TokenMap tokenMap = new TokenMap();
+	protected NodeMap scopeMap = new NodeMap();
 	
 	public SymbolicFacts() { }
 	
-	public void generateFacts(RootToken root, boolean preserveIds) {
+	public void generateFacts(RootToken root, Collection<ISymbolicToken> unrootedTokens, boolean preserveIds) {
 		facts.clear();
 		if( !preserveIds || tokenMap.size() < 1 )
 			tokenMap.mapObjects(root);
+		// scope map is only calculated once as SQL AST will not actually change, 
+		// only the symbolic token wrappers will reorganize
+		if( scopeMap.size() < 1 )
+			scopeMap.mapObjects( ((SQLToken)root.getChildren().get(0)).getAstNode() );
 		
 		long duration = -System.currentTimeMillis();
 		addFacts(root);
+		addFacts(unrootedTokens);
 		_log.debug(Markers.TIMERS_FINE, "Symbolic facts generation took {} ms.", duration += System.currentTimeMillis());
 	}
 	
@@ -89,40 +120,20 @@ public class SymbolicFacts extends DynamicFacts {
 	public TokenMap getTokenMap() {
 		return tokenMap;
 	}
-
-	/**
-	 * Get the parent of <code>child</code>, evaluated using the knowledge base.
-	 * 
-	 * @param child the child token
-	 * @param kb    the datalog knowledge base
-	 * @return the parent token or <code>null</code> if the token has no parent
-	 * @throws SQLTutorException if <code>child</code> is not mapped, 
-	 *                           the query fails to evaluate,
-	 *                           or the parent is not unique
-	 * @deprecated Use {@link ISymbolicToken#getParent()} instead.
-	 */
-	@Deprecated
-	public ISymbolicToken getParent(ISymbolicToken child, IKnowledgeBase kb) {
-		Integer childId = tokenMap.getObjectId(child);
-		
-		IQuery q = Factory.BASIC.createQuery(
-			literal(SymbolicPredicates.parentOf, "?parentId", childId, "?pos")
-		);
-		IRelation relation = null;
-		try {
-			relation = kb.execute(q);
-		} catch( EvaluationException e ) {
-			throw new SQLTutorException(e);
-		}
-		
-		if( relation.size() == 0 )
-			return null;
-		if( relation.size() > 1 )
-			throw new SQLTutorException("Non-unique parent, found " + relation.size() + " nodes.");
-		
-		return tokenMap.getMappedObject(relation.get(0).get(0));
+	
+	public NodeMap getScopeMap() {
+		return scopeMap;
 	}
-
+	
+	private void addFacts(Collection<ISymbolicToken> tokens) {
+		if( tokens != null ) {
+			for( ISymbolicToken token: tokens ) {
+				Integer tokenId = tokenMap.getObjectId(token);
+				addLocalFacts(tokenId, token);
+			}
+		}
+	}
+	
 	private void addFacts(RootToken root) {		
 		Deque<ISymbolicToken> worklist = new LinkedList<ISymbolicToken>();
 		worklist.addFirst(root);
@@ -237,6 +248,10 @@ public class SymbolicFacts extends DynamicFacts {
 			addTableFacts(nodeId, (FromBaseTable)node);
 		if( node instanceof ConstantNode )
 			addConstantFacts(nodeId, (ConstantNode)node);
+		
+		QueryTreeNode cscope = token.getConjunctScope();
+		if( cscope != null )
+			addFact(SymbolicPredicates.conjunctScope, nodeId, scopeMap.getObjectId(cscope));
 		
 		if( _log.isDebugEnabled() ) {
 			// gen facts to make debugging easier
