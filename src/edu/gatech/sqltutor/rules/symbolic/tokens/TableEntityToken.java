@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 import com.akiban.sql.parser.FromTable;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
@@ -15,6 +16,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 	protected String id;
 	protected String singular;
 	protected String plural;
+	protected int cardinality = EREdgeConstraint.ANY_CARDINALITY;
 	
 	public TableEntityToken(TableEntityToken token) {
 		super(token);
@@ -76,11 +78,34 @@ public class TableEntityToken extends AbstractSymbolicToken
 		this.plural = label;
 	}
 	
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public int getCardinality() {
+		return cardinality;
+	}
+	
+	public void setCardinality(int cardinality) {
+		this.cardinality = cardinality;
+	}
+	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
-		b.append(", table=").append(QueryUtils.nodeToString(table))
+		super.addPropertiesString(b);
+		b.append(", id=").append(id)
+			.append(", table=").append(QueryUtils.nodeToString(table))
 			.append(", singular=").append(singular)
-			.append(", plural=").append(plural);
+			.append(", plural=").append(plural)
+			.append(", card=");
+		if( cardinality == EREdgeConstraint.ANY_CARDINALITY )
+			b.append("N");
+		else
+			b.append(cardinality);
 		return b;
 	}
 }

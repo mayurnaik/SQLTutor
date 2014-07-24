@@ -24,6 +24,16 @@ public class SymbolicPredicates {
 	/** <code>(?token:int,?table:int)</code> */
 	public static final IPredicate refsTable = predicate("symRefsTable", 2);
 	
+	/** <code>(?token:int,?id:string)</code>.
+	 * Table-entity <code>?token</code> has id <code>?id</code>.
+	 */
+	public static final IPredicate entityId = predicate("symEntityId", 2);
+
+	/** <code>(?token:int,?card:int)</code> Token has cardinality <code>?card</code>, 
+	 * where <code>-1</code> means any (<code>N</code>).
+	 */
+	public static final IPredicate cardinality = predicate("symCardinality", 2);
+	
 	/** <code>(?token:int,?number:number)</code> */
 	public static final IPredicate number = predicate("symNumber", 2);
 	

@@ -206,8 +206,9 @@ public class SymbolicFacts extends DynamicFacts {
 	}
 	
 	private void addTableEntityFacts(Integer tokenId, TableEntityToken token) {
-//		Integer tableId = nodeMap.getObjectId(token.getTable());
-//		addFact(SymbolicPredicates.refsTable, tokenId, tableId);
+		if( token.getId() != null )
+			addFact(SymbolicPredicates.entityId, tokenId, token.getId());
+		addFact(SymbolicPredicates.cardinality, tokenId, token.getCardinality());
 		// FIXME for now we'll map all these facts to the same id and pretend it refs itself
 		addFact(SymbolicPredicates.refsTable, tokenId, tokenId);
 		addTableFacts(tokenId, (FromBaseTable)token.getTable());

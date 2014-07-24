@@ -159,8 +159,9 @@ public class SymbolicFragmentTranslator
 								String output = symReader.readSymbolicState(symbolic);
 								this.outputs.add(output);
 								_log.info("Output: {}", output);
-								if( this.result == null || Math.random() < 0.5d )
-									this.result = output;
+//								if( this.result == null || Math.random() < 0.5d )
+								// always use latest output
+								this.result = output;
 							} catch ( UnhandledSymbolicTypeException e ) {
 								_log.warn("Could not read output due to unhandled type: {}", e.getSymbolicType());
 							}
