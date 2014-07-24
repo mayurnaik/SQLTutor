@@ -65,6 +65,9 @@ public class SymbolicPredicates {
 	 */
 	public static final IPredicate conjunctScope = predicate("symConjunctScope", 2);
 	
+	/** <code>(?cscope1:id, ?cscope2:id)</code> */
+	public static final IPredicate conjunctScopeParent = predicate("symCScopeParent", 2);
+	
 	// for debugging, id => token.toString()
 	public static final IPredicate debugString = predicate("symDebugString", 2);
 	

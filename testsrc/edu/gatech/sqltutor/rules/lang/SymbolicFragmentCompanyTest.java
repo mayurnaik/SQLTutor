@@ -45,6 +45,8 @@ public class SymbolicFragmentCompanyTest extends SymbolicFragmentTestBase {
 			{"SELECT E.*, S.* FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 			
 			{"SELECT * FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND E.salary > 50000 AND S.salary > 100000"},
+			
+			{"SELECT name FROM department WHERE name = 'Research' OR name = 'Sales'"}
 		};
 		return Arrays.asList(queries);
 	}

@@ -5,6 +5,8 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 import java.util.EnumSet;
 
 import org.deri.iris.api.basics.IQuery;
+import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 
@@ -13,8 +15,10 @@ import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.TranslationPhase;
+import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.NodeMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
@@ -56,9 +60,14 @@ public class ConjunctScopeComputationRule extends StandardSymbolicRule
 		token.setConjunctScope(cscope);
 		// FIXME others, e.g. NOT?
 		if( astNode instanceof OrNode ) {
+			NodeMap scopeMap = state.getSymbolicFacts().getScopeMap();
+			ITerm parentId = IrisUtil.asTerm(scopeMap.getObjectId(cscope));
 			for( ISymbolicToken c: token.getChildren() ) {
 				SQLToken child = (SQLToken)c;
-				processToken(child.getAstNode(), child);
+				QueryTreeNode nextScope = child.getAstNode();
+				ITuple fact = IrisUtil.asTuple(parentId, scopeMap.getObjectId(nextScope));
+				state.addFact(SymbolicPredicates.conjunctScopeParent, fact);
+				processToken(nextScope, child);
 			}
 		} else {
 			for( ISymbolicToken c: token.getChildren() ) {
