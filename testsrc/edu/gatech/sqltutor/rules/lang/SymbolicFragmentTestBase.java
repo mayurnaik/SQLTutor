@@ -48,8 +48,13 @@ public abstract class SymbolicFragmentTestBase {
 	public void testTranslation() throws Exception {
 		Logger log = getLogger();
 		log.info("Query: " + query);
-		String result = translator.getTranslation();
-		log.info("Result: " + result);
+		try {
+			String result = translator.getTranslation();
+			log.info("Result: " + result);
+		} catch( Exception e ) {
+			log.error("Failed to translate.");
+			throw e;
+		}
 	}
 	
 	protected Logger getLogger() { return _log; }

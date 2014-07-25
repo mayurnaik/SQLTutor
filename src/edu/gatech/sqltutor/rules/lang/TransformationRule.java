@@ -277,14 +277,16 @@ public class TransformationRule extends StandardSymbolicRule implements
 		String tableCol = ext.getString("?tableName") + "." + ((ColumnReference)colRef.getAstNode()).getColumnName();
 		ERMapping erMapping = state.getErMapping();
 		
+		ISymbolicToken token;
 		ERAttribute attr = erMapping.getAttribute(tableCol);
-		if( attr == null )
-			throw new SymbolicException("Could not get attribute for " + tableCol);
-		
-		AttributeToken token = new AttributeToken(attr);
+		if( attr != null ) {
+			token = new AttributeToken(attr);
+		} else {
+			token = colRef; // column doesn't map to an attribute, refer to it as is
+		}
 		
 		SQLNounToken fromToken = ext.getToken("?tableId");
-		FromTable fromTable = (FromTable)fromToken.getAstNode();//this.sqlMaps.getTableAliases().get(ext.getString("?tableAlias"));
+		FromTable fromTable = (FromTable)fromToken.getAstNode();
 		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
 		TableEntityToken tableEntity = new TableEntityToken(fromTable);
 		tableEntity.setSingularLabel(fromToken.getSingularLabel());

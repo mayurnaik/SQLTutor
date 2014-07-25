@@ -10,5 +10,6 @@ ruleAttributeDescribes(?table,?eq,?value,?type,?eqParent) :-
   erAttributeMapsTo(?ent,?attr,?tablename,?col),
   sqlTableName(?table, ?tablename),
   sqlNodeHasType(?table, 'FromBaseTable'),
-  sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), ?op = '=',
+  sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), 
+  ?op = '=',
   sqlParentOf(?eqParent,?eq).
