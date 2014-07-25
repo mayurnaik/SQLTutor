@@ -37,7 +37,7 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	}
 
 	@Override
-	protected void setPartOfSpeech(PartOfSpeech partOfSpeech) {
+	public void setPartOfSpeech(PartOfSpeech partOfSpeech) {
 		switch( partOfSpeech ) {
 			case NOUN_SINGULAR_OR_MASS:
 			case NOUN_PLURAL:

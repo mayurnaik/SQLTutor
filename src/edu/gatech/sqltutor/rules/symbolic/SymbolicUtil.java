@@ -32,7 +32,7 @@ public class SymbolicUtil {
 			ClassPath classPath = ClassPath.from(SymbolicUtil.class.getClassLoader());
 			
 			List<ISymbolicTranslationRule> rules = new ArrayList<ISymbolicTranslationRule>();
-			for( ClassPath.ClassInfo classInfo : classPath.getTopLevelClasses(pkg) ) {
+			for( ClassPath.ClassInfo classInfo : classPath.getTopLevelClassesRecursive(pkg) ) {
 				ISymbolicTranslationRule rule = createSymbolicRule(classInfo);
 				if( rule != null )
 					rules.add(rule);
@@ -98,6 +98,17 @@ public class SymbolicUtil {
 		}
 		
 		return copy;
+	}
+	
+	/**
+	 * Replace a child token with another token, in the same position.
+	 * 
+	 * @param child  the child token
+	 * @param replacement the token to replace <code>child</code> with
+	 * @throws SymbolicException if replacement failed
+	 */
+	public static void replaceChild(ISymbolicToken child, ISymbolicToken replacement) {
+		replaceChild(child.getParent(), child, replacement);
 	}
 	
 	/**

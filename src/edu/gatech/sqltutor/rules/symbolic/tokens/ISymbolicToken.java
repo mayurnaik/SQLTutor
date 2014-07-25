@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 import java.util.List;
 import java.util.Set;
 
+import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
@@ -60,6 +61,13 @@ public interface ISymbolicToken {
 	 * or <code>null</code> if there is not a single part of speech.
 	 */
 	public PartOfSpeech getPartOfSpeech();
+	
+	/**
+	 * Sets the part of speech.
+	 * @param partOfSpeech the part of speech
+	 * @throws SQLTutorException if the part of speech is invalid for this token type
+	 */
+	public void setPartOfSpeech(PartOfSpeech partOfSpeech);
 	
 	/** Returns the type of this token. */
 	public SymbolicType getType();

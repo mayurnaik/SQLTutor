@@ -43,7 +43,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 	}
 	
 	@Override
-	protected void setPartOfSpeech(PartOfSpeech partOfSpeech) {
+	public void setPartOfSpeech(PartOfSpeech partOfSpeech) {
 		switch( partOfSpeech ) {
 			case NOUN_SINGULAR_OR_MASS:
 			case NOUN_PLURAL:

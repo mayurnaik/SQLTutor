@@ -33,7 +33,7 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 		return partOfSpeech;
 	}
 	
-	protected void setPartOfSpeech(PartOfSpeech partOfSpeech) {
+	public void setPartOfSpeech(PartOfSpeech partOfSpeech) {
 		this.partOfSpeech = partOfSpeech;
 	}
 	

@@ -282,7 +282,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 		if( attr != null ) {
 			token = new AttributeToken(attr);
 		} else {
-			token = colRef; // column doesn't map to an attribute, refer to it as is
+			// column doesn't map to an attribute, refer to it as is
+			token = colRef;
+			token.setPartOfSpeech(PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 		}
 		
 		SQLNounToken fromToken = ext.getToken("?tableId");
