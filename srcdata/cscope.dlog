@@ -1,0 +1,5 @@
+
+cscopeTableEntity(?token, ?cscope) :-
+  symType(?token, 'TABLE_ENTITY'),
+  symConjunctScope(?token, ?cscope).
+  
