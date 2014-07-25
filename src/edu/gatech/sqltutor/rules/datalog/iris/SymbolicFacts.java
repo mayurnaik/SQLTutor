@@ -24,6 +24,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.IScopedToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
@@ -40,20 +41,31 @@ public class SymbolicFacts extends DynamicFacts {
 	public static class TokenMap extends ObjectMapper<ISymbolicToken> {
 		@Override
 		public void mapObjects(ISymbolicToken root) {
-			if( !(root instanceof RootToken) )
-				throw new SQLTutorException("Token should be the root token: " + root);
-			mapTokens((RootToken)root);
+			mapTokens(root);
+		}
+		
+		public void mapTokens(Collection<ISymbolicToken> tokens) {
+			if( tokens == null ) return;
+
+			Deque<ISymbolicToken> worklist = new LinkedList<ISymbolicToken>();
+			worklist.addAll(tokens);
+			
+			while( !worklist.isEmpty() ) {
+				ISymbolicToken token = worklist.removeFirst();
+				mapObject(token);
+				worklist.addAll(token.getChildren());
+			}
 		}
 		
 		/**
 		 * Assigns ids to the symbolic token tree starting at <code>root</code>.
-		 * @param root The distinguished root node.
+		 * @param parentToken The distinguished root node.
 		 */
-		private void mapTokens(RootToken root) {
+		private void mapTokens(ISymbolicToken parentToken) {
 			clearMap();
 			
 			Deque<ISymbolicToken> worklist = new LinkedList<ISymbolicToken>();
-			worklist.addFirst(root);
+			worklist.addFirst(parentToken);
 			
 			while( !worklist.isEmpty() ) {
 				ISymbolicToken token = worklist.removeFirst();
@@ -98,8 +110,10 @@ public class SymbolicFacts extends DynamicFacts {
 	
 	public void generateFacts(RootToken root, Collection<ISymbolicToken> unrootedTokens, boolean preserveIds) {
 		facts.clear();
-		if( !preserveIds || tokenMap.size() < 1 )
+		if( !preserveIds || tokenMap.size() < 1 ) {
 			tokenMap.mapObjects(root);
+			tokenMap.mapTokens(unrootedTokens);
+		}
 		// scope map is only calculated once as SQL AST will not actually change, 
 		// only the symbolic token wrappers will reorganize
 		if( scopeMap.size() < 1 )
@@ -165,6 +179,8 @@ public class SymbolicFacts extends DynamicFacts {
 		
 		if( token instanceof INounToken )
 			addNounFacts(tokenId, (INounToken)token);
+		if( token instanceof IScopedToken )
+			addScopeFacts(tokenId, (IScopedToken)token);
 		
 		switch( tokenType ) {
 			case ATTRIBUTE: 
@@ -202,6 +218,12 @@ public class SymbolicFacts extends DynamicFacts {
 		if( plural == null ) plural = "";
 		addFact(SymbolicPredicates.singularLabel, tokenId, singular);
 		addFact(SymbolicPredicates.pluralLabel, tokenId, plural);
+	}
+	
+	private void addScopeFacts(Integer tokenId, IScopedToken token) {
+		QueryTreeNode cscope = token.getConjunctScope();
+		if( cscope != null )
+			addFact(SymbolicPredicates.conjunctScope, tokenId, scopeMap.getObjectId(cscope));
 	}
 
 	private void addLiteralFacts(Integer tokenId, LiteralToken token) {
@@ -248,10 +270,6 @@ public class SymbolicFacts extends DynamicFacts {
 			addTableFacts(nodeId, (FromBaseTable)node);
 		if( node instanceof ConstantNode )
 			addConstantFacts(nodeId, (ConstantNode)node);
-		
-		QueryTreeNode cscope = token.getConjunctScope();
-		if( cscope != null )
-			addFact(SymbolicPredicates.conjunctScope, nodeId, scopeMap.getObjectId(cscope));
 		
 		if( _log.isDebugEnabled() ) {
 			// gen facts to make debugging easier

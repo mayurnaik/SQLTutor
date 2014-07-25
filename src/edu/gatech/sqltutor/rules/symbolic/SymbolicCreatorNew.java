@@ -16,6 +16,7 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
 
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
@@ -32,9 +33,6 @@ public class SymbolicCreatorNew {
 	
 	private SelectNode select;
 	
-	private RootToken rootToken;
-	private List<ISymbolicToken> unrootedTokens;
-	
 	private GetChildrenVisitor childVisitor = new GetChildrenVisitor();
 	
 	private Map<String, Integer> nextVar;
@@ -44,10 +42,11 @@ public class SymbolicCreatorNew {
 		this.select = select;
 	}
 
-	public RootToken makeSymbolic() {
+	public SymbolicState makeSymbolic() {
+		SymbolicState state = new SymbolicState();
 		nextVar = new HashMap<String, Integer>();
-		unrootedTokens = new ArrayList<ISymbolicToken>();
-		rootToken = new RootToken();
+		List<ISymbolicToken> unrootedTokens = new ArrayList<ISymbolicToken>();
+		RootToken rootToken = new RootToken();
 		
 		SQLToken selectToken = new SQLToken(select);
 		Stack<SQLToken> tokens = new Stack<SQLToken>();
@@ -69,7 +68,7 @@ public class SymbolicCreatorNew {
 					// FIXME what about relationship tables?
 					TableEntityToken tableEntity = new TableEntityToken(fromTable);
 					tableEntity.setId(getNextEntityId(fromTable.getOrigTableName().getTableName()));
-					tableEntity.setCScope(select); // FIXME should this be computed?
+					tableEntity.setConjunctScope(select); // FIXME should this be computed?
 					unrootedTokens.add(tableEntity);
 				} else if ( childNode instanceof NumericConstantNode ) {
 					childToken = new SQLNumberToken(childNode);
@@ -85,7 +84,9 @@ public class SymbolicCreatorNew {
 		
 		rootToken.addChild(selectToken);
 		
-		return rootToken;
+		state.setRootToken(rootToken);
+		state.setExtraTokens(unrootedTokens);
+		return state;
 	}
 	
 	private String getNextEntityId(String tableName) {
@@ -97,13 +98,5 @@ public class SymbolicCreatorNew {
 		}
 		nextVar.put(firstChar, nextInt + 1);
 		return firstChar + nextInt;
-	}
-	
-	public RootToken getRootToken() {
-		return rootToken;
-	}
-	
-	public List<ISymbolicToken> getUnrootedTokens() {
-		return unrootedTokens;
 	}
 }

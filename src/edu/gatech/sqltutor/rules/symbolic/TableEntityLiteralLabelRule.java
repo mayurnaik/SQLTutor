@@ -17,6 +17,7 @@ import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
@@ -56,9 +57,15 @@ public class TableEntityLiteralLabelRule
 			}
 			if( label != null ) {
 				LiteralToken literal = new LiteralToken(label, pos);
-				SymbolicUtil.replaceChild(token.getParent(), token, literal);
-				_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
-				applied = true;
+				ISymbolicToken parent = token.getParent();
+				if( parent == null ) {
+					// FIXME these are unrooted tokens, different from the in-tree versions
+					_log.warn("FIXME Ignoring parentless {TABLE_ENTITY}");
+				} else {
+					SymbolicUtil.replaceChild(parent, token, literal);
+					_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, literal);
+					applied = true;
+				}
 			}
 		}
 		return applied;

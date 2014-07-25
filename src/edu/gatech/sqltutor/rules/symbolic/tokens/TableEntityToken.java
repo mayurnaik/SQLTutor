@@ -11,7 +11,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class TableEntityToken extends AbstractSymbolicToken
-		implements ISymbolicToken, INounToken {
+		implements ISymbolicToken, INounToken, IScopedToken {
 	/** The referenced table. */
 	protected FromTable table;
 	
@@ -99,11 +99,13 @@ public class TableEntityToken extends AbstractSymbolicToken
 		this.cardinality = cardinality;
 	}
 	
-	public QueryTreeNode getCScope() {
+	@Override
+	public QueryTreeNode getConjunctScope() {
 		return cscope;
 	}
 	
-	public void setCScope(QueryTreeNode cscope) {
+	@Override
+	public void setConjunctScope(QueryTreeNode cscope) {
 		this.cscope = cscope;
 	}
 	

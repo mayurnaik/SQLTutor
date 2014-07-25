@@ -9,29 +9,6 @@ ruleAttributeDescribes(?table,?eq,?value,?type,?eqParent) :-
   erAttributeDescribes(?ent,?attr,?type),
   erAttributeMapsTo(?ent,?attr,?tablename,?col),
   sqlTableName(?table, ?tablename),
+  sqlNodeHasType(?table, 'FromBaseTable'),
   sqlLiteralComparison(?eq, ?op, ?table, ?col, ?value), ?op = '=',
   sqlParentOf(?eqParent,?eq).
-
-
-// ruleAttributeDescribesLabel(?table,?value,?type).
-//   generated fact to say ?table matched the rule with ?value and ?type
-
-// now propogate the generated facts to the learned label rule
-lrnTableLabel(?table,?label, ?plural, ?source) :-
-  lrnTableLabel(?table, ?otherlabel, ?otherplural, ?othersource),
-  not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
-  STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
-  ruleAttributeDescribesLabel(?table,?value,?type),
-  ?type = 'prepend',
-  STRING_CONCAT(?value, ' ', ?temp),
-  STRING_CONCAT(?temp, ?otherlabel, ?label),
-  STRING_CONCAT(?temp, ?otherplural, ?plural).
-
-lrnTableLabel(?table,?label, ?plural, ?source) :-
-  lrnTableLabel(?table, ?label, ?othersource),
-  not STRING_MATCHES2('DescribingAttributeLabelRule', ?othersource),
-  STRING_CONCAT('DescribingAttributeLabelRule|', ?othersource, ?source),
-  ruleAttributeDescribesLabel(?table,?value,?type),
-  ?type = 'replace',
-  ?label = ?value,
-  PLURALIZE_TERM(?label, ?plural).

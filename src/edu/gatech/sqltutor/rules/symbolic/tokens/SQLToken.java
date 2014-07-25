@@ -8,7 +8,7 @@ import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class SQLToken extends ChildContainerToken 
-		implements ISymbolicToken {
+		implements IScopedToken {
 	private QueryTreeNode astNode;
 	
 	private QueryTreeNode conjunctScope;

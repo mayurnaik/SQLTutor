@@ -14,14 +14,19 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.FromBaseTable;
+import com.akiban.sql.parser.QueryTreeNode;
+
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.NLUtil;
 
 
@@ -44,6 +49,7 @@ public class DescribingAttributeLabelRule
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
+		SymbolicQueries queries = state.getQueries();
 		while( ext.nextTuple() ) {
 			// FIXME needs to handle cscopes / {TABLE_ENTITY}
 			// and should insert {IS} token, simplifying if possible
@@ -52,9 +58,18 @@ public class DescribingAttributeLabelRule
 			String value = ext.getString("?value"),
 				type = ext.getString("?type");
 			
+			QueryTreeNode cscope = binop.getConjunctScope();
+			TableEntityToken tableEntity = queries.getTableEntityForScope(
+				((FromBaseTable)fromTable.getAstNode()).getExposedName(), cscope);
+			if( tableEntity == null ) {
+				System.out.println(state.toPrettyPrintedString());
+				System.out.println("Tokens: " + queries.getTableEntitiesForScope(cscope));
+				throw new SymbolicException("FIXME: Need to split for cscope.");
+			}
+			
 			// format the result
-			String singular = fromTable.getSingularLabel(),
-				plural = fromTable.getPluralLabel();
+			String singular = tableEntity/*fromTable*/.getSingularLabel(),
+				plural = tableEntity/*fromTable*/.getPluralLabel();
 			if( "prepend".equalsIgnoreCase(type) ) {
 				singular = value + " " + singular;
 				plural = value + " " + plural;
@@ -65,6 +80,8 @@ public class DescribingAttributeLabelRule
 				throw new SymbolicException("Unsupported describing-attribute type: " + type);
 			}
 			
+			tableEntity.setSingularLabel(singular);
+			tableEntity.setPluralLabel(plural);
 			fromTable.setSingularLabel(singular);
 			fromTable.setPluralLabel(plural);
 			

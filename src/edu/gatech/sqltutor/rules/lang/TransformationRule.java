@@ -263,13 +263,15 @@ public class TransformationRule extends StandardSymbolicRule implements
 			literal(SQLPredicates.columnName, nodeId, "?columnName"),
 			literal(SQLPredicates.tableAlias, nodeId, "?tableAlias"),
 			literal(SQLPredicates.tableAlias, "?tableId", "?tableAlias"),
-			literal(SQLPredicates.tableName, "?tableId", "?tableName")
+			literal(SQLPredicates.tableName, "?tableId", "?tableName"),
+			literal(SQLPredicates.nodeHasType, "?tableId", "FromBaseTable")
 		);
 		
 		RelationExtractor ext = IrisUtil.executeQuery(query, state);
 		IRelation relation = ext.getRelation();
-		if( relation.size() != 1 )
+		if( relation.size() != 1 ) {
 			throw new SymbolicException("Too many or too few results: " + relation);
+		}
 		ext.nextTuple();
 		
 		String tableCol = ext.getString("?tableName") + "." + ((ColumnReference)colRef.getAstNode()).getColumnName();

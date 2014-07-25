@@ -40,6 +40,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.ERRules;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLRules;
+import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
@@ -105,9 +106,8 @@ public class SymbolicFragmentTranslator
 		SelectNode select = QueryUtils.extractSelectNode(statement);
 
 		// create initial symbolic state
-		RootToken symbolic = new SymbolicCreatorNew(select).makeSymbolic();
-		symState = new SymbolicState();
-		symState.setRootToken(symbolic);
+		symState = new SymbolicCreatorNew(select).makeSymbolic();
+		RootToken symbolic = symState.getRootToken();
 		symState.setErDiagram(erDiagram);
 		symState.setErMapping(erMapping);
 		symState.setErFacts(erFacts);
@@ -233,6 +233,7 @@ public class SymbolicFragmentTranslator
 		staticRules.addAll(sqlRules.getRules());
 		staticRules.addAll(erRules.getRules());
 		staticRules.addAll(SymbolicRules.getInstance().getRules());
+		staticRules.addAll(new StaticRules("/cscope.dlog").getRules());
 		for( ITranslationRule rule: translationRules ) {
 			staticRules.addAll(rule.getDatalogRules());
 		}

@@ -24,6 +24,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
@@ -43,6 +44,8 @@ public class SymbolicState {
 	private ERFacts erFacts;
 	private Map<IPredicate, IRelation> ruleFacts = Maps.newHashMap();
 	private List<IRule> rules = Lists.newArrayList();
+	
+	private SymbolicQueries queries = new SymbolicQueries(this);
 	
 	public SymbolicState() { }
 	
@@ -174,5 +177,17 @@ public class SymbolicState {
 
 	public void setExtraTokens(List<ISymbolicToken> extraTokens) {
 		this.extraTokens = extraTokens;
+	}
+	
+	public SymbolicQueries getQueries() {
+		return queries;
+	}
+	
+	public String toPrettyPrintedString() {
+		StringBuilder b = new StringBuilder(SymbolicUtil.prettyPrint(rootToken));
+		b.append("\nExtra tokens:\n");
+		for( ISymbolicToken token: extraTokens )
+			b.append(SymbolicUtil.prettyPrint(token));
+		return b.toString();
 	}
 }
