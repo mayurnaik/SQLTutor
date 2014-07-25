@@ -22,6 +22,7 @@ import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
+import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
@@ -35,10 +36,10 @@ public class DescribingAttributeLabelRule
 	private static final Logger _log = LoggerFactory.getLogger(DescribingAttributeLabelRule.class);
 	
 	// ruleAttributeDescribes(?table,?eq,?value,?type,?eqParent)
-	private static final IPredicate ruleAttributeDescribes = predicate("ruleAttributeDescribes", 5);
+	private static final IPredicate ruleAttributeDescribes = predicate("ruleAttributeDescribes", 6);
 	
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
-		literal(ruleAttributeDescribes, "?table", "?eq", "?value", "?type", "?eqParent")
+		literal(ruleAttributeDescribes, "?table", "?eq", "?value", "?type", "?ent", "?attr")
 	);
 	
 	private static final StaticRules staticRules = new StaticRules(DescribingAttributeLabelRule.class);
@@ -50,6 +51,7 @@ public class DescribingAttributeLabelRule
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
 		SymbolicQueries queries = state.getQueries();
+		boolean applied = false;
 		while( ext.nextTuple() ) {
 			// FIXME needs to handle cscopes / {TABLE_ENTITY}
 			// and should insert {IS} token, simplifying if possible
@@ -57,6 +59,8 @@ public class DescribingAttributeLabelRule
 			SQLToken binop = ext.getToken("?eq");
 			String value = ext.getString("?value"),
 				type = ext.getString("?type");
+			String entName = ext.getString("?ent"), attrName = ext.getString("?attr");
+			ERAttribute attr = state.getErDiagram().getAttribute(entName + "." + attrName);
 			
 			QueryTreeNode cscope = binop.getConjunctScope();
 			TableEntityToken tableEntity = queries.getTableEntityForScope(
@@ -68,8 +72,10 @@ public class DescribingAttributeLabelRule
 			}
 			
 			// format the result
-			String singular = tableEntity/*fromTable*/.getSingularLabel(),
-				plural = tableEntity/*fromTable*/.getPluralLabel();
+			String singular = tableEntity.getSingularLabel(),
+				plural = tableEntity.getPluralLabel();
+			if( singular == null || plural == null )
+				continue; // wait for another rule to give a label we can use
 			if( "prepend".equalsIgnoreCase(type) ) {
 				singular = value + " " + singular;
 				plural = value + " " + plural;
@@ -82,6 +88,10 @@ public class DescribingAttributeLabelRule
 			
 			tableEntity.setSingularLabel(singular);
 			tableEntity.setPluralLabel(plural);
+			if( attr.isKey() )
+				tableEntity.setCardinality(1);
+			
+			// FIXME only do this if no split
 			fromTable.setSingularLabel(singular);
 			fromTable.setPluralLabel(plural);
 			
@@ -89,9 +99,10 @@ public class DescribingAttributeLabelRule
 
 			// delete the comparison
 			state.deleteNode(binop);
+			applied = true;
 		}
 		
-		return true;
+		return applied;
 	}
 	
 	@Override

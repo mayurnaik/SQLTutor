@@ -18,7 +18,7 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 	protected SymbolicState state;
 	
 	/** The rule's precedence. */
-	protected int precedence = DefaultPrecedence.FRAGMENT_REWRITE;
+	protected int precedence = getDefaultPrecedence();
 	
 	protected EnumSet<TranslationPhase> phases = getDefaultPhases();
 
@@ -49,7 +49,18 @@ public abstract class AbstractSymbolicRule implements ISymbolicTranslationRule {
 		this.phases = phases != null ? phases : getDefaultPhases();
 	}
 	
-	protected EnumSet<TranslationPhase> getDefaultPhases() { return EnumSet.allOf(TranslationPhase.class); }
+	/**
+	 * Get the phases this rule participates in by default.
+	 * This is all phases unless overridden.
+	 * @return the default phases
+	 */
+	protected EnumSet<TranslationPhase> getDefaultPhases() { 
+		return EnumSet.allOf(TranslationPhase.class); 
+	}
+	
+	protected int getDefaultPrecedence() {
+		return DefaultPrecedence.FRAGMENT_REWRITE;
+	}
 	
 	@Override
 	public int getType() {

@@ -8,22 +8,23 @@ import java.util.List;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
-import org.deri.iris.api.basics.ITuple;
-import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.akiban.sql.parser.FromBaseTable;
 
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.EntityLabelFormat;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
-import edu.gatech.sqltutor.rules.datalog.iris.LearnedPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
-import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 /**
  * For a table named <em>t</em> referencing entity <em>e</em>, 
@@ -32,9 +33,6 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
  */
 public class DefaultTableLabelRule extends StandardSymbolicRule implements ISymbolicTranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(DefaultTableLabelRule.class);
-	
-	public static final String RULE_SOURCE = DefaultTableLabelRule.class.getSimpleName();
-	private static final ITerm TERM_RULE_SOURCE = IrisUtil.asTerm(RULE_SOURCE);
 	
 	private static final StaticRules staticRules = new StaticRules(DefaultTableLabelRule.class);
 	
@@ -48,17 +46,22 @@ public class DefaultTableLabelRule extends StandardSymbolicRule implements ISymb
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {	
-		final boolean debug = _log.isDebugEnabled(Markers.DATALOG_FACTS);
+		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
+		SymbolicQueries queries = state.getQueries();
 		while( ext.nextTuple() ) {
-			INounToken table = ext.getToken("?table");
+			SQLNounToken table = ext.getToken("?table");
 			String singular = ext.getString("?singular"), plural = ext.getString("plural");
 			table.setSingularLabel(singular);
 			table.setPluralLabel(plural);
-			ITuple fact = IrisUtil.asTuple(ext.getTerm("?table"), ext.getTerm("?singular"), 
-				ext.getTerm("?plural"), TERM_RULE_SOURCE);
-			state.addFact(LearnedPredicates.tableLabel, fact);
-			if( debug ) 
-				_log.debug(Markers.DATALOG_FACTS, "Added label fact: {}{}", LearnedPredicates.tableLabel, fact);
+			
+			TableEntityToken tableEntity = queries.getTableEntityForScope(
+				(FromBaseTable)table.getAstNode(), table.getConjunctScope());
+			tableEntity.setSingularLabel(singular);
+			tableEntity.setPluralLabel(singular);
+			
+			if( debug )  {
+				_log.debug(Markers.SYMBOLIC, "Updated labels for {} and {}", table, tableEntity);
+			}
 		}
 		return true;
 	}

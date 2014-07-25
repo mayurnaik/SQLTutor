@@ -19,7 +19,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			{"SELECT DISTINCT salary FROM employee"},
 			{"SELECT ssn FROM employee"},
 			{"SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND department_id = 5"},
-			{"SELECT first_name, last_name, address FROM employee, department WHERE name = 'Research' AND id = department_id"},
+			{"SELECT e.first_name, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id"},
 			{"SELECT first_name, last_name FROM employee WHERE manager_ssn IS NULL"},
 			{"SELECT birthdate, address FROM employee WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},
 			{"SELECT E.last_name AS employee_name, S.last_name AS supervisor_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},

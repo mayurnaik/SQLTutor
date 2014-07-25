@@ -96,7 +96,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 		
 		addResultColumnsAndTables(root, resultColumns, fromList);
 		if( selectChildren.size() >= 3 )
-			addWhereClause(root, (SQLToken)selectChildren.get(2));
+			addWhereClause(root, selectChildren.get(2));
 		
 		if( _log.isDebugEnabled(Markers.SYMBOLIC) )
 			_log.debug(Markers.SYMBOLIC, "State after transformation:\n{}", SymbolicUtil.prettyPrint(root));
@@ -196,14 +196,20 @@ public class TransformationRule extends StandardSymbolicRule implements
 		}
 	}
 	
-	private void addWhereClause(final RootToken root, SQLToken where) {
+	private void addWhereClause(final RootToken root, ISymbolicToken where) {
 		root.addChild(new WhereToken());
 		
 		addChildTokens(root, where);
 	}
 	
 	private void addChildTokens(ISymbolicToken parentToken, ISymbolicToken token) {
-		addChildTokens(parentToken, (SQLToken)token);
+		if( token instanceof SQLToken ) {
+			addChildTokens(parentToken, (SQLToken)token);
+		} else {
+			parentToken.addChild(token);
+			for( ISymbolicToken child: token.getChildren() )
+				addChildTokens(token, child);
+		}
 	}
 	
 	private void addChildTokens(ISymbolicToken parentToken, SQLToken sqlToken) {

@@ -19,6 +19,10 @@ sqlIsKeyEquality(?eq, ?t1, ?attr1, ?t2, ?attr2) :-
 sqlStringLiteral(?node,?value) :-
   sqlNodeHasType(?node, 'CharConstantNode'),
   sqlLiteralValue(?node,?value).
+  
+sqlNumberLiteral(?node,?value) :-
+  sqlNodeHasType(?node, 'NumericConstantNode'),
+  sqlLiteralValue(?node,?value).
 
 // ?eq is an operator type ?op comparing with a literal value ?val
 sqlLiteralComparison(?eq, ?op, ?table, ?colname, ?val) :-
@@ -29,8 +33,8 @@ sqlLiteralComparison(?eq, ?op, ?table, ?colname, ?val) :-
   sqlParentOf(?eq, ?child1), sqlParentOf(?eq, ?child2), ?child1 != ?child2,
   // one child is the attribute
   sqlTableAlias(?table, ?alias), sqlTableAlias(?child1, ?alias), sqlColumnName(?child1, ?colname),
-  // the other is a string literal
-  sqlStringLiteral(?child2,?val).
+  // the other is a literal (constant)
+  sqlLiteralValue(?child2,?val).
 
 
 // only binary relational operators or AND nodes are possible always-on choices
