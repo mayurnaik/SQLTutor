@@ -13,6 +13,8 @@ import org.deri.iris.factory.Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.FromBaseTable;
+
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.SymbolicState;
@@ -21,9 +23,15 @@ import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
+import edu.gatech.sqltutor.rules.er.ERDiagram;
+import edu.gatech.sqltutor.rules.er.ERRelationship;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.NLUtil;
 
 /**
@@ -107,28 +115,65 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 		RelationExtractor ext = IrisUtil.executeQuery(FK_QUERY, state);
 		if( ext.getRelation().size() == 0 )
 			return false;
+		
+		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		
+		SymbolicQueries queries = state.getQueries();
+		ERDiagram erDiagram = state.getErDiagram();
+		
+		boolean applied = false;
 		while( ext.nextTuple() ) {
 			ITerm relationship = ext.getTerm("?rel");
 			_log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
+			
 			SQLToken binop = ext.getToken("?eq");
 			String pkLabel = ext.getString("?pkLabel").toLowerCase(),
 				fkLabel = ext.getString("?fkLabel").toLowerCase();
 			
 			SQLNounToken pkTable = ext.getToken("?tref1"), fkTable = ext.getToken("?tref2");
+			FromBaseTable pkFromTable = (FromBaseTable)pkTable.getAstNode(),
+		              fkFromTable = (FromBaseTable) fkTable.getAstNode();
+			TableEntityToken pkEntityToken = queries.getTableEntityForScope(
+				pkFromTable.getExposedName(), binop.getConjunctScope());
+			TableEntityToken fkEntityToken = queries.getTableEntityForScope(
+				fkFromTable.getExposedName(), binop.getConjunctScope());
+			
+			if( pkEntityToken == null || fkEntityToken == null )
+				throw new SymbolicException("FIXME: Need to split for cscope.");
+			
+			String oldSingularPK = pkEntityToken.getSingularLabel(),
+			       oldSingularFK = fkEntityToken.getSingularLabel();
+			if( oldSingularPK == null || oldSingularFK == null )
+				continue;
+
+			_log.info("\npkLabel: {}\npkTableLabel: {}\nfkLabel: {}\nfkTableLabel: {}",
+				pkLabel, pkTable.getSingularLabel(), fkLabel, fkTable.getSingularLabel());
+					
 			// FIXME allow plural overrides in ER
 			String pkPlural = NLUtil.pluralize(pkLabel), fkPlural = NLUtil.pluralize(fkLabel);
-			pkTable.setSingularLabel(pkLabel);
-			pkTable.setPluralLabel(pkPlural);
-			fkTable.setSingularLabel(fkLabel);
-			fkTable.setPluralLabel(fkPlural);
+			// FIXME detect if the entity already has a more specific name
+			if( !pkLabel.isEmpty() ) {
+				pkEntityToken.setSingularLabel(pkLabel);
+				pkEntityToken.setPluralLabel(pkPlural);
+			}
+			if( !fkLabel.isEmpty() ) {
+				fkEntityToken.setSingularLabel(fkLabel);
+				fkEntityToken.setPluralLabel(fkPlural);
+			}
 			
-			InRelationshipToken inRelationship = new InRelationshipToken();
-			// FIXME set up this node and replace condition, need to use {TABLE_ENTITY}
-			// FIXME for now, we'll just delete it
-			state.deleteNode(binop);
+			ERRelationship rel = erDiagram.getRelationship(ext.getString("?rel"));
+			if( rel == null )
+				System.out.println("break");
+			InRelationshipToken inRelationship = new InRelationshipToken(
+				pkEntityToken, fkEntityToken, rel
+			);
+			
+			SymbolicUtil.replaceChild(binop, inRelationship);
+			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", binop, inRelationship);
+			applied = true;
 		}
 		
-		return true;
+		return applied;
 	}
 	
 	private boolean detectLookupJoins() {

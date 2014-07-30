@@ -24,7 +24,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			{"SELECT birthdate, address FROM employee WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},
 			{"SELECT E.last_name AS employee_name, S.last_name AS supervisor_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
 			{"SELECT * FROM employee E, employee M, department D WHERE E.salary > M.salary AND E.department_id = D.id AND D.manager_ssn = M.ssn"},
-			{"SELECT project.id, department.id, last_name, address, birthdate FROM project, department, employee WHERE project.department_id = department.id AND department.manager_ssn = ssn AND location = 'Stafford'"},	
+			{"SELECT p.id, d.id, e.last_name, e.address, e.birthdate FROM project p, department d, employee e WHERE p.department_id = d.id AND d.manager_ssn = e.ssn AND d.location = 'Stafford'"},	
 		};
 		return Arrays.asList(params);
 	}

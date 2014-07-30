@@ -137,6 +137,9 @@ public class IrisUtil {
 			throw new SQLTutorException("Unhandled numeric type: " + cname);
 		}
 		
+		if( val == null )
+			return Factory.TERM.createString("");
+		
 		String strVal = val.toString();
 		if( !(val instanceof String || val instanceof Enum<?>) ) {
 			_log.warn("Unknown type, using string representation: " + val.getClass().getName());

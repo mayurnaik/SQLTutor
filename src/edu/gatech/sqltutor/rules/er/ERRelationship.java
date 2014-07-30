@@ -39,6 +39,8 @@ public class ERRelationship extends AbstractERAttributeContainer {
 	@XStreamAsAttribute
 	private boolean isIdentifying;
 	
+	private String verbForm;
+	
 	public ERRelationship(String name) {
 		super(name);
 	}
@@ -87,5 +89,13 @@ public class ERRelationship extends AbstractERAttributeContainer {
 //		if( rightEdge != null )
 //			b.append('.').append(rightEdge.getEntity().getName());
 		return b.toString();
+	}
+
+	public String getVerbForm() {
+		return verbForm;
+	}
+
+	public void setVerbForm(String verbForm) {
+		this.verbForm = verbForm;
 	}
 }
