@@ -21,6 +21,7 @@ import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultColumn;
+import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.TableName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -37,6 +38,7 @@ import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AllAttributesToken;
@@ -55,9 +57,17 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.WhereToken;
 
+/**
+ * This rule transforms the symbolic state from one isomorphic to 
+ * an SQL query's AST into one better suited for NL generation.
+ * Essentially, the state before this rule is the now-defunct 
+ * query analysis phase and the state after this rule is what 
+ * we started with in the old symbolic phase. 
+ */
 public class TransformationRule extends StandardSymbolicRule implements
 		ITranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(TransformationRule.class);
@@ -68,6 +78,8 @@ public class TransformationRule extends StandardSymbolicRule implements
 		literal(SymbolicPredicates.type, "?select", SymbolicType.SQL_AST),
 		literal(SQLPredicates.nodeHasType, "?select", "SelectNode")
 	);
+	
+	private boolean isDistinct;
 
 	public TransformationRule() {
 	}
@@ -86,6 +98,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			_log.debug(Markers.SYMBOLIC, "State before transformation:\n{}", SymbolicUtil.prettyPrint(root));
 		
 		SQLToken select = ext.getToken("?select");
+		isDistinct = ((SelectNode)select.getAstNode()).isDistinct();
 		root.getChildren().clear(); // delete existing children
 		
 		List<ISymbolicToken> selectChildren = select.getChildren();
@@ -94,6 +107,8 @@ public class TransformationRule extends StandardSymbolicRule implements
 		
 		root.addChild(new SelectToken());
 		
+		if( isDistinct ) 
+			addDistinctTokens(root);
 		addResultColumnsAndTables(root, resultColumns, fromList);
 		if( selectChildren.size() >= 3 )
 			addWhereClause(root, selectChildren.get(2));
@@ -127,9 +142,18 @@ public class TransformationRule extends StandardSymbolicRule implements
 		return columns;
 	}
 	
+	private void addDistinctTokens(RootToken root) {
+		if( !isDistinct ) return;
+		root.addChild(new LiteralToken("the", PartOfSpeech.DETERMINER));
+		root.addChild(new LiteralToken("distinct", PartOfSpeech.ADJECTIVE));
+		root.addChild(new LiteralToken("values", PartOfSpeech.NOUN_PLURAL));
+		root.addChild(new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION));
+	}
+	
 	private void addResultColumnsAndTables(RootToken root, 
 			SQLToken resultColumns, SQLToken fromList) {
-		ERMapping erMapping = state.getErMapping();
+		final ERMapping erMapping = state.getErMapping();
+		final SymbolicQueries queries = state.getQueries();
 		
 		List<ISymbolicToken> attrLists = Lists.newLinkedList();
 		for( ISymbolicToken childToken: fromList.getChildren() ) {
@@ -163,26 +187,34 @@ public class TransformationRule extends StandardSymbolicRule implements
 					if( erAttr == null )
 						throw new SQLTutorException("No attribute for name " + attrName);
 					attr = new AttributeToken(erAttr);
+					if( isDistinct )
+						attr.setPartOfSpeech(PartOfSpeech.NOUN_PLURAL);
 				}
 
 				attrList.addChild(attr);
 			}
 
-			seq.addChild(attrList);
+			seq.addChild(attrList);			
+			
+			// the token to be referenced
+			TableEntityToken entityToken = queries.getTableEntityForScope(fromTable, null);
 
-			// "of each" {entity}
+
+			// "of each" {entity} or "of all" {entity}s or "of the" {entity}
 			SequenceToken literals = new SequenceToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
 			LiteralToken of = new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
-			LiteralToken each = new LiteralToken("each", PartOfSpeech.DETERMINER);
+			String expr = entityToken.getCardinality() == 1 ? "the" : isDistinct ? "all" : "each";
+			LiteralToken determiner = new LiteralToken(expr, PartOfSpeech.DETERMINER);
 			literals.addChild(of);
-			literals.addChild(each);
+			literals.addChild(determiner);
 			seq.addChild(literals);
-
-			TableEntityToken table = new TableEntityToken(fromTable);
-			table.setSingularLabel(tableToken.getSingularLabel());
-			table.setPluralLabel(tableToken.getPluralLabel());
-			seq.addChild(table);
-
+			
+			// now the reference
+			TableEntityRefToken ref = new TableEntityRefToken(entityToken);
+			if( entityToken.getCardinality() != 1 && isDistinct )
+				ref.setPartOfSpeech(PartOfSpeech.NOUN_PLURAL);
+			seq.addChild(ref);
+			
 			attrLists.add(seq);
 		}
 
@@ -195,7 +227,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			root.addChild(and);
 		}
 	}
-	
+
 	private void addWhereClause(final RootToken root, ISymbolicToken where) {
 		root.addChild(new WhereToken());
 		
@@ -219,6 +251,11 @@ public class TransformationRule extends StandardSymbolicRule implements
 		ISymbolicToken token = null;
 		int nodeType = node.getNodeType();
 		switch(nodeType) {
+			case NodeTypes.IS_NULL_NODE:
+			case NodeTypes.IS_NOT_NULL_NODE:
+				// types to preserve
+				token = sqlToken;
+				break;
 			case NodeTypes.AND_NODE:
 				token = new AndToken();
 				break;

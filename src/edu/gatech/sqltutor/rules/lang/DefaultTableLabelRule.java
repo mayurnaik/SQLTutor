@@ -57,7 +57,7 @@ public class DefaultTableLabelRule extends StandardSymbolicRule implements ISymb
 			TableEntityToken tableEntity = queries.getTableEntityForScope(
 				(FromBaseTable)table.getAstNode(), table.getConjunctScope());
 			tableEntity.setSingularLabel(singular);
-			tableEntity.setPluralLabel(singular);
+			tableEntity.setPluralLabel(plural);
 			
 			if( debug )  {
 				_log.debug(Markers.SYMBOLIC, "Updated labels for {} and {}", table, tableEntity);

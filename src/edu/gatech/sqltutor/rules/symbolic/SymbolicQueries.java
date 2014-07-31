@@ -17,6 +17,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.NodeMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 /**
@@ -32,12 +33,12 @@ public class SymbolicQueries {
 	
 	/**
 	 * Returns the <code>{TABLE_ENTITY}</code> associated with a conjunct-scope.
-	 * @param cscope the conjunct scope
+	 * @param cscope the conjunct scope or <code>null</code> for the global scope
 	 * @return the entity or <code>null</code> if none is associated
 	 */
 	public List<TableEntityToken> getTableEntitiesForScope(QueryTreeNode cscope) {
 		NodeMap scopeMap = state.getSymbolicFacts().getScopeMap();
-		Integer scopeId = scopeMap.getObjectId(cscope);
+		Integer scopeId = cscope != null ? scopeMap.getObjectId(cscope) : 0;
 		IQuery query = Factory.BASIC.createQuery(
 			literal(SymbolicPredicates.type, "?tableEntity", SymbolicType.TABLE_ENTITY),
 			literal(SymbolicPredicates.conjunctScope, "?tableEntity", scopeId)
@@ -51,12 +52,13 @@ public class SymbolicQueries {
 	
 	/**
 	 * Returns the <code>{TABLE_ENTITY}</code> associated with a conjunct-scope.
-	 * @param cscope the conjunct scope
+	 * @param cscope the conjunct scope or <code>null</code> for the global scope
 	 * @return the entity or <code>null</code> if none is associated
 	 */
 	public TableEntityToken getTableEntityForScope(String tableAlias, QueryTreeNode cscope) {
+		if( tableAlias == null ) throw new NullPointerException("tableAlias is null");
 		NodeMap scopeMap = state.getSymbolicFacts().getScopeMap();
-		Integer scopeId = scopeMap.getObjectId(cscope);
+		Integer scopeId = cscope != null ? scopeMap.getObjectId(cscope) : 0;
 		IQuery query = Factory.BASIC.createQuery(
 			literal(SymbolicPredicates.type, "?tableEntity", SymbolicType.TABLE_ENTITY),
 			literal(SymbolicPredicates.conjunctScope, "?tableEntity", scopeId),
@@ -71,10 +73,11 @@ public class SymbolicQueries {
 	
 	/**
 	 * Returns the <code>{TABLE_ENTITY}</code> associated with a conjunct-scope.
-	 * @param cscope the conjunct scope
+	 * @param cscope the conjunct scope or <code>null</code> for the global scope
 	 * @return the entity or <code>null</code> if none is associated
 	 */
 	public TableEntityToken getTableEntityForScope(FromBaseTable fromTable, QueryTreeNode cscope) {
+		if( fromTable == null ) throw new NullPointerException("fromTable is null");
 		return getTableEntityForScope(fromTable.getExposedName(), cscope);
 	}
 }

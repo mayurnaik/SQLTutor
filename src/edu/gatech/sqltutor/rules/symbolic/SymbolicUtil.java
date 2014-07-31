@@ -134,6 +134,45 @@ public class SymbolicUtil {
 	}
 	
 	/**
+	 * Gets the token that would precede the <code>token</code> if the 
+	 * tree-structure was flattened.  The returned token is always a 
+	 * leaf-token in the tree structure.
+	 * 
+	 * @param token the token to find the predecessor of
+	 * @return the predecessor or <code>null</code> if there is no predecessor
+	 */
+	public static ISymbolicToken getPrecedingToken(ISymbolicToken token) {
+		if( token == null ) throw new NullPointerException("token is null");
+		ISymbolicToken parent = token.getParent();
+		if( parent == null ) return null; // the root token, has no predecessor
+		
+		// if we have a sibling before us, it's right-most descendant
+		List<ISymbolicToken> siblings = parent.getChildren();
+		int idx = siblings.indexOf(token);
+		if( idx > 0 )
+			return getRightmostDescendant(siblings.get(idx-1));
+		
+		// otherwise, up one level and check
+		return getPrecedingToken(parent);
+	}
+	
+	/**
+	 * Returns the right-most tree descendant of a token.  This may be the 
+	 * token itself if it has no children.
+	 * 
+	 * @param token the ancestor token
+	 * @return the right-most descendent 
+	 */
+	public static ISymbolicToken getRightmostDescendant(ISymbolicToken token) {
+		if( token == null ) throw new NullPointerException("token is null");
+		List<ISymbolicToken> children = token.getChildren();
+		int size = children.size();
+		if( size == 0 )
+			return token;
+		return getRightmostDescendant(children.get(size-1));
+	}
+	
+	/**
 	 * Returns whether every leave node is a literal expression node.
 	 * 
 	 * @param kb the knowledge base

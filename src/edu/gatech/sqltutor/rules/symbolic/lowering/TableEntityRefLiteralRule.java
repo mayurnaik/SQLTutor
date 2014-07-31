@@ -56,14 +56,12 @@ public class TableEntityRefLiteralRule
 				break;
 			}
 			if( label != null ) {
-				ISymbolicToken parent = ref.getParent();
-				List<ISymbolicToken> children = parent.getChildren();
-				int idx = children.indexOf(ref);
-				if( idx > 0 ) {
-					ISymbolicToken before = children.get(idx-1);
-					if( before.getPartOfSpeech() != PartOfSpeech.DETERMINER ) {
-						children.add(idx, new LiteralToken("the", PartOfSpeech.DETERMINER)); // FIXME "a/an"?
-					}
+				ISymbolicToken before = SymbolicUtil.getPrecedingToken(ref);
+				if( before == null || before.getPartOfSpeech() != PartOfSpeech.DETERMINER ) {
+					ISymbolicToken parent = ref.getParent();
+					List<ISymbolicToken> siblings = parent.getChildren();
+					int idx = siblings.indexOf(ref);
+					siblings.add(idx, new LiteralToken("the", PartOfSpeech.DETERMINER)); // FIXME "a/an"?
 				}
 				LiteralToken literal = new LiteralToken(label, pos);
 				
