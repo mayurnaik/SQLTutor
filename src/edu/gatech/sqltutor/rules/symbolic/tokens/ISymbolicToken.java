@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +22,14 @@ public interface ISymbolicToken {
 	 * @return the possibly empty list of child tokens
 	 */
 	public List<ISymbolicToken> getChildren();
+	
+	/**
+	 * Adds a series of child tokens.
+	 * @param children the children to add
+	 * @throws SymbolicException if {@link #addChild(ISymbolicToken)} would throw an exception
+	 *                           for any child in <code>children</code>
+	 */
+	public void addChildren(Collection<? extends ISymbolicToken> children);
 	
 	/**
 	 * Adds a child token.

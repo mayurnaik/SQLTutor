@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.rules.symbolic.tokens;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +41,13 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 	@Override
 	public List<ISymbolicToken> getChildren() {
 		return Collections.emptyList();
+	}
+	
+	@Override
+	public void addChildren(Collection<? extends ISymbolicToken> children) {
+		if( children != null )
+			for( ISymbolicToken child: children )
+				addChild(child);
 	}
 	
 	@Override

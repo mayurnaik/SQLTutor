@@ -17,7 +17,6 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.NodeMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
-import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 /**

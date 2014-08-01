@@ -244,10 +244,13 @@ public class TransformationRule extends StandardSymbolicRule implements
 		}
 	}
 	
+	// first adds a replacement for sqlToken to parentToken
+	// then recurses to children of sqlToken
 	private void addChildTokens(ISymbolicToken parentToken, SQLToken sqlToken) {
 		QueryTreeNode node = sqlToken.getAstNode();
 		List<ISymbolicToken> childTokens = sqlToken.getChildren();
 		
+		boolean keepExisting = false;
 		ISymbolicToken token = null;
 		int nodeType = node.getNodeType();
 		switch(nodeType) {
@@ -255,6 +258,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			case NodeTypes.IS_NOT_NULL_NODE:
 				// types to preserve
 				token = sqlToken;
+				keepExisting = true;
 				break;
 			case NodeTypes.AND_NODE:
 				token = new AndToken();
@@ -296,6 +300,12 @@ public class TransformationRule extends StandardSymbolicRule implements
 		}
 		
 		parentToken.addChild(token);
+		if( keepExisting ) {
+			// will be re-adding children or their replacements, prevent concurrent modification issues
+			List<ISymbolicToken> temp = new ArrayList<ISymbolicToken>(childTokens);
+			childTokens.clear();
+			childTokens = temp;
+		}
 		for( ISymbolicToken childToken: childTokens )
 			addChildTokens(token, childToken);
 	}
