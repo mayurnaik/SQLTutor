@@ -25,7 +25,12 @@ public class TableEntityToken extends AbstractSymbolicToken
 	
 	public TableEntityToken(TableEntityToken token) {
 		super(token);
+		this.id = token.id;
+		this.cscope = token.cscope;
 		this.table = token.table;
+		this.singular = token.singular;
+		this.plural = token.plural;
+		this.cardinality = token.cardinality;
 	}
 	
 	public TableEntityToken(FromTable table) {

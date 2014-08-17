@@ -60,6 +60,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.WhereToken;
+import edu.gatech.sqltutor.rules.util.Literals;
 
 /**
  * This rule transforms the symbolic state from one isomorphic to 
@@ -144,10 +145,10 @@ public class TransformationRule extends StandardSymbolicRule implements
 	
 	private void addDistinctTokens(RootToken root) {
 		if( !isDistinct ) return;
-		root.addChild(new LiteralToken("the", PartOfSpeech.DETERMINER));
+		root.addChild(Literals.the());
 		root.addChild(new LiteralToken("distinct", PartOfSpeech.ADJECTIVE));
 		root.addChild(new LiteralToken("values", PartOfSpeech.NOUN_PLURAL));
-		root.addChild(new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION));
+		root.addChild(Literals.of());
 	}
 	
 	private void addResultColumnsAndTables(RootToken root, 
@@ -202,10 +203,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 
 			// "of each" {entity} or "of all" {entity}s or "of the" {entity}
 			SequenceToken literals = new SequenceToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
-			LiteralToken of = new LiteralToken("of", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
 			String expr = entityToken.getCardinality() == 1 ? "the" : isDistinct ? "all" : "each";
 			LiteralToken determiner = new LiteralToken(expr, PartOfSpeech.DETERMINER);
-			literals.addChild(of);
+			literals.addChild(Literals.of());
 			literals.addChild(determiner);
 			seq.addChild(literals);
 			
@@ -343,10 +343,13 @@ public class TransformationRule extends StandardSymbolicRule implements
 		SQLNounToken fromToken = ext.getToken("?tableId");
 		FromTable fromTable = (FromTable)fromToken.getAstNode();
 		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-		TableEntityToken tableEntity = new TableEntityToken(fromTable);
-		tableEntity.setSingularLabel(fromToken.getSingularLabel());
-		tableEntity.setPluralLabel(fromToken.getPluralLabel());
-		seq.addChild(tableEntity);
+		
+		TableEntityToken tableEntity = state.getQueries().getTableEntityForScope(
+			ext.getString("?tableAlias"), colRef.getConjunctScope());
+		if( tableEntity == null )
+			throw new SymbolicException("FIXME: No table entity for scope of " + colRef);
+		TableEntityRefToken ref = new TableEntityRefToken(tableEntity);
+		seq.addChild(ref);
 		seq.addChild(new LiteralToken("'s", PartOfSpeech.POSSESSIVE_ENDING));
 		seq.addChild(token);
 		
