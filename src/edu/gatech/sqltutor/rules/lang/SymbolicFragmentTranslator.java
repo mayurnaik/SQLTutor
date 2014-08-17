@@ -45,7 +45,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicCreatorNew;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
@@ -106,7 +106,7 @@ public class SymbolicFragmentTranslator
 		SelectNode select = QueryUtils.extractSelectNode(statement);
 
 		// create initial symbolic state
-		symState = new SymbolicCreatorNew(select).makeSymbolic();
+		symState = new SymbolicCreator(select).makeSymbolic();
 		RootToken symbolic = symState.getRootToken();
 		symState.setErDiagram(erDiagram);
 		symState.setErMapping(erMapping);

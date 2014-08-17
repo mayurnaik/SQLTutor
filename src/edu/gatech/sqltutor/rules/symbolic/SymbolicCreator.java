@@ -28,8 +28,8 @@ import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 /**
  * Creates the initial symbolic structure.
  */
-public class SymbolicCreatorNew {
-	private static final Logger _log = LoggerFactory.getLogger(SymbolicCreatorNew.class);
+public class SymbolicCreator {
+	private static final Logger _log = LoggerFactory.getLogger(SymbolicCreator.class);
 	
 	private SelectNode select;
 	
@@ -37,7 +37,7 @@ public class SymbolicCreatorNew {
 	
 	private Map<String, Integer> nextVar;
 
-	public SymbolicCreatorNew(SelectNode select) {
+	public SymbolicCreator(SelectNode select) {
 		if( select == null ) throw new NullPointerException("select is null");
 		this.select = select;
 	}
