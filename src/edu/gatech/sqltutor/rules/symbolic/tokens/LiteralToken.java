@@ -9,7 +9,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
  * rather than symbolic.
  */
 public class LiteralToken extends AbstractSymbolicToken {
-	protected final String expression;
+	protected String expression;
 	
 	public LiteralToken(LiteralToken token) {
 		super(token);
@@ -21,6 +21,10 @@ public class LiteralToken extends AbstractSymbolicToken {
 		if( pos == null ) 
 			throw new IllegalArgumentException("Literal fragments must have a part of speech.");
 		if( expression == null ) throw new NullPointerException("expression is null");
+		this.expression = expression;
+	}
+	
+	public void setExpression(String expression) {
 		this.expression = expression;
 	}
 	

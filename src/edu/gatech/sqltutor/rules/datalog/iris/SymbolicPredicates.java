@@ -88,4 +88,12 @@ public class SymbolicPredicates {
 	 * <code>symLeastCommonAncestorDepth(?ancestor:id,?token1:id,?token2:id)</code>
 	 */
 	public static final IPredicate leastCommonAncestor = predicate("symLeastCommonAncestor", 3); 
+	
+	/**
+	 * <code>symLastChild(?parent:id, ?child:id, ?position:int)</code>
+	 */
+	public static final IPredicate lastChild = predicate("symLastChild", 3);
+	
+	/** <code>symNumChildren(?token:id, ?num:int)</code> */
+	public static final IPredicate numChildren = predicate("symNumChildren", 2);
 }

@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
 import org.deri.iris.api.basics.ITuple;
+import org.deri.iris.api.builtins.IBuiltinAtom;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.api.terms.IVariable;
 import org.deri.iris.compiler.BuiltinRegister;
@@ -33,6 +36,10 @@ import edu.gatech.sqltutor.rules.SymbolicState;
 public class IrisUtil {
 	private static final Logger _log = LoggerFactory.getLogger(IrisUtil.class);
 	private static final IRelationFactory relationFactory = new SimpleRelationFactory();
+	
+	public static final String UNUSED = "_";
+	
+	private static int nextUnused = 0;
 	
 	public static Parser newParser() {
 		ITerm t1 = Factory.TERM.createVariable( "a" );
@@ -139,6 +146,8 @@ public class IrisUtil {
 		
 		if( val == null )
 			return Factory.TERM.createString("");
+		if( UNUSED.equals(val) )
+			return Factory.TERM.createVariable("unused" + (++nextUnused));
 		
 		String strVal = val.toString();
 		if( !(val instanceof String || val instanceof Enum<?>) ) {
@@ -192,6 +201,15 @@ public class IrisUtil {
 	
 	public static IPredicate predicate(String symbol, int arity) {
 		return Factory.BASIC.createPredicate(symbol, arity);
+	}
+	
+	public static IBuiltinAtom builtin(Class<? extends IBuiltinAtom> clazz, Object... terms) {
+		try {
+			Constructor<? extends IBuiltinAtom> ctor = clazz.getConstructor(ITerm[].class);
+			return ctor.newInstance((Object)IrisUtil.asTerms((Object[])terms));
+		} catch (Exception e) {
+			throw new SQLTutorException(e);
+		}
 	}
 	
 	public static void dumpFacts(Map<IPredicate, IRelation> facts) { dumpFacts(facts, System.out); }

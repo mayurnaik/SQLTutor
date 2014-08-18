@@ -25,7 +25,11 @@ public class SymbolicReader {
 		return out.toString();
 	}
 	
-	private void readToken(StringBuilder out, ISymbolicToken token) {				
+	public String readToken(ISymbolicToken token) {
+		return readToken(new StringBuilder(), token).toString();
+	}
+	
+	public StringBuilder readToken(StringBuilder out, ISymbolicToken token) {				
 		SymbolicType type = token.getType();
 		switch( type ) {
 			case LITERAL:
@@ -46,6 +50,7 @@ public class SymbolicReader {
 			default:
 				throw new UnhandledSymbolicTypeException(type, "Unhandled type for token " + token);
 		}
+		return out;
 	}
 	
 	/**

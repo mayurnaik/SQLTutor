@@ -12,7 +12,7 @@
   </appender>
      
   <appender name="debug.log" class="ch.qos.logback.core.FileAppender">
-    <file>${java.io.tmpdir}/sqltutor.log</file>
+    <file>sqltutor.debug.log</file>
     <append>false</append>
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -22,10 +22,10 @@
   </appender>
   
   <logger name="org.deri" level="INFO" />
-  <logger name="edu.gatech.sqltutor" level="INFO" />
+  <logger name="edu.gatech.sqltutor" level="DEBUG" />
 
   <root level="INFO">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="debug.log" />
+    <appender-ref ref="STDOUT" />
   </root>
 </configuration>

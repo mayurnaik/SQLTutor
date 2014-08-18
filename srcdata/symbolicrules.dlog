@@ -94,3 +94,16 @@ symLeastCommonAncestor(?ancestor,?token1,?token2,?depth1,?depth2) :-
     // is a common ancestor with none of greater depth
 	symCommonAncestorDepth(?ancestor,?token1,?token2,?depth1,?depth2),
 	not symHasLesserCommonAncestor(?ancestor,?token1,?token2).
+
+symNotLastChild(?parent, ?child, ?pos) :-
+  symParentOf(?parent, ?child, ?pos),
+  symParentOf(?parent, ?child2, ?pos2),
+  ?pos < ?pos2.
+  
+symLastChild(?parent, ?child, ?pos) :-
+  symParentOf(?parent, ?child, ?pos),
+  not symNotLastChild(?parent, ?child, ?pos).
+  
+symNumChildren(?parent, ?num) :- 
+  symLastChild(?parent, ?child, ?pos), 
+  ?pos + 1 = ?num.
