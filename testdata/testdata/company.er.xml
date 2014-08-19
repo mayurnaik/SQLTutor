@@ -131,6 +131,7 @@
     </relationship>
     <relationship>
     	<name>supervision</name>
+    	<verbForm>supervises</verbForm>
     	<leftEdge>
     		<entity reference="entityEmployee" />
     		<constraint>
