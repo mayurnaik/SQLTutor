@@ -12,7 +12,7 @@ public class SymbolicPredicates {
 	 */
 	public static final IPredicate parentOf = predicate("symParentOf", 3);
 	
-	/** <code>(?token:int,?type:string)</code> => <code>?token</code> is of type <code>?type</code> */
+	/** <code>symType(?token:int,?type:string)</code> => <code>?token</code> is of type <code>?type</code> */
 	public static final IPredicate type = predicate("symType", 2);
 	
 	/** <code>(?token:int,?tag:string)</code> => <code>?token</code> has part of speech tag <code>?tag</code> */
@@ -23,6 +23,18 @@ public class SymbolicPredicates {
 	
 	/** <code>(?token:int,?table:int)</code> */
 	public static final IPredicate refsTable = predicate("symRefsTable", 2);
+	
+	/** <code>(?ref:id,?tableEntity:id)</code> */
+	public static final IPredicate refsTableEntity = predicate("symRefsTableEntity", 2);
+	
+	/** <code>symRefsRelationship(?token:id, ?rel:string)</code> Token references a relationship. */
+	public static final IPredicate refsRelationship = predicate("symRefsRelationship", 2);
+	
+	/** <code>symRelLeftEntity(?inrel:id, ?tableEntity:id)</code>  */
+	public static final IPredicate relationshipLeftEntity = predicate("symRelLeftEntity", 2);
+	
+	/** <code>symRelRightEntity(?inrel:id, ?tableEntity:id)</code>  */
+	public static final IPredicate relationshipRightEntity = predicate("symRelRightEntity", 2);
 	
 	/** <code>(?token:int,?id:string)</code>.
 	 * Table-entity <code>?token</code> has id <code>?id</code>.

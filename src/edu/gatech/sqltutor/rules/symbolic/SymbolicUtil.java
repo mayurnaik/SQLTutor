@@ -133,6 +133,21 @@ public class SymbolicUtil {
 		throw new SymbolicException("Failed to replace " + child + " with " + replacement + " in " + parent);
 	}
 	
+	public static ISymbolicToken getPotentialDeterminer(ISymbolicToken token) {
+		ISymbolicToken before = getPrecedingToken(token);
+		if( before == null )
+			return null;
+		switch( before.getPartOfSpeech() ) {
+		case POSSESSIVE_ENDING:
+			before = getPotentialDeterminer(before);
+			if( before != null )
+				before = getPotentialDeterminer(before);
+			return before;
+		default:
+			return before;
+		}
+	}
+	
 	/**
 	 * Gets the token that would precede the <code>token</code> if the 
 	 * tree-structure was flattened.  The returned token is always a 
@@ -146,7 +161,7 @@ public class SymbolicUtil {
 		ISymbolicToken parent = token.getParent();
 		if( parent == null ) return null; // the root token, has no predecessor
 		
-		// if we have a sibling before us, it's right-most descendant
+		// if we have a sibling before us, its right-most descendant
 		List<ISymbolicToken> siblings = parent.getChildren();
 		int idx = siblings.indexOf(token);
 		if( idx > 0 )
@@ -154,6 +169,30 @@ public class SymbolicUtil {
 		
 		// otherwise, up one level and check
 		return getPrecedingToken(parent);
+	}
+	
+	/**
+	 * Gets the token that would follow the <code>token</code> if the 
+	 * tree-structure was flattened.  The returned token is always a 
+	 * leaf-token in the tree structure.
+	 * 
+	 * @param token the token to find the predecessor of
+	 * @return the predecessor or <code>null</code> if there is no predecessor
+	 */
+	public static ISymbolicToken getFollowingToken(ISymbolicToken token) {
+		if( token == null ) throw new NullPointerException("token is null");
+		ISymbolicToken parent = token.getParent();
+		if( parent == null ) return null; // the root token, has no following token
+		
+		// if we have a sibling after us, its left-most descendant
+		List<ISymbolicToken> siblings = parent.getChildren();
+		int idx = siblings.indexOf(token);
+		if( idx < siblings.size() - 1 )
+			return getRightmostDescendant(siblings.get(idx+1));
+		
+		// otherwise, up one level and check
+		return getPrecedingToken(parent);
+		
 	}
 	
 	/**
@@ -170,6 +209,22 @@ public class SymbolicUtil {
 		if( size == 0 )
 			return token;
 		return getRightmostDescendant(children.get(size-1));
+	}
+	
+	/**
+	 * Returns the left-most tree descendant of a token.  This may be the 
+	 * token itself if it has no children.
+	 * 
+	 * @param token the ancestor token
+	 * @return the right-most descendent 
+	 */
+	public static ISymbolicToken getLeftmostDescendent(ISymbolicToken token) {
+		if( token == null ) throw new NullPointerException("token is null");
+		List<ISymbolicToken> children = token.getChildren();
+		int size = children.size();
+		if( size == 0 )
+			return token;
+		return getLeftmostDescendent(children.get(0));
 	}
 	
 	/**

@@ -24,6 +24,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
+import edu.gatech.sqltutor.rules.util.Literals;
 
 public class TableEntityRefLiteralRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
@@ -56,12 +57,20 @@ public class TableEntityRefLiteralRule
 				break;
 			}
 			if( label != null ) {
-				ISymbolicToken before = SymbolicUtil.getPrecedingToken(ref);
+				ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(ref);
 				if( before == null || before.getPartOfSpeech() != PartOfSpeech.DETERMINER ) {
 					ISymbolicToken parent = ref.getParent();
 					List<ISymbolicToken> siblings = parent.getChildren();
 					int idx = siblings.indexOf(ref);
-					siblings.add(idx, new LiteralToken("the", PartOfSpeech.DETERMINER)); // FIXME "a/an"?
+					if( before.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_ENDING ) {
+						// FIXME we really need a smarter check here
+						_log.warn("Skipping determiner insertion due to possessive ending.");
+					} else {
+						LiteralToken det = Literals.the(); // FIXME "a"/"an"?
+						siblings.add(idx, det);
+						det.setParent(parent);
+					}
+						
 				}
 				LiteralToken literal = new LiteralToken(label, pos);
 				

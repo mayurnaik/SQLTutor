@@ -26,6 +26,7 @@ import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
+import edu.gatech.sqltutor.rules.util.Literals;
 
 public class AttributeLiteralLabelRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
@@ -65,19 +66,28 @@ public class AttributeLiteralLabelRule
 		// FIXME what about multi-word labels like "Research Department"?
 		LiteralToken literal = new LiteralToken(label, token.getPartOfSpeech());
 		
+		ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(token);
 		List<ISymbolicToken> siblings = parent.getChildren();
-		LiteralToken determiner = new LiteralToken("the", PartOfSpeech.DETERMINER); // FIXME "a/an"?
+		LiteralToken determiner = null;
+		if( before == null || before.getPartOfSpeech() != PartOfSpeech.DETERMINER )
+			determiner = Literals.the(); // FIXME "a"/"an"?
 		
 		if( parent.getType() == SymbolicType.ATTRIBUTE_LIST || pos == 0 ) {
-			SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-			seq.addChild(determiner);
-			seq.addChild(literal);
-			replacement = seq;
+			if( determiner != null ) {
+				SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+				seq.addChild(determiner);
+				seq.addChild(literal);
+				replacement = seq;
+			} else {
+				replacement = literal;
+			}
 		} else {
 			replacement = literal;
 			
-			_log.debug(Markers.SYMBOLIC, "Inserting {} in front of {}", determiner, parent);
-			siblings.add(0, determiner);
+			if( determiner != null ) {
+				_log.debug(Markers.SYMBOLIC, "Inserting {} in front of {}", determiner, parent);
+				siblings.add(0, determiner);
+			}
 		}
 		
 		SymbolicUtil.replaceChild(parent, token, replacement);

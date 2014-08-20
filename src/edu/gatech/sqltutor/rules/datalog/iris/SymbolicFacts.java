@@ -26,10 +26,12 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.IScopedToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.ObjectMapper;
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
@@ -189,6 +191,9 @@ public class SymbolicFacts extends DynamicFacts {
 			case TABLE_ENTITY: 
 				addTableEntityFacts(tokenId, (TableEntityToken)token); 
 				break;
+			case TABLE_ENTITY_REF:
+				addTableEntityRefFacts(tokenId, (TableEntityRefToken)token);
+				break;
 			case NUMBER: 
 				addNumberFacts(tokenId, (NumberToken)token); 
 				break;
@@ -197,6 +202,9 @@ public class SymbolicFacts extends DynamicFacts {
 				break;
 			case LITERAL:
 				addLiteralFacts(tokenId, (LiteralToken)token);
+				break;
+			case IN_RELATIONSHIP:
+				addInRelationshipFacts(tokenId, (InRelationshipToken)token);
 				break;
 			case SQL_AST:
 				// unification of sql/symbolic phases
@@ -210,6 +218,19 @@ public class SymbolicFacts extends DynamicFacts {
 		}
 	}
 	
+	private void addTableEntityRefFacts(Integer tokenId, TableEntityRefToken token) {
+		Integer tableEntityId = tokenMap.getObjectId(token.getTableEntity());
+		addFact(SymbolicPredicates.refsTableEntity, tokenId, tableEntityId);
+	}
+
+	private void addInRelationshipFacts(Integer tokenId, InRelationshipToken token) {
+		addFact(SymbolicPredicates.refsRelationship, tokenId, token.getRelationship().getFullName());
+		Integer leftId = tokenMap.getObjectId(token.getLeftEntity());
+		Integer rightId = tokenMap.getObjectId(token.getRightEntity());
+		addFact(SymbolicPredicates.relationshipLeftEntity, tokenId, leftId);
+		addFact(SymbolicPredicates.relationshipRightEntity, tokenId, rightId);
+	}
+
 	private void addNounFacts(Integer tokenId, INounToken token) {
 		String singular = token.getSingularLabel();
 		String plural = token.getPluralLabel();

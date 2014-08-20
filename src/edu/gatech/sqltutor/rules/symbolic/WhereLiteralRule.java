@@ -43,10 +43,16 @@ public class WhereLiteralRule
 		ITuple result = relation.get(0);
 		ISymbolicToken token = ext.getToken("?token", result);
 		ISymbolicToken parent = ext.getToken("?parent", result);
-		LiteralToken where = new LiteralToken("where", PartOfSpeech.WH_ADVERB);
 		
-		SymbolicUtil.replaceChild(parent, token, where);
-		_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", token, where);
+		ISymbolicToken following = SymbolicUtil.getFollowingToken(token);
+		if( following == null ) {
+			_log.debug(Markers.SYMBOLIC, "Deleting {WHERE} as there is nothing following.");
+			parent.removeChild(token);
+		} else {
+			LiteralToken where = new LiteralToken("where", PartOfSpeech.WH_ADVERB);
+			SymbolicUtil.replaceChild(parent, token, where);
+			_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", token, where);
+		}
 		
 		return true;
 	}

@@ -1,0 +1,20 @@
+
+
+ruleInRelationshipLabel(?inrel, ?leftEntity, ?rightEntity) :-
+  symType(?inrel, 'IN_RELATIONSHIP'),
+  symRelLeftEntity(?inrel, ?leftEntity),
+  symRelRightEntity(?inrel, ?rightEntity),
+  not ruleInRelationshipLabel_entityInOtherRelationship(?inrel, ?rightEntity).
+  
+ruleInRelationshipLabel_entityInOtherRelationship(?inrel, ?tableEntity) :-
+  ruleInRelationshipLabel_entityInRelationship(?inrel, ?tableEntity),
+  ruleInRelationshipLabel_entityInRelationship(?otherrel, ?tableEntity),
+  ?inrel != ?otherrel.
+
+ruleInRelationshipLabel_entityInRelationship(?inrel, ?tableEntity) :-
+  symType(?inrel, 'IN_RELATIONSHIP'),
+  symRelLeftEntity(?inrel, ?tableEntity).
+  
+ruleInRelationshipLabel_entityInRelationship(?inrel, ?tableEntity) :-
+  symType(?inrel, 'IN_RELATIONSHIP'),
+  symRelRightEntity(?inrel, ?tableEntity).

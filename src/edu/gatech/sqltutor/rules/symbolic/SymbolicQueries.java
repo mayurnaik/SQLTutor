@@ -16,7 +16,9 @@ import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.NodeMap;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.TokenMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
 /**
@@ -78,5 +80,31 @@ public class SymbolicQueries {
 	public TableEntityToken getTableEntityForScope(FromBaseTable fromTable, QueryTreeNode cscope) {
 		if( fromTable == null ) throw new NullPointerException("fromTable is null");
 		return getTableEntityForScope(fromTable.getExposedName(), cscope);
+	}
+	
+	/**
+	 * Returns all the <code>{TABLE_ENTITY_REF}</code> tokens that reference a 
+	 * particular <code>{TABLE_ENTITY}</code>.
+	 * 
+	 * @param tableEntity the table entity
+	 * @return the (possibly empty) list of references
+	 */
+	public List<TableEntityRefToken> getTableEntityReferences(TableEntityToken tableEntity) {
+		if( tableEntity == null ) throw new NullPointerException("tableEntity is null");
+		
+		TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
+		Integer tableEntityId = tokenMap.getObjectId(tableEntity);
+		IQuery query = Factory.BASIC.createQuery(
+			literal(SymbolicPredicates.type, "?ref", SymbolicType.TABLE_ENTITY_REF),
+			literal(SymbolicPredicates.refsTableEntity, "?ref", tableEntityId)
+		);
+		
+		RelationExtractor ext = IrisUtil.executeQuery(query, state);
+		List<TableEntityRefToken> refs = new ArrayList<TableEntityRefToken>(ext.getRelation().size());
+		while( ext.nextTuple() ) {
+			TableEntityRefToken ref = ext.getToken("?ref");
+			refs.add(ref);
+		}
+		return refs;
 	}
 }

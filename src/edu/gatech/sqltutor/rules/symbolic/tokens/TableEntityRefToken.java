@@ -31,4 +31,10 @@ public class TableEntityRefToken extends AbstractSymbolicToken implements ISymbo
 	public SymbolicType getType() {
 		return SymbolicType.TABLE_ENTITY_REF;
 	}
+	
+	@Override
+	protected StringBuilder addPropertiesString(StringBuilder b) {
+		b.append("tableEntity=").append(tableEntity);
+		return b;
+	}
 }

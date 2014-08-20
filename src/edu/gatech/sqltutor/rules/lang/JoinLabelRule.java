@@ -146,24 +146,25 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 			if( oldSingularPK == null || oldSingularFK == null )
 				continue;
 
-			_log.info("\npkLabel: {}\npkTableLabel: {}\nfkLabel: {}\nfkTableLabel: {}",
+			_log.debug("\npkLabel: {}\npkTableLabel: {}\nfkLabel: {}\nfkTableLabel: {}",
 				pkLabel, pkTable.getSingularLabel(), fkLabel, fkTable.getSingularLabel());
 					
-			// FIXME allow plural overrides in ER
-			String pkPlural = NLUtil.pluralize(pkLabel), fkPlural = NLUtil.pluralize(fkLabel);
-			// FIXME detect if the entity already has a more specific name
-			if( !pkLabel.isEmpty() ) {
-				pkEntityToken.setSingularLabel(pkLabel);
-				pkEntityToken.setPluralLabel(pkPlural);
-			}
-			if( !fkLabel.isEmpty() ) {
-				fkEntityToken.setSingularLabel(fkLabel);
-				fkEntityToken.setPluralLabel(fkPlural);
-			}
+//			// FIXME allow plural overrides in ER
+//			String pkPlural = NLUtil.pluralize(pkLabel), fkPlural = NLUtil.pluralize(fkLabel);
+//			// FIXME detect if the entity already has a more specific name
+//			if( !pkLabel.isEmpty() ) {
+//				pkEntityToken.setSingularLabel(pkLabel);
+//				pkEntityToken.setPluralLabel(pkPlural);
+//			}
+//			if( !fkLabel.isEmpty() ) {
+//				fkEntityToken.setSingularLabel(fkLabel);
+//				fkEntityToken.setPluralLabel(fkPlural);
+//			}
 			
-			ERRelationship rel = erDiagram.getRelationship(ext.getString("?rel"));
+			String relName = ext.getString("?rel");
+			ERRelationship rel = erDiagram.getRelationship(relName);
 			if( rel == null )
-				System.out.println("break");
+				throw new SymbolicException("No relationship for name: " + relName);
 			InRelationshipToken inRelationship = new InRelationshipToken(
 				pkEntityToken, fkEntityToken, rel
 			);
@@ -183,6 +184,9 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 		if( ext.getRelation().size() == 0 )
 			return false;
 		
+		SymbolicQueries queries = state.getQueries();
+		ERDiagram erDiagram = state.getErDiagram();
+		
 		while( ext.nextTuple() ) {
 			ITerm relationship = ext.getTerm("?rel");
 			if( DEBUG ) _log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
@@ -194,20 +198,45 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 			SQLToken binop1 = ext.getToken("?eq1"),
 			         binop2 = ext.getToken("?eq2");
 			
-			// remove the join conditions
+			SQLNounToken pkTable = ext.getToken("?tref1"), fkTable = ext.getToken("?tref2");
+			FromBaseTable pkFromTable = (FromBaseTable)pkTable.getAstNode(),
+		              fkFromTable = (FromBaseTable) fkTable.getAstNode();
+			TableEntityToken pkEntityToken = queries.getTableEntityForScope(
+				pkFromTable.getExposedName(), binop1.getConjunctScope());
+			TableEntityToken fkEntityToken = queries.getTableEntityForScope(
+				fkFromTable.getExposedName(), binop1.getConjunctScope());
+			
+			if( pkEntityToken == null || fkEntityToken == null )
+				throw new SymbolicException("FIXME: Need to split for cscope.");
+			
+			// remove the join condition, then replace the second with {IN_RELATIONSHIP}
 			state.deleteNode(binop2);
-			InRelationshipToken inRelationship = new InRelationshipToken();
-			// FIXME replace first condition with this token, for now just delete
-			state.deleteNode(binop1);
-//			
-			// update labels
-			// FIXME allow ER override, handle {TABLE_ENTITY}
-			String pkLeftPlural = NLUtil.pluralize(pkLabelLeft), 
-			      pkRightPlural = NLUtil.pluralize(pkLabelRight);
-			pkTableLeft.setSingularLabel(pkLabelLeft);
-			pkTableLeft.setPluralLabel(pkLeftPlural);
-			pkTableRight.setSingularLabel(pkLabelRight);
-			pkTableRight.setPluralLabel(pkRightPlural);
+			
+			String relName = ext.getString("?rel");
+			ERRelationship rel = erDiagram.getRelationship(relName);
+			if( rel == null )
+				throw new SymbolicException("No relationship for name: " + relName);
+			InRelationshipToken inRelationship = new InRelationshipToken(
+				pkEntityToken, fkEntityToken, rel
+			);
+
+			
+			SymbolicUtil.replaceChild(binop1, inRelationship);
+			_log.trace(Markers.SYMBOLIC, "Replaced {} and {} with {}", binop1, binop2, inRelationship);
+			
+			return true;
+//			applied = true;
+//			// FIXME replace first condition with this token, for now just delete
+//			state.deleteNode(binop1);
+////			
+//			// update labels
+//			// FIXME allow ER override, handle {TABLE_ENTITY}
+////			String pkLeftPlural = NLUtil.pluralize(pkLabelLeft), 
+////			      pkRightPlural = NLUtil.pluralize(pkLabelRight);
+////			pkTableLeft.setSingularLabel(pkLabelLeft);
+////			pkTableLeft.setPluralLabel(pkLeftPlural);
+////			pkTableRight.setSingularLabel(pkLabelRight);
+////			pkTableRight.setPluralLabel(pkRightPlural);
 		}
 		
 		return false;
