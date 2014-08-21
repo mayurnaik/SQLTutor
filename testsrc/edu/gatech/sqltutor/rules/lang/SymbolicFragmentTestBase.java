@@ -1,6 +1,9 @@
 package edu.gatech.sqltutor.rules.lang;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -14,12 +17,15 @@ public abstract class SymbolicFragmentTestBase {
 	private static final Logger _log = LoggerFactory.getLogger(SymbolicFragmentTestBase.class);
 	
 	protected String query;
+	protected String matches;
 	protected ERDiagram erDiagram;
 	protected ERMapping erMapping;
 	protected SymbolicFragmentTranslator translator;
 	
-	public SymbolicFragmentTestBase(String query) {
+	public SymbolicFragmentTestBase(String query) { this(query, null); }
+	public SymbolicFragmentTestBase(String query, String matches) {
 		this.query = query;
+		this.matches = matches;
 	}
 	
 	@Before
@@ -51,6 +57,22 @@ public abstract class SymbolicFragmentTestBase {
 		try {
 			String result = translator.getTranslation();
 			log.info("Result: " + result);
+			
+			if( matches != null ) {
+				Assert.assertThat("Translation did not match expected result.", result, 
+					new BaseMatcher<String>() {
+						@Override
+						public boolean matches(Object item) {
+							return item.toString().matches(matches);
+						}
+						
+						@Override
+						public void describeTo(Description description) {
+							description.appendText("must match regex: ").appendText(matches);
+						}
+					
+					});
+			}
 		} catch( Exception e ) {
 			log.error("Failed to translate.");
 			throw e;
