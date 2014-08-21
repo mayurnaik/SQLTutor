@@ -30,7 +30,8 @@ public class SelectLabelRule
 	private static final Logger _log = LoggerFactory.getLogger(SelectLabelRule.class);
 	
 	private static final List<String> LITERAL_CHOICES = 
-		ImmutableList.of("select", "retrieve", "show", "list", "display");
+		ImmutableList.of("select"); // just one choice to remove non-determinism
+//		ImmutableList.of("select", "retrieve", "show", "list", "display");
 	
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		literal(SymbolicPredicates.type, "?token", SymbolicType.SELECT),
@@ -49,7 +50,6 @@ public class SelectLabelRule
 		ISymbolicToken select = ext.getToken("?token", result);
 		ISymbolicToken parent = ext.getToken("?parent", result);
 		
-		// FIXME non-determinism so that all choices are used eventually
 		String replacement = LITERAL_CHOICES.get(random.nextInt(LITERAL_CHOICES.size()));
 		LiteralToken literal = new LiteralToken(replacement, PartOfSpeech.VERB_BASE_FORM);
 		
