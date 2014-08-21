@@ -2,7 +2,9 @@ package edu.gatech.sqltutor.rules.symbolic;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.text.FieldPosition;
 import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.EnumSet;
 import java.util.Locale;
 
@@ -49,7 +51,7 @@ public class NumberLiteralRule
 		NumberFormat numberFormat;
 		switch( numberToken.getNumericType() ) {
 			case DOLLARS:
-				numberFormat = NumberFormat.getCurrencyInstance(Locale.US);
+				numberFormat = new CurrencyFormatWrapper();
 				break;
 			default:
 				_log.warn("Unhandled numeric type in token: {}", numberToken);
@@ -72,5 +74,48 @@ public class NumberLiteralRule
 	@Override
 	protected EnumSet<TranslationPhase> getDefaultPhases() {
 		return EnumSet.of(TranslationPhase.LOWERING);
+	}
+	
+	private static class CurrencyFormatWrapper extends NumberFormat {
+		private static final long serialVersionUID = 1L;
+		
+		private NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
+		public CurrencyFormatWrapper() {
+		}
+
+
+		private StringBuffer checkFormat(StringBuffer toAppendTo) {
+			int size = toAppendTo.length();
+			for( int i = size - 1; i >= 0; --i ) {
+				char charAt = toAppendTo.charAt(i);
+				// scanning for all 0s after the dot
+				if( charAt == '0' )
+					continue;
+				if( charAt == '.' ) {
+					toAppendTo.setLength(i);
+					break;
+				}
+				if( charAt == '$' || charAt == ',' || (charAt >= '1' && charAt <= '9') )
+					break;
+			}
+			return toAppendTo;
+		}
+
+		@Override
+		public StringBuffer format(double number, StringBuffer toAppendTo,
+				FieldPosition pos) {
+			return checkFormat(format.format(number, toAppendTo, pos));
+		}
+
+		@Override
+		public StringBuffer format(long number, StringBuffer toAppendTo,
+				FieldPosition pos) {
+			return checkFormat(format.format(number, toAppendTo, pos));
+		}
+
+		@Override
+		public Number parse(String source, ParsePosition parsePosition) {
+			return format.parse(source, parsePosition);
+		}
 	}
 }
