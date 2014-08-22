@@ -5,10 +5,12 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 
+import org.deri.iris.api.basics.ILiteral;
 import org.deri.iris.api.basics.IPredicate;
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.api.basics.IRule;
@@ -21,10 +23,12 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
+import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
+import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.TokenMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.er.EntityType;
@@ -60,10 +64,29 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 	);
 	
 	private static final IPredicate otherRefsPredicate = predicate(PREFIX + "otherRefs", 2);
+	private static final IPredicate maybeBlockingPredicate = predicate(PREFIX + "maybeBlockingRefs", 3);
+	private static final ILiteral maybeBlockingLiteral = literal(maybeBlockingPredicate, "?baseRef", "?nextRef", "?blockingRef");
 	
 	private static final IQuery possessivePronouns = Factory.BASIC.createQuery(
 		literal(SymbolicPredicates.partOfSpeech, "?token", PartOfSpeech.POSSESSIVE_PRONOUN)
 	);
+	
+	private static class ReferenceCandidate {
+		TableEntityRefToken baseRef;
+		List<TableEntityRefToken> refsToReplace;
+		public ReferenceCandidate(TableEntityRefToken baseRef, List<TableEntityRefToken> refsToReplace) {
+			this.baseRef = baseRef;
+			this.refsToReplace = refsToReplace;
+		}
+		public TableEntityRefToken getBaseRef() {
+			return baseRef;
+		}
+		public List<TableEntityRefToken> getRefsToReplace() {
+			return refsToReplace;
+		}
+	}
+	
+	private Random random = new Random();
 
 	public AnaphoricPronounRule() {
 	}
@@ -71,26 +94,50 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 	public AnaphoricPronounRule(int precedence) {
 		super(precedence);
 	}
+	
+	@Override
+	public boolean apply(SymbolicState state) {
+		this.state = state;
+		try {
+			if( arePossessivePronounsUsed() )
+				return false;
+			return super.apply(state);
+		} finally {
+			this.state = null;
+		}
+	}
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		if( arePossessivePronounsUsed() )
-			return false;
-		
+		List<ReferenceCandidate> candidates = new ArrayList<ReferenceCandidate>(ext.getRelation().size());
 		while( ext.nextTuple() ) {
 			TableEntityRefToken ref = ext.getToken("?firstRef");
-			List<TableEntityRefToken> otherRefs = getOtherRefs(ref);
-			
-			if( areAnyPossessed(otherRefs) ) {
-				_log.debug("Reject candidate which has a possessed reference: {}", ref);
+			List<TableEntityRefToken> otherRefs = getUseableRefs(ref);
+			if( otherRefs.size() == 0 ) {
+				_log.debug(Markers.SYMBOLIC, "Reject candidate with no useable references: {}", ref);
 				continue;
 			}
 			
-			_log.info(Markers.SYMBOLIC, "Using anaphoric reference base: {}", ref);
-			replaceReferences(ref, otherRefs);
-			return true;
+			candidates.add(new ReferenceCandidate(ref, otherRefs));
 		}
-		return false;
+		
+		int nCandidates = candidates.size();
+		if( nCandidates == 0 )
+			return false;
+		ReferenceCandidate candidate;
+		if( nCandidates == 1 ) {
+			candidate = candidates.get(0);
+		} else {
+			_log.warn(Markers.SYMBOLIC, "Choosing from {} candidates.", nCandidates);
+			// FIXME maybe use the one with greatest number of replaceable refs
+			candidate = candidates.get(random.nextInt(nCandidates));
+		}
+		
+		TableEntityRefToken ref = candidate.getBaseRef();
+		_log.debug(Markers.SYMBOLIC, "Using anaphoric reference base: {}", ref);
+		replaceReferences(ref, candidate.getRefsToReplace());
+			
+		return true;
 	}
 	
 	private void replaceReferences(TableEntityRefToken ref,
@@ -130,44 +177,109 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 			SymbolicUtil.replaceChild(otherRef, replacement);
 		}
 	}
+	
+
+	/**
+	 * Returns all the other ref tokens referring to the same entity and not 
+	 * blocked by other references.
+	 * 
+	 * @param baseToken the main ref token
+	 * @return the other ref tokens
+	 */
+	private List<TableEntityRefToken> getUseableRefs(TableEntityRefToken baseToken) {
+		final TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
+		Integer baseId = tokenMap.getObjectId(baseToken);
+		
+		RelationExtractor ext = getOtherRefs(baseId);
+		int nRefs = ext.getRelation().size();
+		if( nRefs == 0 )
+			return Collections.emptyList();
+		
+		List<TableEntityRefToken> otherRefs = new ArrayList<TableEntityRefToken>(nRefs);
+		while( ext.nextTuple() ) {
+			TableEntityRefToken ref = ext.getToken("?otherRef");
+			if( isPossessed(ref) )
+				continue;
+			Integer otherRefId = tokenMap.getObjectId(ref);
+			if( isBlockedRef(baseId, otherRefId) )
+				continue;
+			otherRefs.add(ref);
+		}
+		return otherRefs;
+	}
 
 	/**
 	 * Returns all the other ref tokens referring to the same entity.
 	 * @param baseToken the main ref token
 	 * @return the other ref tokens
 	 */
-	private List<TableEntityRefToken> getOtherRefs(TableEntityRefToken baseToken) {
-		Integer tokenId = state.getSymbolicFacts().getTokenMap().getObjectId(baseToken);
+	private RelationExtractor getOtherRefs(Integer tokenId) {
 		IQuery query = Factory.BASIC.createQuery(
 			literal(otherRefsPredicate, "?baseRef", "?otherRef"),
 			literal(builtin(EqualBuiltin.class, "?baseRef", tokenId))
 		);
-		RelationExtractor ext = IrisUtil.executeQuery(query, state);
-		
-		ArrayList<TableEntityRefToken> otherRefs = new ArrayList<TableEntityRefToken>(ext.getRelation().size());
-		while( ext.nextTuple() ) {
-			TableEntityRefToken ref = ext.getToken("?otherRef");
-			otherRefs.add(ref);
-		}
-		return otherRefs;
+		return IrisUtil.executeQuery(query, state);
 	}
 	
-	/**
-	 * Checks whether any of these tokens are possessed (e.g. proceeded by a possessive).
-	 */
-	private boolean areAnyPossessed(Collection<? extends ISymbolicToken> tokens) {
-		for( ISymbolicToken token: tokens ) {
-			ISymbolicToken before = SymbolicUtil.getPrecedingToken(token);
-			if( PartOfSpeech.isPossessive(before.getPartOfSpeech()) ) {
-				return true;
-			}
-		}
-		return false;
+	
+	private boolean isPossessed(ISymbolicToken token) {
+		ISymbolicToken before = SymbolicUtil.getPrecedingToken(token);
+		return before != null && PartOfSpeech.isPossessive(before.getPartOfSpeech());
 	}
 	
 	private boolean arePossessivePronounsUsed() {
 		RelationExtractor ext = IrisUtil.executeQuery(possessivePronouns, state);
 		return ext.getRelation().size() > 0;
+	}
+	
+	private RelationExtractor getPotentialBlockers(Integer firstRefId, Integer nextRefId) {
+		IQuery query = Factory.BASIC.createQuery(
+			maybeBlockingLiteral,
+			literal(builtin(EqualBuiltin.class, "?baseRef", firstRefId)),
+			literal(builtin(EqualBuiltin.class, "?nextRef", nextRefId))
+		);
+		return IrisUtil.executeQuery(query, state);
+	}
+	
+	/**
+	 * Checks whether another entity reference blocks anaphoric referencing between two references.
+	 * @param firstRefId the base reference
+	 * @param nextRefId  the anaphoric reference candidate
+	 * @return <code>true</code> if these references are blocked, <code>false</code> otherwise
+	 */
+	private boolean isBlockedRef(Integer firstRefId, Integer nextRefId) {
+		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
+		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		
+		// start with all the potential blockers
+		RelationExtractor ext = getPotentialBlockers(firstRefId, nextRefId);
+		
+		IRelation rel = null;
+		if( TRACE ) {
+			rel = ext.getRelation();
+			_log.trace(Markers.SYMBOLIC, "Considering {} potential blockers: {}", rel.size(), rel);
+		}
+		
+		while( ext.nextTuple() ) {
+			TableEntityRefToken firstRef = ext.getToken("?baseRef"), 
+				blockingRef = ext.getToken("?blockingRef");
+			
+			// if the blocking ref is posssessed by the same entity as our two refs, it does not block
+			// e.g. {firstRef:ent1} ... {ref:ent1} {'s} {blockingRef:ent2} ... {nextRef:ent1} 
+			ISymbolicToken before = SymbolicUtil.getPrecedingToken(blockingRef);
+			PartOfSpeech beforePos = before.getPartOfSpeech();
+			if( beforePos == PartOfSpeech.POSSESSIVE_ENDING ) {
+				ISymbolicToken possessor = SymbolicUtil.getPrecedingToken(before);
+				if( possessor.getType() == SymbolicType.TABLE_ENTITY_REF ) {
+					TableEntityRefToken possessorRef = (TableEntityRefToken)possessor;
+					if( possessorRef.getTableEntity().equals(firstRef.getTableEntity()) )
+						continue;
+				}
+			}
+			
+			return true;
+		}
+		return false;
 	}
 	
 	@Override
