@@ -18,6 +18,8 @@ public class SymbolicFragmentCompanyTest extends SymbolicFragmentTestBase {
 	@Parameters
 	public static Collection<Object[]> parameters() {
 		Object[][] queries = {
+			{"SELECT e.first_name FROM employee e, department d WHERE e.ssn=d.manager_ssn"},
+			
 			{"SELECT * FROM employee e, works_on wo, project p WHERE e.ssn=wo.employee_ssn AND p.id=wo.project_id"},
 			
 			{"SELECT e.birthdate, e.address FROM employee e WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},

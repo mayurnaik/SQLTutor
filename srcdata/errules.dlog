@@ -11,18 +11,62 @@ erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
   erJoinPK(?rel, 0, ?pktable, ?pkattr),
   erJoinFK(?rel, 0, ?fktable, ?fkattr).
-
-// ?pos is the edge index of the primary key for relationship ?rel 
-erFKJoinPKSide(?rel,?pos) :-
+  
+    
+erFKJoinPKSide(?rel, ?pos) :- erFKJoinPKSide1(?rel, ?pos).
+  
+erFKJoinFKSide(?rel, ?pos) :- erFKJoinFKSide1(?rel, ?pos).
+  
+// relationship ?rel is a one-to-one join
+erIsRelationshipOneToOne(?rel) :-
   erRelationshipJoinType(?rel, 'foreign_key'),
-  erRelationshipEdgeCardinality(?rel,?pos,?card),
+  erRelationshipEdgeCardinality(?rel, ?pos1, ?card1),
+  erRelationshipEdgeCardinality(?rel, ?pos2, ?card2),
+  ?pos1 != ?pos2,
+  ?card1 = 1,
+  ?card2 = 1.
+  
+erIsNotRelationshipOneToOne(?rel) :-
+  erRelationship(?rel),
+  not erIsRelationshipOneToOne(?rel).
+  
+// ?pos is the edge index of the primary key for relationship ?rel, not 1-to-1 case 
+erFKJoinPKSideNotOneToOne(?rel, ?pos) :-
+  erIsNotRelationshipOneToOne(?rel),
+  erRelationshipJoinType(?rel, 'foreign_key'), 
+  erRelationshipEdgeCardinality(?rel, ?pos, ?card), 
   ?card >= 0.
   
-// ?pos is the edge index of the foreign key for relationship ?rel
-erFKJoinFKSide(?rel,?pos) :-
-  erRelationshipJoinType(?rel, 'foreign_key'),
-  erRelationshipEdgeCardinality(?rel,?pos,?card),
+// ?pos is the edge index of the foreign key for relationship ?rel, not 1-to-1 case
+erFKJoinFKSideNotOneToOne(?rel, ?pos) :- 
+  erIsNotRelationshipOneToOne(?rel),
+  erRelationshipJoinType(?rel, 'foreign_key'), 
+  erRelationshipEdgeCardinality(?rel, ?pos, ?card), 
   ?card < 0.
+
+// ?pos is the edge index of the primary key for relationship ?rel, 1-to-1 case 
+erFKJoinPKSideOneToOne(?rel, ?pos) :-
+  erIsRelationshipOneToOne(?rel),
+  erRelationshipJoinType(?rel, 'foreign_key'), 
+  erRelationshipEdgeEntity(?rel, ?pos, ?entity),
+  erTableRefsEntity(?table, ?entity),
+  erJoinPK(?rel, 0, ?table, ?attr).
+
+// ?pos is the edge index of the foreign key for relationship ?rel, 1-to-1 case  
+erFKJoinFKSideOneToOne(?rel, ?pos) :-
+  erIsRelationshipOneToOne(?rel),
+  erRelationshipJoinType(?rel, 'foreign_key'), 
+  erRelationshipEdgeEntity(?rel, ?pos, ?entity),
+  erTableRefsEntity(?table, ?entity),
+  erJoinFK(?rel, 0, ?table, ?attr).
+
+// ?pos is the edge index of the primary key for relationship ?rel 
+erFKJoinPKSide(?rel,?pos) :- erFKJoinPKSideNotOneToOne(?rel, ?pos).
+erFKJoinPKSide(?rel,?pos) :- erFKJoinPKSideOneToOne(?rel, ?pos).
+  
+// ?pos is the edge index of the foreign key for relationship ?rel
+erFKJoinFKSide(?rel,?pos) :- erFKJoinFKSideNotOneToOne(?rel, ?pos).
+erFKJoinFKSide(?rel,?pos) :- erFKJoinFKSideOneToOne(?rel, ?pos).
 
 // ?pkSide and ?fkSide are the positions of the primary and 
 // foreign key edges of relationship ?rel 
