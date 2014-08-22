@@ -34,6 +34,23 @@ public class Literals {
 	public static LiteralToken is() {
 		return new LiteralToken("is", VERB_BASE_FORM);
 	}
+	
+	public static LiteralToken their() {
+		return new LiteralToken("their", POSSESSIVE_PRONOUN);
+	}
+	
+	public static LiteralToken its() {
+		return new LiteralToken("its", POSSESSIVE_PRONOUN);
+	}
+	
+	public static LiteralToken it() {
+		return new LiteralToken("it", PERSONAL_PRONOUN);
+	}
+	
+	public static LiteralToken they() {
+		return new LiteralToken("they", PERSONAL_PRONOUN);
+	}
+
 
 	private Literals() {
 	}

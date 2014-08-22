@@ -66,10 +66,10 @@ public class AttributeLiteralLabelRule
 		// FIXME what about multi-word labels like "Research Department"?
 		LiteralToken literal = new LiteralToken(label, token.getPartOfSpeech());
 		
-		ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(token);
+//		ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(token);
 		List<ISymbolicToken> siblings = parent.getChildren();
 		LiteralToken determiner = null;
-		if( before == null || before.getPartOfSpeech() != PartOfSpeech.DETERMINER )
+		if( needsDeterminer(token) )
 			determiner = Literals.the(); // FIXME "a"/"an"?
 		
 		if( parent.getType() == SymbolicType.ATTRIBUTE_LIST || pos == 0 ) {
@@ -92,6 +92,16 @@ public class AttributeLiteralLabelRule
 		
 		SymbolicUtil.replaceChild(parent, token, replacement);
 		_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, replacement);
+		return true;
+	}
+	
+	private boolean needsDeterminer(ISymbolicToken token) {
+		ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(token);
+		if( before == null )
+			return true;
+		PartOfSpeech pos = before.getPartOfSpeech();
+		if( PartOfSpeech.isPossessive(pos) || pos == PartOfSpeech.DETERMINER )
+			return false;
 		return true;
 	}
 

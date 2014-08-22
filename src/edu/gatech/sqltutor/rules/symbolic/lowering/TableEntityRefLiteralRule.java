@@ -62,7 +62,7 @@ public class TableEntityRefLiteralRule
 					ISymbolicToken parent = ref.getParent();
 					List<ISymbolicToken> siblings = parent.getChildren();
 					int idx = siblings.indexOf(ref);
-					if( before.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_ENDING ) {
+					if( PartOfSpeech.isPossessive(before.getPartOfSpeech()) ) {
 						// FIXME we really need a smarter check here
 						_log.warn("Skipping determiner insertion due to possessive ending.");
 					} else {

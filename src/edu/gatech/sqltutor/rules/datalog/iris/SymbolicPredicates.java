@@ -24,7 +24,7 @@ public class SymbolicPredicates {
 	/** <code>(?token:int,?table:int)</code> */
 	public static final IPredicate refsTable = predicate("symRefsTable", 2);
 	
-	/** <code>(?ref:id,?tableEntity:id)</code> */
+	/** <code>symRefsTableEntity(?ref:id,?tableEntity:id)</code> */
 	public static final IPredicate refsTableEntity = predicate("symRefsTableEntity", 2);
 	
 	/** <code>symRefsRelationship(?token:id, ?rel:string)</code> Token references a relationship. */

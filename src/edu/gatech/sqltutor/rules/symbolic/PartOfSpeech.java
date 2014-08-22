@@ -113,6 +113,18 @@ public enum PartOfSpeech {
 				return false;
 		}
 	}
+	
+	public static boolean isPossessive(PartOfSpeech pos) {
+		if( pos == null ) throw new NullPointerException("pos is null");
+		switch( pos ) {
+		case POSSESSIVE_ENDING:
+		case POSSESSIVE_PRONOUN:
+		case POSSESSIVE_WH_PRONOUN:
+			return true;
+		default:
+			return false;
+		}
+	}
 
 	private final boolean isChunk;
 	private final String tag;

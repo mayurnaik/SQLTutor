@@ -1,0 +1,30 @@
+
+ruleAnaphoricPronoun(?ref) :-
+	ruleAnaphoricPronoun_firstRef(?ref),
+	ruleAnaphoricPronoun_refPair(?ref1, ?ref2, ?tableEntity).
+  
+
+// a pair of {TABLE_ENTITY_REF}, with ?ref1 being the one that comes first
+ruleAnaphoricPronoun_refPair(?ref1, ?ref2, ?tableEntity) :-
+  symType(?ref1, 'TABLE_ENTITY_REF'), 
+  symType(?ref2, 'TABLE_ENTITY_REF'), 
+  symRefsTableEntity(?ref1, ?tableEntity), 
+  symRefsTableEntity(?ref2, ?tableEntity), 
+  ?ref1 < ?ref2.
+  
+ruleAnaphoricPronoun_afterSomeUse(?ref) :-
+  ruleAnaphoricPronoun_refPair(?ref1, ?ref, ?tableEntity).
+  
+ruleAnaphoricPronoun_firstRef(?ref) :-
+  symType(?ref, 'TABLE_ENTITY_REF'),
+  not ruleAnaphoricPronoun_afterSomeUse(?ref).
+
+ruleAnaphoricPronoun_otherRefs(?baseRef, ?otherRef) :-
+	symRefsTableEntity(?baseRef, ?tableEntity),
+	ruleAnaphoricPronoun_refPair(?baseRef, ?otherRef, ?tableEntity),
+	?baseRef != ?otherRef.
+  
+ruleAnaphoricPronoun_otherRefs(?baseRef, ?otherRef) :-
+	symRefsTableEntity(?baseRef, ?tableEntity),
+	ruleAnaphoricPronoun_refPair(?otherRef, ?baseRef, ?tableEntity),
+	?baseRef != ?otherRef.

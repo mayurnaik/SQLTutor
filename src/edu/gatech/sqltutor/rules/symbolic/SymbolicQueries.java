@@ -12,12 +12,14 @@ import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.rules.SymbolicState;
+import edu.gatech.sqltutor.rules.datalog.iris.ERPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.NodeMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.TokenMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 
@@ -106,5 +108,26 @@ public class SymbolicQueries {
 			refs.add(ref);
 		}
 		return refs;
+	}
+	
+	/**
+	 * <b>FIXME</code> Returns the entity associated with the token, which should be kept with that token instead.
+	 * @param tableEntity
+	 * @return
+	 */
+	@Deprecated
+	public EREntity getReferencedEntity(TableEntityToken tableEntity) {
+		if( tableEntity == null ) throw new NullPointerException("tableEntity is null");
+		
+		String tableName = tableEntity.getTable().getOrigTableName().getTableName();
+		IQuery query = Factory.BASIC.createQuery(
+			literal(ERPredicates.erTableRefsEntity, tableName, "?entityName")
+		);
+		RelationExtractor ext = IrisUtil.executeQuery(query, state);
+		ext.nextTuple();
+		
+		String entityName = ext.getString("?entityName");
+		EREntity entity = state.getErDiagram().getEntity(entityName);
+		return entity;
 	}
 }

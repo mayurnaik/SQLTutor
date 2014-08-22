@@ -6,12 +6,17 @@ import com.akiban.sql.parser.QueryTreeNode;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
+import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 
 public class TableEntityToken extends AbstractSymbolicToken
 		implements ISymbolicToken, INounToken, IScopedToken {
+	
+	/** The referenced entity. */
+	protected EREntity entity;
+	
 	/** The referenced table. */
 	protected FromTable table;
 	
@@ -27,6 +32,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 		super(token);
 		this.id = token.id;
 		this.cscope = token.cscope;
+		this.entity = token.entity;
 		this.table = token.table;
 		this.singular = token.singular;
 		this.plural = token.plural;
