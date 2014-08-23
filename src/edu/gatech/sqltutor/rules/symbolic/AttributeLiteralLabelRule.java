@@ -42,7 +42,6 @@ public class AttributeLiteralLabelRule
 	private Random random = new Random();
 	
 	public AttributeLiteralLabelRule() {
-		super(DefaultPrecedence.LOWERING);
 	}
 	
 	public AttributeLiteralLabelRule(int precedence) {
@@ -134,6 +133,11 @@ public class AttributeLiteralLabelRule
 	@Override
 	public List<IRule> getDatalogRules() {
 		return staticRules.getRules();
+	}
+	
+	@Override
+	protected int getDefaultPrecedence() {
+		return DefaultPrecedence.PARTIAL_LOWERING;
 	}
 	
 	@Override

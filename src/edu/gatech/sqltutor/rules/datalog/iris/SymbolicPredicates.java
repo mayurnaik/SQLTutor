@@ -108,4 +108,7 @@ public class SymbolicPredicates {
 	
 	/** <code>symNumChildren(?token:id, ?num:int)</code> */
 	public static final IPredicate numChildren = predicate("symNumChildren", 2);
+	
+	/** <code>symIsVerb(?pos:string)</code> => <code>?pos</code> is a verb form */
+	public static final IPredicate isVerb = predicate("symIsVerb", 1);
 }

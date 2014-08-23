@@ -81,7 +81,7 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 	
 	@Override
 	protected int getDefaultPrecedence() {
-		return DefaultPrecedence.LOWERING;
+		return DefaultPrecedence.PARTIAL_LOWERING;
 	}
 	
 	@Override

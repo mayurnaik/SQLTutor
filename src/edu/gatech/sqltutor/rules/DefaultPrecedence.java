@@ -13,9 +13,14 @@ public class DefaultPrecedence {
 	/** For rules that will add information to the symbolic sentence structure. */
 	public static final int FRAGMENT_ENHANCEMENT = 200;
 	
+	/** For rules that partially lower tokens, but leave some non-literal tokens. */
+	public static final int PARTIAL_LOWERING = 75;
+	
 	/** For rules that will lower to literal natural language. */
 	public static final int LOWERING = 50;
 	
 	/** For rules that simplified already-lowered state. */
 	public static final int SIMPLIFYING_LOWERED = 40;
+	
+	public static final int CLEANUP = 0;
 }

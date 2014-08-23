@@ -11,6 +11,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
@@ -88,6 +89,11 @@ public class TableEntityRefLiteralRule
 	@Override
 	protected int getVariableEstimate() {
 		return 1;
+	}
+	
+	@Override
+	protected int getDefaultPrecedence() {
+		return DefaultPrecedence.LOWERING;
 	}
 	
 	@Override

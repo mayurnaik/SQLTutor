@@ -151,9 +151,10 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 		EntityType type = entity.getEntityType();
 		
 		for( TableEntityRefToken otherRef: otherRefs ) {
-			ISymbolicToken parent = otherRef.getParent();
-			ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
-			ISymbolicToken replacement;
+			ISymbolicToken parent = otherRef.getParent(),
+				after = SymbolicUtil.getFollowingToken(otherRef),
+				before = SymbolicUtil.getPrecedingToken(otherRef),
+				replacement;
 			if( after.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_ENDING ) {
 				parent.removeChild(after);
 				switch( type ) {
@@ -175,6 +176,9 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 			}
 			_log.debug(Markers.SYMBOLIC, "Replacing {} with pronoun reference {}", otherRef, replacement);
 			SymbolicUtil.replaceChild(otherRef, replacement);
+			
+			// we rely on another rule cleaning up bad determiners, e.g. "each employee's supervisor" -> "each their supervisor"
+			// see InvalidDeterminerRule
 		}
 	}
 	
@@ -294,7 +298,7 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 	
 	@Override
 	protected int getDefaultPrecedence() {
-		return DefaultPrecedence.SIMPLIFYING_SYMBOLIC;
+		return DefaultPrecedence.PARTIAL_LOWERING - 1;
 	}
 	
 	@Override

@@ -32,7 +32,6 @@ public class BetweenLiteralsRule extends StandardSymbolicRule implements ISymbol
 	);
 
 	public BetweenLiteralsRule() {
-		super(DefaultPrecedence.LOWERING);
 	}
 
 	public BetweenLiteralsRule(int precedence) {
@@ -70,6 +69,11 @@ public class BetweenLiteralsRule extends StandardSymbolicRule implements ISymbol
 	@Override
 	protected EnumSet<TranslationPhase> getDefaultPhases() {
 		return EnumSet.of(TranslationPhase.LOWERING);
+	}
+	
+	@Override
+	protected int getDefaultPrecedence() {
+		return DefaultPrecedence.LOWERING;
 	}
 
 }
