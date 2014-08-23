@@ -10,6 +10,7 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
+import edu.gatech.sqltutor.rules.util.SymbolicTokenChildList;
 
 /**
  * A symbolic token that accepts children.
@@ -97,7 +98,7 @@ public abstract class ChildContainerToken
 	
 	/** Instantiate the initial child container. */
 	protected List<ISymbolicToken> makeChildContainer() {
-		return new ArrayList<ISymbolicToken>(1);
+		return new SymbolicTokenChildList(this, new ArrayList<ISymbolicToken>(1));
 	}
 
 	/**
