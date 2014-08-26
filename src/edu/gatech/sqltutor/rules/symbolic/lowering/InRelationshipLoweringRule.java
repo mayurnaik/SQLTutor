@@ -58,9 +58,9 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 			
 			SequenceToken seq = new SequenceToken(PartOfSpeech.VERB_PHRASE);
 			// TODO is this ordering fixed?
-			seq.addChild(rightRef);
-			verbalizeRelationship(token.getRelationship(), seq);
 			seq.addChild(leftRef);
+			verbalizeRelationship(token.getRelationship(), seq);
+			seq.addChild(rightRef);
 			
 			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} with {}", token, seq);
 			SymbolicUtil.replaceChild(token, seq);

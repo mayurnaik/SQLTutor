@@ -12,11 +12,6 @@ erFKJoin(?rel, ?pktable, ?pkattr, ?fktable, ?fkattr) :-
   erJoinPK(?rel, 0, ?pktable, ?pkattr),
   erJoinFK(?rel, 0, ?fktable, ?fkattr).
   
-    
-erFKJoinPKSide(?rel, ?pos) :- erFKJoinPKSide1(?rel, ?pos).
-  
-erFKJoinFKSide(?rel, ?pos) :- erFKJoinFKSide1(?rel, ?pos).
-  
 // relationship ?rel is a one-to-one join
 erIsRelationshipOneToOne(?rel) :-
   erRelationshipJoinType(?rel, 'foreign_key'),

@@ -32,7 +32,6 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
-import edu.gatech.sqltutor.rules.util.NLUtil;
 
 /**
  * Meta-rule for labeling join entities.
@@ -75,6 +74,8 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 			"?tref2", "?tname2", "?attr2",
 			"?eq"),
 		literal(ERPredicates.erFKJoinSides, "?rel", "?pkPos", "?fkPos"),
+		literal(ERPredicates.erRelationshipEdgeEntity, "?rel", "?pkPos", "?pkEntity"),
+		literal(ERPredicates.erRelationshipEdgeEntity, "?rel", "?fkPos", "?fkEntity"),
 		literal(ERPredicates.erRelationshipEdgeLabel, "?rel", "?pkPos", "?pkLabel"),
 		literal(ERPredicates.erRelationshipEdgeLabel, "?rel", "?fkPos", "?fkLabel")
 	);
@@ -148,29 +149,28 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 
 			_log.debug("\npkLabel: {}\npkTableLabel: {}\nfkLabel: {}\nfkTableLabel: {}",
 				pkLabel, pkTable.getSingularLabel(), fkLabel, fkTable.getSingularLabel());
-					
-//			// FIXME allow plural overrides in ER
-//			String pkPlural = NLUtil.pluralize(pkLabel), fkPlural = NLUtil.pluralize(fkLabel);
-//			// FIXME detect if the entity already has a more specific name
-//			if( !pkLabel.isEmpty() ) {
-//				pkEntityToken.setSingularLabel(pkLabel);
-//				pkEntityToken.setPluralLabel(pkPlural);
-//			}
-//			if( !fkLabel.isEmpty() ) {
-//				fkEntityToken.setSingularLabel(fkLabel);
-//				fkEntityToken.setPluralLabel(fkPlural);
-//			}
+			
+			TableEntityToken leftToken, rightToken;
+			Integer pkPos = ext.getInteger("?pkPos"), fkPos = ext.getInteger("?fkPos");
+			if( pkPos < fkPos  ) {
+				leftToken = pkEntityToken;
+				rightToken = fkEntityToken;
+			} else {
+				leftToken = fkEntityToken;
+				rightToken = pkEntityToken;
+			}
 			
 			String relName = ext.getString("?rel");
 			ERRelationship rel = erDiagram.getRelationship(relName);
 			if( rel == null )
 				throw new SymbolicException("No relationship for name: " + relName);
 			InRelationshipToken inRelationship = new InRelationshipToken(
-				pkEntityToken, fkEntityToken, rel
+				leftToken, rightToken, rel
 			);
 			
 			SymbolicUtil.replaceChild(binop, inRelationship);
 			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", binop, inRelationship);
+			_log.info(Markers.SYMBOLIC, "Replaced {} with {}", binop, inRelationship);
 			applied = true;
 		}
 		
@@ -191,10 +191,10 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 			ITerm relationship = ext.getTerm("?rel");
 			if( DEBUG ) _log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
 			
-			SQLNounToken pkTableLeft = ext.getToken("?tref1"),
-			            pkTableRight = ext.getToken("?tref3");
-			String pkLabelLeft = ext.getString("?pkLabelLeft").toLowerCase(),
-			      pkLabelRight = ext.getString("?pkLabelRight").toLowerCase();
+//			SQLNounToken pkTableLeft = ext.getToken("?tref1"),
+//			            pkTableRight = ext.getToken("?tref3");
+//			String pkLabelLeft = ext.getString("?pkLabelLeft").toLowerCase(),
+//			      pkLabelRight = ext.getString("?pkLabelRight").toLowerCase();
 			SQLToken binop1 = ext.getToken("?eq1"),
 			         binop2 = ext.getToken("?eq2");
 			
@@ -225,18 +225,6 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 			_log.trace(Markers.SYMBOLIC, "Replaced {} and {} with {}", binop1, binop2, inRelationship);
 			
 			return true;
-//			applied = true;
-//			// FIXME replace first condition with this token, for now just delete
-//			state.deleteNode(binop1);
-////			
-//			// update labels
-//			// FIXME allow ER override, handle {TABLE_ENTITY}
-////			String pkLeftPlural = NLUtil.pluralize(pkLabelLeft), 
-////			      pkRightPlural = NLUtil.pluralize(pkLabelRight);
-////			pkTableLeft.setSingularLabel(pkLabelLeft);
-////			pkTableLeft.setPluralLabel(pkLeftPlural);
-////			pkTableRight.setSingularLabel(pkLabelRight);
-////			pkTableRight.setPluralLabel(pkRightPlural);
 		}
 		
 		return false;
