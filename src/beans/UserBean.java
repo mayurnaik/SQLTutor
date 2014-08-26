@@ -122,7 +122,7 @@ public class UserBean implements Serializable {
 	 */
 	public boolean isDevUser() {
 		if(isLoggedIn()) {
-			Pattern devNames = Pattern.compile("^sql-tutor@googlegroups.com|jake.cobb@gatech.edu|mayur.naik@gmail.com|sumitg@microsoft.com|wholton@gatech.edu|edwardo@cc.gatech.edu|sham@cc.gatech.edu$", 
+			Pattern devNames = Pattern.compile("^sql-tutor@googlegroups.com|jake.cobb@gatech.edu|sweat@cc.gatech.edu|mayur.naik@gmail.com|sumitg@microsoft.com|wholton@gatech.edu|edwardo@cc.gatech.edu|sham@cc.gatech.edu$", 
 				Pattern.CASE_INSENSITIVE);
 			return devNames.matcher(email).matches();
 		}
