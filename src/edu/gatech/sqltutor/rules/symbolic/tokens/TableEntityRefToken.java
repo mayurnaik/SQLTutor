@@ -8,10 +8,12 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
  */
 public class TableEntityRefToken extends AbstractSymbolicToken implements ISymbolicToken {
 	private TableEntityToken tableEntity;
+	private boolean needsId = false;
 
 	public TableEntityRefToken(TableEntityRefToken toCopy) {
 		super(toCopy);
 		this.tableEntity = toCopy.tableEntity;
+		this.needsId = needsId;
 	}
 	
 	public TableEntityRefToken(TableEntityToken tableEntity) {
@@ -27,6 +29,14 @@ public class TableEntityRefToken extends AbstractSymbolicToken implements ISymbo
 		this.tableEntity = tableEntity;
 	}
 	
+	public void setNeedsId(boolean needsId) {
+		this.needsId = needsId;
+	}
+	
+	public boolean getNeedsId() {
+		return needsId;
+	}
+	
 	@Override
 	public SymbolicType getType() {
 		return SymbolicType.TABLE_ENTITY_REF;
@@ -34,7 +44,8 @@ public class TableEntityRefToken extends AbstractSymbolicToken implements ISymbo
 	
 	@Override
 	protected StringBuilder addPropertiesString(StringBuilder b) {
-		b.append("tableEntity=").append(tableEntity);
+		b.append("tableEntity=").append(tableEntity)
+			.append(", needsId=").append(needsId);
 		return b;
 	}
 }

@@ -27,6 +27,9 @@ public class SymbolicPredicates {
 	/** <code>symRefsTableEntity(?ref:id,?tableEntity:id)</code> */
 	public static final IPredicate refsTableEntity = predicate("symRefsTableEntity", 2);
 	
+	/** <code>symRefNeedsId(?ref:id)</code> => Entity reference <code>?ref</code> needs to use its id for non-ambiguity */
+	public static final IPredicate refNeedsId = predicate("symRefNeedsId", 1);
+	
 	/** <code>symRefsRelationship(?token:id, ?rel:string)</code> Token references a relationship. */
 	public static final IPredicate refsRelationship = predicate("symRefsRelationship", 2);
 	
@@ -111,4 +114,9 @@ public class SymbolicPredicates {
 	
 	/** <code>symIsVerb(?pos:string)</code> => <code>?pos</code> is a verb form */
 	public static final IPredicate isVerb = predicate("symIsVerb", 1);
+	
+	/** <code>symEarliestTableEntityRef(?ref:id,?tableEntity:id)</code> => <code>?ref</code> is 
+	 * the earliest occurring reference to entity <code>?tableEntity</code>.
+	 */
+	public static final IPredicate earliestTableEntityRef = predicate("symEarliestTableEntityRef", 2);
 }

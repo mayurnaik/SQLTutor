@@ -1,6 +1,10 @@
 
 
-ruleInRelationshipLabel(?inrel, ?leftEntity, ?rightEntity) :-
+ruleInRelationshipLabel(?inrel, ?leftEntity, ?rightEntity, ?which) :-
+  ruleInRelationshipLabel_base(?inrel, ?leftEntity, ?rightEntity),
+  ruleInRelationshipLabel_firstRef(?leftEntity, ?rightEntity, ?which).
+  
+ruleInRelationshipLabel_base(?inrel, ?leftEntity, ?rightEntity) :-
   symType(?inrel, 'IN_RELATIONSHIP'),
   symRelLeftEntity(?inrel, ?leftEntity),
   symRelRightEntity(?inrel, ?rightEntity),
@@ -18,3 +22,15 @@ ruleInRelationshipLabel_entityInRelationship(?inrel, ?tableEntity) :-
 ruleInRelationshipLabel_entityInRelationship(?inrel, ?tableEntity) :-
   symType(?inrel, 'IN_RELATIONSHIP'),
   symRelRightEntity(?inrel, ?tableEntity).
+
+ruleInRelationshipLabel_firstRef(?leftEntity, ?rightEntity, ?which) :-
+  symEarliestTableEntityRef(?leftRef, ?leftEntity),
+  symEarliestTableEntityRef(?rightRef, ?rightEntity),
+  ?leftRef < ?rightRef,
+  ?which = 0.
+  
+ruleInRelationshipLabel_firstRef(?leftEntity, ?rightEntity, ?which) :-
+  symEarliestTableEntityRef(?leftRef, ?leftEntity),
+  symEarliestTableEntityRef(?rightRef, ?rightEntity),
+  ?leftRef > ?rightRef,
+  ?which = 1. 

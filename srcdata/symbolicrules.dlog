@@ -107,3 +107,12 @@ symLastChild(?parent, ?child, ?pos) :-
 symNumChildren(?parent, ?num) :- 
   symLastChild(?parent, ?child, ?pos), 
   ?pos + 1 = ?num.
+
+symEarliestTableEntityRef(?ref, ?entity) :-
+  symRefsTableEntity(?ref, ?entity),
+  not symEarlierTableEntityRef(?ref, ?entity, ?earlierRef).
+
+symEarlierTableEntityRef(?ref, ?entity, ?earlierRef) :-
+  symRefsTableEntity(?ref, ?entity),
+  symRefsTableEntity(?earlierRef, ?entity),
+  ?earlierRef < ?ref.

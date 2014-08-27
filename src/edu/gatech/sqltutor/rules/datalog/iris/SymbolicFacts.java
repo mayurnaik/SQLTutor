@@ -221,6 +221,8 @@ public class SymbolicFacts extends DynamicFacts {
 	private void addTableEntityRefFacts(Integer tokenId, TableEntityRefToken token) {
 		Integer tableEntityId = tokenMap.getObjectId(token.getTableEntity());
 		addFact(SymbolicPredicates.refsTableEntity, tokenId, tableEntityId);
+		if( token.getNeedsId() )
+			addFact(SymbolicPredicates.refNeedsId, tokenId);
 	}
 
 	private void addInRelationshipFacts(Integer tokenId, InRelationshipToken token) {

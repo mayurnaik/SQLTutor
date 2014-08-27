@@ -3,6 +3,8 @@ package edu.gatech.sqltutor.rules.symbolic;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.deri.iris.api.basics.IQuery;
@@ -92,9 +94,21 @@ public class SymbolicQueries {
 	 * @return the (possibly empty) list of references
 	 */
 	public List<TableEntityRefToken> getTableEntityReferences(TableEntityToken tableEntity) {
+		return getTableEntityReferences(tableEntity, false);
+	}
+	
+	/**
+	 * Returns all the <code>{TABLE_ENTITY_REF}</code> tokens that reference a 
+	 * particular <code>{TABLE_ENTITY}</code>.
+	 * 
+	 * @param tableEntity the table entity
+	 * @param sorted      if the references should be sorted by order of appearance
+	 * @return the (possibly empty) list of references
+	 */
+	public List<TableEntityRefToken> getTableEntityReferences(TableEntityToken tableEntity, boolean sorted) {
 		if( tableEntity == null ) throw new NullPointerException("tableEntity is null");
 		
-		TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
+		final TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
 		Integer tableEntityId = tokenMap.getObjectId(tableEntity);
 		IQuery query = Factory.BASIC.createQuery(
 			literal(SymbolicPredicates.type, "?ref", SymbolicType.TABLE_ENTITY_REF),
@@ -107,7 +121,41 @@ public class SymbolicQueries {
 			TableEntityRefToken ref = ext.getToken("?ref");
 			refs.add(ref);
 		}
+		
+		if( sorted ) {
+			Collections.sort(refs, new Comparator<TableEntityRefToken>() {
+				@Override
+				public int compare(TableEntityRefToken o1,
+						TableEntityRefToken o2) {
+					int id1 = tokenMap.getObjectId(o1),
+					    id2 = tokenMap.getObjectId(o2);
+					return id1 < id2 ? -1 : (id1 > id2 ? 1 : 0);
+				}
+			});
+		}
+		
 		return refs;
+	}
+	
+	/**
+	 * Returns the earliest occurring reference to <code>tableEntity</code>.
+	 * @param tableEntity the referenced entity
+	 * @return the earliest reference or <code>null</code> if there are no references
+	 */
+	public TableEntityRefToken getEarliestRef(TableEntityToken tableEntity) {
+		if( tableEntity == null ) throw new NullPointerException("tableEntity is null");
+		
+		final TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
+		Integer tableEntityId = tokenMap.getObjectId(tableEntity);
+		IQuery query = Factory.BASIC.createQuery(
+			literal(SymbolicPredicates.earliestTableEntityRef, "?ref", tableEntityId)
+		);
+			
+		RelationExtractor ext = IrisUtil.executeQuery(query, state);
+		if( ext.nextTuple() ) {
+			return ext.getToken("?ref");
+		}
+		return null;
 	}
 	
 	/**
