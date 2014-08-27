@@ -142,6 +142,11 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 	
 	private void replaceReferences(TableEntityRefToken ref,
 			List<TableEntityRefToken> otherRefs) {
+		boolean trace = _log.isTraceEnabled(Markers.SYMBOLIC);
+		
+		_log.debug(Markers.SYMBOLIC, "Preparing to replace references to {}", ref);
+		if( trace )
+			_log.trace(Markers.SYMBOLIC, "Current state:\n{}", SymbolicUtil.prettyPrint(state.getRootToken()));
 		
 		SymbolicQueries queries = state.getQueries();
 		
@@ -180,6 +185,10 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 			// we rely on another rule cleaning up bad determiners, e.g. "each employee's supervisor" -> "each their supervisor"
 			// see InvalidDeterminerRule
 		}
+		
+
+		if( trace )
+			_log.trace(Markers.SYMBOLIC, "After state:\n{}", SymbolicUtil.prettyPrint(state.getRootToken()));
 	}
 	
 

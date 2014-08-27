@@ -17,13 +17,13 @@ import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
-import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
+import edu.gatech.sqltutor.rules.lang.StandardLoweringRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 
-public class ColumnReferenceLiteralRule extends StandardSymbolicRule implements
+public class ColumnReferenceLiteralRule extends StandardLoweringRule implements
 		ITranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(ColumnReferenceLiteralRule.class);
 	
@@ -34,7 +34,6 @@ public class ColumnReferenceLiteralRule extends StandardSymbolicRule implements
 	);
 
 	public ColumnReferenceLiteralRule() {
-		super(DefaultPrecedence.LOWERING);
 	}
 
 	public ColumnReferenceLiteralRule(int precedence) {
@@ -69,10 +68,5 @@ public class ColumnReferenceLiteralRule extends StandardSymbolicRule implements
 	@Override
 	protected IQuery getQuery() {
 		return QUERY;
-	}
-	
-	@Override
-	protected EnumSet<TranslationPhase> getDefaultPhases() {
-		return EnumSet.of(TranslationPhase.LOWERING);
 	}
 }
