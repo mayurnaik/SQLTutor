@@ -27,7 +27,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 
 public class FixVerbTenseRule extends StandardSymbolicRule implements
 		ITranslationRule {
-	private static final Logger _log = LoggerFactory.getLogger(InvalidDeterminerRule.class);
+	private static final Logger _log = LoggerFactory.getLogger(FixVerbTenseRule.class);
 	
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		literal(SymbolicPredicates.type, "?verb", SymbolicType.LITERAL),
@@ -57,7 +57,7 @@ public class FixVerbTenseRule extends StandardSymbolicRule implements
 	
 	private boolean checkVerb(LiteralToken verb, ISymbolicToken before) {
 		
-		_log.info(Markers.SYMBOLIC, "Checking {} against {}", verb, before);
+		_log.trace(Markers.SYMBOLIC, "Checking {} against {}", verb, before);
 		PartOfSpeech beforeType = before.getPartOfSpeech();
 		switch( beforeType ) {
 		case NOUN_SINGULAR_OR_MASS:

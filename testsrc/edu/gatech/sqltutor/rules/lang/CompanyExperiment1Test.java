@@ -54,8 +54,8 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 8
 			{"SELECT * FROM employee E, employee M, department D WHERE E.salary > M.salary AND E.department_id = D.id AND D.manager_ssn = M.ssn", 
-				Pattern.quote("Select all attributes of each employee, employee, and department where the employee's salary is greater than the employee's salary, " 
-						+ "the employee works for the department, and manager ssn is the employee's ssn.")},
+				Pattern.quote("Select all attributes of each employee _e_, employee _e2_, and department where _e_'s salary is greater than _e2_'s salary, " 
+						+ "_e_ works for the department, and _e2_ manages the department.")},
 			
 			// 9
 			{"SELECT p.id, d.id, e.last_name, e.address, e.birthdate FROM project p, department d, employee e WHERE p.department_id = d.id AND d.manager_ssn = e.ssn AND d.location = 'Stafford'", 

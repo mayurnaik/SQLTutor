@@ -13,7 +13,7 @@ public class TableEntityRefToken extends AbstractSymbolicToken implements ISymbo
 	public TableEntityRefToken(TableEntityRefToken toCopy) {
 		super(toCopy);
 		this.tableEntity = toCopy.tableEntity;
-		this.needsId = needsId;
+		this.needsId = toCopy.needsId;
 	}
 	
 	public TableEntityRefToken(TableEntityToken tableEntity) {

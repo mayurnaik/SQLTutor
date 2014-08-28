@@ -52,6 +52,8 @@ public class InvalidDeterminerRule extends StandardSymbolicRule implements
 			switch( after.getPartOfSpeech() ) {
 			case PERSONAL_PRONOUN:
 			case POSSESSIVE_PRONOUN:
+			case PROPER_NOUN_SINGULAR:
+			case PROPER_NOUN_PLURAL:
 				_log.debug(Markers.SYMBOLIC, "Deleting determiner {} followed by {}", determiner, after);
 				determiner.getParent().removeChild(determiner);
 				applied = true;

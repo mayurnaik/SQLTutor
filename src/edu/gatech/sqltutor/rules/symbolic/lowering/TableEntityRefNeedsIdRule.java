@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
-import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
@@ -66,7 +65,7 @@ public class TableEntityRefNeedsIdRule extends StandardSymbolicRule {
 		if( ref.getNeedsId() )
 			return false;
 		ref.setNeedsId(true);
-		_log.info(Markers.SYMBOLIC, "Needs id: {}", ref);
+		_log.trace(Markers.SYMBOLIC, "Needs id: {}", ref);
 		return true;
 	}
 
