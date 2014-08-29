@@ -48,15 +48,8 @@ public class SymbolicFacts extends DynamicFacts {
 		
 		public void mapTokens(Collection<ISymbolicToken> tokens) {
 			if( tokens == null ) return;
-
-			Deque<ISymbolicToken> worklist = new LinkedList<ISymbolicToken>();
-			worklist.addAll(tokens);
-			
-			while( !worklist.isEmpty() ) {
-				ISymbolicToken token = worklist.removeFirst();
-				mapObject(token);
-				worklist.addAll(token.getChildren());
-			}
+			for( ISymbolicToken token: tokens )
+				mapTokensRecursive(token);
 		}
 		
 		/**
@@ -65,15 +58,13 @@ public class SymbolicFacts extends DynamicFacts {
 		 */
 		private void mapTokens(ISymbolicToken parentToken) {
 			clearMap();
-			
-			Deque<ISymbolicToken> worklist = new LinkedList<ISymbolicToken>();
-			worklist.addFirst(parentToken);
-			
-			while( !worklist.isEmpty() ) {
-				ISymbolicToken token = worklist.removeFirst();
-				mapObject(token);
-				worklist.addAll(token.getChildren());
-			}
+			mapTokensRecursive(parentToken);
+		}
+		
+		private void mapTokensRecursive(ISymbolicToken parentToken) {
+			mapObject(parentToken);
+			for( ISymbolicToken child: parentToken.getChildren() )
+				mapTokensRecursive(child);
 		}
 	}
 
