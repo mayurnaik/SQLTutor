@@ -70,7 +70,7 @@ public enum PartOfSpeech {
 
 	// words: RB+MD+VB 
 	// example: was looking
-	VERB_PHRASE (true,"VP "),
+	VERB_PHRASE (true,"VP"),
 
 	// words: RB
 	// example: also
@@ -114,18 +114,6 @@ public enum PartOfSpeech {
 		}
 	}
 	
-	public static boolean isPossessive(PartOfSpeech pos) {
-		if( pos == null ) throw new NullPointerException("pos is null");
-		switch( pos ) {
-		case POSSESSIVE_ENDING:
-		case POSSESSIVE_PRONOUN:
-		case POSSESSIVE_WH_PRONOUN:
-			return true;
-		default:
-			return false;
-		}
-	}
-
 	private final boolean isChunk;
 	private final String tag;
 
@@ -146,6 +134,56 @@ public enum PartOfSpeech {
 	 */
 	public String toString() {
 		return getTag();
+	}
+	
+	public boolean isNoun() { 
+		switch (this) {
+		case NOUN_PLURAL:
+		case NOUN_SINGULAR_OR_MASS:
+		case PROPER_NOUN_SINGULAR:
+		case PROPER_NOUN_PLURAL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isPronoun() { 
+		switch( this ) {
+		case PERSONAL_PRONOUN:
+		case POSSESSIVE_PRONOUN:
+		case POSSESSIVE_WH_PRONOUN:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isPossessive() {
+		switch( this ) {
+		case POSSESSIVE_ENDING:
+		case POSSESSIVE_PRONOUN:
+		case POSSESSIVE_WH_PRONOUN:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isPunctuation() { return isPunctuation(this); }
+	
+	public boolean isVerb() {
+		switch( this ) {
+		case VERB_BASE_FORM:
+		case VERB_GERUND_OR_PRESENT_PARTICIPLE:
+		case VERB_NON_RD_PERSON_SINGULAR_PRESENT:
+		case VERB_PAST_PARTICIPLE:
+		case VERB_PAST_TENSE:
+		case VERB_RD_PERSON_SINGULAR_PRESENT:
+			return true;
+		default:
+			return false;
+		}
 	}
 	
 	public boolean isChunk() { return isChunk; }

@@ -14,6 +14,7 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
@@ -23,6 +24,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.TokenMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.EntityType;
 import edu.gatech.sqltutor.rules.lang.StandardLoweringRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -72,7 +74,6 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 			throw new SymbolicException("Should only ever have one result, got: " + relation);
 		ext.nextTuple();
 		
-		TokenMap tokenMap = state.getSymbolicFacts().getTokenMap();
 		TableEntityRefToken ref = ext.getToken("?ref");
 		WhereToken where = ext.getToken("?where");
 		List<ISymbolicToken> verbPhrases = getVerbPhrasesAfterWhere();
@@ -81,33 +82,49 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 			_log.info(Markers.SYMBOLIC, "All verb phrases possessive for this reference: {}", ref);
 			replaceAllPossessives(ref, verbPhrases);
 			SymbolicUtil.replaceChild(where, Literals.whose());
-		} else {
-			_log.info(Markers.SYMBOLIC, "Possessive substitution not possible for ref: {}", ref);
+			return true;
+			
+		} else if( areAllVerbalizing(ref, verbPhrases)) {
+			_log.debug(Markers.SYMBOLIC, "All verb phrases verbalizing against ref: {}", ref);
+			replaceAllVerbalizations(ref, verbPhrases);
+			EntityType entityType = state.getQueries().getReferencedEntity(ref.getTableEntity()).getEntityType();
+			LiteralToken replacement;
+			if( entityType == EntityType.PERSON ) {
+				replacement = new LiteralToken("who", PartOfSpeech.WH_PRONOUN);
+			} else {
+				replacement = new LiteralToken("which", PartOfSpeech.WH_PRONOUN);
+			}
+			SymbolicUtil.replaceChild(where, replacement);
+			return true;
 		}
 		
 		return false;
 	}
 	
 	private void replaceAllPossessives(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
+		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
 		for( ISymbolicToken verbPhrase: verbPhrases ) {
-			_log.info(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
+			if( TRACE ) {
+				_log.trace(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
+			}
+			
 			ISymbolicToken nounPhrase = getNounStartPhrase(verbPhrase);
 			List<ISymbolicToken> children = nounPhrase.getChildren();
 			ISymbolicToken token = children.get(0);
 			
 			if( token.getPartOfSpeech() == PartOfSpeech.DETERMINER ) {
-				_log.info(Markers.SYMBOLIC, "Deleted determiner: {}", token);
+				_log.debug(Markers.SYMBOLIC, "Deleted determiner: {}", token);
 				token.getParent().removeChild(token);
 				token = children.get(0);
 			}
 			
 			if( token.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_PRONOUN ) {
-				_log.info(Markers.SYMBOLIC, "Deleted possessive pronoun: {}", token);
+				_log.debug(Markers.SYMBOLIC, "Deleted possessive pronoun: {}", token);
 				token.getParent().removeChild(token);
 			} else {
 				if( !(token instanceof TableEntityRefToken) )
 					throw new SymbolicException("Expecting a reference token, not: " + token);
-				_log.info(Markers.SYMBOLIC, "Deleting possessive reference: {}", token);
+				_log.debug(Markers.SYMBOLIC, "Deleting possessive reference: {}", token);
 				token.getParent().removeChild(token);
 				token = children.get(0);
 				if( token.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_ENDING )
@@ -117,6 +134,12 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		}
 	}
 	
+	/**
+	 * Digs through any nested noun-phrases and returns either the verb phrase 
+	 * or the inner-most noun phrase.
+	 * @param verbPhrase
+	 * @return
+	 */
 	private ISymbolicToken getNounStartPhrase(ISymbolicToken verbPhrase) {
 		ISymbolicToken phrase = verbPhrase;
 		while( true ) {
@@ -157,6 +180,59 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		return true;
 	}
 	
+	private boolean areAllVerbalizing(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
+		TableEntityToken entity = ref.getTableEntity();
+		if( verbPhrases.size() < 1 )
+			return false;
+		
+		for( ISymbolicToken verbPhrase: verbPhrases ) {
+			ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
+			ISymbolicToken theRef = getPotentialReference(nounParent);
+			
+			if( theRef instanceof LiteralToken ) {
+				if( theRef.getPartOfSpeech() != PartOfSpeech.PERSONAL_PRONOUN )
+					return false;
+			} else {
+				TableEntityRefToken otherRef = (TableEntityRefToken)theRef;
+				if( otherRef.getTableEntity() != entity )
+					return false;
+				ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
+				if( !after.getPartOfSpeech().isVerb() )
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	private void replaceAllVerbalizations(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
+		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		for( ISymbolicToken verbPhrase: verbPhrases ) {
+			if( TRACE ) {
+				_log.trace(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
+			}
+			ISymbolicToken nounPhrase = getNounStartPhrase(verbPhrase);
+			List<ISymbolicToken> children = nounPhrase.getChildren();
+			ISymbolicToken token = children.get(0);
+			
+			if( token.getPartOfSpeech() == PartOfSpeech.DETERMINER ) {
+				_log.debug(Markers.SYMBOLIC, "Deleted determiner: {}", token);
+				token.getParent().removeChild(token);
+				token = children.get(0);
+			}
+
+			if( token.getPartOfSpeech().isPronoun() ) {
+				_log.debug(Markers.SYMBOLIC, "Deleting pronoun: {}", token);
+			} else {
+				if( !(token instanceof TableEntityRefToken) )
+					throw new SymbolicException("Expecting a reference token, not: " + token);
+				_log.debug(Markers.SYMBOLIC, "Deleting reference: {}", token);
+			}
+			token.getParent().removeChild(token);
+		}
+	}
+	
+	
+	
 	private ISymbolicToken getPotentialReference(ISymbolicToken nounParent) {
 		List<ISymbolicToken> nounChildren = nounParent.getChildren();
 		ISymbolicToken theRef = null;
@@ -165,15 +241,11 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		for( int i = 0, len = nounChildren.size(); i < len; ++i ) {
 			theRef = nounChildren.get(i);
 			partOfSpeech = theRef.getPartOfSpeech();
-			switch( partOfSpeech ) {
-			case DETERMINER:
+			if( partOfSpeech == PartOfSpeech.DETERMINER ) {
 				theRef = null;
-				break;
-			case NOUN_SINGULAR_OR_MASS:
-			case NOUN_PLURAL:
-			case POSSESSIVE_PRONOUN:
+			} else if ( partOfSpeech.isNoun() || partOfSpeech.isPronoun() ) {
 				break searchLoop;
-			default:
+			} else {
 				_log.warn(Markers.SYMBOLIC, "Unexpected token: {}", theRef);
 				return null;
 			}

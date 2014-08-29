@@ -36,7 +36,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 4
 			{"SELECT e.first_name, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id", 
 				// Select the first name, last name and address of each employee who works for the Research department.
-				Pattern.quote("Select the first name, last name, and address of each employee where they work for the Research department.")},
+				Pattern.quote("Select the first name, last name, and address of each employee who works for the Research department.")},
 			
 			// 5
 			{"SELECT first_name, last_name FROM employee WHERE manager_ssn IS NULL", 

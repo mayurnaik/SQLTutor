@@ -237,7 +237,7 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 	
 	private boolean isPossessed(ISymbolicToken token) {
 		ISymbolicToken before = SymbolicUtil.getPrecedingToken(token);
-		return before != null && PartOfSpeech.isPossessive(before.getPartOfSpeech());
+		return before != null && before.getPartOfSpeech().isPossessive();
 	}
 	
 	private boolean arePossessivePronounsUsed() {

@@ -102,7 +102,7 @@ public class TableEntityRefLiteralRule
 					ISymbolicToken parent = ref.getParent();
 					List<ISymbolicToken> siblings = parent.getChildren();
 					int idx = siblings.indexOf(ref);
-					if( PartOfSpeech.isPossessive(before.getPartOfSpeech()) ) {
+					if( before.getPartOfSpeech().isPossessive() ) {
 						// FIXME we really need a smarter check here
 						_log.warn("Skipping determiner insertion due to possessive ending.");
 					} else if ( insertIdAfter || !ref.getNeedsId() ) {
