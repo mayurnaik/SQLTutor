@@ -1,0 +1,22 @@
+
+ruleSingleReferenceAnaphora(?ref, ?where) :-
+  ruleSingleReferenceAnaphora_onlyRefBeforeWhere(?ref),
+  symType(?where, 'WHERE').
+
+ruleSingleReferenceAnaphora_refBeforeWhere(?ref) :-
+  symType(?ref, 'TABLE_ENTITY_REF'),
+  symType(?where, 'WHERE'),
+  ?ref < ?where.
+  
+ruleSingleReferenceAnaphora_refPairBeforeWhere(?ref1, ?ref2) :-
+  ruleSingleReferenceAnaphora_refBeforeWhere(?ref1),
+  ruleSingleReferenceAnaphora_refBeforeWhere(?ref2),
+  ?ref1 != ?ref2.
+  
+ruleSingleReferenceAnaphora_onlyRefBeforeWhere(?ref) :-
+  ruleSingleReferenceAnaphora_refBeforeWhere(?ref),
+  not ruleSingleReferenceAnaphora_refPairBeforeWhere(?ref, ?otherref).
+  
+
+ruleSingleReferenceAnaphora_isVerbPhrase(?token) :- symPartOfSpeech(?token, 'VP').
+ruleSingleReferenceAnaphora_isVerbPhrase(?token) :- symPartOfSpeech(?token, 'QP').

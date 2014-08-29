@@ -51,6 +51,9 @@ public class Literals {
 		return new LiteralToken("they", PERSONAL_PRONOUN);
 	}
 
+	public static LiteralToken whose() {
+		return new LiteralToken("whose", POSSESSIVE_WH_PRONOUN);
+	}
 
 	private Literals() {
 	}

@@ -31,7 +31,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 3
 			{"SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND department_id = 5", 
 				// Select all attributes of each employee whose salary is between $30,000 and $40,000 and who works for department 5.
-				Pattern.quote("Select all attributes of each employee where their salary is between $30,000 and $40,000 and department id is 5.")},
+				Pattern.quote("Select all attributes of each employee whose salary is between $30,000 and $40,000 and department id is 5.")},
 			
 			// 4
 			{"SELECT e.first_name, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id", 
@@ -45,8 +45,8 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 6
 			{"SELECT birthdate, address FROM employee WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'", 
 				// Select the birth date and address of each employee whose name is \"John B. Smith\"
-				Pattern.quote("Select the birth date and address of each employee where their first name is \"John\", "
-						+ "their middle initial is \"B\", and their last name is \"Smith\".")},
+				Pattern.quote("Select the birth date and address of each employee whose first name is \"John\", "
+						+ "middle initial is \"B\", and last name is \"Smith\".")},
 			
 			// 7
 			{"SELECT E.last_name AS employee_name, S.last_name AS supervisor_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn", 

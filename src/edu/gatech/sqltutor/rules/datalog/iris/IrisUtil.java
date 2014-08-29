@@ -197,6 +197,14 @@ public class IrisUtil {
 		return literal(true, pred, vals);
 	}
 	
+	public static ILiteral literal(boolean isPositive, Class<? extends IBuiltinAtom> builtin, Object... terms) {
+		return literal(isPositive, builtin(builtin, (Object[])terms));
+	}
+	
+	public static ILiteral literal(Class<? extends IBuiltinAtom> builtin, Object... terms) {
+		return literal(true, builtin, (Object[])terms);
+	}
+	
 	public static IRelation relation() { return relationFactory.createRelation(); }
 	
 	public static IPredicate predicate(String symbol, int arity) {
