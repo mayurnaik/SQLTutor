@@ -37,6 +37,7 @@ public class UserBean implements Serializable {
 	private String password;
 	private String email;
 	private boolean loggedIn = false;
+	private boolean admin = false;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
 	private String selectedSchema = "company";
 
@@ -58,6 +59,7 @@ public class UserBean implements Serializable {
 			}
 
 			loggedIn = true;
+			admin = getDatabaseManager().isAdmin(email.toLowerCase());
 			selectedSchema = "company";
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
@@ -114,24 +116,9 @@ public class UserBean implements Serializable {
         }
 	}
 	
-	/**
-	 * Temporary method for special development users.
-	 * 
-	 * @deprecated
-	 * @return if this is a development user
-	 */
-	public boolean isDevUser() {
-		if(isLoggedIn()) {
-			Pattern devNames = Pattern.compile("^sql-tutor@googlegroups.com|jake.cobb@gatech.edu|sweat@cc.gatech.edu|mayur.naik@gmail.com|sumitg@microsoft.com|wholton@gatech.edu|edwardo@cc.gatech.edu|sham@cc.gatech.edu$", 
-				Pattern.CASE_INSENSITIVE);
-			return devNames.matcher(email).matches();
-		}
-		return false;
-	}
-	
 	public void devRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		if (!isDevUser()) {
+		if (!isAdmin()) {
 	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 	    }
 	}
@@ -148,6 +135,9 @@ public class UserBean implements Serializable {
 	 */
 	public void setLoggedIn(boolean loggedIn) {
 		this.loggedIn = loggedIn;
+		if(!loggedIn) {
+			setAdmin(false);
+		}
 	}
 
 	/** 
@@ -192,5 +182,13 @@ public class UserBean implements Serializable {
 
 	public void setDatabaseManager(DatabaseManager databaseManager) {
 		this.databaseManager = databaseManager;
+	}
+
+	public boolean isAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(boolean admin) {
+		this.admin = admin;
 	}
 }

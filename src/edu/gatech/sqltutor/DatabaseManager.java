@@ -94,6 +94,26 @@ public class DatabaseManager implements Serializable {
 		return schemas;
 	}
 	
+	public boolean isAdmin(String email) throws SQLException {
+		Connection connection = dataSource.getConnection();
+
+		final String query = "SELECT admin FROM \"user\" WHERE email = ?;";
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
+		preparedStatement.setString(1, email);
+		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		boolean isAdmin = false;
+		if (resultSet.next()) {
+			isAdmin = resultSet.getBoolean(1);
+		}
+		
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+		
+		return isAdmin;
+	}
+	
 	public List<String> getUserSchemas(boolean dev) throws SQLException {
 		Connection conn = dataSource.getConnection();
 		
@@ -165,17 +185,18 @@ public class DatabaseManager implements Serializable {
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
 		preparedStatement.setString(1, schemaName);
 		preparedStatement.setString(2, email);
-		
 		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		boolean schemaPermissions = false;
 		if (resultSet.next()) {
-			return true;
+			schemaPermissions = true;
 		}
 		
 		Utils.tryClose(preparedStatement);
 		Utils.tryClose(resultSet);
 		Utils.tryClose(connection);
 			
-		return false;
+		return schemaPermissions;
 	}
 	
 	public void addQuestion(String schemaName, String question, String answer) throws SQLException {
@@ -349,21 +370,22 @@ public class DatabaseManager implements Serializable {
 		
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
 		preparedStatement.setString(1, email);
-		
 		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		boolean autheticated = false;
 		if (resultSet.next()) {
 			byte[] salt = resultSet.getBytes(1);
 			byte[] encryptedId = resultSet.getBytes(2);
 			
 			// use the password hasher to authenticate
-			return PasswordHasher.authenticate(id, encryptedId, salt);
+			autheticated = PasswordHasher.authenticate(id, encryptedId, salt);
 		} 
 		
 		Utils.tryClose(preparedStatement);
 		Utils.tryClose(connection);
 		Utils.tryClose(resultSet);
 
-		return false;
+		return autheticated;
 	}
 
 	public void changePassword(String email, String newPassword) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {

@@ -36,7 +36,7 @@ public class SchemaSelectionBean implements Serializable {
 	@PostConstruct
 	public void refreshList() {
 		try {
-			List<String> userSchemas = databaseManager.getUserSchemas(getUserBean().isDevUser());
+			List<String> userSchemas = databaseManager.getUserSchemas(getUserBean().isAdmin());
 			
 			SelectItemGroup postgres = new SelectItemGroup("PostgreSQL");
 			SelectItem[] schemaItems = new SelectItem[userSchemas.size()];

@@ -78,7 +78,7 @@ public class SchemaInstancesPageBean implements Serializable {
 				return;
 			}
 			
-			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isDevUser());
+			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();

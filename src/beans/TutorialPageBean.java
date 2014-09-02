@@ -68,7 +68,7 @@ public class TutorialPageBean {
 
 	public void processSQL() {
 		try {
-			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isDevUser());
+			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
 			if(!nlpDisabled)
 				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
 			else 
@@ -104,7 +104,7 @@ public class TutorialPageBean {
 	
 	public void setResultSetDiffs() {
 		try {
-			answerResult = databaseManager.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isDevUser());
+			answerResult = databaseManager.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isAdmin());
 			queryDiffResult = new QueryResult(queryResult);
 			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
 			queryDiffResult.getData().removeAll(answerResult.getData());
@@ -139,8 +139,8 @@ public class TutorialPageBean {
 				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
 				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
 				try {
-					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isDevUser());
-					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isDevUser());
+					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isAdmin());
+					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isAdmin());
 					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
 						resultSetFeedback = "Correct.";
 					} else {

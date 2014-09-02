@@ -129,7 +129,7 @@ public class FreeEntryPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = getDatabaseManager().getQueryResult(selectedDatabase, query, userBean.isDevUser());
+			queryResult = getDatabaseManager().getQueryResult(selectedDatabase, query, userBean.isAdmin());
 			IQueryTranslator question = new Question(query, tables);
 			String nlp = question.getTranslation();
 			userQuery = new UserQuery();
