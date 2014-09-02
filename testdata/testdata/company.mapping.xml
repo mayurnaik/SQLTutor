@@ -7,23 +7,23 @@
     </entry>
     <entry>
       <attribute>Employee.Fname</attribute>
-      <column>employee.first_name</column>
+      <column>employee.fname</column>
     </entry>
     <entry>
       <attribute>Employee.Minit</attribute>
-      <column>employee.middle_initial</column>
+      <column>employee.Minit</column>
     </entry>
     <entry>
       <attribute>Employee.Lname</attribute>
-      <column>employee.last_name</column>
+      <column>employee.Lname</column>
     </entry>
     <entry>
       <attribute>Employee.Address</attribute>
-      <column>employee.address</column>
+      <column>employee.Address</column>
     </entry>
     <entry>
       <attribute>Employee.Bdate</attribute>
-      <column>employee.birthdate</column>
+      <column>employee.Bdate</column>
     </entry>
     <entry>
       <attribute>Employee.Salary</attribute>
@@ -34,36 +34,32 @@
       <column>employee.sex</column>
     </entry>
     <entry>
-      <attribute>Employee.Lname</attribute>
-      <column>employee.last_name</column>
-    </entry>
-    <entry>
       <attribute>Project.Number</attribute>
-      <column>project.id</column>
+      <column>project.pnumber</column>
     </entry>
     <entry>
       <attribute>Project.Name</attribute>
-      <column>project.name</column>
+      <column>project.pname</column>
     </entry>
     <entry>
       <attribute>Project.Location</attribute>
-      <column>project.location</column>
+      <column>project.plocation</column>
     </entry>
     <entry>
       <attribute>Department.Number</attribute>
-      <column>department.id</column>
+      <column>department.dnumber</column>
     </entry>
     <entry>
       <attribute>Department.Name</attribute>
-      <column>department.name</column>
+      <column>department.dname</column>
     </entry>
     <entry>
       <attribute>Dependent.Name</attribute>
-      <column>dependent.name</column>
+      <column>dependent.dependent_name</column>
     </entry>
     <entry>
       <attribute>Dependent.Bdate</attribute>
-      <column>dependent.birthdate</column>
+      <column>dependent.bdate</column>
     </entry>
     <entry>
       <attribute>Dependent.Sex</attribute>
@@ -79,7 +75,7 @@
     </entry>
     <entry>
     	<attribute>manages.Start_date</attribute>
-    	<column>department.manager_start_date</column>
+    	<column>department.mgr_start_date</column>
     </entry>
   </attribute-map>
   <join-map>
@@ -88,7 +84,7 @@
       <join type="foreign_key">
         <keyPair>
           <primary>employee.ssn</primary>
-          <foreign>employee.manager_ssn</foreign>
+          <foreign>employee.super_ssn</foreign>
         </keyPair>
       </join>
     </entry>
@@ -96,8 +92,8 @@
       <relationship>works_for</relationship>
       <join type="foreign_key">
         <keyPair>
-          <primary>department.id</primary>
-          <foreign>employee.department_id</foreign>
+          <primary>department.dnumber</primary>
+          <foreign>employee.dno</foreign>
         </keyPair>
       </join>
     </entry>
@@ -106,7 +102,7 @@
       <join type="foreign_key">
         <keyPair>
           <primary>employee.ssn</primary>
-          <foreign>department.manager_ssn</foreign>
+          <foreign>department.mgr_ssn</foreign>
         </keyPair>
       </join>
     </entry>
@@ -115,11 +111,11 @@
       <join type="lookup_table">
         <leftKeyPair>
           <primary>employee.ssn</primary>
-          <foreign>works_on.employee_ssn</foreign>
+          <foreign>works_on.essn</foreign>
         </leftKeyPair>
         <rightKeyPair>
-          <primary>project.id</primary>
-          <foreign>works_on.project_id</foreign>
+          <primary>project.pnumber</primary>
+          <foreign>works_on.pno</foreign>
         </rightKeyPair>
       </join>
     </entry>
@@ -127,8 +123,8 @@
       <relationship>controls</relationship>
       <join type="foreign_key">
         <keyPair>
-          <primary>department.id</primary>
-          <foreign>project.department_id</foreign>
+          <primary>department.dnumber</primary>
+          <foreign>project.dnum</foreign>
         </keyPair>
       </join>
     </entry>
@@ -137,7 +133,7 @@
       <join type="foreign_key">
         <keyPair>
           <primary>employee.ssn</primary>
-          <foreign>dependent.employee_ssn</foreign>
+          <foreign>dependent.essn</foreign>
         </keyPair>
       </join>
     </entry>
