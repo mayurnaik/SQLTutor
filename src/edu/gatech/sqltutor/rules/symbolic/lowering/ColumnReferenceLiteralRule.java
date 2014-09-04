@@ -2,18 +2,14 @@ package edu.gatech.sqltutor.rules.symbolic.lowering;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
-import java.util.EnumSet;
-
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;

@@ -87,6 +87,7 @@ public class ERAttributeSet extends ERNodeMap<ERAttribute> {
 	
 	public Set<ERAttribute> getSimpleAttributes() {
 		return Sets.filter(getNodes(), new Predicate<ERAttribute>() {
+			@Override
 			public boolean apply(ERAttribute attr) {
 				return !(attr.isComposite() || attr.isMultivalued());
 			}
@@ -95,6 +96,7 @@ public class ERAttributeSet extends ERNodeMap<ERAttribute> {
 	
 	public Set<ERAttribute> getTopLevelAttributes() {
 		return Sets.filter(getNodes(), new Predicate<ERAttribute>() {
+			@Override
 			public boolean apply(ERAttribute attr) {
 				return attr.getParent() == parent;
 			}

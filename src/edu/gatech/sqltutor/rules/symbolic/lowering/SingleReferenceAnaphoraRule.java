@@ -14,7 +14,6 @@ import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
@@ -22,7 +21,6 @@ import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
-import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts.TokenMap;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.er.EntityType;
 import edu.gatech.sqltutor.rules.lang.StandardLoweringRule;

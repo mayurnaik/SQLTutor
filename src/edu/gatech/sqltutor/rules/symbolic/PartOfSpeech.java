@@ -132,6 +132,7 @@ public enum PartOfSpeech {
 	 * @return A string representing a Penn Treebank encoding for an English
 	 * part-of-speech.
 	 */
+	@Override
 	public String toString() {
 		return getTag();
 	}

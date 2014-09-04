@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
-import java.util.regex.Pattern;
+import java.util.List;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -38,6 +38,9 @@ public class UserBean implements Serializable {
 	private String email;
 	private boolean loggedIn = false;
 	private boolean admin = false;
+	private boolean developer = false;
+	private String adminCode = null;
+	private List<String> linkedAdminCodes = null;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
 	private String selectedSchema = "company";
 
@@ -60,6 +63,9 @@ public class UserBean implements Serializable {
 
 			loggedIn = true;
 			admin = getDatabaseManager().isAdmin(email.toLowerCase());
+			developer = getDatabaseManager().isDeveloper(email.toLowerCase());
+			adminCode = getDatabaseManager().getAdminCode(email.toLowerCase());
+			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(email.toLowerCase());
 			selectedSchema = "company";
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
@@ -92,7 +98,6 @@ public class UserBean implements Serializable {
 				msg = "The email you entered is already tied to an account.";
 				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, msg, null));
 			}
-			System.out.println(e.getMessage());
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -108,18 +113,25 @@ public class UserBean implements Serializable {
 	 * 
 	 * @throws IOException		The IOException will be thrown by the redirect method if the URI is not valid.
 	 */
-	public void homepageRedirect() throws IOException {
+	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
         if(!(loggedIn ^ onRegistrationPage)) {
-        	externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+        	externalContext.responseSendError(404, "");
         }
 	}
 	
 	public void devRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		if (!isDeveloper()) {
+			externalContext.responseSendError(404, "");
+	    }
+	}
+	
+	public void adminRedirect() throws IOException {
+        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		if (!isAdmin()) {
-	        externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+			externalContext.responseSendError(404, "");
 	    }
 	}
 	
@@ -132,11 +144,19 @@ public class UserBean implements Serializable {
 
 	/** 
 	 * @param loggedIn	Sets the current user's login status (whether the user is logged in or not).
+	 * @throws IOException 
 	 */
-	public void setLoggedIn(boolean loggedIn) {
+	public void setLoggedIn(boolean loggedIn) throws IOException {
 		this.loggedIn = loggedIn;
 		if(!loggedIn) {
-			setAdmin(false);
+			password = null;
+			email = null;
+			admin = false;
+			developer = false;
+			adminCode = null;
+			linkedAdminCodes = null;
+			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 		}
 	}
 
@@ -190,5 +210,29 @@ public class UserBean implements Serializable {
 
 	public void setAdmin(boolean admin) {
 		this.admin = admin;
+	}
+
+	public String getAdminCode() {
+		return adminCode;
+	}
+
+	public void setAdminCode(String adminCode) {
+		this.adminCode = adminCode;
+	}
+
+	public List<String> getLinkedAdminCodes() {
+		return linkedAdminCodes;
+	}
+
+	public void setLinkedAdminCodes(List<String> linkedAdminCodes) {
+		this.linkedAdminCodes = linkedAdminCodes;
+	}
+
+	public boolean isDeveloper() {
+		return developer;
+	}
+
+	public void setDeveloper(boolean developer) {
+		this.developer = developer;
 	}
 }

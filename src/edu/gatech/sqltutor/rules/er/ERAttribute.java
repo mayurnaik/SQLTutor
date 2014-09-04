@@ -126,6 +126,7 @@ public class ERAttribute extends AbstractERNamedNode implements ERNode {
 		return Objects.equal(this.parent, that.parent);
 	}
 	
+	@Override
 	public String getFullName() {
 		StringBuilder b = new StringBuilder();
 		if( parent != null )

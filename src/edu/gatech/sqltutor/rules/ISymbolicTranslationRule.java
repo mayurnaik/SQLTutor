@@ -11,5 +11,6 @@ public interface ISymbolicTranslationRule extends ITranslationRule {
 	 * 
 	 * @param state the current symbolic state
 	 */
+	@Override
 	public boolean apply(SymbolicState state); 
 }

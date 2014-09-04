@@ -10,19 +10,19 @@ import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERCompositeAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.er.ERObjectMetadata;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
-import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERRelationship.ERRelationshipEdge;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
-import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.MapType;
+import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.util.Pair;
 

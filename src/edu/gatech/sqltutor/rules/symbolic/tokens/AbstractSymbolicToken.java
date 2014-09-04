@@ -34,6 +34,7 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 		return partOfSpeech;
 	}
 	
+	@Override
 	public void setPartOfSpeech(PartOfSpeech partOfSpeech) {
 		this.partOfSpeech = partOfSpeech;
 	}

@@ -1,6 +1,13 @@
 package edu.gatech.sqltutor.rules.util;
 
-import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.*;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.ADVERB;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.DETERMINER;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.PERSONAL_PRONOUN;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.POSSESSIVE_PRONOUN;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.POSSESSIVE_WH_PRONOUN;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_BASE_FORM;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 
 /**

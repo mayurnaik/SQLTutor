@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form>
+	    	<div class="left2">
+				<p:panel styleClass="panel">
+					<h:link value="User Management" outcome="DevManageUsersPage" />
+					<br/><br/>
+					
+					<h:link value="Statistics" outcome="DevStatisticsPage" disabled="true"/>	
+					<br/><br/>	
+					
+					<h:link value="Instance View" outcome="DevInstancesPage"/>
+				</p:panel>	
+			</div>
+			
+			<div class="middle"/>
+			
+			<div class="right2">
+		    	<p:messages />
+		    	
+				<h:outputText value="Under Construction..." />
+			</div>
+		</h:form>
+	</h:body>
+</html>

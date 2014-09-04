@@ -35,6 +35,7 @@ public abstract class ChildContainerToken
 	 * @param token the child to add
 	 * @throws SQLTutorException if <code>token</code> is not an acceptable child type
 	 */
+	@Override
 	public void addChild(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
 		acceptOrThrow(token);
@@ -42,6 +43,7 @@ public abstract class ChildContainerToken
 		token.setParent(this);
 	}
 	
+	@Override
 	public boolean removeChild(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
 		boolean result = children.remove(token);

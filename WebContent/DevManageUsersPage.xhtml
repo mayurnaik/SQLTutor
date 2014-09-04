@@ -1,0 +1,90 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:event type="preRenderView" listener="#{userBean.devRedirect}" />
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:outputStylesheet library="css" name="styles.css"/>
+		<h:form id="form">
+	    	<div class="left2">
+				<p:panel styleClass="panel">
+					<h:link value="User Management" outcome="DevManageUsersPage" disabled="true"/>
+					<br/><br/>
+					
+					<h:link value="Statistics" outcome="DevStatisticsPage" />	
+					<br/><br/>	
+					
+					<h:link value="Instance View" outcome="DevInstancesPage"/>
+				</p:panel>	
+			</div>
+			
+			<div class="middle"/>
+			
+			<div id="rightDiv" class="right2">
+		    	<p:messages id="messages"/>
+	    	
+				<p:panel id="outerPanel" styleClass="panel" header="Promote/Demote Users">
+					<h:outputText value="Please select a user for a list of options." />
+					<br/><br/>
+				    <p:dataTable id="table" var="user" value="#{devManageUsersPageBean.users}" 
+				    	resizableColumns="true" 
+						style="height:50% !important"
+						scrollWidth="100%"
+						scrollable="true"
+				    	selectionMode="single" selection="#{devManageUsersPageBean.selectedUser}" rowKey="#{user}">
+				    	<p:ajax event="rowSelect" update=":form:buttonsPanel"/>
+				        <p:column headerText="Email">
+				            <h:outputText style="white-space: normal;" value="#{user.email}" />
+				        </p:column>
+				 
+				        <p:column headerText="Admin Status (Admin Code)">
+				            <h:outputText value="#{user.adminStatus}" style="white-space: normal;"/>
+				        </p:column>
+				        
+				        <p:column headerText="Dev Status">
+				            <h:outputText value="#{user.dev}" style="white-space: normal;"/>
+				        </p:column>
+				    </p:dataTable>
+					<br/>
+					
+					<h:outputText value="* Demoting a user from admin will delete their admin code as well as their tutorials. Deleting or demoting a user will cascade " />
+					<h:outputText value="(cannot be undone)" styleClass="warning"/>  
+					<h:outputText value="." />  
+					<br/>
+					
+				    <p:panel id="buttonsPanel">
+						<p:commandButton id="deleteUserButton" rendered="#{devManageUsersPageBean.selectedUser != null}"
+							action="#{devManageUsersPageBean.deleteUser}"
+							update=":form"
+							value="Delete User *" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+						<br/>
+						
+						<p:commandButton id="promoteUserToAdminButton" rendered="#{devManageUsersPageBean.selectedUser != null and devManageUsersPageBean.selectedUser.admin == false}"
+							action="#{devManageUsersPageBean.promoteUserToAdmin}"
+							update=":form"
+							value="Promote to Admin" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+						<p:commandButton id="promoteUserToDevButton" rendered="#{devManageUsersPageBean.selectedUser != null and devManageUsersPageBean.selectedUser.dev == false}"
+							action="#{devManageUsersPageBean.promoteUserToDev}"
+							update=":form"
+							value="Promote to Dev" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+						<p:commandButton id="demoteUserFromAdminButton" rendered="#{devManageUsersPageBean.selectedUser != null and devManageUsersPageBean.selectedUser.dev == false and devManageUsersPageBean.selectedUser.admin}"
+							action="#{devManageUsersPageBean.demoteUserFromAdmin}"
+							update=":form"
+							value="Demote from Admin *" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+						<p:commandButton id="demoteUserFromDevButton" rendered="#{devManageUsersPageBean.selectedUser != null and devManageUsersPageBean.selectedUser.dev}"
+							action="#{devManageUsersPageBean.demoteUserFromDev}"
+							update=":form"
+							value="Demote from Dev" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+					</p:panel>
+				</p:panel>
+			</div>
+		</h:form>
+	</h:body>
+</html>

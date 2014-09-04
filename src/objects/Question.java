@@ -376,7 +376,7 @@ public class Question implements IQueryTranslator {
 		Iterator<String> phraseKeyIterator = spellCheckDictionary.keySet().iterator();
 		ArrayList<String> phraseKeyList = new ArrayList<String>();
 		while (phraseKeyIterator.hasNext()) {
-			phraseKeyList.add((String)phraseKeyIterator.next());
+			phraseKeyList.add(phraseKeyIterator.next());
 		}
 		// check if the question contains any of these keys
 		for(int i = 0; i < phraseKeyList.size(); i++) {
@@ -392,7 +392,7 @@ public class Question implements IQueryTranslator {
 		Iterator<String> phraseKeyIterator = phraseCheckDictionary.keySet().iterator();
 		ArrayList<String> phraseKeyList = new ArrayList<String>();
 		while (phraseKeyIterator.hasNext()) {
-			phraseKeyList.add((String)phraseKeyIterator.next());
+			phraseKeyList.add(phraseKeyIterator.next());
 		}
 		// check if the question contains any of these keys
 		for(int i = 0; i < phraseKeyList.size(); i++) {

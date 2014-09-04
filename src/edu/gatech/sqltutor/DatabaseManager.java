@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -17,6 +18,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,8 +35,12 @@ import javax.sql.DataSource;
 import objects.DatabaseTable;
 import objects.QueryResult;
 import objects.QuestionTuple;
+import objects.UserTuple;
 import utilities.PasswordHasher;
 import utilities.ScriptRunner;
+
+import com.google.common.io.BaseEncoding;
+
 import edu.gatech.sqltutor.entities.UserQuery;
 
 @ManagedBean(name="databaseManager", eager=true)
@@ -114,10 +120,35 @@ public class DatabaseManager implements Serializable {
 		return isAdmin;
 	}
 	
-	public List<String> getUserSchemas(boolean dev) throws SQLException {
+	public List<String> getDevSchemas(boolean dev) throws SQLException {
+		ArrayList<String> schemas = new ArrayList<String>();
+		if(dev) {
+			Connection conn = dataSource.getConnection();
+	
+			String query = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';";
+			
+			Statement statement = conn.createStatement();
+			statement.execute(query);
+			
+			ResultSet resultSet = statement.getResultSet();
+			
+			while(resultSet.next()) {
+				schemas.add(resultSet.getString(1));
+			}
+			
+			Utils.tryClose(resultSet);
+			Utils.tryClose(statement);
+			Utils.tryClose(conn);
+			
+			return schemas;
+		}
+		return schemas;
+	}
+	
+	public List<String> getUserSchemas(boolean admin) throws SQLException {
 		Connection conn = dataSource.getConnection();
 		
-		String query = dev ? "SELECT schema FROM schema_options;" : 
+		String query = admin ? "SELECT schema FROM schema_options;" : 
 			"SELECT schema FROM schema_options WHERE visible_to_users;";
 		
 		Statement statement = conn.createStatement();
@@ -224,6 +255,45 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(ps);
 		
 		Utils.tryClose(conn);
+	}
+	
+	public List<UserTuple> getUserTuples() throws SQLException {
+		Connection conn = dataSource.getConnection();
+		
+		Statement statement = conn.createStatement();
+		statement.execute("SELECT \"email\", \"admin\", \"admin_code\", \"developer\" FROM \"user\"");
+		
+		ResultSet rs = statement.getResultSet();
+		List<UserTuple> users = new ArrayList<UserTuple>();
+		while(rs.next()) { 
+			users.add(new UserTuple(rs.getString(1), rs.getBoolean(2), rs.getString(3), rs.getBoolean(4)));
+		}
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+		Utils.tryClose(rs);
+		
+		return users;
+	}
+	
+	public UserTuple getUserTuple(String email) throws SQLException {
+		Connection conn = dataSource.getConnection();
+		
+		PreparedStatement statement = conn.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?");
+		statement.setString(1, email);
+		statement.execute();
+		
+		ResultSet rs = statement.getResultSet();
+		UserTuple user = new UserTuple();
+		while(rs.next()) { 
+			user = new UserTuple(email, rs.getBoolean(1), rs.getString(2), rs.getBoolean(3));
+		}
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+		Utils.tryClose(rs);
+		
+		return user;
 	}
 	
 	public List<QuestionTuple> getQuestions(String schemaName) throws SQLException {
@@ -494,6 +564,39 @@ public class DatabaseManager implements Serializable {
 		return allData;
 	}
 	
+	public HashMap<String, QueryResult> getAllDevData(List<String> tables) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		Statement statement = connection.createStatement();
+		statement.execute("set search_path to public");
+		
+		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
+		for(String tableName : tables) {
+			ResultSet resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
+			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+			int columnCount = resultSetMetaData.getColumnCount();
+			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
+			ArrayList<String> columnNames = new ArrayList<String>();
+			for(int i = 1; i <=  columnCount; i++) {
+				columnNames.add(resultSetMetaData.getColumnName(i));
+			}
+			while(resultSet.next()) {
+				ArrayList<String> rowData = new ArrayList<String>();
+				for (int i = 1; i <= columnCount; i++) {
+					rowData.add(resultSet.getString(i));
+				}
+				queryData.add(rowData);
+			}
+			// return the query result object
+			allData.put(tableName, new QueryResult(columnNames, queryData));
+			Utils.tryClose(resultSet);
+		} 
+		
+		Utils.tryClose(statement);
+		Utils.tryClose(connection);
+		
+		return allData;
+	}
+	
 	public void verifyQuery(String schemaName, String query) throws SQLException {
 		Connection connection = userDataSource.getConnection();
 		
@@ -536,11 +639,42 @@ public class DatabaseManager implements Serializable {
 		return new QueryResult(columnNames, queryData);
 	}
 	
+	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		
+		Statement statement = connection.createStatement();
+		statement.execute("set search_path to public");
+		
+		ResultSet resultSet = statement.executeQuery(query);
+		ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+	
+		int columnCount = resultSetMetaData.getColumnCount();
+		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
+		ArrayList<String> columnNames = new ArrayList<String>();
+		for(int i = 1; i <=  columnCount; i++) {
+			columnNames.add(resultSetMetaData.getColumnName(i));
+		}
+		while(resultSet.next()) {
+			ArrayList<String> rowData = new ArrayList<String>();
+			for (int i = 1; i <= columnCount; i++) {
+				rowData.add(resultSet.getString(i));
+			}
+			queryData.add(rowData);
+		}
+		
+		// return the query result object
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+		Utils.tryClose(statement);
+		
+		return new QueryResult(columnNames, queryData);
+	}
+	
 	public void registerUser(String email, String password) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
-		final String update = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\") VALUES (?, ?, ?)";
-		PreparedStatement preparedStatement = connection.prepareStatement(update);
+		final String updateUserEntry = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\") VALUES (?, ?, ?)";
+		PreparedStatement preparedStatement = connection.prepareStatement(updateUserEntry);
 		
 		// generate the user's encryption salt and password
 		byte[] salt = PasswordHasher.generateSalt();
@@ -549,6 +683,26 @@ public class DatabaseManager implements Serializable {
 		preparedStatement.setBytes(1, encryptedPassword);
 		preparedStatement.setBytes(2, salt);
 		preparedStatement.setString(3, email);
+		preparedStatement.executeUpdate();
+		
+		Utils.tryClose(preparedStatement);
+		
+		final String updateAdminCodeLinkEntry = "INSERT INTO linked_admin_codes (\"email\") VALUES (?)";
+		preparedStatement = connection.prepareStatement(updateAdminCodeLinkEntry);
+
+		preparedStatement.setString(1, email);
+		preparedStatement.executeUpdate();
+
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(connection);
+	}
+	
+	public void deleteUser(String email) throws SQLException {
+		Connection connection = dataSource.getConnection();
+
+		final String delete = "DELETE FROM \"user\" WHERE email = ?";
+		PreparedStatement preparedStatement = connection.prepareStatement(delete);
+		preparedStatement.setString(1, email);
 		preparedStatement.executeUpdate();
 
 		Utils.tryClose(preparedStatement);
@@ -709,5 +863,180 @@ public class DatabaseManager implements Serializable {
 
 		Utils.tryClose(connection);
 		return tables;
+	}
+	
+	public List<DatabaseTable> getDevTables() throws SQLException {
+		Connection connection = dataSource.getConnection();
+
+		DatabaseMetaData metadata = connection.getMetaData();
+		
+		ResultSet resultSet = metadata.getTables(null, "public", "%", new String[] {"TABLE"});
+		ArrayList<DatabaseTable> tables = new ArrayList<DatabaseTable>();
+		while(resultSet.next()) {
+			// the API tells us the third element is the TABLE_NAME string.
+			tables.add(new DatabaseTable(resultSet.getString(3)));
+		}
+		Utils.tryClose(resultSet);
+
+		Statement statement = connection.createStatement();
+		statement.execute("set search_path to public");
+		Utils.tryClose(statement);
+		
+		for(int i = 0; i < tables.size(); i++) {
+			resultSet = metadata.getColumns(null, "public", tables.get(i).getTableName(), null); 
+			ArrayList<String> columns = new ArrayList<String>();
+			while(resultSet.next()) {
+				columns.add(resultSet.getString(4));
+			}
+			tables.get(i).setColumns(columns);
+			Utils.tryClose(resultSet);
+		}
+
+		Utils.tryClose(connection);
+		return tables;
+	}
+
+	public String getAdminCode(String email) throws SQLException {
+		Connection connection = dataSource.getConnection();
+			
+		String query = "SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;";
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
+		preparedStatement.setString(1, email);
+		preparedStatement.execute();
+			
+		ResultSet rs = preparedStatement.getResultSet();
+		String adminCode = null;
+		while(rs.next()) {
+			adminCode = rs.getString(1);
+		}
+
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(connection);
+		Utils.tryClose(rs);
+
+		return adminCode;
+	}
+
+	public List<String> getLinkedAdminCodes(String email) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		
+		String query = "SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;";
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
+		preparedStatement.setString(1, email);
+		preparedStatement.execute();
+		
+		ResultSet rs = preparedStatement.getResultSet();
+		List<String> linkedAdminCodes = new ArrayList<String>();
+		while(rs.next()) {
+			linkedAdminCodes.add(rs.getString(1));
+		}
+
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(connection);
+		Utils.tryClose(rs);
+
+		return linkedAdminCodes;
+	}
+	
+	public String generateAdminCode() throws SQLException {
+		final Random random = new SecureRandom();
+		byte[] buffer = new byte[5];
+		String adminCode = null;
+		do {
+			random.nextBytes(buffer);
+			adminCode = BaseEncoding.base64Url().omitPadding().encode(buffer);
+		} while(adminCodeAlreadyExists(adminCode));
+		
+		return adminCode;
+	}
+	
+	public boolean adminCodeAlreadyExists(String adminCode) throws SQLException {
+		Connection connection = dataSource.getConnection();
+
+		final String query = "SELECT 1 FROM \"user\" WHERE admin_code = ?;";
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
+		preparedStatement.setString(1, adminCode);
+		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		boolean adminCodeExists = false;
+		if (resultSet.next()) {
+			adminCodeExists = true;
+		}
+		
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+			
+		return adminCodeExists;
+	}
+	
+	public void promoteUserToAdmin(String email) throws SQLException {
+		Connection conn = dataSource.getConnection();
+
+		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
+		statement.setBoolean(1, true);
+		statement.setString(2, generateAdminCode());
+		statement.setString(3, email);
+		statement.execute();
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+	}
+	
+	public void promoteUserToDev(String email) throws SQLException {
+		Connection conn = dataSource.getConnection();
+
+		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
+		statement.setBoolean(1, true);
+		statement.setString(2, email);
+		statement.execute();
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+	}
+	
+	public void demoteUserFromAdmin(String email) throws SQLException {
+		Connection conn = dataSource.getConnection();
+
+		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
+		statement.setBoolean(1, false);
+		statement.setString(2, null);
+		statement.setString(3, email);
+		statement.execute();
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+	}
+	
+	public void demoteUserFromDev(String email) throws SQLException {
+		Connection conn = dataSource.getConnection();
+
+		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
+		statement.setBoolean(1, false);
+		statement.setString(2, email);
+		statement.execute();
+
+		Utils.tryClose(statement);
+		Utils.tryClose(conn);
+	}
+
+	public boolean isDeveloper(String email) throws SQLException {
+		Connection connection = dataSource.getConnection();
+
+		final String query = "SELECT developer FROM \"user\" WHERE email = ?;";
+		PreparedStatement preparedStatement = connection.prepareStatement(query);
+		preparedStatement.setString(1, email);
+		ResultSet resultSet = preparedStatement.executeQuery();
+		
+		boolean isDeveloper = false;
+		if (resultSet.next()) {
+			isDeveloper = resultSet.getBoolean(1);
+		}
+		
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(resultSet);
+		Utils.tryClose(connection);
+		
+		return isDeveloper;
 	}
 }

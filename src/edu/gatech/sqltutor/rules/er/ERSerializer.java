@@ -8,8 +8,8 @@ import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.Xpp3Driver;
 
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
-import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
+import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
 /**
  * For serializing {@link ERDiagram}s to/from XML.

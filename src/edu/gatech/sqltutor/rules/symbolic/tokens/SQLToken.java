@@ -36,10 +36,12 @@ public class SQLToken extends ChildContainerToken
 		this.astNode = astNode;
 	}
 	
+	@Override
 	public QueryTreeNode getConjunctScope() {
 		return conjunctScope;
 	}
 	
+	@Override
 	public void setConjunctScope(QueryTreeNode conjunctScope) {
 		this.conjunctScope = conjunctScope;
 	}

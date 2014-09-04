@@ -13,19 +13,24 @@
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.isLoggedIn()}"
 				styleClass="menubutton"/>
-			<p:menuitem value="Tutorial Setup" 
-				action="TutorialSetupPage.xhtml?faces-redirect=true"
-				icon="ui-icon-arrow-1-e" 
-				rendered="#{userBean.isAdmin()}"
-				styleClass="menubutton"/>
 			<p:menuitem value="Schema Options" icon="ui-icon-disk" 
 				type="button" styleClass="menubutton"
 				onclick="PF('schema_dlg').show();" 
 				rendered="#{userBean.isLoggedIn()}"/>
+			<p:menuitem value="Admin Options" 
+				action="AdminPage.xhtml?faces-redirect=true"
+				icon="ui-icon-arrow-1-e" 
+				rendered="#{userBean.isAdmin()}"
+				styleClass="menubutton"/>
+			<p:menuitem value="Developer Options" 
+				action="DevInstancesPage.xhtml?faces-redirect=true"
+				icon="ui-icon-arrow-1-e" 
+				rendered="#{userBean.isDeveloper()}"
+				styleClass="menubutton"/>
 			<p:menuitem value="Login" onclick="PF('login_dlg').show();" 
 				type="button" icon="ui-icon-arrowreturnthick-1-e"
 				styleClass="menubutton"
-				rendered="#{!userBean.isLoggedIn()}" />
+				rendered="#{userBean.loggedIn == false}" />
 			<p:menuitem value="Logout" type="button" 
 				icon="ui-icon-arrowreturnthick-1-w" ajax="false"
 				styleClass="menubutton"
@@ -37,14 +42,14 @@
 		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchema)}" closeable="true" closeOnEscape="true"
 		modal="true" width="30%" resizable="false" appentTo="@(body)">
 		<h:form id="schemaForm">
-			<h:outputText value="Current schema: #{userBean.selectedSchema}"/>
+			<h:outputText value="Current tutorial schema: #{userBean.selectedSchema}"/>
 			<br/><br/>
 			<p:panel>
 				<h:panelGrid id="schemaGrid" columns="2">
-					<p:outputLabel for="schema" value="Please select a schema:" />
+					<p:outputLabel for="schema" value="Please select a tutorial schema:" />
 					<p:selectOneMenu id="schema" value="#{schemaSelectionBean.selectedSchema}" effect="fade">
-						<f:selectItems value="#{schemaSelectionBean.schemas}" itemValue="#{schemaSelectionBean.schemas}"
-							itemLabel="#{schemaSelectionBean.schemas}" />
+						<f:selectItems value="#{schemaSelectionBean.userSchemas}" itemValue="#{schemaSelectionBean.userSchemas}"
+							itemLabel="#{schemaSelectionBean.userSchemas}" />
 					</p:selectOneMenu>	
 				</h:panelGrid>
 			</p:panel>

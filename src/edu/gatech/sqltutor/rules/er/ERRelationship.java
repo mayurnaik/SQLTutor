@@ -80,6 +80,7 @@ public class ERRelationship extends AbstractERAttributeContainer {
 		return ERNode.TYPE_RELATIONSHIP;
 	}
 	
+	@Override
 	public String getFullName() {
 		StringBuilder b = new StringBuilder();
 		// TODO are relationships unique by local name or by combination with entities?

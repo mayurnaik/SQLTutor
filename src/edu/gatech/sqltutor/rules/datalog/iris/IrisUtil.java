@@ -2,7 +2,6 @@ package edu.gatech.sqltutor.rules.datalog.iris;
 
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -198,11 +197,11 @@ public class IrisUtil {
 	}
 	
 	public static ILiteral literal(boolean isPositive, Class<? extends IBuiltinAtom> builtin, Object... terms) {
-		return literal(isPositive, builtin(builtin, (Object[])terms));
+		return literal(isPositive, builtin(builtin, terms));
 	}
 	
 	public static ILiteral literal(Class<? extends IBuiltinAtom> builtin, Object... terms) {
-		return literal(true, builtin, (Object[])terms);
+		return literal(true, builtin, terms);
 	}
 	
 	public static IRelation relation() { return relationFactory.createRelation(); }
@@ -214,7 +213,7 @@ public class IrisUtil {
 	public static IBuiltinAtom builtin(Class<? extends IBuiltinAtom> clazz, Object... terms) {
 		try {
 			Constructor<? extends IBuiltinAtom> ctor = clazz.getConstructor(ITerm[].class);
-			return ctor.newInstance((Object)IrisUtil.asTerms((Object[])terms));
+			return ctor.newInstance((Object)IrisUtil.asTerms(terms));
 		} catch (Exception e) {
 			throw new SQLTutorException(e);
 		}

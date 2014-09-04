@@ -30,23 +30,22 @@ public class SchemaSelectionBean implements Serializable {
 	private DatabaseManager databaseManager;
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
-	private List<SelectItem> schemas = new ArrayList<SelectItem>();
+	private List<SelectItem> userSchemas = new ArrayList<SelectItem>();
 	private String selectedSchema;
 	
 	@PostConstruct
 	public void refreshList() {
 		try {
-			List<String> userSchemas = databaseManager.getUserSchemas(getUserBean().isAdmin());
-			
-			SelectItemGroup postgres = new SelectItemGroup("PostgreSQL");
-			SelectItem[] schemaItems = new SelectItem[userSchemas.size()];
-			for( int i = 0; i < schemaItems.length; ++i ) {
-				String schema = userSchemas.get(i);
-				schemaItems[i] = new SelectItem(schema);
+			List<String> uSchemas = databaseManager.getUserSchemas(getUserBean().isAdmin());
+
+			SelectItemGroup itemGroup = new SelectItemGroup();
+			SelectItem[] schemaItems = new SelectItem[uSchemas.size()];
+			for(int i = 0; i < schemaItems.length; ++i) {
+				schemaItems[i] = new SelectItem(uSchemas.get(i));
 			}
-			postgres.setSelectItems(schemaItems);
-			schemas.clear();
-			schemas.add(postgres);
+			itemGroup.setSelectItems(schemaItems);
+			userSchemas.clear();
+			userSchemas.add(itemGroup);
 		} catch( SQLException e ) {
 			e.printStackTrace();
 			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
@@ -57,7 +56,6 @@ public class SchemaSelectionBean implements Serializable {
 	
 	public void submit() {
 		userBean.setSelectedSchema(selectedSchema);
-		
 		//Refresh page
 		ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
 	    try {
@@ -75,21 +73,6 @@ public class SchemaSelectionBean implements Serializable {
 		this.databaseManager = dbManager;
 	}
 
-	
-	/** 
-	 * @return 		The list of SelectItems which will populate the database selection menu.
-	 */
-	public List<SelectItem> getSchemas() {
-		return schemas;
-	}
-
-	/** 
-	 * @param databases		Sets the list of databases which will populate the database selection menu.
-	 */
-	public void setSchemas(List<SelectItem> schemas) {
-		this.schemas = schemas;
-	}
-
 	public void setSelectedSchema(String selectedSchema) {
 		this.selectedSchema = selectedSchema;
 	}
@@ -104,5 +87,13 @@ public class SchemaSelectionBean implements Serializable {
 
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
+	}
+
+	public List<SelectItem> getUserSchemas() {
+		return userSchemas;
+	}
+
+	public void setUserSchemas(List<SelectItem> userSchemas) {
+		this.userSchemas = userSchemas;
 	}
 }

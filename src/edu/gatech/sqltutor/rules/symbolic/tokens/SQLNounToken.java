@@ -31,18 +31,22 @@ public class SQLNounToken extends SQLToken implements INounToken {
 		return b;
 	}
 
+	@Override
 	public String getSingularLabel() {
 		return singular;
 	}
 
+	@Override
 	public void setSingularLabel(String singular) {
 		this.singular = singular;
 	}
 
+	@Override
 	public String getPluralLabel() {
 		return plural;
 	}
 
+	@Override
 	public void setPluralLabel(String plural) {
 		this.plural = plural;
 	}

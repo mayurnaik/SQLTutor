@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-
 //import javax.persistence.Entity;
 //import javax.persistence.FetchType;
 //import javax.persistence.GeneratedValue;
@@ -12,7 +11,6 @@ import java.util.Date;
 //import javax.persistence.Id;
 //import javax.persistence.OneToMany;
 //import javax.validation.constraints.NotNull;
-
 import beans.UserBean;
 
 //@Entity

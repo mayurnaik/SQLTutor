@@ -13,7 +13,6 @@ import org.deri.iris.storage.IRelation;
 import com.akiban.sql.parser.OrNode;
 import com.akiban.sql.parser.QueryTreeNode;
 
-import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;

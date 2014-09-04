@@ -3,7 +3,7 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-	<f:event type="preRenderView" listener="#{userBean.homepageRedirect}" />
+	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" />
 	<h:head>
 		<title>SQL Tutor</title>
 		<h:outputStylesheet library="css" name="styles.css"/>
@@ -77,8 +77,8 @@
 					<br/>
 					
 					<p:outputLabel value="Your result should resemble this example: " 
-						rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
-					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.getQueryIsCorrect()}"/>
+						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
+					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
 							value="#{tutorialPageBean.answerResult.data}" >

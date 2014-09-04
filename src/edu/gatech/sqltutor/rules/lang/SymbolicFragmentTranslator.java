@@ -195,6 +195,7 @@ public class SymbolicFragmentTranslator
 	
 	private List<ITranslationRule> getPhaseRules(final TranslationPhase phase) {
 		return ImmutableList.copyOf(Iterables.filter(translationRules, new Predicate<ITranslationRule>() {
+			@Override
 			public boolean apply(ITranslationRule rule) {
 				return rule.getPhases().contains(phase);
 			}

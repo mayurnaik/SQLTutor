@@ -2,6 +2,8 @@ package edu.gatech.sqltutor.rules.util;
 
 import org.deri.iris.api.terms.ITerm;
 
+import edu.gatech.sqltutor.SQLTutorException;
+
 /** 
  * Mapper that assigns integer ids to some type
  * @param <T> the type of object being mapped

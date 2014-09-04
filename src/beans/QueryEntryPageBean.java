@@ -9,9 +9,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import objects.DatabaseTable;
 import objects.QueryResult;
+import edu.gatech.sqltutor.DatabaseManager;
 
 @ManagedBean
 @ViewScoped

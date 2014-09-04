@@ -69,7 +69,7 @@ public class SchemaOptionsPageBean implements Serializable {
 				userBean.setSelectedSchema("company"); //TODO: may need to set a warning that company is the default schema
 
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-				externalContext.redirect(externalContext.getRequestContextPath() + "/TutorialSetupPage.jsf");
+				externalContext.redirect(externalContext.getRequestContextPath() + "/AdminPage.jsf");
 			} else {
 				databaseManager.setOptions(userBean.getSelectedSchema(), visibleToUsers, inOrderQuestions);
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,

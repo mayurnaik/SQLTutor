@@ -39,31 +39,40 @@ public class SymbolicTokenChildList implements List<ISymbolicToken> {
 		public ListIteratorWrapper(ListIterator<ISymbolicToken> iterator) {
 			this.iterator = iterator;
 		}
+		@Override
 		public void add(ISymbolicToken e) {
 			iterator.add(e);
 		}
+		@Override
 		public boolean hasNext() {
 			return iterator.hasNext();
 		}
+		@Override
 		public boolean hasPrevious() {
 			return iterator.hasPrevious();
 		}
+		@Override
 		public ISymbolicToken next() {
 			return current = iterator.next();
 		}
+		@Override
 		public int nextIndex() {
 			return iterator.nextIndex();
 		}
+		@Override
 		public ISymbolicToken previous() {
 			return current = iterator.previous();
 		}
+		@Override
 		public int previousIndex() {
 			return iterator.previousIndex();
 		}
+		@Override
 		public void remove() {
 			iterator.remove();
 			current.setParent(null);
 		}
+		@Override
 		public void set(ISymbolicToken e) {
 			iterator.set(e);
 			current.setParent(null);
