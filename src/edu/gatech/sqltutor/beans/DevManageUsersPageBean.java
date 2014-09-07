@@ -47,7 +47,7 @@ public class DevManageUsersPageBean implements Serializable {
 			return;
 		}
 		try {
-			getDatabaseManager().deleteUser(selectedUser.getEmail());
+			getDatabaseManager().deleteUser(selectedUser.getEmail(), selectedUser.getAdminCode());
 			users.remove(selectedUser);
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Successfully deleted \"" + selectedUser.getEmail() + "\".", "");
@@ -92,7 +92,7 @@ public class DevManageUsersPageBean implements Serializable {
 		try {
 			FacesMessage msg;
 			if(selectedUser.isAdmin()) {
-				getDatabaseManager().demoteUserFromAdmin(selectedUser.getEmail());
+				getDatabaseManager().demoteUserFromAdmin(selectedUser.getEmail(), selectedUser.getAdminCode());
 				updateSelectedUser();
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully demoted \"" + selectedUser.getEmail() + "\" from admin.", "");

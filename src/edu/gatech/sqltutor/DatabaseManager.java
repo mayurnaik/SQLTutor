@@ -697,15 +697,20 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(connection);
 	}
 	
-	public void deleteUser(String email) throws SQLException {
+	public void deleteUser(String email, String adminCode) throws SQLException {
 		Connection connection = dataSource.getConnection();
 
 		final String delete = "DELETE FROM \"user\" WHERE email = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(delete);
 		preparedStatement.setString(1, email);
 		preparedStatement.executeUpdate();
-
 		Utils.tryClose(preparedStatement);
+		
+		preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
+		preparedStatement.setString(1, adminCode);
+		preparedStatement.execute();
+		Utils.tryClose(preparedStatement);
+		
 		Utils.tryClose(connection);
 	}
 	
@@ -945,12 +950,12 @@ public class DatabaseManager implements Serializable {
 		do {
 			random.nextBytes(buffer);
 			adminCode = BaseEncoding.base64Url().omitPadding().encode(buffer);
-		} while(adminCodeAlreadyExists(adminCode));
+		} while(adminCodeExists(adminCode));
 		
 		return adminCode;
 	}
 	
-	public boolean adminCodeAlreadyExists(String adminCode) throws SQLException {
+	public boolean adminCodeExists(String adminCode) throws SQLException {
 		Connection connection = dataSource.getConnection();
 
 		final String query = "SELECT 1 FROM \"user\" WHERE admin_code = ?;";
@@ -972,13 +977,21 @@ public class DatabaseManager implements Serializable {
 	
 	public void promoteUserToAdmin(String email) throws SQLException {
 		Connection conn = dataSource.getConnection();
-
+		
+		String adminCode = generateAdminCode();
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
 		statement.setBoolean(1, true);
-		statement.setString(2, generateAdminCode());
+		statement.setString(2, adminCode);
 		statement.setString(3, email);
 		statement.execute();
-
+		
+		Utils.tryClose(statement);
+		
+		statement = conn.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)");
+		statement.setString(1, email);
+		statement.setString(2, adminCode);
+		statement.execute();
+		
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
 	}
@@ -995,7 +1008,7 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(conn);
 	}
 	
-	public void demoteUserFromAdmin(String email) throws SQLException {
+	public void demoteUserFromAdmin(String email, String adminCode) throws SQLException {
 		Connection conn = dataSource.getConnection();
 
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
@@ -1003,7 +1016,13 @@ public class DatabaseManager implements Serializable {
 		statement.setString(2, null);
 		statement.setString(3, email);
 		statement.execute();
-
+		Utils.tryClose(statement);
+		
+		statement = conn.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
+		statement.setString(1, adminCode);
+		statement.execute();
+		Utils.tryClose(statement);
+		
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
 	}
@@ -1038,5 +1057,31 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(connection);
 		
 		return isDeveloper;
+	}
+
+	public void linkCode(String email, String code) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		
+		final String update = "INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)";
+		PreparedStatement preparedStatement = connection.prepareStatement(update);
+		preparedStatement.setString(1, email);
+		preparedStatement.setString(2, code);
+		preparedStatement.executeUpdate();
+
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(connection);
+	}
+
+	public void unlinkCode(String email, String code) throws SQLException {
+		Connection connection = dataSource.getConnection();
+		
+		final String update = "DELETE FROM linked_admin_codes WHERE email = ? AND linked_admin_code = ?";
+		PreparedStatement preparedStatement = connection.prepareStatement(update);
+		preparedStatement.setString(1, email);
+		preparedStatement.setString(2, code);
+		preparedStatement.executeUpdate();
+
+		Utils.tryClose(preparedStatement);
+		Utils.tryClose(connection);
 	}
 }
