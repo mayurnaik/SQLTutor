@@ -11,6 +11,9 @@
         <attribute id="6" isComposite="false" isKey="true" isDerived="false" isMultivalued="false">
           <name>Name</name>
           <describesEntity>prepend</describesEntity>
+          <metadata>
+          	<singularLabel>name</singularLabel>
+          </metadata>
         </attribute>
         <attribute isKey="true">
         	<name>Number</name>
