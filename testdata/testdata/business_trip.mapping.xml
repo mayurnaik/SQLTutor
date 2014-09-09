@@ -59,10 +59,10 @@
 	    <entry>
 			<relationship>incurs</relationship>
 			<join type="foreign_key">
-		        <leftKeyPair>
+		        <keyPair>
 		          	<primary>trip.id</primary>
 		          	<foreign>expense.trip_id</foreign>
-		        </leftKeyPair>
+		        </keyPair>
       		</join>
 	    </entry>
   	</join-map>

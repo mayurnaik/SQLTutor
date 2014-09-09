@@ -146,4 +146,40 @@ public class ERSerializerTest {
 		System.out.println("Reserialization result:");
 		System.out.println(xml);
 	}
+	
+	@Test
+	public void testReadBusinessTripDiagram() throws Exception {
+		ERSerializer serializer = new ERSerializer();
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM);
+		ERDiagram diagram = null;
+		try {
+			diagram = (ERDiagram)serializer.deserialize(inStream);
+		} finally {
+			if( inStream != null ) inStream.close();
+		}
+		
+		System.out.println("Loaded successfully.");
+		
+		String xml = serializer.serialize(diagram);
+		System.out.println("Reserialization result:");
+		System.out.println(xml);
+	}
+	
+	@Test
+	public void testReadBusinessTripMapping() throws Exception {
+		ERSerializer serializer = new ERSerializer();
+		InputStream inStream = ERSerializerTest.class.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING);
+		ERMapping mapping = null;
+		try {
+			mapping = (ERMapping)serializer.deserialize(inStream);
+		} finally {
+			if( inStream != null ) inStream.close();
+		}
+		
+		System.out.println("Loaded successfully.");
+		
+		String xml = serializer.serialize(mapping);
+		System.out.println("Reserialization result:");
+		System.out.println(xml);
+	}
 }

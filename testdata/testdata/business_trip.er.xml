@@ -8,7 +8,7 @@
           			<name>SSN</name>
         		</attribute>
         		<attribute>
-        			<name>name</name>
+        			<name>Name</name>
         		</attribute>
         		<attribute>
         			<name>start year</name>
