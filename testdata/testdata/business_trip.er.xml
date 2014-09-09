@@ -11,10 +11,10 @@
         			<name>Name</name>
         		</attribute>
         		<attribute>
-        			<name>start year</name>
+        			<name>start_year</name>
         		</attribute>
         		<attribute>
-        			<name>department number</name>
+        			<name>department_number</name>
         		</attribute>
       		</attributes>
       		<type>PERSON</type>
@@ -26,10 +26,10 @@
           			<name>id</name>
         		</attribute>
         		<attribute>
-          			<name>return date</name>
+          			<name>return_date</name>
             	</attribute>
             	<attribute>
-              		<name>departure date</name>
+              		<name>departure_date</name>
             	</attribute>
             	<attribute>
               		<name>origin</name>
@@ -44,7 +44,7 @@
 	    	<name>Expense</name>
 	    	<attributes>
 	    		<attribute isKey="true">
-	    			<name>account id</name>
+	    			<name>account_id</name>
 	    		</attribute>
 	    		<attribute>
 	    			<name>amount</name>

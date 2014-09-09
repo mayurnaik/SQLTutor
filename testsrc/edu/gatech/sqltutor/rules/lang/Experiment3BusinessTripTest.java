@@ -12,7 +12,6 @@ import org.junit.runners.Parameterized.Parameters;
 import edu.gatech.sqltutor.TestConst;
 
 @RunWith(Parameterized.class)
-@Ignore("BusinessTrip schema not yet encoded")
 public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 	
 	@Parameters
@@ -37,31 +36,31 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 			{"SELECT DISTINCT * FROM salesperson",
 				null},
 			//6
-			{"SELECT ssn FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT ssn FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//7
-			{"SELECT ssn, dept_no FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT ssn, dept_no FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//8
-			{"SELECT * FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT * FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//9
-			{"SELECT * FROM salesperson WHERE start_year > ‘2012’ AND name = ‘John Smith’",
+			{"SELECT * FROM salesperson WHERE start_year > '2012' AND name = 'John Smith'",
 				null},
 			//10
-			{"SELECT DISTINCT start_year FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT DISTINCT start_year FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//11
-			{"SELECT DISTINCT start_year, dept_no FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT DISTINCT start_year, dept_no FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//12
-			{"SELECT DISTINCT * FROM salesperson WHERE name = ‘John Smith’",
+			{"SELECT DISTINCT * FROM salesperson WHERE name = 'John Smith'",
 				null},
 			//13
-			{"SELECT name, to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn",
+			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn",
 				null},
 			//14
-			{"SELECT name, to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn  AND from_city = ‘Atlanta’",
+			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn AND trip.from_city = 'Atlanta' ",
 				null},
 		};
 		return Arrays.asList(params);
@@ -73,12 +72,12 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 
 	@Override
 	protected String getERDiagramResource() {
-		return TestConst.Resources.COMPANY_DIAGRAM;
+		return TestConst.Resources.BUSINESS_TRIP_DIAGRAM;
 	}
 
 	@Override
 	protected String getERMappingResource() {
-		return TestConst.Resources.COMPANY_MAPPING;
+		return TestConst.Resources.BUSINESS_TRIP_MAPPING;
 	}
 
 }

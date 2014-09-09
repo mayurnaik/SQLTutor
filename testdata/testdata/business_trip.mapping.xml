@@ -2,47 +2,47 @@
 <ermapping>
 	<attribute-map>
     	<entry>
-      		<attribute>salesperson.SSN</attribute>
-      		<column>salesperson.SSN</column>
+      		<attribute>Salesperson.SSN</attribute>
+      		<column>salesperson.ssn</column>
     	</entry>
 	    <entry>
-	      <attribute>salesperson.Name</attribute>
+	      <attribute>Salesperson.Name</attribute>
 	      <column>salesperson.name</column>
 	    </entry>
 	    <entry>
-	      <attribute>salesperson.start year</attribute>
+	      <attribute>Salesperson.start_year</attribute>
 	      <column>salesperson.start_year</column>
 	    </entry>
 	    <entry>
-	      <attribute>salesperson.department number</attribute>
+	      <attribute>Salesperson.department_number</attribute>
 	      <column>salesperson.dept_no</column>
 	    </entry>
 	    <entry>
-	      <attribute>trip.origin</attribute>
+	      <attribute>Trip.origin</attribute>
 	      <column>trip.from_city</column>
 	    </entry>
 	    <entry>
-	      <attribute>trip.destination</attribute>
+	      <attribute>Trip.destination</attribute>
 	      <column>trip.to_city</column>
 	    </entry>
 	    <entry>
-	      <attribute>trip.departure date</attribute>
+	      <attribute>Trip.departure_date</attribute>
 	      <column>trip.departure_date</column>
 	    </entry>
 	    <entry>
-	      <attribute>trip.return date</attribute>
+	      <attribute>Trip.return_date</attribute>
 	      <column>trip.return_date</column>
 	    </entry>
 	    <entry>
-	      <attribute>trip.id</attribute>
+	      <attribute>Trip.id</attribute>
 	      <column>trip.trip_id</column>
 	    </entry>
 	    <entry>
-	      <attribute>expense.amount</attribute>
+	      <attribute>Expense.amount</attribute>
 	      <column>expense.amount</column>
 	    </entry>
 	    <entry>
-	    	<attribute>expense.account id</attribute>
+	    	<attribute>Expense.account_id</attribute>
 	    	<column>expense.account_id</column>
 	    </entry>
   	</attribute-map>
