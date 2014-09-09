@@ -3,50 +3,50 @@
 	<attribute-map>
     	<entry>
       		<attribute>Customer.Number</attribute>
-      		<column>Customer.cust#</column>
+      		<column>customer.cust_num</column>
     	</entry>
 	    <entry>
 	      <attribute>Customer.Name</attribute>
-	      <column>Customer.cname</column>
+	      <column>customer.cname</column>
 	    </entry>
 	    <entry>
-	      <attribute>Customer.city</attribute>
-	      <column>Customer.city</column>
+	      <attribute>Customer.City</attribute>
+	      <column>customer.city</column>
 	    </entry>
 	    <entry>
 	      <attribute>Order.Number</attribute>
-	      <column>Order.order#</column>
+	      <column>order.order_num</column>
 	    </entry>
 	    <entry>
 	      <attribute>Order.Date</attribute>
-	      <column>Order.odate</column>
+	      <column>order.odate</column>
 	    </entry>
 	    <entry>
-	      <attribute>Order.amount</attribute>
-	      <column>Order.ord_amt</column>
+	      <attribute>Order.Amount</attribute>
+	      <column>order.ord_amt</column>
 	    </entry>
 	    <entry>
 	      <attribute>Item.Number</attribute>
-	      <column>Item.item#</column>
+	      <column>item.item_num</column>
 	    </entry>
 	    <entry>
-	      <attribute>Item.unit price</attribute>
-	      <column>Item.unit_price</column>
+	      <attribute>Item.Unit_Price</attribute>
+	      <column>item.unit_price</column>
 	    </entry>
 	    <entry>
-	      <attribute>Warehouse.number</attribute>
-	      <column>Warehouse.Warehouse#</column>
+	      <attribute>Warehouse.Number</attribute>
+	      <column>warehouse.Warehouse_num</column>
 	    </entry>
 	    <entry>
-	      <attribute>Warehouse.city</attribute>
-	      <column>Warehouse.city</column>
+	      <attribute>Warehouse.City</attribute>
+	      <column>warehouse.city</column>
 	    </entry>
 	    <entry>
-	    	<attribute>contains.quantity</attribute>
+	    	<attribute>contains.Quantity</attribute>
 	    	<column>order_item.quantity</column>
 	    </entry>
 	    <entry>
-	    	<attribute>ships.Shipment Date</attribute>
+	    	<attribute>ships.Shipment_Date</attribute>
 	    	<column>shipment.ship_date</column>
 	    </entry>
   	</attribute-map>
@@ -55,8 +55,8 @@
       		<relationship>makes</relationship>
 	      	<join type="foreign_key">
 		        <keyPair>
-		          <primary>customer.cust#</primary>
-		          <foreign>order.cust#</foreign>
+		          <primary>customer.cust_num</primary>
+		          <foreign>order.cust_num</foreign>
 		        </keyPair>
 	      	</join>
 	    </entry>
@@ -64,12 +64,12 @@
 			<relationship>contains</relationship>
 			<join type="lookup_table">
 		        <leftKeyPair>
-		          	<primary>order.order#</primary>
-		          	<foreign>order_item.order#</foreign>
+		          	<primary>order.order_num</primary>
+		          	<foreign>order_item.order_num</foreign>
 		        </leftKeyPair>
 		        <rightKeyPair>
-		          	<primary>item.item#</primary>
-		          	<foreign>order_item.item#</foreign>
+		          	<primary>item.item_num</primary>
+		          	<foreign>order_item.item_num</foreign>
 		        </rightKeyPair>
       		</join>
 	    </entry>
@@ -77,12 +77,12 @@
 			<relationship>ships</relationship>
 			<join type="lookup_table">
 		        <leftKeyPair>
-		          	<primary>order.order#</primary>
-		          	<foreign>shipment.order#</foreign>
+		          	<primary>order.order_num</primary>
+		          	<foreign>shipment.order_num</foreign>
 		        </leftKeyPair>
 		        <rightKeyPair>
-		          	<primary>warehouse.warehouse#</primary>
-		          	<foreign>shipment.warehouse#</foreign>
+		          	<primary>warehouse.warehouse_num</primary>
+		          	<foreign>shipment.warehouse_num</foreign>
 		        </rightKeyPair>
       		</join>
 	    </entry>

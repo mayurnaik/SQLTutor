@@ -38,7 +38,7 @@
 	    			<name>Number</name>
 	    		</attribute>
 	    		<attribute>
-	    			<name>Unit Price</name>
+	    			<name>Unit_Price</name>
 	    		</attribute>
 	    	</attributes>
 	    	<type>THING</type>
@@ -101,7 +101,7 @@
     		<name>ships</name>
     		<attributes>
     			<attribute>
-    				<name>Shipment Date</name>
+    				<name>Shipment_Date</name>
     			</attribute>
     		</attributes>
     		<leftEdge>

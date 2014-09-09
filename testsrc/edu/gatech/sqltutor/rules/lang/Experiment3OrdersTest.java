@@ -12,7 +12,6 @@ import org.junit.runners.Parameterized.Parameters;
 import edu.gatech.sqltutor.TestConst;
 
 @RunWith(Parameterized.class)
-@Ignore("Orders schema not yet encoded")
 public class Experiment3OrdersTest extends SymbolicFragmentTestBase {
 	
 	@Parameters
@@ -37,31 +36,31 @@ public class Experiment3OrdersTest extends SymbolicFragmentTestBase {
 			{"SELECT DISTINCT * FROM customer",
 				null},
 			//6
-			{"SELECT cust# FROM customer WHERE cname = ‘John Smith’",
+			{"SELECT cust_num FROM customer WHERE cname = 'John Smith'",
 				null},
 			//7
-			{"SELECT cust#, city FROM customer WHERE cname = ‘John Smith’",
+			{"SELECT cust_num, city FROM customer WHERE cname = 'John Smith'",
 				null},
 			//8
-			{"SELECT * FROM customer WHERE cname = ‘John Smith’",
+			{"SELECT * FROM customer WHERE cname = 'John Smith'",
 				null},
 			//9
-			{"SELECT * FROM order WHERE ord_amt > ‘2’ AND odate = ‘11-12-2013’",
+			{"SELECT * FROM \"order\" WHERE ord_amt > '2' AND odate = '11-12-2013'",
 				null},
 			//10
-			{"SELECT DISTINCT ord_amt FROM order WHERE cust# = ‘1122334455’",
+			{"SELECT DISTINCT ord_amt FROM \"order\" WHERE cust_num = '1122334455'",
 				null},
 			//11
-			{"SELECT DISTINCT ord_amt, odate FROM order WHERE cust# = ‘1122334455’",
+			{"SELECT DISTINCT ord_amt, odate FROM \"order\" WHERE cust_num = '1122334455'",
 				null},
 			//12
-			{"SELECT DISTINCT * FROM order WHERE cust# = ‘1122334455’",
+			{"SELECT DISTINCT * FROM \"order\" WHERE cust_num = '1122334455'",
 				null},
 			//13
-			{"SELECT city, ship_date FROM shipment, warehouse WHERE shipment.warehouse# = warehouse.warehouse#",
+			{"SELECT w.city, s.ship_date FROM shipment s, warehouse w WHERE s.warehouse_num = w.warehouse_num",
 				null},
 			//14
-			{"SELECT city, ship_date FROM shipment, warehouse WHERE shipment.warehouse# = warehouse.warehouse# AND order# = ‘1122334455’",
+			{"SELECT w.city, s.ship_date FROM shipment s, warehouse w WHERE s.warehouse_num = w.warehouse_num AND s.order_num = '1122334455'",
 				null},
 		};
 		return Arrays.asList(params);
@@ -73,12 +72,12 @@ public class Experiment3OrdersTest extends SymbolicFragmentTestBase {
 
 	@Override
 	protected String getERDiagramResource() {
-		return TestConst.Resources.COMPANY_DIAGRAM;
+		return TestConst.Resources.ORDERS_DIAGRAM;
 	}
 
 	@Override
 	protected String getERMappingResource() {
-		return TestConst.Resources.COMPANY_MAPPING;
+		return TestConst.Resources.ORDERS_MAPPING;
 	}
 
 }
