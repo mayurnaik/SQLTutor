@@ -24,6 +24,7 @@ import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.MapType;
 import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.util.NLUtil;
 import edu.gatech.sqltutor.util.Pair;
 
 /** Dynamic ER diagram facts. */
@@ -154,13 +155,21 @@ public class ERFacts extends DynamicFacts {
 		
 		addFact(ERPredicates.erAttributeDataType, parent, attrName, attr.getDataType().toString());
 		
+		// get override labels if provided
 		ERObjectMetadata metadata = attr.getMetadata();
+		String singularLabel = null, pluralLabel = null;
 		if( metadata != null ) {
-			if( metadata.getSingularLabel() != null )
-				addFact(ERPredicates.erAttributeLabelSingular, parent, attrName, metadata.getSingularLabel());
-			if( metadata.getPluralLabel() != null )
-				addFact(ERPredicates.erAttributeLabelSingular, parent, attrName, metadata.getPluralLabel());
+			singularLabel = metadata.getSingularLabel();
+			pluralLabel = metadata.getPluralLabel();
 		}
+		// otherwise default to the attribute name
+		if( singularLabel == null )
+			singularLabel = attr.getName().toLowerCase();
+		if( pluralLabel == null )
+			pluralLabel = NLUtil.pluralize(singularLabel);
+		
+		addFact(ERPredicates.erAttributeLabelSingular, parent, attrName, singularLabel);
+		addFact(ERPredicates.erAttributeLabelPlural, parent, attrName, pluralLabel);
 	}
 
 	private void addRelationshipEdge(String rel, Integer pos, ERRelationshipEdge edge) {
