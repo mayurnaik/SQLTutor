@@ -176,7 +176,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 				ResultColumn resultColumn = (ResultColumn)columnToken.getAstNode();
 				
 				String attrName;
-				AttributeToken attr;
+				ISymbolicToken attr;
 				if(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN) {
 					// @see com.akiban.sql.parser.AllResultColumn.java
 					attr = new AllAttributesToken(fromTable.getOrigTableName().getTableName());
@@ -185,11 +185,13 @@ public class TransformationRule extends StandardSymbolicRule implements
 						fromTable.getOrigTableName().getTableName() + 
 						"." + resultColumn.getExpression().getColumnName();
 					ERAttribute erAttr = erMapping.getAttribute(attrName);
-					if( erAttr == null )
-						throw new SQLTutorException("No attribute for name " + attrName);
-					attr = new AttributeToken(erAttr);
-					if( isDistinct )
-						attr.setPartOfSpeech(PartOfSpeech.NOUN_PLURAL);
+					if( erAttr == null ) {
+						_log.warn("No attribute for name {}, leaving column reference.", attrName);
+						attr = columnToken.getChildren().get(0); // should have a single ColumnReference child
+					} else {
+						attr = new AttributeToken(erAttr);
+					}
+					attr.setPartOfSpeech(isDistinct ? PartOfSpeech.NOUN_PLURAL : PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 				}
 
 				attrList.addChild(attr);

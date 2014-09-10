@@ -44,12 +44,14 @@ public class ColumnReferenceLiteralRule extends StandardLoweringRule implements
 			SQLNounToken colRef = ext.getToken("?colRef");
 			PartOfSpeech pos = colRef.getPartOfSpeech();
 			String label;
-			if( pos == PartOfSpeech.NOUN_SINGULAR_OR_MASS )
+			if( pos == PartOfSpeech.NOUN_SINGULAR_OR_MASS ) {
 				label = colRef.getSingularLabel();
-			else if ( pos == PartOfSpeech.NOUN_PLURAL )
+			} else if ( pos == PartOfSpeech.NOUN_PLURAL ) {
 				label = colRef.getPluralLabel();
-			else
+			} else {
+				_log.warn(Markers.SYMBOLIC, "Not handling ref {} due to part of speech {}", colRef, pos);
 				continue;
+			}
 			
 			LiteralToken literal = new LiteralToken(label, pos);
 			SymbolicUtil.replaceChild(colRef.getParent(), literal);
