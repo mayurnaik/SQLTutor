@@ -54,7 +54,7 @@ public class ColumnReferenceLiteralRule extends StandardLoweringRule implements
 			}
 			
 			LiteralToken literal = new LiteralToken(label, pos);
-			SymbolicUtil.replaceChild(colRef.getParent(), literal);
+			SymbolicUtil.replaceChild(colRef, literal);
 			
 			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", colRef, literal);
 			
