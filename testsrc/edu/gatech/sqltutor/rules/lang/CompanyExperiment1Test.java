@@ -31,7 +31,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 3
 			{"SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND dno = 5", 
 				// Select all attributes of each employee whose salary is between $30,000 and $40,000 and who works for department 5.
-				Pattern.quote("Select all attributes of each employee whose salary is between $30,000 and $40,000 and department id is 5.")},
+				Pattern.quote("Select all attributes of each employee whose salary is between $30,000 and $40,000 and dno is 5.")},
 			
 			// 4
 			{"SELECT e.fname, e.lname, e.address FROM employee e, department d WHERE d.dname = 'Research' AND d.dnumber = e.dno", 
@@ -40,7 +40,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 5
 			{"SELECT fname, lname FROM employee WHERE super_ssn IS NULL", 
-				Pattern.quote("Select the first name and last name of each employee where manager ssn does not exist.")},
+				Pattern.quote("Select the first name and last name of each employee where their super ssn does not exist.")},
 			
 			// 6
 			{"SELECT bdate, address FROM employee WHERE fname = 'John' AND minit = 'B' AND lname = 'Smith'", 
@@ -59,8 +59,8 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 9
 			{"SELECT p.pnumber, d.dnumber, e.lname, e.address, e.bdate FROM project p, department d, employee e WHERE p.dnum = d.dnumber AND d.mgr_ssn = e.ssn AND p.plocation = 'Stafford'", 
-				Pattern.quote("Select the id of each project, the number of each project's controlling department, "
-						+ "and the last name, address, and birth date of each employee where manager ssn is the employee's ssn and location is \"Stafford\".")},	
+				Pattern.quote("Select the numbers of each project and department "
+						+ "and the last name, address, and birth date of each employee where the department controls the project, the employee manages the department, and the project's location is \"Stafford\".")},	
 		};
 		return Arrays.asList(params);
 	}

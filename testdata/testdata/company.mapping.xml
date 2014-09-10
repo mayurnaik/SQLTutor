@@ -11,19 +11,19 @@
     </entry>
     <entry>
       <attribute>Employee.Minit</attribute>
-      <column>employee.Minit</column>
+      <column>employee.minit</column>
     </entry>
     <entry>
       <attribute>Employee.Lname</attribute>
-      <column>employee.Lname</column>
+      <column>employee.lname</column>
     </entry>
     <entry>
       <attribute>Employee.Address</attribute>
-      <column>employee.Address</column>
+      <column>employee.address</column>
     </entry>
     <entry>
       <attribute>Employee.Bdate</attribute>
-      <column>employee.Bdate</column>
+      <column>employee.bdate</column>
     </entry>
     <entry>
       <attribute>Employee.Salary</attribute>
