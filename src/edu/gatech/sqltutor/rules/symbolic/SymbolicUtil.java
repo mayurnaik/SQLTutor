@@ -188,7 +188,7 @@ public class SymbolicUtil {
 		List<ISymbolicToken> siblings = parent.getChildren();
 		int idx = siblings.indexOf(token);
 		if( idx < siblings.size() - 1 )
-			return getRightmostDescendant(siblings.get(idx+1));
+			return getLeftmostDescendant(siblings.get(idx+1));
 		
 		// otherwise, up one level and check
 		return getPrecedingToken(parent);
@@ -218,13 +218,13 @@ public class SymbolicUtil {
 	 * @param token the ancestor token
 	 * @return the right-most descendent 
 	 */
-	public static ISymbolicToken getLeftmostDescendent(ISymbolicToken token) {
+	public static ISymbolicToken getLeftmostDescendant(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
 		List<ISymbolicToken> children = token.getChildren();
 		int size = children.size();
 		if( size == 0 )
 			return token;
-		return getLeftmostDescendent(children.get(0));
+		return getLeftmostDescendant(children.get(0));
 	}
 	
 	/**
