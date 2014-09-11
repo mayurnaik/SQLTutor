@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -57,6 +59,12 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -78,6 +86,12 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -105,6 +119,12 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -129,6 +149,12 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -156,10 +182,16 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
-	public void updateSelectedUser() throws SQLException {
+	public void updateSelectedUser() throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		UserTuple temp = getDatabaseManager().getUserTuple(selectedUser.getEmail());
 		selectedUser.setAdmin(temp.isAdmin());
 		selectedUser.setDev(temp.isDev());

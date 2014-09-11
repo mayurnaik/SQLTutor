@@ -1,5 +1,7 @@
 package edu.gatech.sqltutor.beans;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,9 +80,15 @@ public class TutorialPageBean {
 		}
 		
 		try {
-			databaseManager.log(getSessionId(), getIpAddress(), userBean.getEmail(), selectedSchema, 
+			databaseManager.log(getSessionId(), userBean.getEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

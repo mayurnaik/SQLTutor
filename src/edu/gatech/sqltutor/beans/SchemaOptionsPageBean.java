@@ -2,6 +2,8 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -78,6 +80,12 @@ public class SchemaOptionsPageBean implements Serializable {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}

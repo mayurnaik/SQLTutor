@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,6 +95,12 @@ public class SchemaInstancesPageBean implements Serializable {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					message, "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	} 
 

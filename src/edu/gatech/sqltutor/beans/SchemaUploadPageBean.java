@@ -3,6 +3,8 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
 import javax.faces.application.FacesMessage;
@@ -51,6 +53,12 @@ public class SchemaUploadPageBean implements Serializable {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 				"IO error.", e.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

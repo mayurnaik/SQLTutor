@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -36,6 +38,12 @@ public class AdminCodesPageBean implements Serializable {
 			code = "";
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -59,6 +67,12 @@ public class AdminCodesPageBean implements Serializable {
 					e.getNextException().printStackTrace();
 				else
 					e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		FacesContext.getCurrentInstance().addMessage("panel2", msg);
@@ -88,6 +102,12 @@ public class AdminCodesPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

@@ -1,6 +1,8 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +79,12 @@ public class SchemaQuestionsPageBean implements Serializable {
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			e.getNextException().printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -103,6 +111,12 @@ public class SchemaQuestionsPageBean implements Serializable {
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -122,6 +136,12 @@ public class SchemaQuestionsPageBean implements Serializable {
 					"Successfully added this question.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

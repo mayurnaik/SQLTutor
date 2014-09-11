@@ -42,6 +42,7 @@ import edu.gatech.sqltutor.util.ScriptRunner;
 @ApplicationScoped
 public class DatabaseManager implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final byte[] SALT = "-JllYJaGhP+-0xfJ2+_-K~6YIJkF1ip8hg8qKTDis1TmCjQu*B|Mm TB-szu".getBytes();
 	
 	@Resource(name="jdbc/sqltutorDB")
 	private DataSource dataSource;
@@ -95,12 +96,12 @@ public class DatabaseManager implements Serializable {
 		return schemas;
 	}
 	
-	public boolean isAdmin(String email) throws SQLException {
+	public boolean isAdmin(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
 		final String query = "SELECT admin FROM \"user\" WHERE email = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
 		boolean isAdmin = false;
@@ -204,13 +205,13 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(conn);
 	}
 	
-	public boolean checkSchemaPermissions(String email, String schemaName) throws SQLException {
+	public boolean checkSchemaPermissions(String email, String schemaName) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
 		final String query = "SELECT 1 FROM schema_options WHERE schema = ? AND owner = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
 		preparedStatement.setString(1, schemaName);
-		preparedStatement.setString(2, email);
+		preparedStatement.setBytes(2, getHashedEmail(email));
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
 		boolean schemaPermissions = false;
@@ -260,7 +261,7 @@ public class DatabaseManager implements Serializable {
 		
 		ResultSet rs = statement.getResultSet();
 		List<UserTuple> users = new ArrayList<UserTuple>();
-		while(rs.next()) { 
+		while(rs.next()) {
 			users.add(new UserTuple(rs.getString(1), rs.getBoolean(2), rs.getString(3), rs.getBoolean(4)));
 		}
 
@@ -271,11 +272,11 @@ public class DatabaseManager implements Serializable {
 		return users;
 	}
 	
-	public UserTuple getUserTuple(String email) throws SQLException {
+	public UserTuple getUserTuple(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 		
 		PreparedStatement statement = conn.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?");
-		statement.setString(1, email);
+		statement.setBytes(1, getHashedEmail(email));
 		statement.execute();
 		
 		ResultSet rs = statement.getResultSet();
@@ -323,7 +324,7 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	public String addSchema(String schemaDump, String email) 
-			throws SQLException, IOException, IllegalArgumentException {
+			throws SQLException, IOException, IllegalArgumentException, NoSuchAlgorithmException, InvalidKeySpecException {
 		
 		if(schemaDump == null || schemaDump.length() == 0) {
 			throw new IllegalArgumentException("Schema file is null or empty.");
@@ -352,7 +353,7 @@ public class DatabaseManager implements Serializable {
 		
 		conn = dataSource.getConnection();
 		statement = conn.createStatement();
-		statement.execute("INSERT INTO schema_options (schema, owner) VALUES ('"+schemaName+"', '"+email+"');");
+		statement.execute("INSERT INTO schema_options (schema, owner) VALUES ('"+schemaName+"', '"+getHashedEmail(email)+"');");
 		
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
@@ -415,7 +416,7 @@ public class DatabaseManager implements Serializable {
 		
 		final String update = "INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.setBytes(2, encryptedId);
 		preparedStatement.setBytes(3, salt);
 		preparedStatement.executeUpdate();
@@ -434,7 +435,7 @@ public class DatabaseManager implements Serializable {
 				+ "\"time\" >= (now() - '1 day'::INTERVAL));";
 		
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
 		boolean autheticated = false;
@@ -464,18 +465,18 @@ public class DatabaseManager implements Serializable {
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;");
 		statement.setBytes(1, encryptedPassword);
 		statement.setBytes(2, salt);
-		statement.setString(3, email);
+		statement.setBytes(3, getHashedEmail(email));
 		statement.execute();
 
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
 	}
 
-	public boolean emailExists(String email) throws SQLException {
+	public boolean emailExists(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 		
 		PreparedStatement statement = conn.prepareStatement("SELECT 1 FROM \"user\" WHERE email = ?;");
-		statement.setString(1, email);
+		statement.setBytes(1, getHashedEmail(email));
 		statement.execute();
 		
 		boolean hasResults = false;
@@ -677,7 +678,7 @@ public class DatabaseManager implements Serializable {
 		
 		preparedStatement.setBytes(1, encryptedPassword);
 		preparedStatement.setBytes(2, salt);
-		preparedStatement.setString(3, email);
+		preparedStatement.setBytes(3, getHashedEmail(email));
 		preparedStatement.executeUpdate();
 		
 		Utils.tryClose(preparedStatement);
@@ -685,19 +686,19 @@ public class DatabaseManager implements Serializable {
 		final String updateAdminCodeLinkEntry = "INSERT INTO linked_admin_codes (\"email\") VALUES (?)";
 		preparedStatement = connection.prepareStatement(updateAdminCodeLinkEntry);
 
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.executeUpdate();
 
 		Utils.tryClose(preparedStatement);
 		Utils.tryClose(connection);
 	}
 	
-	public void deleteUser(String email, String adminCode) throws SQLException {
+	public void deleteUser(String email, String adminCode) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
 		final String delete = "DELETE FROM \"user\" WHERE email = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(delete);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.executeUpdate();
 		Utils.tryClose(preparedStatement);
 		
@@ -709,12 +710,12 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(connection);
 	}
 	
-	public boolean isUsernameRegistered(String email) throws SQLException {
+	public boolean isUsernameRegistered(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
 		final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
@@ -737,7 +738,7 @@ public class DatabaseManager implements Serializable {
 		String query = "SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?";
 	
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
@@ -757,20 +758,23 @@ public class DatabaseManager implements Serializable {
 		return isCorrect;
 	}
 	
-	public void log(String sessionId, String ipAddress, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) throws SQLException {
+	public byte[] getHashedEmail(String email) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		return SaltHasher.getEncryptedValue(email, SALT);
+	}
+	
+	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
-		final String update = "INSERT INTO \"log\" (\"session_id\", \"ip_address\", \"email\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		final String update = "INSERT INTO \"log\" (\"session_id\", \"email\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
 		preparedStatement.setString(1, sessionId);
-		preparedStatement.setString(2, ipAddress);
-		preparedStatement.setString(3, email);
-		preparedStatement.setString(4, schemaName);
-		preparedStatement.setString(5, question);
-		preparedStatement.setString(6, correctAnswer);
-		preparedStatement.setString(7, userQuery);
-		preparedStatement.setBoolean(8, parsed);
-		preparedStatement.setBoolean(9, correct);
+		preparedStatement.setBytes(2, getHashedEmail(email));
+		preparedStatement.setString(3, schemaName);
+		preparedStatement.setString(4, question);
+		preparedStatement.setString(5, correctAnswer);
+		preparedStatement.setString(6, userQuery);
+		preparedStatement.setBoolean(7, parsed);
+		preparedStatement.setBoolean(8, correct);
 		preparedStatement.executeUpdate();
 
 		Utils.tryClose(preparedStatement);
@@ -896,12 +900,12 @@ public class DatabaseManager implements Serializable {
 		return tables;
 	}
 
-	public String getAdminCode(String email) throws SQLException {
+	public String getAdminCode(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 			
 		String query = "SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.execute();
 			
 		ResultSet rs = preparedStatement.getResultSet();
@@ -917,12 +921,12 @@ public class DatabaseManager implements Serializable {
 		return adminCode;
 	}
 
-	public List<String> getLinkedAdminCodes(String email) throws SQLException {
+	public List<String> getLinkedAdminCodes(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 		
 		String query = "SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.execute();
 		
 		ResultSet rs = preparedStatement.getResultSet();
@@ -970,20 +974,20 @@ public class DatabaseManager implements Serializable {
 		return adminCodeExists;
 	}
 	
-	public void promoteUserToAdmin(String email) throws SQLException {
+	public void promoteUserToAdmin(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 		
 		String adminCode = generateAdminCode();
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
 		statement.setBoolean(1, true);
 		statement.setString(2, adminCode);
-		statement.setString(3, email);
+		statement.setBytes(3, getHashedEmail(email));
 		statement.execute();
 		
 		Utils.tryClose(statement);
 		
 		statement = conn.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)");
-		statement.setString(1, email);
+		statement.setBytes(1, getHashedEmail(email));
 		statement.setString(2, adminCode);
 		statement.execute();
 		
@@ -991,25 +995,25 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(conn);
 	}
 	
-	public void promoteUserToDev(String email) throws SQLException {
+	public void promoteUserToDev(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
 		statement.setBoolean(1, true);
-		statement.setString(2, email);
+		statement.setBytes(2, getHashedEmail(email));
 		statement.execute();
 
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
 	}
 	
-	public void demoteUserFromAdmin(String email, String adminCode) throws SQLException {
+	public void demoteUserFromAdmin(String email, String adminCode) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
 		statement.setBoolean(1, false);
 		statement.setString(2, null);
-		statement.setString(3, email);
+		statement.setBytes(3, getHashedEmail(email));
 		statement.execute();
 		Utils.tryClose(statement);
 		
@@ -1022,24 +1026,24 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(conn);
 	}
 	
-	public void demoteUserFromDev(String email) throws SQLException {
+	public void demoteUserFromDev(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection conn = dataSource.getConnection();
 
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
 		statement.setBoolean(1, false);
-		statement.setString(2, email);
+		statement.setBytes(2, getHashedEmail(email));
 		statement.execute();
 
 		Utils.tryClose(statement);
 		Utils.tryClose(conn);
 	}
 
-	public boolean isDeveloper(String email) throws SQLException {
+	public boolean isDeveloper(String email) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
 		final String query = "SELECT developer FROM \"user\" WHERE email = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(query);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
 		boolean isDeveloper = false;
@@ -1054,12 +1058,12 @@ public class DatabaseManager implements Serializable {
 		return isDeveloper;
 	}
 
-	public void linkCode(String email, String code) throws SQLException {
+	public void linkCode(String email, String code) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 		
 		final String update = "INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.setString(2, code);
 		preparedStatement.executeUpdate();
 
@@ -1067,12 +1071,12 @@ public class DatabaseManager implements Serializable {
 		Utils.tryClose(connection);
 	}
 
-	public void unlinkCode(String email, String code) throws SQLException {
+	public void unlinkCode(String email, String code) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 		
 		final String update = "DELETE FROM linked_admin_codes WHERE email = ? AND linked_admin_code = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
-		preparedStatement.setString(1, email);
+		preparedStatement.setBytes(1, getHashedEmail(email));
 		preparedStatement.setString(2, code);
 		preparedStatement.executeUpdate();
 
