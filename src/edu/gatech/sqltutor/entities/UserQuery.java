@@ -11,7 +11,8 @@ import java.util.Date;
 //import javax.persistence.Id;
 //import javax.persistence.OneToMany;
 //import javax.validation.constraints.NotNull;
-import beans.UserBean;
+
+import edu.gatech.sqltutor.beans.UserBean;
 
 //@Entity
 public class UserQuery implements Serializable {

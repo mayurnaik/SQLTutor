@@ -1,4 +1,4 @@
-package utilities;
+package edu.gatech.sqltutor.util;
 
 import java.util.Map;
 import java.util.Map.Entry;

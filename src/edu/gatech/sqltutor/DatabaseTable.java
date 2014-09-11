@@ -1,4 +1,4 @@
-package objects;
+package edu.gatech.sqltutor;
 
 import java.util.List;
 

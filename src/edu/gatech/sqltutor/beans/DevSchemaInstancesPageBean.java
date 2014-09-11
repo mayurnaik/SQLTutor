@@ -13,13 +13,11 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
-import objects.DatabaseTable;
-import objects.QueryResult;
-
 import org.primefaces.context.RequestContext;
 
-import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.QueryResult;
 
 @ManagedBean
 @ViewScoped

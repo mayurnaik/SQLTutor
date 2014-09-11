@@ -1,4 +1,4 @@
-package objects;
+package edu.gatech.sqltutor;
 
 public class QuestionTuple {
 	private int order;

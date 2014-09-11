@@ -32,16 +32,11 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import objects.DatabaseTable;
-import objects.QueryResult;
-import objects.QuestionTuple;
-import objects.UserTuple;
-import utilities.PasswordHasher;
-import utilities.ScriptRunner;
-
 import com.google.common.io.BaseEncoding;
 
 import edu.gatech.sqltutor.entities.UserQuery;
+import edu.gatech.sqltutor.util.SaltHasher;
+import edu.gatech.sqltutor.util.ScriptRunner;
 
 @ManagedBean(name="databaseManager", eager=true)
 @ApplicationScoped
@@ -415,8 +410,8 @@ public class DatabaseManager implements Serializable {
 		Connection connection = dataSource.getConnection();
 		
 		// generate the user's encryption salt and password
-		byte[] salt = PasswordHasher.generateSalt();
-		byte[] encryptedId = PasswordHasher.getEncryptedPassword(uuid.toString(), salt);
+		byte[] salt = SaltHasher.generateSalt();
+		byte[] encryptedId = SaltHasher.getEncryptedValue(uuid.toString(), salt);
 		
 		final String update = "INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
@@ -448,7 +443,7 @@ public class DatabaseManager implements Serializable {
 			byte[] encryptedId = resultSet.getBytes(2);
 			
 			// use the password hasher to authenticate
-			autheticated = PasswordHasher.authenticate(id, encryptedId, salt);
+			autheticated = SaltHasher.authenticate(id, encryptedId, salt);
 		} 
 		
 		Utils.tryClose(preparedStatement);
@@ -462,9 +457,9 @@ public class DatabaseManager implements Serializable {
 		Connection conn = dataSource.getConnection();
 
 		// generate the user's encryption salt and password
-		byte[] salt = PasswordHasher.generateSalt();
+		byte[] salt = SaltHasher.generateSalt();
 		byte[] encryptedPassword = null;
-		encryptedPassword = PasswordHasher.getEncryptedPassword(newPassword, salt);
+		encryptedPassword = SaltHasher.getEncryptedValue(newPassword, salt);
 		
 		PreparedStatement statement = conn.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;");
 		statement.setBytes(1, encryptedPassword);
@@ -677,8 +672,8 @@ public class DatabaseManager implements Serializable {
 		PreparedStatement preparedStatement = connection.prepareStatement(updateUserEntry);
 		
 		// generate the user's encryption salt and password
-		byte[] salt = PasswordHasher.generateSalt();
-		byte[] encryptedPassword = PasswordHasher.getEncryptedPassword(password, salt);
+		byte[] salt = SaltHasher.generateSalt();
+		byte[] encryptedPassword = SaltHasher.getEncryptedValue(password, salt);
 		
 		preparedStatement.setBytes(1, encryptedPassword);
 		preparedStatement.setBytes(2, salt);
@@ -752,7 +747,7 @@ public class DatabaseManager implements Serializable {
 			byte[] encryptedPassword = resultSet.getBytes(2);
 			
 			// use the password hasher to authenticate
-			isCorrect = PasswordHasher.authenticate(attemptedPassword, encryptedPassword, salt);
+			isCorrect = SaltHasher.authenticate(attemptedPassword, encryptedPassword, salt);
 		} 
 
 		Utils.tryClose(preparedStatement);

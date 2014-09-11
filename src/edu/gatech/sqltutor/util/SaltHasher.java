@@ -1,4 +1,4 @@
-package utilities;
+package edu.gatech.sqltutor.util;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -9,7 +9,7 @@ import java.util.Arrays;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-public class PasswordHasher {
+public class SaltHasher {
 	// PBKDF2 with SHA-1 as the hashing algorithm. Note that the NIST
 	// specifically names SHA-1 as an acceptable hashing algorithm for PBKDF2
 	private final static String ALGORITHM = "PBKDF2WithHmacSHA1";
@@ -20,19 +20,19 @@ public class PasswordHasher {
 	// http://csrc.nist.gov/publications/nistpubs/800-132/nist-sp800-132.pdf
 	private final static int ITERATIONS = 20000;
 
-	public static boolean authenticate(String attemptedPassword, byte[] encryptedPassword, byte[] salt)
+	public static boolean authenticate(String attemptedValue, byte[] encryptedValue, byte[] salt)
 	throws NoSuchAlgorithmException, InvalidKeySpecException {
 		// Encrypt the clear-text password using the same salt that was used to
 		// encrypt the original password
-		byte[] encryptedAttemptedPassword = getEncryptedPassword(attemptedPassword, salt);
+		byte[] encryptedAttemptedValue = getEncryptedValue(attemptedValue, salt);
 		// Authentication succeeds if encrypted password that the user entered
 		// is equal to the stored hash
-		return Arrays.equals(encryptedPassword, encryptedAttemptedPassword);
+		return Arrays.equals(encryptedValue, encryptedAttemptedValue);
 	}
 
-	public static byte[] getEncryptedPassword(String password, byte[] salt)
+	public static byte[] getEncryptedValue(String value, byte[] salt)
 	throws NoSuchAlgorithmException, InvalidKeySpecException {
-		KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, DERIVED_KEY_LENGTH);
+		KeySpec spec = new PBEKeySpec(value.toCharArray(), salt, ITERATIONS, DERIVED_KEY_LENGTH);
 		SecretKeyFactory f = SecretKeyFactory.getInstance(ALGORITHM);
 		return f.generateSecret(spec).getEncoded();
 	}

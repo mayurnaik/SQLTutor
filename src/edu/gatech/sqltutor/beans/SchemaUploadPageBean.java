@@ -14,7 +14,6 @@ import javax.faces.context.FacesContext;
 
 import org.primefaces.event.FileUploadEvent;
 
-import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 
 @ManagedBean

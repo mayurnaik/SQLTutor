@@ -14,9 +14,8 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
-import objects.DatabaseTable;
-import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.DatabaseTable;
 
 @ManagedBean
 @ViewScoped

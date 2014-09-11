@@ -2,8 +2,6 @@ package edu.gatech.sqltutor;
 
 import java.util.List;
 
-import objects.DatabaseTable;
-
 /**
  * Query translators produce natural language 
  * descriptions from SQL queries.

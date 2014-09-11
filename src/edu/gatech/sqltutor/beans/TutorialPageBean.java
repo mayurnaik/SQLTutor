@@ -1,4 +1,4 @@
-package beans;
+package edu.gatech.sqltutor.beans;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -18,15 +18,14 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import objects.DatabaseTable;
-import objects.QueryResult;
-import objects.Question;
-import objects.QuestionTuple;
-
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.QueryResult;
+import edu.gatech.sqltutor.Question;
+import edu.gatech.sqltutor.QuestionTuple;
 
 @ManagedBean
 @ViewScoped
@@ -70,7 +69,7 @@ public class TutorialPageBean {
 		try {
 			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
 			if(!nlpDisabled)
-				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getQuestion() + "\"";
+				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getTranslation() + "\"";
 			else 
 				feedbackNLP = "";
 			setResultSetDiffs();

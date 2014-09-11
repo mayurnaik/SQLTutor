@@ -1,4 +1,4 @@
-package beans;
+package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;

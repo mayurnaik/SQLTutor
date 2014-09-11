@@ -11,8 +11,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-import objects.DatabaseTable;
-
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.BinaryOperatorNode;

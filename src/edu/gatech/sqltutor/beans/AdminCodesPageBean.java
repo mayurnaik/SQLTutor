@@ -11,8 +11,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
-import objects.UserTuple;
-import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
 
 @ManagedBean

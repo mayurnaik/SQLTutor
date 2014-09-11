@@ -3,8 +3,6 @@ package edu.gatech.sqltutor.rules.util;
 import java.util.Collection;
 import java.util.List;
 
-import objects.DatabaseTable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +20,7 @@ import com.akiban.sql.parser.Visitor;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
+import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.SQLTutorException;
 
 /**

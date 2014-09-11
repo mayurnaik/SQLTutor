@@ -15,9 +15,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 
-import utilities.Emailer;
-import beans.UserBean;
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.util.Emailer;
 
 @ManagedBean
 @SessionScoped
