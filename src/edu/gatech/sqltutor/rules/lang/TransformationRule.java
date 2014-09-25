@@ -26,7 +26,6 @@ import com.akiban.sql.parser.TableName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
@@ -54,6 +53,8 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.OrToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
@@ -290,12 +291,15 @@ public class TransformationRule extends StandardSymbolicRule implements
 					numToken.setNumericType(((SQLNumberToken)sqlToken).getNumericType());
 				} else if ( node instanceof CharConstantNode ) {
 					token = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-					token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_LEFT));
+					StringType stringType = ((SQLStringToken)sqlToken).getStringType();
+					if( stringType == StringType.STRING )
+						token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_LEFT));
 					token.addChild(new LiteralToken(
 						((CharConstantNode)node).getValue().toString(), 
 						PartOfSpeech.NOUN_PHRASE // FIXME part of speech not actually known
 					));
-					token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_RIGHT));
+					if( stringType == StringType.STRING )
+						token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_RIGHT));
 				} else {
 					throw new SymbolicException("FIXME: Unhandled node type: " + node.getClass().getSimpleName());
 				}

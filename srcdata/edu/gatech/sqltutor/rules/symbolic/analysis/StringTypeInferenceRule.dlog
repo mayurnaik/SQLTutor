@@ -1,0 +1,35 @@
+
+// adapted from StringTypeInferenceRule
+// FIXME: unify common logic
+
+// in case we need to expand concrete types
+ruleStringTypeInference_binop(?binop) :-
+  sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode').
+ruleStringTypeInference_string(?string) :-
+  sqlNodeHasType(?string, 'CharConstantNode').
+  
+// column and number are direct children of a binary operator
+ruleStringTypeInference_colAndString(?binop, ?col, ?string) :-
+  sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode'),
+  ruleStringTypeInference_string(?string),
+  sqlNodeHasType(?col, 'ColumnReference'),
+  sqlParentOf(?binop,?col),
+  sqlParentOf(?binop,?string).
+  
+// for BETWEEN, column is a child and the number node is nested
+ruleStringTypeInference_colAndString(?binop, ?col, ?string) :-
+  sqlNodeHasType(?binop, 'BetweenOperatorNode'),
+  ruleStringTypeInference_string(?string),
+  sqlNodeHasType(?col, 'ColumnReference'),
+  sqlParentOf(?binop,?col),
+  sqlParentOf(?binop,?valList),
+  sqlNodeHasType(?valList, 'ValueNodeList'),
+  sqlParentOf(?valList, ?string).
+  
+  
+ruleStringTypeInference(?binop, ?attrType, ?string) :-
+  ruleStringTypeInference_colAndString(?binop, ?col, ?string),
+  sqlColumnInfo(?col, ?tableAlias, ?tableName, ?colName),
+  erAttributeMapsTo(?parent,?attr,?tableName,?colName),
+  erAttributeDataType(?parent,?attr,?attrType).
+  

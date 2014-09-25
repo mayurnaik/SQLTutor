@@ -5,5 +5,9 @@ package edu.gatech.sqltutor.rules.er;
  * for attributes.
  */
 public enum ERAttributeDataType {
-	STRING, NUMBER, DOLLARS, UNKNOWN;
+	STRING, 
+	NUMBER, 
+	DOLLARS,
+	DATETIME,
+	UNKNOWN;
 }

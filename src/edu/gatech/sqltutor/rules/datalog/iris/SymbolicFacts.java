@@ -30,6 +30,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
@@ -268,6 +269,10 @@ public class SymbolicFacts extends DynamicFacts {
 	
 	private void addBinaryComparisonFacts(Integer tokenId, BinaryComparisonToken token) {
 		addFact(SymbolicPredicates.binaryOperator, tokenId, token.getOperator());
+	}
+	
+	private void addStringFacts(Integer tokenId, SQLStringToken token) {
+		addFact(SymbolicPredicates.stringType, tokenId, token.getStringType());
 	}
 	
 	// FIXME migrated from SQLFacts for sql/symbolic phase unification

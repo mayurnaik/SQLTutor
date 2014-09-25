@@ -12,6 +12,7 @@
         		</attribute>
         		<attribute>
         			<name>start_year</name>
+          			<dataType>DATETIME</dataType>
         		</attribute>
         		<attribute>
         			<name>department_number</name>
@@ -27,9 +28,11 @@
         		</attribute>
         		<attribute>
           			<name>return_date</name>
+          			<dataType>DATETIME</dataType>
             	</attribute>
             	<attribute>
               		<name>departure_date</name>
+          			<dataType>DATETIME</dataType>
             	</attribute>
             	<attribute>
               		<name>origin</name>

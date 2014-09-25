@@ -9,6 +9,7 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NumericConstantNode;
@@ -21,6 +22,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
@@ -72,6 +74,8 @@ public class SymbolicCreator {
 					unrootedTokens.add(tableEntity);
 				} else if ( childNode instanceof NumericConstantNode ) {
 					childToken = new SQLNumberToken(childNode);
+				} else if( childNode instanceof CharConstantNode ) {
+					childToken = new SQLStringToken(childNode);
 				} else {
 					childToken = new SQLToken(childNode);
 				}
