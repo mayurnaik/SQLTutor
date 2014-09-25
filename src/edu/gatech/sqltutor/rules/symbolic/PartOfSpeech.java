@@ -171,6 +171,26 @@ public enum PartOfSpeech {
 		}
 	}
 	
+	public boolean isSingular() {
+		switch( this ) {
+		case NOUN_SINGULAR_OR_MASS:
+		case PROPER_NOUN_SINGULAR:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isPlural() {
+		switch( this ) {
+		case NOUN_PLURAL:
+		case PROPER_NOUN_PLURAL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
 	public boolean isPunctuation() { return isPunctuation(this); }
 	
 	public boolean isVerb() {

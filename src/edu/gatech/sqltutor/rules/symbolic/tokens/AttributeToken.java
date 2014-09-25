@@ -4,8 +4,9 @@ import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
+import edu.gatech.sqltutor.rules.util.NLUtil;
 
-public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken {
+public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken, INounToken {
 	
 	protected ERAttribute attribute;
 
@@ -34,6 +35,44 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	
 	public void setAttribute(ERAttribute attribute) {
 		this.attribute = attribute;
+	}
+	
+	@Override
+	public String getSingularLabel() {
+		String label = null;
+		if( attribute != null ) {
+			label = attribute.getMetadata().getSingularLabel();
+			if( label == null ) {
+				label = NLUtil.nameFormat(attribute.getName()).toLowerCase();
+			}
+		}
+		return label;
+	}
+	
+	@Override
+	public String getPluralLabel() {
+		String label = null;
+		if( attribute != null ) {
+			label = attribute.getMetadata().getPluralLabel();
+			if( label == null ) {
+				label = NLUtil.pluralize(getSingularLabel());
+			}
+		}
+		return label;
+	}
+	
+	@Override
+	public void setSingularLabel(String label) {
+		rejectSetLabel();
+	}
+	
+	@Override
+	public void setPluralLabel(String label) {
+		rejectSetLabel();
+	}
+	
+	private void rejectSetLabel() { 
+		throw new UnsupportedOperationException("AttributeToken does not support overridding labels");
 	}
 
 	@Override

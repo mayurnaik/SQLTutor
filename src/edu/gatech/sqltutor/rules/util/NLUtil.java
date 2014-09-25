@@ -37,5 +37,9 @@ public final class NLUtil {
 		return verb;
 	}
 	
+	public static String nameFormat(String name) {
+		return name.replace('_', ' ');
+	}
+	
 	private NLUtil() {}
 }

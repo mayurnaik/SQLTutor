@@ -310,7 +310,6 @@ public class SymbolicFragmentTranslator
 			// analysis rules
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
-			new DefaultAttributeLabelRule(),
 			new DefaultColumnLabelRule(),
 			new DescribingAttributeLabelRule(),
 			// transformation
