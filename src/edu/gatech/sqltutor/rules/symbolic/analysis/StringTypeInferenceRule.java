@@ -18,7 +18,9 @@ import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttributeDataType;
+import edu.gatech.sqltutor.rules.symbolic.ValueType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLValueToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
 
 public class StringTypeInferenceRule extends StandardAnalysisRule implements
@@ -46,14 +48,19 @@ public class StringTypeInferenceRule extends StandardAnalysisRule implements
 		boolean applied = false;
 		while( ext.nextTuple() ) {
 			ERAttributeDataType attrType = ERAttributeDataType.valueOf(ext.getString("?attrType"));
+			SQLValueToken binop = ext.getToken("?binop");
 			SQLStringToken token = ext.getToken("?token");
 			StringType stringType = token.getStringType();
 			if( stringType == StringType.STRING ) {
 				switch( attrType ) {
 				case DATETIME:
+					binop.setValueType(ValueType.DATETIME);
+					token.setValueType(ValueType.DATETIME);
 					token.setStringType(StringType.DATETIME);
 					applied = true;
 					if( debug ) _log.debug(Markers.SYMBOLIC, "Inferred string type for {}", token);
+					// FIXME temp
+					_log.info(Markers.SYMBOLIC, "Inferred DATETIME type for {} and {}", binop, token);
 					break;
 				default:
 					break;

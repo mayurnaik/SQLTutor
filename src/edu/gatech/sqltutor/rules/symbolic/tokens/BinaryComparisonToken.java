@@ -6,11 +6,13 @@ import com.google.common.base.Joiner;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
+import edu.gatech.sqltutor.rules.symbolic.ValueType;
 
 public class BinaryComparisonToken 
-		extends ChildContainerToken implements ISymbolicToken {
+		extends ChildContainerToken implements ISymbolicToken, IHasValueType {
 	
 	protected String operator;
+	protected ValueType valueType = ValueType.UNKNOWN;
 	
 	public BinaryComparisonToken(BinaryComparisonToken token) {
 		super(token);
@@ -25,6 +27,12 @@ public class BinaryComparisonToken
 	public BinaryComparisonToken(String operator) {
 		super(PartOfSpeech.QUANTIFIER_PHRASE);
 		this.operator = operator;
+	}
+	
+	public BinaryComparisonToken(SQLToken sqlToken) {
+		this(sqlToken.getAstNode().getNodeType());
+		if( sqlToken instanceof IHasValueType )
+			setValueType(((IHasValueType)sqlToken).getValueType());
 	}
 	
 	public BinaryComparisonToken(int nodeType) {
@@ -58,6 +66,18 @@ public class BinaryComparisonToken
 	@Override
 	public SymbolicType getType() {
 		return SymbolicType.BINARY_COMPARISON;
+	}
+	
+	@Override
+	public ValueType getValueType() {
+		return valueType;
+	}
+	
+	@Override
+	public void setValueType(ValueType valueType) {
+		if( valueType == null )
+			valueType = ValueType.UNKNOWN;
+		this.valueType = valueType;
 	}
 	
 	@Override

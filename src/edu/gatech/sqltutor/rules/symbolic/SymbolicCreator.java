@@ -9,6 +9,8 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.akiban.sql.parser.BetweenOperatorNode;
+import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
@@ -24,6 +26,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.SQLValueToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.GetChildrenVisitor;
 
@@ -76,6 +79,8 @@ public class SymbolicCreator {
 					childToken = new SQLNumberToken(childNode);
 				} else if( childNode instanceof CharConstantNode ) {
 					childToken = new SQLStringToken(childNode);
+				} else if( childNode instanceof BinaryRelationalOperatorNode || childNode instanceof BetweenOperatorNode ) {
+					childToken = new SQLValueToken(childNode);
 				} else {
 					childToken = new SQLToken(childNode);
 				}

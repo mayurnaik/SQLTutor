@@ -23,6 +23,7 @@ import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.IHasValueType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.INounToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.IScopedToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
@@ -175,6 +176,9 @@ public class SymbolicFacts extends DynamicFacts {
 			addNounFacts(tokenId, (INounToken)token);
 		if( token instanceof IScopedToken )
 			addScopeFacts(tokenId, (IScopedToken)token);
+		if( token instanceof IHasValueType ) {
+			addFact(SymbolicPredicates.valueType, tokenId, ((IHasValueType)token).getValueType());
+		}
 		
 		switch( tokenType ) {
 			case ATTRIBUTE: 

@@ -4,6 +4,7 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 
 import org.deri.iris.api.basics.IPredicate;
 
+import edu.gatech.sqltutor.rules.symbolic.ValueType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken.NumericType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
 
@@ -59,6 +60,9 @@ public class SymbolicPredicates {
 	 * @see NumericType 
 	 */
 	public static final IPredicate numberType = predicate("symNumberType", 2);
+	
+	/** <code>symValueType(?token:id, ?type:string/{@link ValueType})</code>. */
+	public static final IPredicate valueType = predicate("symValueType", 2);
 	
 	/** <code>symStringType(?token:id, ?type:string/{@link StringType})</code>. */
 	public static final IPredicate stringType = predicate("symStringType", 2);

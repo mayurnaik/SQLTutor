@@ -46,7 +46,7 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select all attributes of each salesperson whose name is \"John Smith\".")},
 			//9
 			{"SELECT * FROM salesperson WHERE start_year > '2012' AND name = 'John Smith'",
-				Pattern.quote("Select all attributes of each salesperson whose start year is greater than 2012 and name is \"John Smith\".")},
+				Pattern.quote("Select all attributes of each salesperson whose start year is later than 2012 and name is \"John Smith\".")},
 			//10
 			{"SELECT DISTINCT start_year FROM salesperson WHERE name = 'John Smith'",
 				Pattern.quote("Select the distinct values of the start years of all salespersons whose name is \"John Smith\".")},

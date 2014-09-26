@@ -61,9 +61,9 @@ public class BinaryComparisonRule
 		} else if ( !"=".equals(op) ) {
 			char first = op.charAt(0);
 			if( first == '<' )
-				seq.addChild(new LiteralToken("less", PartOfSpeech.ADJECTIVE_COMPARATIVE));
+				seq.addChild(new LiteralToken(lessPhrase(token), PartOfSpeech.ADJECTIVE_COMPARATIVE));
 			else
-				seq.addChild(new LiteralToken("greater", PartOfSpeech.ADJECTIVE_COMPARATIVE));
+				seq.addChild(new LiteralToken(greaterPhrase(token), PartOfSpeech.ADJECTIVE_COMPARATIVE));
 			seq.addChild(new LiteralToken("than", PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION));
 			if( op.length() > 1 )
 				orEqualTo(seq);
@@ -74,6 +74,25 @@ public class BinaryComparisonRule
 		SymbolicUtil.replaceChild(parent, token, seq);
 		_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", token, seq);
 		return true;
+	}
+	
+	private String lessPhrase(BinaryComparisonToken token) {
+		switch( token.getValueType() ) {
+		case DATETIME:
+			return "earlier";
+		default:
+			return "less";
+		}
+	}
+	
+	private String greaterPhrase(BinaryComparisonToken token) {
+		switch( token.getValueType() ) {
+		case DATETIME:
+			return "later";
+		default:
+			return "greater";
+		}
+		
 	}
 	
 	private void orEqualTo(ISymbolicToken token) {

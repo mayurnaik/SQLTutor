@@ -46,6 +46,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BetweenToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.IHasValueType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
@@ -275,7 +276,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			case NodeTypes.BINARY_LESS_EQUALS_OPERATOR_NODE:
 			case NodeTypes.BINARY_LESS_THAN_OPERATOR_NODE:
 			case NodeTypes.BINARY_NOT_EQUALS_OPERATOR_NODE:
-				token = new BinaryComparisonToken(nodeType);
+				token = new BinaryComparisonToken(sqlToken);
 				break;
 			case NodeTypes.BETWEEN_OPERATOR_NODE:
 				token = new BetweenToken();
