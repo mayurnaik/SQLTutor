@@ -2,21 +2,17 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
+import edu.gatech.sqltutor.rules.symbolic.ValueType;
 
-public class NumberToken extends AbstractSymbolicToken implements ISymbolicToken {
+public class NumberToken extends AbstractSymbolicToken 
+		implements ISymbolicToken, IHasValueType {
 	private Number number;
-	private NumericType numericType = NumericType.GENERAL;
-	
-	public static enum NumericType {
-		GENERAL,
-		DOLLARS;
-		// TODO others?
-	}
+	private ValueType valueType = ValueType.NUMBER;
 
 	public NumberToken(NumberToken toCopy) {
 		super(toCopy);
 		this.number = toCopy.number;
-		this.numericType = toCopy.numericType;
+		this.valueType = toCopy.valueType;
 	}
 
 	public NumberToken(Number number) {
@@ -26,15 +22,6 @@ public class NumberToken extends AbstractSymbolicToken implements ISymbolicToken
 	public NumberToken(Number number, PartOfSpeech pos) {
 		super(pos);
 		this.number = number;
-	}
-	
-	public NumericType getNumericType() {
-		return numericType;
-	}
-	
-	public void setNumericType(NumericType numericType) {
-		if( numericType == null ) throw new NullPointerException("numericType is null");
-		this.numericType = numericType;
 	}
 	
 	public void setNumber(Number number) {
@@ -51,7 +38,31 @@ public class NumberToken extends AbstractSymbolicToken implements ISymbolicToken
 	}
 	
 	@Override
-	public String toString() {
-		return "{" + typeAndTag() + " number=" + number + ", type=" + numericType + "}";
+	public ValueType getValueType() {
+		return valueType;
+	}
+	
+	@Override
+	public void setValueType(ValueType valueType) {
+		if( valueType == null ) throw new NullPointerException("valueType is null");
+		switch( valueType ) {
+		case NUMBER:
+		case DOLLARS:
+			this.valueType = valueType;
+			break;
+		case UNKNOWN:
+			this.valueType = ValueType.NUMBER;
+			break;
+		default:
+			throw new IllegalArgumentException("Not a numeric type: " + valueType);
+		}
+	}
+	
+	@Override
+	protected StringBuilder addPropertiesString(StringBuilder b) {
+		return super.addPropertiesString(b)
+				.append(" [valueType=").append(valueType)
+				.append(", number=").append(number)
+				.append("]");
 	}
 }

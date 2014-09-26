@@ -45,26 +45,29 @@ public class NumberLiteralRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		ITuple first = relation.get(0);
-		ISymbolicToken parent = ext.getToken("?parent", first);
-		NumberToken numberToken = (NumberToken)ext.getToken("?token", first);
-		NumberFormat numberFormat;
-		switch( numberToken.getNumericType() ) {
+		while( ext.nextTuple() ) {
+			ISymbolicToken parent = ext.getToken("?parent");
+			NumberToken numberToken = (NumberToken)ext.getToken("?token");
+			NumberFormat numberFormat;
+			switch( numberToken.getValueType() ) {
 			case DOLLARS:
 				numberFormat = new CurrencyFormatWrapper();
 				break;
 			default:
 				_log.warn("Unhandled numeric type in token: {}", numberToken);
 				// fall-through
-			case GENERAL:
+			case NUMBER:
+			case UNKNOWN:
 				numberFormat = NumberFormat.getNumberInstance(Locale.US);
 				break;
+			}
+			
+			String expression = numberFormat.format(numberToken.getNumber());
+			LiteralToken literal = new LiteralToken(expression, numberToken.getPartOfSpeech());
+			
+			SymbolicUtil.replaceChild(parent, numberToken, literal);
+			_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", numberToken, literal);
 		}
-		String expression = numberFormat.format(numberToken.getNumber());
-		LiteralToken literal = new LiteralToken(expression, numberToken.getPartOfSpeech());
-		
-		SymbolicUtil.replaceChild(parent, numberToken, literal);
-		_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", numberToken, literal);
 		return true;
 	}
 	

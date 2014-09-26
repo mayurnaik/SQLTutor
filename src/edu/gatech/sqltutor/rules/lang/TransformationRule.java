@@ -40,6 +40,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
+import edu.gatech.sqltutor.rules.symbolic.ValueType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AllAttributesToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AndToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeListToken;
@@ -53,9 +54,6 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.OrToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
@@ -289,17 +287,17 @@ public class TransformationRule extends StandardSymbolicRule implements
 				if( node instanceof NumericConstantNode ) {
 					NumberToken numToken;
 					token = numToken = new NumberToken((Number)((NumericConstantNode)node).getValue());
-					numToken.setNumericType(((SQLNumberToken)sqlToken).getNumericType());
+					numToken.setValueType(((IHasValueType)sqlToken).getValueType());
 				} else if ( node instanceof CharConstantNode ) {
 					token = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-					StringType stringType = ((SQLStringToken)sqlToken).getStringType();
-					if( stringType == StringType.STRING )
+					ValueType valueType = ((IHasValueType)sqlToken).getValueType();
+					if( valueType == ValueType.STRING )
 						token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_LEFT));
 					token.addChild(new LiteralToken(
 						((CharConstantNode)node).getValue().toString(), 
 						PartOfSpeech.NOUN_PHRASE // FIXME part of speech not actually known
 					));
-					if( stringType == StringType.STRING )
+					if( valueType == ValueType.STRING )
 						token.addChild(new LiteralToken("\"", PartOfSpeech.QUOTE_RIGHT));
 				} else {
 					throw new SymbolicException("FIXME: Unhandled node type: " + node.getClass().getSimpleName());

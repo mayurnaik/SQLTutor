@@ -1,31 +1,32 @@
 
 // in case we need to expand concrete types
-ruleNumberTypeInference_binop(?binop) :-
+ruleValueTypeInference_binop(?binop) :-
   sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode').
-ruleNumberTypeInference_number(?num) :-
-  sqlNodeHasType(?num, 'NumericConstantNode').
+  
+ruleValueTypeInference_constant(?constant) :- sqlNodeHasType(?constant, 'CharConstantNode').
+ruleValueTypeInference_constant(?constant) :- sqlNodeHasType(?constant, 'NumericConstantNode').
   
 // column and number are direct children of a binary operator
-ruleNumberTypeInference_colAndNum(?binop, ?col, ?num) :-
+ruleValueTypeInference_colAndConst(?binop, ?col, ?constant) :-
   sqlNodeHasType(?binop, 'BinaryRelationalOperatorNode'),
-  ruleNumberTypeInference_number(?num),
+  ruleValueTypeInference_constant(?constant),
   sqlNodeHasType(?col, 'ColumnReference'),
   sqlParentOf(?binop,?col),
-  sqlParentOf(?binop,?num).
+  sqlParentOf(?binop,?constant).
   
 // for BETWEEN, column is a child and the number node is nested
-ruleNumberTypeInference_colAndNum(?binop, ?col, ?num) :-
+ruleValueTypeInference_colAndConst(?binop, ?col, ?constant) :-
   sqlNodeHasType(?binop, 'BetweenOperatorNode'),
-  ruleNumberTypeInference_number(?num),
+  ruleValueTypeInference_constant(?constant),
   sqlNodeHasType(?col, 'ColumnReference'),
   sqlParentOf(?binop,?col),
   sqlParentOf(?binop,?valList),
   sqlNodeHasType(?valList, 'ValueNodeList'),
-  sqlParentOf(?valList, ?num).
+  sqlParentOf(?valList, ?constant).
   
   
-ruleNumberTypeInference(?binop, ?attrType, ?num) :-
-  ruleNumberTypeInference_colAndNum(?binop, ?col, ?num),
+ruleValueTypeInference(?binop, ?attrType, ?constant) :-
+  ruleValueTypeInference_colAndConst(?binop, ?col, ?constant),
   sqlColumnInfo(?col, ?tableAlias, ?tableName, ?colName),
   erAttributeMapsTo(?parent,?attr,?tableName,?colName),
   erAttributeDataType(?parent,?attr,?attrType).

@@ -13,7 +13,9 @@ import com.akiban.sql.parser.BetweenOperatorNode;
 import com.akiban.sql.parser.BinaryRelationalOperatorNode;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
+import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.FromTable;
+import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
@@ -75,11 +77,9 @@ public class SymbolicCreator {
 					tableEntity.setId(getNextEntityId(fromTable.getOrigTableName().getTableName()));
 					tableEntity.setConjunctScope(select); // FIXME should this be computed?
 					unrootedTokens.add(tableEntity);
-				} else if ( childNode instanceof NumericConstantNode ) {
-					childToken = new SQLNumberToken(childNode);
-				} else if( childNode instanceof CharConstantNode ) {
-					childToken = new SQLStringToken(childNode);
-				} else if( childNode instanceof BinaryRelationalOperatorNode || childNode instanceof BetweenOperatorNode ) {
+				} else if( childNode instanceof BinaryRelationalOperatorNode 
+						|| childNode instanceof BetweenOperatorNode
+						|| childNode instanceof ConstantNode) {
 					childToken = new SQLValueToken(childNode);
 				} else {
 					childToken = new SQLToken(childNode);

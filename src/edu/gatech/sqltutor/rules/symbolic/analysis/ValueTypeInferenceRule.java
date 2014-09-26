@@ -19,25 +19,23 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttributeDataType;
 import edu.gatech.sqltutor.rules.symbolic.ValueType;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLValueToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
+import edu.gatech.sqltutor.rules.symbolic.tokens.IHasValueType;
 
-public class StringTypeInferenceRule extends StandardAnalysisRule implements
+public class ValueTypeInferenceRule extends StandardAnalysisRule implements
 		ITranslationRule {
-	private static final Logger _log = LoggerFactory.getLogger(StringTypeInferenceRule.class);
+	private static final Logger _log = LoggerFactory.getLogger(ValueTypeInferenceRule.class);
 	
-	private static final StaticRules staticRules = new StaticRules(StringTypeInferenceRule.class);
+	private static final StaticRules staticRules = new StaticRules(ValueTypeInferenceRule.class);
 	
-	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleStringTypeInference", 3);
+	private static final IPredicate PREDICATE = IrisUtil.predicate("ruleValueTypeInference", 3);
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		literal(PREDICATE, "?binop", "?attrType", "?token")
 	);
 
-	public StringTypeInferenceRule() {
+	public ValueTypeInferenceRule() {
 	}
 
-	public StringTypeInferenceRule(int precedence) {
+	public ValueTypeInferenceRule(int precedence) {
 		super(precedence);
 	}
 
@@ -48,26 +46,35 @@ public class StringTypeInferenceRule extends StandardAnalysisRule implements
 		boolean applied = false;
 		while( ext.nextTuple() ) {
 			ERAttributeDataType attrType = ERAttributeDataType.valueOf(ext.getString("?attrType"));
-			SQLValueToken binop = ext.getToken("?binop");
-			SQLStringToken token = ext.getToken("?token");
-			StringType stringType = token.getStringType();
-			if( stringType == StringType.STRING ) {
-				switch( attrType ) {
-				case DATETIME:
-					binop.setValueType(ValueType.DATETIME);
-					token.setValueType(ValueType.DATETIME);
-					token.setStringType(StringType.DATETIME);
-					applied = true;
-					if( debug ) _log.debug(Markers.SYMBOLIC, "Inferred string type for {}", token);
-					// FIXME temp
-					_log.info(Markers.SYMBOLIC, "Inferred DATETIME type for {} and {}", binop, token);
-					break;
-				default:
-					break;
-				}
+			IHasValueType binop = ext.getToken("?binop"), 
+				token = ext.getToken("?token");
+			ValueType valueType = null;
+			switch( attrType ) {
+			case DATETIME:
+				valueType = ValueType.DATETIME;
+				break;
+			case DOLLARS:
+				valueType = ValueType.DOLLARS;
+				break;
+			default:
+				break;
+			}
+			if( valueType != null && setValueType(valueType, binop, token) ) {
+				applied = true;
+				if( debug ) _log.debug(Markers.SYMBOLIC, "Inferred {} type for {} and {}", valueType, binop, token);
 			}
 		}
 		return applied;
+	}
+
+	private boolean setValueType(ValueType valueType, IHasValueType binop,
+			IHasValueType token) {
+		boolean changed = binop.getValueType() != valueType || token.getValueType() != valueType;
+		if( changed ) {
+			binop.setValueType(valueType);
+			token.setValueType(valueType);
+		}
+		return changed;
 	}
 
 	@Override

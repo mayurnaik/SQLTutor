@@ -5,8 +5,6 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.predicate;
 import org.deri.iris.api.basics.IPredicate;
 
 import edu.gatech.sqltutor.rules.symbolic.ValueType;
-import edu.gatech.sqltutor.rules.symbolic.tokens.NumberToken.NumericType;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken.StringType;
 
 /** Static predicates referring to symbolic sentence structure. */
 public class SymbolicPredicates {
@@ -56,16 +54,8 @@ public class SymbolicPredicates {
 	/** <code>(?token:int,?number:number)</code> */
 	public static final IPredicate number = predicate("symNumber", 2);
 	
-	/** <code>symNumberType(?token:int,?type:string/{@link NumericType})</code>.
-	 * @see NumericType 
-	 */
-	public static final IPredicate numberType = predicate("symNumberType", 2);
-	
 	/** <code>symValueType(?token:id, ?type:string/{@link ValueType})</code>. */
 	public static final IPredicate valueType = predicate("symValueType", 2);
-	
-	/** <code>symStringType(?token:id, ?type:string/{@link StringType})</code>. */
-	public static final IPredicate stringType = predicate("symStringType", 2);
 	
 	/** <code>(?token:int,?op:string)</code> */
 	public static final IPredicate binaryOperator = predicate("symBinaryOperator", 2);
