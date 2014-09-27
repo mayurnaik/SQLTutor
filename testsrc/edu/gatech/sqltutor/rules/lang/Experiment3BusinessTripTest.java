@@ -37,32 +37,32 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select the distinct values of all attributes of all salespersons.")},
 			//6
 			{"SELECT ssn FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the ssn of each salesperson whose name is \"John Smith\".")},
+				Pattern.quote("Select the ssn of each salesperson whose name is \"John Smith.\"")},
 			//7
 			{"SELECT ssn, dept_no FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the ssn and department number of each salesperson whose name is \"John Smith\".")},
+				Pattern.quote("Select the ssn and department number of each salesperson whose name is \"John Smith.\"")},
 			//8
 			{"SELECT * FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select all attributes of each salesperson whose name is \"John Smith\".")},
+				Pattern.quote("Select all attributes of each salesperson whose name is \"John Smith.\"")},
 			//9
 			{"SELECT * FROM salesperson WHERE start_year > '2012' AND name = 'John Smith'",
-				Pattern.quote("Select all attributes of each salesperson whose start year is later than 2012 and name is \"John Smith\".")},
+				Pattern.quote("Select all attributes of each salesperson whose start year is later than 2012 and name is \"John Smith.\"")},
 			//10
 			{"SELECT DISTINCT start_year FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of the start years of all salespersons whose name is \"John Smith\".")},
+				Pattern.quote("Select the distinct values of the start years of all salespersons whose name is \"John Smith.\"")},
 			//11
 			{"SELECT DISTINCT start_year, dept_no FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of the start years and department numbers of all salespersons whose name is \"John Smith\".")},
+				Pattern.quote("Select the distinct values of the start years and department numbers of all salespersons whose name is \"John Smith.\"")},
 			//12
 			{"SELECT DISTINCT * FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of all attributes of all salespersons whose name is \"John Smith\".")},
+				Pattern.quote("Select the distinct values of all attributes of all salespersons whose name is \"John Smith.\"")},
 			//13
 			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn",
 				Pattern.quote("Select the name of each salesperson and the destination of each trip where the salesperson takes the trip.")},
 			//14
 			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn AND trip.from_city = 'Atlanta' ",
 				Pattern.quote("Select the name of each salesperson and the destination of each trip where the salesperson takes the trip " +
-					"and the trip's origin is \"Atlanta\".")},
+					"and the trip's origin is \"Atlanta.\"")},
 		};
 		return Arrays.asList(params);
 	}

@@ -46,7 +46,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			{"SELECT bdate, address FROM employee WHERE fname = 'John' AND minit = 'B' AND lname = 'Smith'", 
 				// Select the birth date and address of each employee whose name is \"John B. Smith\"
 				Pattern.quote("Select the birth date and address of each employee whose first name is \"John\", "
-						+ "middle initial is \"B\", and last name is \"Smith\".")},
+						+ "middle initial is \"B\", and last name is \"Smith.\"")},
 			
 			// 7
 			{"SELECT E.lname AS employee_name, S.lname AS supervisor_name FROM employee AS E, employee AS S WHERE E.super_ssn = S.ssn", 
@@ -60,7 +60,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 9
 			{"SELECT p.pnumber, d.dnumber, e.lname, e.address, e.bdate FROM project p, department d, employee e WHERE p.dnum = d.dnumber AND d.mgr_ssn = e.ssn AND p.plocation = 'Stafford'", 
 				Pattern.quote("Select the numbers of each project and department "
-						+ "and the last name, address, and birth date of each employee where the department controls the project, the employee manages the department, and the project's location is \"Stafford\".")},	
+						+ "and the last name, address, and birth date of each employee where the department controls the project, the employee manages the department, and the project's location is \"Stafford.\"")},	
 		};
 		return Arrays.asList(params);
 	}

@@ -7,6 +7,8 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 
 public class SymbolicReader {
+	
+	private static boolean isQuote(char c) { return c == '\'' || c == '"'; }
 
 	public SymbolicReader() {
 	}
@@ -15,7 +17,12 @@ public class SymbolicReader {
 		StringBuilder out = new StringBuilder();
 		
 		readSequence(out, root);
-		out.append('.');
+		
+		// insert period at the end, but inside any trailing quotes
+		int dotIdx = out.length();
+		while( isQuote(out.charAt(dotIdx - 1)) )
+			--dotIdx;
+		out.insert(dotIdx, '.');
 		
 		// start with uppercase
 		char first = out.charAt(0);
