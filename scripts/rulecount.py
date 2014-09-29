@@ -3,10 +3,47 @@ from __future__ import with_statement, print_function
 import sys, re
 from collections import OrderedDict, namedtuple
 
+ALL_RULES = [
+	'TransformationRule',
+	'InRelationshipLabelRule',
+	'DescribingAttributeLabelRule',
+	'JoinLabelRule',
+	'MergeCompositeAttributeRule',
+	'ValueTypeInferenceRule',
+	'TableEntityRefNeedsIdRule',
+	'AllAttributesLiteralLabelRule',
+	'AttributeLiteralLabelRule',
+	'BetweenLiteralsRule',
+	'BinaryComparisonRule',
+	'NumberLiteralRule',
+	'SelectLabelRule',
+	'WhereLiteralRule',
+	'ColumnReferenceLiteralRule',
+	'DefaultIsNullRule',
+	'InRelationshipLoweringRule',
+	'TableEntityRefLiteralRule',
+	'SimplifyConjunctionsRule',
+	'FixVerbTenseRule',
+	'InvalidDeterminerRule',
+	'ConjunctScopeComputationRule',
+	'DefaultColumnLabelRule',
+	'DefaultTableLabelRule',
+	'AnaphoricPronounRule',
+	'DeterminerRedundancyRule',
+	'RangeToBetweenRule',
+	'SimplifyRepeatedAttributesRule',
+	'SingleReferenceAnaphoraRule'
+]
+
 class RuleStats(object):
 	def __init__(self):
-		self.gstats = OrderedDict()
+		self._init_gstats()
 		self.qstats = None
+
+	def _init_gstats(self):
+		self.gstats = OrderedDict()
+		for rule in ALL_RULES:
+			self.gstats[rule] = 0
 
 	def update_stats(self):
 		if self.qstats:
