@@ -56,10 +56,10 @@ public class Experiment3CompanyTest extends SymbolicFragmentTestBase {
 			{"SELECT DISTINCT * FROM employee WHERE fname = 'Ahmad'",
 				null},
 			//13
-			{"SELECT employee.salary, department.dname FROM employee, department WHERE department.dnumber = employee.dno",
+			{"SELECT e.salary, d.dname FROM employee e, department d WHERE d.dnumber = e.dno",
 				null},
 			//14
-			{"SELECT employee.salary, department.dname FROM employee, department WHERE department.dnumber = employee.dno AND employee.fname = 'Ahmad'",
+			{"SELECT e.salary, d.dname FROM employee e, department d WHERE d.dnumber = e.dno AND e.fname = 'Ahmad'",
 				null},	
 		};
 		return Arrays.asList(params);

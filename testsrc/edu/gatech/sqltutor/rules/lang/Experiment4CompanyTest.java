@@ -32,10 +32,10 @@ public class Experiment4CompanyTest extends SymbolicFragmentTestBase {
 			{"SELECT E.fname, S.fname FROM employee AS E, employee AS S WHERE E.super_ssn = S.ssn",
 				null},
 			//5
-			{"SELECT employee.salary, department.dname FROM employee, department WHERE department.dnumber = employee.dno AND employee.fname = 'Ahmad'",
+			{"SELECT e.salary, d.dname FROM employee e, department d WHERE d.dnumber = e.dno AND e.fname = 'Ahmad'",
 				null},
 			//6
-			{"SELECT employee.salary, department.dname FROM employee, department WHERE department.dnumber = employee.dno",
+			{"SELECT e.salary, d.dname FROM employee e, department d WHERE d.dnumber = e.dno",
 				null},
 			//7
 			{"SELECT DISTINCT * FROM employee WHERE fname = 'Ahmad'",

@@ -57,10 +57,10 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 			{"SELECT DISTINCT * FROM salesperson WHERE name = 'John Smith'",
 				Pattern.quote("Select the distinct values of all attributes of all salespersons whose name is \"John Smith.\"")},
 			//13
-			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn",
+			{"SELECT s.name, t.to_city FROM salesperson s, trip t WHERE s.ssn = t.ssn",
 				Pattern.quote("Select the name of each salesperson and the destination of each trip where the salesperson takes the trip.")},
 			//14
-			{"SELECT salesperson.name, trip.to_city FROM salesperson, trip WHERE salesperson.ssn = trip.ssn AND trip.from_city = 'Atlanta' ",
+			{"SELECT s.name, t.to_city FROM salesperson s, trip t WHERE s.ssn = t.ssn AND t.from_city = 'Atlanta' ",
 				Pattern.quote("Select the name of each salesperson and the destination of each trip where the salesperson takes the trip " +
 					"and the trip's origin is \"Atlanta.\"")},
 		};
