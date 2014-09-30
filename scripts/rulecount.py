@@ -98,6 +98,7 @@ def create_schema(outfile):
             rule STRING NOT NULL,
             PRIMARY KEY(source, query, rule))
         ''')
+        conn.commit()
 
 
 def run_update(args):
@@ -200,7 +201,7 @@ def run_all_tests(args):
         raise RuntimeError('build.xml does not exist, generate it from Eclipse first')
     if not os.path.isfile(db):
         print('Creating db file: {}'.format(db))
-        main(['init', '--db', db])
+        main(['--db', db, 'init'])
     for source, testname in SOURCES.iteritems():
         print('Running test case: {}'.format(testname))
         ant_args = ('ant', testname)
