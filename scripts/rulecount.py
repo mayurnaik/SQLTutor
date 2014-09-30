@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 from __future__ import with_statement, print_function
+import subprocess
 import sys
 import re
+import os
 from collections import OrderedDict
 import argparse
 import sqlite3
@@ -191,6 +193,24 @@ def run_global_report(conn, unique_queries=False, source=None):
             stats.applied(row[0], times=int(row[1]))
     stats.print_stats()
 
+def run_all_tests(args):
+    """:param args: argparser.Namespace"""
+    db = args.db
+    if not os.path.isfile('build.xml'):
+        raise RuntimeError('build.xml does not exist, generate it from Eclipse first')
+    if not os.path.isfile(db):
+        print('Creating db file: {}'.format(db))
+        main(['init', '--db', db])
+    for source, testname in SOURCES.iteritems():
+        print('Running test case: {}'.format(testname))
+        ant_args = ('ant', testname)
+        retcode = subprocess.call(ant_args)
+        if retcode != 0:
+            raise RuntimeError('Ant run failed with code: {}'.format(retcode))
+        print('Updating results for {}'.format(source))
+        main(['update', source])
+
+
 
 def get_query(line):
     m = re.match(r'^.*TestBase - Query: (?P<query>.+)$', line)
@@ -226,6 +246,9 @@ def _parser():
     report.add_argument('sources', nargs='*', default=None,
                         help='Report for each source (report is global otherwise)')
     report.set_defaults(func=run_report)
+
+    run = sub.add_parser('run', description='Run all tests and update the results')
+    run.set_defaults(func=run_all_tests)
 
     return parent
 
