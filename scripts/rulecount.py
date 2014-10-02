@@ -7,8 +7,6 @@ import os
 from collections import OrderedDict
 import argparse
 import sqlite3
-import operator
-import itertools
 
 ALL_RULES = [
     'TransformationRule',
@@ -80,8 +78,9 @@ class RuleStats(object):
             self.rules[rule] = times
 
     def print_stats(self):
+        print('{}\t{}'.format('Rule', 'Count'))
         for rule, count in self.rules.iteritems():
-            print('{}: {}'.format(rule, count))
+            print('{}\t{}'.format(rule, count))
 
 
 def run_init(args):
@@ -116,6 +115,8 @@ def run_update(args):
 
 
 def read_stats(logfile):
+    """Reads the rule application stats from a log file.
+    :returns a dict mapping query -> QueryStats"""
     stats = OrderedDict()
     qstats = None
     with open(logfile) as fp:
@@ -135,17 +136,6 @@ def get_query_rules(conn, source, query):
     return conn.execute(q, (source, query))
 
 
-def run_report(args):
-    db = args.db
-    with sqlite3.connect(db) as conn:
-        if not args.sources:
-            run_global_report(conn, unique_queries=args.unique_queries)
-        else:
-            for source in args.sources:
-                run_source_report(conn, source, show_rules=args.show_rules)
-                print()
-
-
 def get_source_counts(conn, source=None, query=None):
     source_query = (source, query)
     q = 'SELECT COUNT(*) FROM rule_application WHERE source=? AND query=?'
@@ -155,21 +145,65 @@ def get_source_counts(conn, source=None, query=None):
     return total, paper
 
 
-def run_source_report(conn, source, show_rules=False):
-    print('Source: {}'.format(source))
-    q = 'SELECT DISTINCT query, query_number FROM rule_application WHERE source=? ORDER BY query_number ASC'
-    cur = conn.execute(q, (source,))
-    for query, num in cur:
-        print('Query {}: {}'.format(num, query))
-        if show_rules:
-            map(print, itertools.imap(operator.itemgetter(0), get_query_rules(conn, source, query)))
+def run_query_report(args):
+    db = args.db
+    with sqlite3.connect(db) as conn:
+        if not args.sources:
+            query_report(conn, unique_queries=args.unique_queries, show_rules=args.show_rules)
+        else:
+            for source in args.sources:
+                query_report(conn, source=source, unique_queries=args.unique_queries, show_rules=args.show_rules)
+
+
+def query_report(conn, source=None, unique_queries=False, show_rules=False):
+    """Generate a report aggregated by query.
+
+    :param conn: the database connection
+    :param source: optional source to restrict the report to
+    :param unique_queries: if only unique queries should be counted, has no effect if a single source is given
+    :param show_rules: if the individual rules used should be included in the output
+    """
+    seen = set()
+    qargs = []
+    headers = ['Source', 'Query #', 'Core', 'Total', 'Query']
+    if show_rules:
+        headers.append('Rules')
+
+    q = 'SELECT DISTINCT source, query, query_number FROM rule_application'
+    if source:
+        q += ' WHERE source=?'
+        qargs.append(source)
+    q += ' ORDER BY source DESC, query_number ASC'
+
+    cur = conn.execute(q, qargs)
+    print('\t'.join(headers))
+    for source, query, query_number in cur:
+        # skip if unique
+        if unique_queries:
+            if query in seen:
+                continue
+            seen.add(query)
+
         total, paper_total = get_source_counts(conn, source, query)
-        print('Rules applied: {} ({})'.format(paper_total, total))
-    print()
-    run_global_report(conn, source=source)
+        output = [source, query_number, paper_total, total, query]
+        if show_rules:
+            rules = '|'.join(r[0] for r in get_query_rules(conn, source, query))
+            output.append(rules)
+        print('\t'.join(map(str, output)))
 
 
-def run_global_report(conn, unique_queries=False, source=None):
+def run_rules_report(args):
+    db = args.db
+    with sqlite3.connect(db) as conn:
+        if not args.sources:
+            rules_report(conn, unique_queries=args.unique_queries)
+        else:
+            for source in args.sources:
+                print('Source: {}'.format(source), file=sys.stderr)
+                rules_report(conn, unique_queries=args.unique_queries, source=source)
+
+
+def rules_report(conn, unique_queries=False, source=None):
     """Collects and reports rule application counts, either globally or for a particular source.
 
     :param conn: sqlite3.Connection the database connections
@@ -182,7 +216,7 @@ def run_global_report(conn, unique_queries=False, source=None):
         for query, rule in conn.execute('SELECT DISTINCT query, rule FROM rule_application'):
             queries.add(query)
             stats.applied(rule)
-        print('Unique queries: {}'.format(len(queries)))
+        print('Unique queries: {}'.format(len(queries)), file=sys.stderr)
     else:
         args = []
         q = 'SELECT rule, COUNT(*) FROM rule_application'
@@ -193,6 +227,7 @@ def run_global_report(conn, unique_queries=False, source=None):
         for row in conn.execute(q, args):
             stats.applied(row[0], times=int(row[1]))
     stats.print_stats()
+
 
 def run_all_tests(args):
     """:param args: argparser.Namespace"""
@@ -224,31 +259,49 @@ def get_applied(line):
 
 
 def _parser():
-    parent = argparse.ArgumentParser()
-    parent.add_argument('--db', default='sqltutorrules.db')
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument('--db', default='sqltutorrules.db',
+                        help='Choose the SQLite database file')
+
+    parent = argparse.ArgumentParser(parents=[common])
+    # parent.add_argument('--db', default='sqltutorrules.db')
 
     sub = parent.add_subparsers()
 
-    init = sub.add_parser('init', description='Create the database')
+    init = sub.add_parser('init', help='Initialize the database file',
+                          description='Creates the database file and schema.')
     """:type : argparse.ArgumentParser"""
     init.set_defaults(func=run_init)
 
-    update = sub.add_parser('update', description='Update the database from a log file')
+    update = sub.add_parser('update', help='Update the database from a log file',
+                            description='Reads a log file and updates the database entries of a source.')
     """:type : argparse.ArgumentParser"""
+    update.add_argument('--logfile', default='sqltutor.debug.log',
+                        help='The logfile location to read results from')
     update.add_argument('sourcename', help='Source (test case) name for these results.')
-    update.add_argument('logfile', nargs='?', default='sqltutor.debug.log')
     update.set_defaults(func=run_update)
 
-    report = sub.add_parser('report', description='Report current results')
-    report.add_argument('--unique-queries', action='store_true', default=False,
-                        help='Only consider unique queries for global counts')
-    report.add_argument('--show-rules', action='store_true', default=False,
-                        help='Show the rules used for per-source reports')
-    report.add_argument('sources', nargs='*', default=None,
-                        help='Report for each source (report is global otherwise)')
-    report.set_defaults(func=run_report)
+    report_parent = argparse.ArgumentParser(add_help=False)
+    report_parent.add_argument('--unique-queries', action='store_true', default=False,
+                               help='Only consider unique queries for global counts')
+    report_parent.add_argument('sources', nargs='*', default=None,
+                               help='Report for each source (report is global otherwise)')
 
-    run = sub.add_parser('run', description='Run all tests and update the results')
+    report = sub.add_parser('report', help='Generate reports, see subcommand help.',
+                            description='Generate rule application reports, either per query or per rule.')
+    report_subs = report.add_subparsers()
+    report_queries = report_subs.add_parser('queries', parents=[report_parent],
+                                            help='Generate per-query reports')
+    report_queries.add_argument('--show-rules', action='store_true', default=False,
+                                help='Show the rules used for per-source reports')
+    report_queries.set_defaults(func=run_query_report)
+
+    report_rules = report_subs.add_parser('rules', parents=[report_parent],
+                                          help='Generate per-rule reports')
+    report_rules.set_defaults(func=run_rules_report)
+
+    run = sub.add_parser('run', help='Run tests and gather results',
+                         description='Run all tests and update the results.')
     run.set_defaults(func=run_all_tests)
 
     return parent
