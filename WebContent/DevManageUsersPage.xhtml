@@ -41,7 +41,7 @@
 				    	selectionMode="single" selection="#{devManageUsersPageBean.selectedUser}" rowKey="#{user}">
 				    	<p:ajax event="rowSelect" update=":form"/>
 				        <p:column headerText="Email">
-				            <h:outputText style="white-space: normal;" value="#{user.email}" />
+				            <h:outputText style="white-space: normal;" value="#{user.hashedEmail}" />
 				        </p:column>
 				 
 				        <p:column headerText="Admin Status (Admin Code)">
