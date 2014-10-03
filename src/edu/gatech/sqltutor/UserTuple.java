@@ -24,11 +24,11 @@ public class UserTuple {
 		return admin + " (" + adminCode + ")";
 	}
 
-	public String getEmail() {
+	public String getHashedEmail() {
 		return email;
 	}
 
-	public void setEmail(String email) {
+	public void setHashedEmail(String email) {
 		this.email = email;
 	}
 

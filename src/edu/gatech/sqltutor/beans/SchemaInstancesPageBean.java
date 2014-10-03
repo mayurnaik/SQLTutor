@@ -69,7 +69,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,

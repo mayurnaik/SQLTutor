@@ -64,7 +64,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void reorderQuestions() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -90,7 +90,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 	
 	public void deleteQuestions() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -122,7 +122,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void addQuestion() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");

@@ -33,7 +33,7 @@ public class SchemaUploadPageBean implements Serializable {
 	
 	public void addSchema() {
 		try {
-			String schemaName = databaseManager.addSchema(schemaDump, userBean.getEmail());
+			String schemaName = databaseManager.addSchema(schemaDump, userBean.getHashedEmail());
 			userBean.setSelectedSchema(schemaName);
 	        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + "/SchemaOptionsPage.jsf");

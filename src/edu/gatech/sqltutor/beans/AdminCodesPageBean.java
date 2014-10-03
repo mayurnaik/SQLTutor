@@ -33,7 +33,7 @@ public class AdminCodesPageBean implements Serializable {
 	@PostConstruct
 	public void init() {
 		try {
-			codes = getDatabaseManager().getLinkedAdminCodes(userBean.getEmail());
+			codes = getDatabaseManager().getLinkedAdminCodes(userBean.getHashedEmail());
 			selectedCode = "";
 			code = "";
 		} catch (SQLException e) {
@@ -57,7 +57,7 @@ public class AdminCodesPageBean implements Serializable {
 					"You are not allowed to remove your own admin code, or the \"examples\" admin code.", "");
 		} else {
 			try {
-				getDatabaseManager().unlinkCode(userBean.getEmail(), selectedCode);
+				getDatabaseManager().unlinkCode(userBean.getHashedEmail(), selectedCode);
 				codes.remove(selectedCode);
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully unlinked \"" + selectedCode + "\".", "");
@@ -91,7 +91,7 @@ public class AdminCodesPageBean implements Serializable {
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You are already linked to this admin code.", "");
 			} else {
-					getDatabaseManager().linkCode(userBean.getEmail(), code);
+					getDatabaseManager().linkCode(userBean.getHashedEmail(), code);
 					codes.add(code);
 					msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"Successfully linked \"" + code + "\".", "");

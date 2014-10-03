@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.util;
 
+import java.io.ByteArrayInputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;

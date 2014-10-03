@@ -15,6 +15,7 @@ import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.UserTuple;
+import edu.gatech.sqltutor.util.SaltHasher;
 
 @ManagedBean
 @ViewScoped
@@ -41,17 +42,17 @@ public class DevManageUsersPageBean implements Serializable {
 	}
 	
 	public void deleteUser() {
-		if(selectedUser.getEmail().equals("sql-tutor@googlegroups.com")) {
+		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getEmail() + "\".", "");
+					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return;
 		}
 		try {
-			getDatabaseManager().deleteUser(selectedUser.getEmail(), selectedUser.getAdminCode());
+			getDatabaseManager().deleteUser(selectedUser.getHashedEmail(), selectedUser.getAdminCode());
 			users.remove(selectedUser);
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				"Successfully deleted \"" + selectedUser.getEmail() + "\".", "");
+				"Successfully deleted \"" + selectedUser.getHashedEmail() + "\".", "");
 
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
@@ -72,13 +73,13 @@ public class DevManageUsersPageBean implements Serializable {
 		try {
 			FacesMessage msg;
 			if(!selectedUser.isAdmin()) {
-				getDatabaseManager().promoteUserToAdmin(selectedUser.getEmail());
+				getDatabaseManager().promoteUserToAdmin(selectedUser.getHashedEmail());
 				updateSelectedUser();
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully promoted \"" + selectedUser.getEmail() + "\" to admin.", "");
+					"Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to admin.", "");
 			} else {
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"\"" + selectedUser.getEmail() + "\" is already an admin.", "");
+					"\"" + selectedUser.getHashedEmail() + "\" is already an admin.", "");
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
@@ -96,22 +97,22 @@ public class DevManageUsersPageBean implements Serializable {
 	}
 	
 	public void demoteUserFromAdmin() {
-		if(selectedUser.getEmail().equals("sql-tutor@googlegroups.com")) {
+		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getEmail() + "\".", "");
+					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return;
 		}
 		try {
 			FacesMessage msg;
 			if(selectedUser.isAdmin()) {
-				getDatabaseManager().demoteUserFromAdmin(selectedUser.getEmail(), selectedUser.getAdminCode());
+				getDatabaseManager().demoteUserFromAdmin(selectedUser.getHashedEmail(), selectedUser.getAdminCode());
 				updateSelectedUser();
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully demoted \"" + selectedUser.getEmail() + "\" from admin.", "");
+					"Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from admin.", "");
 			} else {
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"\"" + selectedUser.getEmail() + "\" is not an admin.", ""); 
+						"\"" + selectedUser.getHashedEmail() + "\" is not an admin.", ""); 
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
@@ -135,13 +136,13 @@ public class DevManageUsersPageBean implements Serializable {
 				if(!selectedUser.isAdmin()) {
 					promoteUserToAdmin();
 				}
-				getDatabaseManager().promoteUserToDev(selectedUser.getEmail());
+				getDatabaseManager().promoteUserToDev(selectedUser.getHashedEmail());
 				updateSelectedUser();
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully promoted \"" + selectedUser.getEmail() + "\" to dev.", "");
+					"Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to dev.", "");
 			} else {
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"\"" + selectedUser.getEmail() + "\" is already a dev", "");
+						"\"" + selectedUser.getHashedEmail() + "\" is already a dev", "");
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
@@ -159,22 +160,22 @@ public class DevManageUsersPageBean implements Serializable {
 	}
 	
 	public void demoteUserFromDev() {
-		if(selectedUser.getEmail().equals("sql-tutor@googlegroups.com")) {
+		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getEmail() + "\".", "");
+					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			return;
 		}
 		try {
 			FacesMessage msg;
 			if(selectedUser.isDev()) {
-				getDatabaseManager().demoteUserFromDev(selectedUser.getEmail());
+				getDatabaseManager().demoteUserFromDev(selectedUser.getHashedEmail());
 				updateSelectedUser();
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Successfully demoted \"" + selectedUser.getEmail() + "\" from dev.", "");
+						"Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from dev.", "");
 			} else {
 				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"\"" + selectedUser.getEmail() + "\" is not a dev.", "");
+					"\"" + selectedUser.getHashedEmail() + "\" is not a dev.", "");
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
@@ -192,7 +193,7 @@ public class DevManageUsersPageBean implements Serializable {
 	}
 	
 	public void updateSelectedUser() throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
-		UserTuple temp = getDatabaseManager().getUserTuple(selectedUser.getEmail());
+		UserTuple temp = getDatabaseManager().getUserTuple(selectedUser.getHashedEmail());
 		selectedUser.setAdmin(temp.isAdmin());
 		selectedUser.setDev(temp.isDev());
 		selectedUser.setAdminCode(temp.getAdminCode());

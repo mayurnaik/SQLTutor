@@ -80,7 +80,7 @@ public class TutorialPageBean {
 		}
 		
 		try {
-			databaseManager.log(getSessionId(), userBean.getEmail(), selectedSchema, 
+			databaseManager.log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

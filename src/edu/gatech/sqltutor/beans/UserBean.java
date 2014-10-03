@@ -2,9 +2,11 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.faces.application.FacesMessage;
@@ -16,6 +18,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.util.SaltHasher;
 
 /**
  * UserBean is a class attended to handle user login status, registration, 
@@ -27,6 +30,7 @@ import edu.gatech.sqltutor.DatabaseManager;
 @SessionScoped
 public class UserBean implements Serializable {
 	private static final long serialVersionUID = 1L;
+	public static final byte[] SALT = "-JllYJaGhP+-0xfJ2+_-K~6YIJkF1ip8hg8qKTDis1TmCjQu*B|Mm TB-szu".getBytes();
 
 	@ManagedProperty(value="#{databaseManager}")
 	private DatabaseManager databaseManager;
@@ -54,21 +58,21 @@ public class UserBean implements Serializable {
 	public void login() throws IOException { 
 		String loginMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":loginForm:loginMessages").getClientId();
 		try {
-			if(!getDatabaseManager().isUsernameRegistered(email.toLowerCase()) || 
-					!getDatabaseManager().isPasswordCorrect(email.toLowerCase(), password)) {
+			if(!getDatabaseManager().isEmailRegistered(getHashedEmail()) || 
+					!getDatabaseManager().isPasswordCorrect(getHashedEmail(), password)) {
 				
 				FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, null));
 				return;
 			}
 
 			loggedIn = true;
-			admin = getDatabaseManager().isAdmin(email.toLowerCase());
-			developer = getDatabaseManager().isDeveloper(email.toLowerCase());
-			adminCode = getDatabaseManager().getAdminCode(email.toLowerCase());
-			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(email.toLowerCase());
+			admin = getDatabaseManager().isAdmin(getHashedEmail());
+			developer = getDatabaseManager().isDeveloper(getHashedEmail());
+			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
+			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
 			selectedSchema = "company";
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
+			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -84,16 +88,15 @@ public class UserBean implements Serializable {
 	public void register() throws IOException {
 		String registrationMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":registrationForm:registrationMessages").getClientId();
 		try {
-			if(getDatabaseManager().isUsernameRegistered(email.toLowerCase())) {
+			if(getDatabaseManager().isEmailRegistered(getHashedEmail())) {
 				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
 				return;
 			}
-			getDatabaseManager().registerUser(email.toLowerCase(), password);
-			loggedIn = true;
-			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(((HttpServletRequest)externalContext.getRequest()).getRequestURI());
+			getDatabaseManager().registerUser(getHashedEmail(), password);
+			login();
 		} catch(SQLException e) {
 			String msg = e.getMessage();
+			System.out.println(msg);
 			if(msg.contains("user_email")) {
 				msg = "The email you entered is already tied to an account.";
 				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, msg, null));
@@ -150,7 +153,7 @@ public class UserBean implements Serializable {
 		this.loggedIn = loggedIn;
 		if(!loggedIn) {
 			password = null;
-			email = null;
+			setEmail(null);
 			admin = false;
 			developer = false;
 			adminCode = null;
@@ -186,14 +189,6 @@ public class UserBean implements Serializable {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
 	}
 
 	public DatabaseManager getDatabaseManager() {
@@ -234,5 +229,17 @@ public class UserBean implements Serializable {
 
 	public void setDeveloper(boolean developer) {
 		this.developer = developer;
+	}
+	
+	public String getHashedEmail() throws NoSuchAlgorithmException, InvalidKeySpecException {
+		return Arrays.toString(SaltHasher.getEncryptedValue(email.toLowerCase(), SALT));
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 }

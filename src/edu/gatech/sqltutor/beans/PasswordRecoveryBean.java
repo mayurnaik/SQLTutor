@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.UUID;
 
 import javax.faces.application.FacesMessage;
@@ -17,6 +18,7 @@ import javax.mail.MessagingException;
 
 import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.util.Emailer;
+import edu.gatech.sqltutor.util.SaltHasher;
 
 @ManagedBean
 @SessionScoped
@@ -35,7 +37,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void sendPasswordLink() {
 		try {
-			if(!databaseManager.emailExists(getEmail())) {
+			if(!databaseManager.emailExists(getHashedEmail())) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"The email you entered has not been registered.", "");
 				FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -43,7 +45,7 @@ public class PasswordRecoveryBean implements Serializable {
 			}
 			
 			UUID uuid = UUID.randomUUID();
-			databaseManager.addPasswordChangeRequest(getEmail(), uuid);
+			databaseManager.addPasswordChangeRequest(getHashedEmail(), uuid);
 			String to = getEmail(); 
 			String subject = "[SQL-Tutor] Password Recovery - Do Not Reply";
 			String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
@@ -67,7 +69,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void invalidRedirect() {
 		try {
-			if(!databaseManager.getPasswordChangeRequest(getEmail(), id)) {
+			if(!databaseManager.getPasswordChangeRequest(getHashedEmail(), getId())) {
 				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			    try {
 					externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
@@ -89,7 +91,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void updatePassword() {
 		try {
-			databaseManager.changePassword(getEmail(), getPassword());
+			databaseManager.changePassword(getHashedEmail(), getPassword());
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 
@@ -147,5 +149,9 @@ public class PasswordRecoveryBean implements Serializable {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	
+	public String getHashedEmail() throws NoSuchAlgorithmException, InvalidKeySpecException {
+		return Arrays.toString(SaltHasher.getEncryptedValue(getEmail().toLowerCase(), UserBean.SALT));
 	}
 }
