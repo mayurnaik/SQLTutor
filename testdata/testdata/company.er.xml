@@ -176,14 +176,14 @@
     		<entity reference="entityDepartment" />
     		<constraint>
     			<label>Controlling Department</label>
-    			<cardinality>N</cardinality>
+    			<cardinality>1</cardinality>
     		</constraint>
     	</leftEdge>
     	<rightEdge>
     		<entity reference="entityProject" />
     		<constraint>
     			<label>Controlled Project</label>
-    			<cardinality>1</cardinality>
+    			<cardinality>N</cardinality>
     		</constraint>
     	</rightEdge>
     </relationship>
