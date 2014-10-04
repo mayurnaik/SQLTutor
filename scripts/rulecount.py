@@ -40,6 +40,24 @@ ALL_RULES = [
     'SingleReferenceAnaphoraRule'
 ]
 
+# establish map from implementation name to name used in the paper
+RULE_TO_PAPER_NAME = OrderedDict()
+for rule in ALL_RULES:
+    # first common pattern
+    paper_name = re.sub(r'Rule$', '', rule)
+    paper_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', paper_name)
+    RULE_TO_PAPER_NAME[rule] = paper_name
+# then overrides
+RULE_TO_PAPER_NAME['TransformationRule'] = 'Select List Format'
+RULE_TO_PAPER_NAME['TableEntityRefNeedsIdRule'] = 'Entity Ref Needs Id'
+RULE_TO_PAPER_NAME['JoinLabelRule'] = 'Join Relationship'
+RULE_TO_PAPER_NAME['DescribingAttributeLabelRule'] = 'Describing Attribute'
+RULE_TO_PAPER_NAME['TableEntityRefLiteralRule'] = 'Entity Ref Lowering'
+
+def get_paper_name(rule):
+    return RULE_TO_PAPER_NAME[rule]
+
+
 IGNORE_RULES = [
     'DefaultColumnLabelRule',
     'DefaultTableLabelRule',

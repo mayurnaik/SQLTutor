@@ -4,25 +4,26 @@ import sys
 import matplotlib.figure
 from matplotlib.figure import Figure, Axes
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 import argparse
 import csv
 import collections
 import itertools as it
 
-from rulecount import IGNORE_RULES
+from rulecount import IGNORE_RULES, get_paper_name
 
 RuleCount = collections.namedtuple('RuleCount', ('rule', 'count'))
 
 def create_plot(args):
     data = read_input(args.inputfile)
 
+    # optionally filter and sort
     if not args.all_rules:
         data = [d for d in data if d.rule not in IGNORE_RULES]
     if args.sort:
         data.sort(cmp=lambda x, y: cmp(x.count, y.count))
 
-    rules = [d.rule for d in data]
+    rules = [get_paper_name(d.rule) for d in data]
     counts = [d.count for d in data]
     fig = plt.figure()
     """:type : Figure"""
@@ -33,6 +34,7 @@ def create_plot(args):
     rects = ax.barh(range(len(rules)), counts, align='center', hatch=None, fill=True, color='gray')
     ax.set_xlabel('Query Translation')
 
+    # draw values by bars
     for i, rect in enumerate(rects):
         y = rect.get_y() + rect.get_height() / 4.0
         val = counts[i]
@@ -44,6 +46,9 @@ def create_plot(args):
             x = rect.get_width() - 2
         ax.text(x, y, str(counts[i]), color=color)
 
+    # draw mean
+    mean = np.mean(counts)
+    print('Mean: {}'.format(mean), file=sys.stderr)
 
     fig.tight_layout(pad=0.0, rect=(0, 0, 0.925, 1))
 
