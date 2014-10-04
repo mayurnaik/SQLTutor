@@ -191,8 +191,7 @@ public class SymbolicUtil {
 			return getLeftmostDescendant(siblings.get(idx+1));
 		
 		// otherwise, up one level and check
-		return getPrecedingToken(parent);
-		
+		return getFollowingToken(parent);
 	}
 	
 	/**
