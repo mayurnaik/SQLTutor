@@ -193,14 +193,14 @@
     		<entity reference="entityEmployee" />
     		<constraint>
     			<label>Employee</label>
-    			<cardinality>N</cardinality>
+    			<cardinality>1</cardinality>
     		</constraint>
     	</leftEdge>
     	<rightEdge>
     		<entity reference="entityDependent" />
     		<constraint>
     			<label>Dependent</label>
-    			<cardinality>1</cardinality>
+    			<cardinality>N</cardinality>
     		</constraint>
     	</rightEdge>
     </relationship>
