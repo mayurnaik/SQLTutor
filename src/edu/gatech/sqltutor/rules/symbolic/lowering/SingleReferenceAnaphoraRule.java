@@ -162,7 +162,8 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 			ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
 			
 			ISymbolicToken theRef = getPotentialReference(nounParent);
-			
+			if(theRef == null)
+				return false;
 			if( theRef instanceof LiteralToken ) {
 				if( theRef.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_PRONOUN )
 					return false;
@@ -186,7 +187,8 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		for( ISymbolicToken verbPhrase: verbPhrases ) {
 			ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
 			ISymbolicToken theRef = getPotentialReference(nounParent);
-			
+			if(theRef == null)
+				return false;
 			if( theRef instanceof LiteralToken ) {
 				if( theRef.getPartOfSpeech() != PartOfSpeech.PERSONAL_PRONOUN )
 					return false;
