@@ -353,11 +353,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 		} else {
 			// column doesn't map to an attribute, refer to it as is
 			token = colRef;
-			token.setPartOfSpeech(PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 		}
+		token.setPartOfSpeech(isDistinct ? PartOfSpeech.NOUN_PLURAL : PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 		
-		SQLNounToken fromToken = ext.getToken("?tableId");
-		FromTable fromTable = (FromTable)fromToken.getAstNode();
 		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
 		
 		TableEntityToken tableEntity = state.getQueries().getTableEntityForScope(
