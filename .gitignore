@@ -11,3 +11,5 @@
 # Build files #
 build/*
 
+*.log
+

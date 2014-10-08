@@ -108,8 +108,17 @@ public class TransformationRule extends StandardSymbolicRule implements
 		
 		root.addChild(new SelectToken());
 		
-		if( isDistinct ) 
-			addDistinctTokens(root);
+		if( isDistinct ) {
+			boolean hasSingleAttr = resultColumns.getChildren().size() == 1;
+			ResultColumn col = null;
+			if(hasSingleAttr) {
+				ISymbolicToken childToken = resultColumns.getChildren().get(0);
+				SQLToken child = (SQLToken)childToken;
+				col = (ResultColumn)child.getAstNode();
+			}
+			addDistinctTokens(root, hasSingleAttr && !(col instanceof AllResultColumn));
+		}
+
 		addResultColumnsAndTables(root, resultColumns, fromList);
 		if( selectChildren.size() >= 3 )
 			addWhereClause(root, selectChildren.get(2));
@@ -143,12 +152,14 @@ public class TransformationRule extends StandardSymbolicRule implements
 		return columns;
 	}
 	
-	private void addDistinctTokens(RootToken root) {
+	private void addDistinctTokens(RootToken root, boolean single) {
 		if( !isDistinct ) return;
 		root.addChild(Literals.the());
 		root.addChild(new LiteralToken("distinct", PartOfSpeech.ADJECTIVE));
-		root.addChild(new LiteralToken("values", PartOfSpeech.NOUN_PLURAL));
-		root.addChild(Literals.of());
+		if(!single) {
+			root.addChild(new LiteralToken("values", PartOfSpeech.NOUN_PLURAL));
+			root.addChild(Literals.of());
+		}
 	}
 	
 	private void addResultColumnsAndTables(RootToken root, 

@@ -97,7 +97,7 @@ public class AttributeLiteralLabelRule
 		if( before == null )
 			return true;
 		PartOfSpeech pos = before.getPartOfSpeech();
-		if( pos.isPossessive() || pos == PartOfSpeech.DETERMINER )
+		if( pos.isPossessive() || pos == PartOfSpeech.DETERMINER || pos == PartOfSpeech.ADJECTIVE)
 			return false;
 		return true;
 	}
