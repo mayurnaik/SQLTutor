@@ -130,7 +130,8 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 		} else {
 			_log.warn(Markers.SYMBOLIC, "Choosing from {} candidates.", nCandidates);
 			// FIXME maybe use the one with greatest number of replaceable refs
-			candidate = candidates.get(random.nextInt(nCandidates));
+//			candidate = candidates.get(random.nextInt(nCandidates));
+			candidate = candidates.get(0);
 		}
 		
 		TableEntityRefToken ref = candidate.getBaseRef();

@@ -59,8 +59,8 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 9
 			{"SELECT p.pnumber, d.dnumber, e.lname, e.address, e.bdate FROM project p, department d, employee e WHERE p.dnum = d.dnumber AND d.mgr_ssn = e.ssn AND p.plocation = 'Stafford'", 
-				Pattern.quote("Select the numbers of each project and department "
-						+ "and the last name, address, and birth date of each employee where the department controls the project, the employee manages the department, and the project's location is \"Stafford.\"")},	
+				Pattern.quote("Select the numbers of each project and its controlling department "
+						+ "and the last name, address, and birth date of each controlling department's manager where the project's location is \"Stafford.\"")},	
 		};
 		return Arrays.asList(params);
 	}
