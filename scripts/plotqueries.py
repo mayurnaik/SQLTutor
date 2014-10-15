@@ -15,7 +15,7 @@ def create_plot(args):
     counts = [counter[g] for g in groups]
 
     plt.gray()
-    plt.bar(groups, counts, align='center', fill=False, hatch='///')
+    plt.bar(groups, counts, align='center', fill=True, color='grey')
     # plt.subplots_adjust(left=0.05, right=0.95, bottom=0, top=1.1)
 
     plt.xlabel('# of rules')
