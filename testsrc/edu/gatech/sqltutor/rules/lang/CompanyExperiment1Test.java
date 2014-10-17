@@ -22,7 +22,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 1
 			{"SELECT DISTINCT salary FROM employee", 
-				Pattern.quote("Select the distinct values of the salaries of all employees.")},
+				Pattern.quote("Select the distinct salaries of all employees.")},
 			
 			// 2
 			{"SELECT ssn FROM employee", 

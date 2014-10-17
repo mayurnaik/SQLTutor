@@ -14,6 +14,7 @@ import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.er.converters.BiMapConverter;
+import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
 
 @XStreamAlias("ermapping")
 public class ERMapping {
@@ -119,6 +120,25 @@ public class ERMapping {
 	public ERRelationship getRelationship(ERJoinMap join) {
 		checkDiagram();
 		return diagram.getRelationship(getRelationshipName(join));
+	}
+	
+	public ERJoinMap getJoin(String column) {
+		for(ERJoinMap join : getJoins()) {
+			if(join instanceof ERForeignKeyJoin) {
+				ERKeyPair p = ((ERForeignKeyJoin) join).getKeyPair();
+				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column)) {
+					return join;
+				}
+			} else if(join instanceof ERLookupTableJoin) {
+				ERKeyPair p = ((ERLookupTableJoin) join).getLeftKeyPair();
+				ERKeyPair p2 = ((ERLookupTableJoin) join).getRightKeyPair();
+				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column) ||
+						p2.getForeignKey().equals(column) || p2.getForeignKey().equals(column)) {
+					return join;
+				}
+			}
+		}
+		return null;
 	}
 	
 	protected void checkDiagram() {

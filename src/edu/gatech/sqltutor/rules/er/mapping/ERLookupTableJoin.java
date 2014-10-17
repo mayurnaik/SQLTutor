@@ -33,6 +33,16 @@ public class ERLookupTableJoin extends ERJoinMap {
 		return rightKeyPair;
 	}
 	
+	public String getCorrespondingPrimaryKey(String foreignKey) {
+		String primaryKey = null;
+		if(getLeftKeyPair().getForeignKey().equals(foreignKey)) {
+			return getLeftKeyPair().getPrimaryKey();
+		} else if(getRightKeyPair().getForeignKey().equals(foreignKey)) {
+			return getRightKeyPair().getPrimaryKey();
+		}
+		return primaryKey;
+	}
+	
 	@Override
 	public int hashCode() {
 		return Objects.hashCode(leftKeyPair, rightKeyPair);

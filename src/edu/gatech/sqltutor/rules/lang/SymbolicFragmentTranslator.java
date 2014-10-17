@@ -50,6 +50,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
+import edu.gatech.sqltutor.rules.util.ForeignKeyReplacer;
 
 public class SymbolicFragmentTranslator 
 		extends AbstractQueryTranslator implements IQueryTranslator {
@@ -104,7 +105,10 @@ public class SymbolicFragmentTranslator
 		// parse query
 		StatementNode statement = parseQuery();
 		SelectNode select = QueryUtils.extractSelectNode(statement);
-
+		
+		// check for and replace foreign keys
+		new ForeignKeyReplacer(erMapping).resolve(select);
+		
 		// create initial symbolic state
 		symState = new SymbolicCreator(select).makeSymbolic();
 		RootToken symbolic = symState.getRootToken();
