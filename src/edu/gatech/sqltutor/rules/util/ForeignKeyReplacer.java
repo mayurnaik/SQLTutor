@@ -1,18 +1,15 @@
 package edu.gatech.sqltutor.rules.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
-import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.AndNode;
 import com.akiban.sql.parser.BinaryComparisonOperatorNode;
 import com.akiban.sql.parser.BinaryLogicalOperatorNode;
@@ -23,32 +20,17 @@ import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.FromList;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
-import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.ResultColumnList;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.TableName;
 import com.akiban.sql.parser.ValueNode;
-import com.akiban.sql.parser.Visitable;
-import com.akiban.sql.parser.Visitor;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 
-import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
 import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
-import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SelectToken;
-import edu.gatech.sqltutor.util.Pair;
 
 public class ForeignKeyReplacer {
 	public static final boolean ACTIVE = false;
