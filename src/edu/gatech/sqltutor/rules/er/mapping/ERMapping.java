@@ -126,14 +126,13 @@ public class ERMapping {
 		for(ERJoinMap join : getJoins()) {
 			if(join instanceof ERForeignKeyJoin) {
 				ERKeyPair p = ((ERForeignKeyJoin) join).getKeyPair();
-				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column)) {
+				if(p.getForeignKey().equals(column)) {
 					return join;
 				}
 			} else if(join instanceof ERLookupTableJoin) {
 				ERKeyPair p = ((ERLookupTableJoin) join).getLeftKeyPair();
 				ERKeyPair p2 = ((ERLookupTableJoin) join).getRightKeyPair();
-				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column) ||
-						p2.getForeignKey().equals(column) || p2.getForeignKey().equals(column)) {
+				if(p.getForeignKey().equals(column) || p2.getForeignKey().equals(column)) {
 					return join;
 				}
 			}

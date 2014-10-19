@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.AllResultColumn;
+import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
@@ -120,8 +121,15 @@ public class SQLMaps {
 			} else {
 				tableName = resultColumn.getTableName();
 				if( tableName == null ) {
-					_log.error("Result column does not have a table name: {}", resultColumn);
-					continue;
+					tableName = resultColumn.getTableName();
+					if( tableName == null) {
+						ColumnReference cr = resultColumn.getReference();
+						if(cr != null)
+							tableName = cr.getTableName();
+						else
+							_log.error("Result column does not have a table name: {}", resultColumn);
+						continue;
+					}
 				}
 				fromTable = tableAliases.get(tableName);
 				if( fromTable != null ) {

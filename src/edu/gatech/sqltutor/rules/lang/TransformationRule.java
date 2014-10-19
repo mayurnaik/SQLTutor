@@ -130,12 +130,23 @@ public class TransformationRule extends StandardSymbolicRule implements
 	}
 	
 	private String getTableName(ResultColumn col) {
-		String tableName = col.getTableName();
 		// bad implementation keeps table name differently in AllResultColumn subclass
 		if( col instanceof AllResultColumn ) {
 			TableName tableNameObj = col.getTableNameObject();
 			if( tableNameObj != null )
-				tableName = tableNameObj.getTableName();
+				return tableNameObj.getTableName();
+		}
+		String tableName = col.getTableName();
+		if( tableName == null ) {
+			if(col.getTableNameObject() != null)
+				tableName = col.getTableNameObject().getTableName();
+			if( tableName == null) {
+				ColumnReference cr = col.getReference();
+				if(cr != null)
+					tableName = cr.getTableName();
+				else
+					_log.error("Result column does not have a table name: {}", col);
+			}
 		}
 		return tableName;
 	}
@@ -192,9 +203,16 @@ public class TransformationRule extends StandardSymbolicRule implements
 					// @see com.akiban.sql.parser.AllResultColumn.java
 					attr = new AllAttributesToken(fromTable.getOrigTableName().getTableName());
 				} else {
+					String columnName = null;
+					if(resultColumn.getColumnName() != null)
+						columnName = resultColumn.getColumnName();
+					else if(resultColumn.getExpression() != null)
+						columnName = resultColumn.getExpression().getColumnName();
+					else if(resultColumn.getReference() != null)
+						columnName = resultColumn.getReference().getColumnName();
 					attrName =
 						fromTable.getOrigTableName().getTableName() + 
-						"." + resultColumn.getExpression().getColumnName();
+						"." + columnName;
 					ERAttribute erAttr = erMapping.getAttribute(attrName);
 					if( erAttr == null ) {
 						_log.warn("No attribute for name {}, leaving column reference.", attrName);
