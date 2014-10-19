@@ -24,12 +24,17 @@ import com.akiban.sql.parser.UnaryOperatorNode;
 import com.akiban.sql.parser.ValueNode;
 import com.akiban.sql.parser.ValueNodeList;
 
+/**
+ * Applies aliases to each of the tables and cascades this change to each of its column references.
+ * 
+ * @author William Holton
+ *
+ */
 public class AliasApplier {
 	private static final Logger log = LoggerFactory
 			.getLogger(AliasApplier.class);
 
 	public void resolve(SelectNode select) {
-
 		FromList fromList = select.getFromList();
 		ResultColumnList resultColumns = select.getResultColumns();
 		List<ValueNode> whereNodes = getWhereNodes(select.getWhereClause());
@@ -37,6 +42,7 @@ public class AliasApplier {
 		for (int i = 0; i < fromList.size(); i++) {
 			FromBaseTable fromTable = (FromBaseTable)fromList.get(i);
 			ResultColumnList tablesResultColumns = getResultColumnsForTableAlias(fromTable.getExposedName(), resultColumns);
+			// if we actually updated the table's alias, then we need to update its column references
 			if( generateCorrelationName(fromTable) ) {
 				for(int j = 0; j < tablesResultColumns.size(); j++) {
 					ResultColumn c = resultColumns.get(j);
@@ -122,6 +128,11 @@ public class AliasApplier {
 		return columns;
 	}
 
+	/**
+	 * Generates a random correlation name and adds it to the FromTable.
+	 * @param fromTable
+	 * @return	true if an alias was generated and added to the FromTable, else false.
+	 */
 	public static boolean generateCorrelationName(FromTable fromTable) {
 		boolean generated = false;
 		if (fromTable.getCorrelationName() == null) {

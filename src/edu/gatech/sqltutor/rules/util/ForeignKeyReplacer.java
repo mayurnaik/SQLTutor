@@ -35,6 +35,14 @@ import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
 import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 
+/**
+ * Replaces any foreign keys within a query with their corresponding primary keys from another table.
+ * If the join which is formed by this FK to PK pairing is not already within the query, this class will
+ * also add the primary key's FromBaseTable and "t1.fk == t2.pk" to the WHERE-clause.
+ * 
+ * @author William Holton
+ *
+ */
 public class ForeignKeyReplacer {
 	private static final Logger log = LoggerFactory
 			.getLogger(ForeignKeyReplacer.class);

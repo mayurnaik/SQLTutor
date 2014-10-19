@@ -122,6 +122,13 @@ public class ERMapping {
 		return diagram.getRelationship(getRelationshipName(join));
 	}
 	
+	/**
+	 * Given a foreign key column, this method will iterate over the list of joins and return
+	 * the one that uses the foreign key.
+	 * 
+	 * @param column	the foreign key of the join you're wishing to find
+	 * @return
+	 */
 	public ERJoinMap getJoin(String column) {
 		for(ERJoinMap join : getJoins()) {
 			if(join instanceof ERForeignKeyJoin) {
