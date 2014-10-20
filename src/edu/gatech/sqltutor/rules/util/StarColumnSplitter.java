@@ -11,6 +11,7 @@ import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.ResultColumn;
 import com.akiban.sql.parser.ResultColumnList;
 import com.akiban.sql.parser.SelectNode;
+import com.akiban.sql.parser.TableName;
 
 import edu.gatech.sqltutor.SQLTutorException;
 
@@ -33,27 +34,24 @@ public class StarColumnSplitter {
 	public void split(SelectNode select) {
 		final ResultColumnList resultColumns = select.getResultColumns();
 		List<AllResultColumn> starColumns = getStarColumns(resultColumns);
+		FromList fromList = select.getFromList();
 		if( starColumns.size() == 0 )
 			return;
 		
 		// remove the */*.* columns
-		AllResultColumn origColumn = null;
-		for( AllResultColumn c: starColumns )
-			resultColumns.remove(origColumn = c);
+		for( AllResultColumn c : starColumns )
+			resultColumns.remove(c);
 		
 		// add t1.*, t2.*, ...
-		FromList fromList = select.getFromList();
-		for( int i = 0, len = fromList.size(); i < len; ++i ) {
+		for( int i = 0; i < fromList.size(); i++ ) {
 			FromTable fromTable = fromList.get(i);
-			
+
 			AllResultColumn newCol = new AllResultColumn();
-			newCol.setParserContext(origColumn.getParserContext());
 			newCol.setNodeType(NodeTypes.ALL_RESULT_COLUMN);
-			newCol.setBeginOffset(origColumn.getBeginOffset());
-			newCol.setEndOffset(origColumn.getEndOffset());
 			try {
-				newCol.copyFrom(origColumn);
-				newCol.init(fromTable.getTableName());
+				TableName tName = new TableName();
+				tName.init(null, fromTable.getExposedName());
+				newCol.init(tName);
 			} catch (StandardException e) {
 				throw new SQLTutorException(e);
 			}

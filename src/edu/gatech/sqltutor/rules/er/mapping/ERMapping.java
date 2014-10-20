@@ -122,18 +122,24 @@ public class ERMapping {
 		return diagram.getRelationship(getRelationshipName(join));
 	}
 	
+	/**
+	 * Given a foreign key column, this method will iterate over the list of joins and return
+	 * the one that uses the foreign key.
+	 * 
+	 * @param column	the foreign key of the join you're wishing to find
+	 * @return
+	 */
 	public ERJoinMap getJoin(String column) {
 		for(ERJoinMap join : getJoins()) {
 			if(join instanceof ERForeignKeyJoin) {
 				ERKeyPair p = ((ERForeignKeyJoin) join).getKeyPair();
-				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column)) {
+				if(p.getForeignKey().equals(column)) {
 					return join;
 				}
 			} else if(join instanceof ERLookupTableJoin) {
 				ERKeyPair p = ((ERLookupTableJoin) join).getLeftKeyPair();
 				ERKeyPair p2 = ((ERLookupTableJoin) join).getRightKeyPair();
-				if(p.getForeignKey().equals(column) || p.getPrimaryKey().equals(column) ||
-						p2.getForeignKey().equals(column) || p2.getForeignKey().equals(column)) {
+				if(p.getForeignKey().equals(column) || p2.getForeignKey().equals(column)) {
 					return join;
 				}
 			}
