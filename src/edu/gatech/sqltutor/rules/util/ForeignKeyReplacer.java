@@ -122,23 +122,11 @@ public class ForeignKeyReplacer {
 						
 						if(tableNamePair == null) {
 							// Add the join in the where clause (t1.fkey = t2.pkey)
-							BinaryRelationalOperatorNode joinNode = new BinaryRelationalOperatorNode();
-							joinNode.setNodeType(NodeTypes.BINARY_EQUALS_OPERATOR_NODE);
 							ColumnReference fkReference = resultColumn.getReference();
 							if(fkReference == null) {
 								fkReference = generateColumnReference(getColumnName(resultColumn), getTableName(resultColumn));
 							}
-							joinNode.init(cr, fkReference);
-							// check if there is already something in the where clause
-							ValueNode topWhereNode = select.getWhereClause();
-							if(topWhereNode != null) {
-								AndNode andNode = new AndNode();
-								andNode.setNodeType(NodeTypes.AND_NODE);
-								andNode.init(joinNode, topWhereNode);
-								select.setWhereClause(andNode);
-							} else {
-								select.setWhereClause(joinNode);
-							}
+							addJoin(select, fkReference, cr);
 							whereNodes = getWhereNodes(select.getWhereClause());
 						}
 					}
@@ -234,22 +222,32 @@ public class ForeignKeyReplacer {
 				
 				if(tableNamePair == null) {
 					// Add the join in the where clause (t1.fkey = t2.pkey)
-					BinaryRelationalOperatorNode joinNode = new BinaryRelationalOperatorNode();
-					joinNode.setNodeType(NodeTypes.BINARY_EQUALS_OPERATOR_NODE);
-					joinNode.init(cr, columnReference);
-					// check if there is already something in the where clause
-					ValueNode topWhereNode = select.getWhereClause();
-					if(topWhereNode != null) {
-						AndNode andNode = new AndNode();
-						andNode.setNodeType(NodeTypes.AND_NODE);
-						andNode.init(joinNode, topWhereNode);
-						select.setWhereClause(andNode);
-					} else {
-						select.setWhereClause(joinNode);
-					}
+					addJoin(select, columnReference, cr);
 					whereNodes = getWhereNodes(select.getWhereClause());
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Add the join in the where clause (t1.fkey = t2.pkey)
+	 * @param select	select node which we'll be adding the join to 
+	 * @param fkColumnReference	the column reference of the foreign key we're joining
+	 * @param pkColumnReference	the column reference of the primary key we're joining
+	 */
+	private void addJoin(SelectNode select, ColumnReference fkColumnReference, ColumnReference pkColumnReference) {
+		BinaryRelationalOperatorNode joinNode = new BinaryRelationalOperatorNode();
+		joinNode.setNodeType(NodeTypes.BINARY_EQUALS_OPERATOR_NODE);
+		joinNode.init(fkColumnReference, pkColumnReference);
+		// check if there is already something in the where clause
+		ValueNode topWhereNode = select.getWhereClause();
+		if(topWhereNode != null) {
+			AndNode andNode = new AndNode();
+			andNode.setNodeType(NodeTypes.AND_NODE);
+			andNode.init(joinNode, topWhereNode);
+			select.setWhereClause(andNode);
+		} else {
+			select.setWhereClause(joinNode);
 		}
 	}
 
