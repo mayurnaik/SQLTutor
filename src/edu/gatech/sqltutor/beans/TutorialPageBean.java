@@ -46,22 +46,19 @@ public class TutorialPageBean {
 	private HashMap<String, String> answers = new HashMap<String, String>();
 	private int questionIndex;
 	private String query;
-	private String feedbackNLP;
 	private String resultSetFeedback;
 	private String userFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
 	private QueryResult queryDiffResult;
 	private QueryResult answerDiffResult;
-	private final boolean nlpDisabled = true;
-
+	private final boolean nlpDisabled = false;
 	@PostConstruct
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
 		try {
 			tables = databaseManager.getTables(selectedSchema);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		setQuestionsAndAnswers();
@@ -70,11 +67,9 @@ public class TutorialPageBean {
 	public void processSQL() {
 		try {
 			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
-			if(!nlpDisabled)
-				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getTranslation() + "\"";
-			else 
-				feedbackNLP = "";
 			setResultSetDiffs();
+			if(!nlpDisabled && resultSetFeedback.toLowerCase().contains("incorrect"))
+				resultSetFeedback += " We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getTranslation() + "\"";
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
@@ -83,13 +78,10 @@ public class TutorialPageBean {
 			databaseManager.log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	} 
@@ -249,7 +241,6 @@ public class TutorialPageBean {
 		answerResult = null;
 		queryDiffResult = null;
 		answerDiffResult = null;
-		feedbackNLP = "";
 		resultSetFeedback = "";
 	}
 	
@@ -275,10 +266,6 @@ public class TutorialPageBean {
 
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
-	}
-
-	public String getFeedbackNLP() {
-		return feedbackNLP;
 	}
 	
 	public String getSelectedSchema() {

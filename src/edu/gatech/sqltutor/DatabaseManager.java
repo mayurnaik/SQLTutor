@@ -762,7 +762,7 @@ public class DatabaseManager implements Serializable {
 	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
 		Connection connection = dataSource.getConnection();
 
-		final String update = "INSERT INTO \"log\" (\"session_id\", \"email\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		final String update = "INSERT INTO \"log\" (\"session_id\", \"email\", \"schema\", \"question\", \"correct_answer\", \"query\", \"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement preparedStatement = connection.prepareStatement(update);
 		preparedStatement.setString(1, sessionId);
 		preparedStatement.setString(2, email);

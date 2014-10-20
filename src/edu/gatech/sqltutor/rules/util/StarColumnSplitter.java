@@ -39,9 +39,8 @@ public class StarColumnSplitter {
 			return;
 		
 		// remove the */*.* columns
-		AllResultColumn origColumn = null;
 		for( AllResultColumn c : starColumns )
-			resultColumns.remove(origColumn = c);
+			resultColumns.remove(c);
 		
 		// add t1.*, t2.*, ...
 		for( int i = 0; i < fromList.size(); i++ ) {
