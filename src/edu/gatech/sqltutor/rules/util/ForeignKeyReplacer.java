@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.StandardException;
+import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.AndNode;
 import com.akiban.sql.parser.BinaryComparisonOperatorNode;
 import com.akiban.sql.parser.BinaryListOperatorNode;
@@ -72,10 +73,11 @@ public class ForeignKeyReplacer {
 			for (int j = 0; j < tablesResultColumns.size(); j++) {
 				ResultColumn resultColumn = tablesResultColumns.get(j);
 				if (!(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN)) {
+					String columnName = getColumnName(resultColumn);
 					String attrName = fromTable.getOrigTableName()
 							.getTableName()
 							+ "."
-							+ resultColumn.getExpression().getColumnName();
+							+ columnName;
 					ERAttribute erAttr = mapping.getAttribute(attrName);
 					// If there is no mapped attribute, then we've found a foreign key.
 					if (erAttr == null) {
@@ -239,6 +241,8 @@ public class ForeignKeyReplacer {
 
 	private Pair<String, String> containsJoin(FromList fromList, List<ValueNode> whereNodes,
 			String primaryKey, String foreignKey) {
+		if(whereNodes == null || whereNodes.size() == 0)
+			return null;
 		for (ValueNode node : whereNodes) {
 			if (!(node instanceof BinaryComparisonOperatorNode))
 				continue;
@@ -338,11 +342,48 @@ public class ForeignKeyReplacer {
 		ResultColumnList columns = new ResultColumnList();
 		for (int i = 0; i < resultColumns.size(); i++) {
 			ResultColumn resultColumn = resultColumns.get(i);
-			String columnTableName = resultColumn.getTableName();
-			if (tableAlias.equals(columnTableName))
+			String tableName = getTableName(resultColumn);
+			if (tableAlias.equals(tableName))
 				columns.add(resultColumn);
 		}
 		return columns;
+	}
+
+	private String getColumnName(ResultColumn resultColumn) {
+		String columnName = resultColumn.getColumnName();
+		if(columnName == null) {
+			if(resultColumn.getExpression() != null) 
+				columnName = resultColumn.getExpression().getColumnName();
+			if(columnName == null) {
+				if(resultColumn.getReference() != null)
+					columnName = resultColumn.getReference().getColumnName();
+			}
+			if(columnName == null)
+				log.error("Result column does not have a column name: {}", resultColumn);
+		}
+		return columnName;
+	}
+	
+	private String getTableName(ResultColumn col) {
+		// bad implementation keeps table name differently in AllResultColumn subclass
+		if( col instanceof AllResultColumn ) {
+			TableName tableNameObj = col.getTableNameObject();
+			if( tableNameObj != null )
+				return tableNameObj.getTableName();
+		}
+		String tableName = col.getTableName();
+		if( tableName == null ) {
+			if(col.getTableNameObject() != null)
+				tableName = col.getTableNameObject().getTableName();
+			if( tableName == null) {
+				ColumnReference cr = col.getReference();
+				if(cr != null)
+					tableName = cr.getTableName();
+				else
+					log.error("Result column does not have a table name: {}", col);
+			}
+		}
+		return tableName;
 	}
 	
 	private class Pair<A, B> {

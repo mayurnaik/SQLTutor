@@ -203,13 +203,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 					// @see com.akiban.sql.parser.AllResultColumn.java
 					attr = new AllAttributesToken(fromTable.getOrigTableName().getTableName());
 				} else {
-					String columnName = null;
-					if(resultColumn.getColumnName() != null)
-						columnName = resultColumn.getColumnName();
-					else if(resultColumn.getExpression() != null)
-						columnName = resultColumn.getExpression().getColumnName();
-					else if(resultColumn.getReference() != null)
-						columnName = resultColumn.getReference().getColumnName();
+					String columnName = getColumnName(resultColumn);
 					attrName =
 						fromTable.getOrigTableName().getTableName() + 
 						"." + columnName;
@@ -398,6 +392,21 @@ public class TransformationRule extends StandardSymbolicRule implements
 			throw new SymbolicException("Unexpected number of children.", e);
 		}
 		
+	}
+	
+	private String getColumnName(ResultColumn resultColumn) {
+		String columnName = resultColumn.getColumnName();
+		if(columnName == null) {
+			if(resultColumn.getExpression() != null) 
+				columnName = resultColumn.getExpression().getColumnName();
+			if(columnName == null) {
+				if(resultColumn.getReference() != null)
+					columnName = resultColumn.getReference().getColumnName();
+			}
+			if(columnName == null)
+				_log.error("Result column does not have a column name: {}", resultColumn);
+		}
+		return columnName;
 	}
 
 	@Override
