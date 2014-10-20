@@ -122,14 +122,23 @@ public class ForeignKeyReplacer {
 						
 						if(tableNamePair == null) {
 							// Add the join in the where clause (t1.fkey = t2.pkey)
-							ValueNode topWhereNode = select.getWhereClause();
 							BinaryRelationalOperatorNode joinNode = new BinaryRelationalOperatorNode();
 							joinNode.setNodeType(NodeTypes.BINARY_EQUALS_OPERATOR_NODE);
-							joinNode.init(cr, resultColumn.getReference());
-							AndNode andNode = new AndNode();
-							andNode.setNodeType(NodeTypes.AND_NODE);
-							andNode.init(joinNode, topWhereNode);
-							select.setWhereClause(andNode);
+							ColumnReference fkReference = resultColumn.getReference();
+							if(fkReference == null) {
+								fkReference = generateColumnReference(getColumnName(resultColumn), getTableName(resultColumn));
+							}
+							joinNode.init(cr, fkReference);
+							// check if there is already something in the where clause
+							ValueNode topWhereNode = select.getWhereClause();
+							if(topWhereNode != null) {
+								AndNode andNode = new AndNode();
+								andNode.setNodeType(NodeTypes.AND_NODE);
+								andNode.init(joinNode, topWhereNode);
+								select.setWhereClause(andNode);
+							} else {
+								select.setWhereClause(joinNode);
+							}
 							whereNodes = getWhereNodes(select.getWhereClause());
 						}
 					}
@@ -225,14 +234,19 @@ public class ForeignKeyReplacer {
 				
 				if(tableNamePair == null) {
 					// Add the join in the where clause (t1.fkey = t2.pkey)
-					ValueNode topWhereNode = select.getWhereClause();
 					BinaryRelationalOperatorNode joinNode = new BinaryRelationalOperatorNode();
 					joinNode.setNodeType(NodeTypes.BINARY_EQUALS_OPERATOR_NODE);
 					joinNode.init(cr, columnReference);
-					AndNode andNode = new AndNode();
-					andNode.setNodeType(NodeTypes.AND_NODE);
-					andNode.init(joinNode, topWhereNode);
-					select.setWhereClause(andNode);
+					// check if there is already something in the where clause
+					ValueNode topWhereNode = select.getWhereClause();
+					if(topWhereNode != null) {
+						AndNode andNode = new AndNode();
+						andNode.setNodeType(NodeTypes.AND_NODE);
+						andNode.init(joinNode, topWhereNode);
+						select.setWhereClause(andNode);
+					} else {
+						select.setWhereClause(joinNode);
+					}
 					whereNodes = getWhereNodes(select.getWhereClause());
 				}
 			}

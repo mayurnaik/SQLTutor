@@ -2,7 +2,6 @@ package edu.gatech.sqltutor.rules.lang;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -26,7 +25,7 @@ public class Experiment5Test extends SymbolicFragmentTestBase {
 			{"SELECT ssn FROM employee WHERE fname = 'Ahmad'",
 				null},
 			// 3 (2-2)
-			{"SELECT e.super_ssn FROM employee e, department d WHERE d.dname = 'Research'",
+			{"SELECT e.super_ssn FROM employee e, department d WHERE e.dno = d.dnumber AND d.dname = 'Research'",
 				null},
 			// 4 (3-1)
 			{"SELECT E.fname, S.fname FROM employee AS E, employee AS S WHERE E.super_ssn = S.ssn AND E.salary > 20000",
