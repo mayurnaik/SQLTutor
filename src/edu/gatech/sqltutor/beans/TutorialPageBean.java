@@ -28,6 +28,11 @@ import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.Question;
 import edu.gatech.sqltutor.QuestionTuple;
+import edu.gatech.sqltutor.TestConst;
+import edu.gatech.sqltutor.rules.er.ERDiagram;
+import edu.gatech.sqltutor.rules.er.ERSerializer;
+import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
 
 @ManagedBean
 @ViewScoped
@@ -53,7 +58,7 @@ public class TutorialPageBean {
 	private QueryResult answerResult;
 	private QueryResult queryDiffResult;
 	private QueryResult answerDiffResult;
-	private final boolean nlpDisabled = true;
+	private boolean nlpDisabled = true;
 
 	@PostConstruct
 	public void init() {
@@ -69,12 +74,37 @@ public class TutorialPageBean {
 
 	public void processSQL() {
 		try {
+			// check the answer
 			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
-			if(!nlpDisabled)
-				feedbackNLP = "We determined the question that you actually answered was: \n\"" + (new Question(query, tables)).getTranslation() + "\"";
+			setResultSetDiffs();
+			
+			// generate NLP feedback
+			SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
+			queryTranslator.setQuery(query);
+			queryTranslator.setSchemaMetaData(tables);
+			ERSerializer serializer = new ERSerializer();
+			if(userBean.getSelectedSchema().equals("company")) {
+				nlpDisabled = false;
+				Class<?> c = this.getClass();
+				ERDiagram erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM));
+				ERMapping erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING));
+				queryTranslator.setERDiagram(erDiagram);
+				queryTranslator.setERMapping(erMapping);
+			} else if(userBean.getSelectedSchema().equals("business_trip")) {
+				nlpDisabled = false;
+				Class<?> c = this.getClass();
+				ERDiagram erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM));
+				ERMapping erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING));
+				queryTranslator.setERDiagram(erDiagram);
+				queryTranslator.setERMapping(erMapping);
+			} else {
+				nlpDisabled = true;
+			}
+
+			if(!nlpDisabled && resultSetFeedback.toLowerCase().contains("incorrect"))
+				resultSetFeedback += " We determined the question that you actually answered was: \n\"" + queryTranslator.getTranslation() + "\"";
 			else 
 				feedbackNLP = "";
-			setResultSetDiffs();
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
