@@ -26,13 +26,13 @@ import com.google.common.collect.Multiset;
 import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
-import edu.gatech.sqltutor.Question;
 import edu.gatech.sqltutor.QuestionTuple;
 import edu.gatech.sqltutor.TestConst;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 
 @ManagedBean
 @ViewScoped
@@ -98,17 +98,23 @@ public class TutorialPageBean {
 			}
 
 			if(!nlpDisabled && getQueryIsCorrect() == false) {
-				SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
-				queryTranslator.setQuery(query);
-				queryTranslator.setSchemaMetaData(tables);
-				queryTranslator.setERDiagram(erDiagram);
-				queryTranslator.setERMapping(erMapping); 
-				String result = null;
-				result = queryTranslator.getTranslation();
-				resultSetFeedback += " We determined the question that you actually answered was: ";
-				feedbackNLP = "\" " + result + " \"";
-			} else 
+				try {
+					SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
+					queryTranslator.setQuery(query);
+					queryTranslator.setSchemaMetaData(tables);
+					queryTranslator.setERDiagram(erDiagram);
+					queryTranslator.setERMapping(erMapping); 
+					String result = null;
+					result = queryTranslator.getTranslation();
+					resultSetFeedback += " We determined the question that you actually answered was: ";
+					feedbackNLP = "\" " + result + " \"";
+				} catch (SymbolicException symException) {
+					feedbackNLP = "";
+					// FIXME: log the error
+				}
+			} else {
 				feedbackNLP = "";
+			}
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
 		}
