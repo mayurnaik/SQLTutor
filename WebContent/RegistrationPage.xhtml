@@ -11,144 +11,147 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:outputStylesheet library="css" name="styles.css"/>
-		<h:panelGrid columns="2" columnClasses="alignTop,alignTop">
-			<h:form id="registrationForm">
-				<p:panel header="Register" styleClass="panel">
-					<h:outputText value="Any field marked with an asterkisk (*) is required."/>
-					<br/><br/>
-					
-					<h:panelGrid columns="3">
-						<p:outputLabel for="email" value="*Email:" />
-						<p:inputText required="true" id="email"
-							requiredMessage="Please enter your email address."
-							validatorMessage="Invalid email format."
-							value="#{userBean.email}">
-				  			<f:validateRegex
-								pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-						</p:inputText>
+		<div class="left">
+			<h:outputStylesheet library="css" name="styles.css"/>
+				<h:form id="registrationForm">
+					<p:panel header="Register" styleClass="panel">
+						<h:outputText value="Any field marked with an asterkisk (*) is required."/>
+						<br/><br/>
 						
-						<p:outputLabel value="*Password:" for="password"/>
-						<p:password required="true" id="password"
-							value="#{userBean.password}" label="Password 1" feedback="true"
-							requiredMessage="Please enter your password."
-							validatorMessage="Password length must be length greater than 2 and less than 13, and both entries must match."
-							match="again">
-							<f:validateLength minimum="3" maximum="12" />
-						</p:password>
+						<h:panelGrid columns="2">
+							<p:outputLabel for="email" value="*Email:" />
+							<p:inputText required="true" id="email"
+								requiredMessage="Please enter your email address."
+								validatorMessage="Invalid email format."
+								value="#{userBean.email}">
+					  			<f:validateRegex
+									pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+							</p:inputText>
+							
+							<p:outputLabel value="*Password:" for="password"/>
+							<p:password required="true" id="password"
+								value="#{userBean.password}" label="Password 1" feedback="true"
+								requiredMessage="Please enter your password."
+								validatorMessage="Password length must be length greater than 2 and less than 13, and both entries must match."
+								match="again">
+								<f:validateLength minimum="3" maximum="12" />
+							</p:password>
+							
+							<p:outputLabel value="*(again)" for="again" />
+							<p:password required="true" label="Password 2" id="again"
+								value="#{userBean.password}" 
+								requiredMessage="Please enter your password (again)."/>
+						</h:panelGrid>
 						
-						<p:outputLabel value="*(again)" for="again" />
-						<p:password required="true" label="Password 2" id="again"
-							value="#{userBean.password}" 
-							requiredMessage="Please enter your password (again)."/>
-					</h:panelGrid>
-					
-					<p:captcha id="captcha" label="Captcha" required="true" secure="true" theme="white"/>   
-					
-					<p>By registering for and using this site, you agree to be bound by the consent form 
-					   on the right.  Please read it carefully before submitting.</p>
-					<p:commandButton value="Submit" ajax="false" action="#{userBean.register}" styleClass="panelbutton"/>
-				</p:panel>
-				<p:messages id="registrationMessages"/>
-			</h:form>
+						<p:captcha id="captcha" label="Captcha" required="true" secure="true" theme="white"/>   
+						
+						<p>By registering for and using this site, you agree to be bound by the consent form 
+						   on the right.  Please read it carefully before submitting.</p>
+						<p:commandButton value="Submit" ajax="false" action="#{userBean.register}" styleClass="panelbutton"/>
+					</p:panel>
+					<p:messages id="registrationMessages"/>
+				</h:form>
+			</div>
+			<div class="middle"/>
 			
-			<p:panel header="Consent" styleClass="panel">
-				<div><center><h2>Consent Agreement</h2></center></div>
-				<p>
-					<b>You are being asked to be a volunteer in a research 
-					study. Participation is voluntary and neither 
-					participation nor non-participation will affect your grade
-					or class standing in any way.</b>
-				</p><p>
-					<b>Purpose:</b><br /> 
-					The purpose of this study is to evaluate automated feedback 
-					mechanisms in database education and to collect common error
-					and success patterns.
-				</p><p>
-					<b>Exclusion/Inclusion Criteria:</b><br />
-					All students enrolled in a database course who are 18 years of 
-					age or older are eligible to participate.
-				</p><p>
-					<b>Procedures:</b><br />
-					You will be provided access to an automated database query 
-					practice and quizzing tool on a website. There is no fixed 
-					session for using the website. You may choose to use the 
-					tutorials and quizzes on the website as little or as much as you 
-					like.
-				</p><p>
-					The data collected will include the logging of your activity: 
-					questions attempted, the answers given, the success or failure 
-					of each attempt, as well as metadata about the state of the 
-					system, such as any automated feedback given by the system.
-				</p><p>
-					<b>Risks or Discomforts:</b><br />
-					The risks involved are no greater than those involved in daily 
-					activities such as attending class or programming.
-				</p><p>
-					<b>Benefits:</b><br />
-					You may benefit from use of the website by increased study 
-					and practice in materials relevant to the database course.
-				</p><p>
-					<b>Compensation to You:</b><br />
-					There is no monetary compensation for participation.
-				</p><p>
-					<b>Confidentiality:</b><br />
-					The following procedures will be followed to keep your personal 
-					information confidential in this study: The data collected about 
-					you will be kept private to the extent allowed by law. To 
-					protect your privacy, your account information will be protected
-					by a cryptographic hash. No personally identifiable information 
-					about you will be stored in the system or used when results of 
-					this study are presented or published. The website will be 
-					hosted using SSL technology to encrypt and protect 
-					communications between your computer and the web server. In
-					general, the web server software will log as header lines the IP 
-					address of the machine you use to access this page, 
-					e.g.,102.403.506.807, but this information will not be linked to 
-					your account nor stored by the web page software. Only the 
-					research team will have access to server and application logs.
-					To make sure that this research is being carried out in the 
-					proper way, the Georgia Institute of Technology IRB may review
-					study records. The Office of Human Research Protections may 
-					also look over study records during required reviews.
-				</p><p>
-					<b>Costs to You:</b><br />
-					There are no costs to you, other than your time, for being in this
-					study.
-				</p><p>
-					<b>In Case of Injury/Harm:</b><br />
-					If you are injured as a result of being in this study, please 
-					contact the Principal Investigator (Mayur Naik), at telephone 
-					(650) 521-6930. Neither the Principal Investigator nor Georgia
-					Institute of Technology has made provision for payment of costs
-					associated with any injury resulting from participation in this 
-					study.
-				</p>
-					<b>Participant Rights:</b><br />
-					<ul>
-					<li>Your participation in this study is voluntary. You do not 
-					have to be in this study if you don't want to be.</li>
-					<li>You have the right to change your mind and leave the 
-					study at any time without giving any reason and without 
-					penalty.</li>
-					<li>Any new information that may make you change your 
-					mind about being in this study will be given to you.</li>
-					</ul>
-				<p>
-					<b>Questions about the Study:</b><br />
-					If you have any questions about the study, you may contact 
-					Mayur Naik at telephone (650) 521-6930 or naik@ 
-					cc.gatech.edu.
-				</p><p>
-					<b>Questions about Your Rights as a Research Participant:</b><br />
-					If you have any questions about your rights as a research
-					participant, you may contact 
-					Ms. Melanie Clark, Georgia Institute of Technology
-					Office of Research Compliance, at (404) 894-6942.
-					By using the web site’s functionality, you indicate your consent 
-					to be in the study.
-				</p>
-			</p:panel>
-		</h:panelGrid>
+			<div class="right">
+				<p:panel header="Consent" styleClass="panel">
+					<div><center><h2>Consent Agreement</h2></center></div>
+					<p>
+						<b>You are being asked to be a volunteer in a research 
+						study. Participation is voluntary and neither 
+						participation nor non-participation will affect your grade
+						or class standing in any way.</b>
+					</p><p>
+						<b>Purpose:</b><br /> 
+						The purpose of this study is to evaluate automated feedback 
+						mechanisms in database education and to collect common error
+						and success patterns.
+					</p><p>
+						<b>Exclusion/Inclusion Criteria:</b><br />
+						All students enrolled in a database course who are 18 years of 
+						age or older are eligible to participate.
+					</p><p>
+						<b>Procedures:</b><br />
+						You will be provided access to an automated database query 
+						practice and quizzing tool on a website. There is no fixed 
+						session for using the website. You may choose to use the 
+						tutorials and quizzes on the website as little or as much as you 
+						like.
+					</p><p>
+						The data collected will include the logging of your activity: 
+						questions attempted, the answers given, the success or failure 
+						of each attempt, as well as metadata about the state of the 
+						system, such as any automated feedback given by the system.
+					</p><p>
+						<b>Risks or Discomforts:</b><br />
+						The risks involved are no greater than those involved in daily 
+						activities such as attending class or programming.
+					</p><p>
+						<b>Benefits:</b><br />
+						You may benefit from use of the website by increased study 
+						and practice in materials relevant to the database course.
+					</p><p>
+						<b>Compensation to You:</b><br />
+						There is no monetary compensation for participation.
+					</p><p>
+						<b>Confidentiality:</b><br />
+						The following procedures will be followed to keep your personal 
+						information confidential in this study: The data collected about 
+						you will be kept private to the extent allowed by law. To 
+						protect your privacy, your account information will be protected
+						by a cryptographic hash. No personally identifiable information 
+						about you will be stored in the system or used when results of 
+						this study are presented or published. The website will be 
+						hosted using SSL technology to encrypt and protect 
+						communications between your computer and the web server. In
+						general, the web server software will log as header lines the IP 
+						address of the machine you use to access this page, 
+						e.g.,102.403.506.807, but this information will not be linked to 
+						your account nor stored by the web page software. Only the 
+						research team will have access to server and application logs.
+						To make sure that this research is being carried out in the 
+						proper way, the Georgia Institute of Technology IRB may review
+						study records. The Office of Human Research Protections may 
+						also look over study records during required reviews.
+					</p><p>
+						<b>Costs to You:</b><br />
+						There are no costs to you, other than your time, for being in this
+						study.
+					</p><p>
+						<b>In Case of Injury/Harm:</b><br />
+						If you are injured as a result of being in this study, please 
+						contact the Principal Investigator (Mayur Naik), at telephone 
+						(650) 521-6930. Neither the Principal Investigator nor Georgia
+						Institute of Technology has made provision for payment of costs
+						associated with any injury resulting from participation in this 
+						study.
+					</p>
+						<b>Participant Rights:</b><br />
+						<ul>
+						<li>Your participation in this study is voluntary. You do not 
+						have to be in this study if you don't want to be.</li>
+						<li>You have the right to change your mind and leave the 
+						study at any time without giving any reason and without 
+						penalty.</li>
+						<li>Any new information that may make you change your 
+						mind about being in this study will be given to you.</li>
+						</ul>
+					<p>
+						<b>Questions about the Study:</b><br />
+						If you have any questions about the study, you may contact 
+						Mayur Naik at telephone (650) 521-6930 or naik@ 
+						cc.gatech.edu.
+					</p><p>
+						<b>Questions about Your Rights as a Research Participant:</b><br />
+						If you have any questions about your rights as a research
+						participant, you may contact 
+						Ms. Melanie Clark, Georgia Institute of Technology
+						Office of Research Compliance, at (404) 894-6942.
+						By using the web site’s functionality, you indicate your consent 
+						to be in the study.
+					</p>
+				</p:panel>
+		</div>
 	</h:body>
 </html>
