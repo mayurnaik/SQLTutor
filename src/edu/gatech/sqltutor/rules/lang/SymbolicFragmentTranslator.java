@@ -54,7 +54,7 @@ import edu.gatech.sqltutor.rules.util.AliasApplier;
 import edu.gatech.sqltutor.rules.util.ForeignKeyReplacer;
 
 public class SymbolicFragmentTranslator 
-		extends AbstractQueryTranslator implements IQueryTranslator {
+		extends AbstractQueryTranslator {
 	private static final Logger _log = 
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
 	

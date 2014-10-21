@@ -73,10 +73,12 @@
 				<div class="seperator"/>
 				
 				<p:panel header="Feedback" styleClass="panel">
-					<p:outputLabel id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
+					<h:outputText id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
+					<br/> &#160;&#160;&#160;&#160;&#160;&#160;
+					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" />
 					<br/>
-					
-					<p:outputLabel value="Your result should resemble this example: " 
+					<br/>
+					<h:outputText value="Your result should resemble this example: " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 

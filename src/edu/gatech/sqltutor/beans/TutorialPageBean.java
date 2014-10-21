@@ -79,31 +79,35 @@ public class TutorialPageBean {
 			setResultSetDiffs();
 			
 			// generate NLP feedback
-			SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
-			queryTranslator.setQuery(query);
-			queryTranslator.setSchemaMetaData(tables);
-			ERSerializer serializer = new ERSerializer();
+			ERDiagram erDiagram = null;
+			ERMapping erMapping = null;
 			if(userBean.getSelectedSchema().equals("company")) {
 				nlpDisabled = false;
 				Class<?> c = this.getClass();
-				ERDiagram erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM));
-				ERMapping erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING));
-				queryTranslator.setERDiagram(erDiagram);
-				queryTranslator.setERMapping(erMapping);
+				ERSerializer serializer = new ERSerializer();
+				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM));
+				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING));
 			} else if(userBean.getSelectedSchema().equals("business_trip")) {
 				nlpDisabled = false;
 				Class<?> c = this.getClass();
-				ERDiagram erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM));
-				ERMapping erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING));
-				queryTranslator.setERDiagram(erDiagram);
-				queryTranslator.setERMapping(erMapping);
+				ERSerializer serializer = new ERSerializer();
+				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM));
+				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING));
 			} else {
 				nlpDisabled = true;
 			}
 
-			if(!nlpDisabled && resultSetFeedback.toLowerCase().contains("incorrect"))
-				resultSetFeedback += " We determined the question that you actually answered was: \n\"" + queryTranslator.getTranslation() + "\"";
-			else 
+			if(!nlpDisabled && getQueryIsCorrect() == false) {
+				SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
+				queryTranslator.setQuery(query);
+				queryTranslator.setSchemaMetaData(tables);
+				queryTranslator.setERDiagram(erDiagram);
+				queryTranslator.setERMapping(erMapping); 
+				String result = null;
+				result = queryTranslator.getTranslation();
+				resultSetFeedback += " We determined the question that you actually answered was: ";
+				feedbackNLP = "\" " + result + " \"";
+			} else 
 				feedbackNLP = "";
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
