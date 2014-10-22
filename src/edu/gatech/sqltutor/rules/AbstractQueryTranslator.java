@@ -65,10 +65,11 @@ public abstract class AbstractQueryTranslator implements IQueryTranslator {
 				throw new SQLTutorException("Wrong query type for: " + query, e);
 			}
 		
-			// preprocessing steps, split '*' and *.* columns
-			new StarColumnSplitter().split(select);
 			// resolve any implicit column references
 			new ColumnReferenceResolver(tables).resolve(select);
+			
+			// preprocessing steps, split '*' and *.* columns
+			new StarColumnSplitter().split(select);
 			
 			return statement;
 		} catch( StandardException e ) {

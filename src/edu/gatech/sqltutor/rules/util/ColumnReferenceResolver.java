@@ -21,6 +21,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 
 /**
@@ -51,6 +52,7 @@ public class ColumnReferenceResolver {
 								} else {
 									log.warn("No original table name (type={}): {}", table.getClass().getSimpleName(), table);
 								}
+								QueryUtils.generateCorrelationName(table);
 								break;
 							}
 							case NodeTypes.FROM_SUBQUERY:

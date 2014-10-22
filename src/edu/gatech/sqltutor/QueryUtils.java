@@ -1,9 +1,11 @@
 package edu.gatech.sqltutor;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.CursorNode;
+import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
@@ -152,5 +154,33 @@ public class QueryUtils {
 		} catch( StandardException e ) {
 			throw new SQLTutorException(e);
 		}
+	}
+	
+	/**
+	 * Generates a random correlation name and adds it to the FromTable.
+	 * @param fromTable
+	 * @return	true if an alias was generated and added to the FromTable, else false.
+	 */
+	public static boolean generateCorrelationName(FromTable fromTable) {
+		boolean generated = false;
+		if (fromTable.getCorrelationName() == null) {
+			// To avoid overlap, make it random
+			final String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			final Random rand = new Random();
+			final int len = 5;
+			StringBuilder sb = new StringBuilder(len);
+			for (int i = 0; i < len; i++)
+				sb.append(alphabet.charAt(rand.nextInt(alphabet.length())));
+			try {
+				String correlationName = fromTable.getTableName()
+						.getTableName().substring(0, 1)
+						+ sb.toString();
+				fromTable.setCorrelationName(correlationName);
+			} catch (StandardException e) {
+				e.printStackTrace();
+			}
+			generated = true;
+		}
+		return generated;
 	}
 }

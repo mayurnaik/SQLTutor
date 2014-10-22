@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import com.akiban.sql.parser.UnaryOperatorNode;
 import com.akiban.sql.parser.ValueNode;
 import com.akiban.sql.parser.ValueNodeList;
 
+import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
@@ -323,7 +325,7 @@ public class ForeignKeyReplacer {
 		} catch (StandardException e) {
 			e.printStackTrace();
 		}
-		AliasApplier.generateCorrelationName(fTable);
+		QueryUtils.generateCorrelationName(fTable);
 		return fTable;
 	}
 

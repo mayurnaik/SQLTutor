@@ -50,7 +50,6 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
-import edu.gatech.sqltutor.rules.util.AliasApplier;
 import edu.gatech.sqltutor.rules.util.ForeignKeyReplacer;
 
 public class SymbolicFragmentTranslator 
@@ -106,9 +105,6 @@ public class SymbolicFragmentTranslator
 		// parse query
 		StatementNode statement = parseQuery();
 		SelectNode select = QueryUtils.extractSelectNode(statement);
-		
-		// add aliases for all tables
-		new AliasApplier().resolve(select);
 		
 		// check for and replace foreign keys
 		new ForeignKeyReplacer(erMapping).resolve(select);
