@@ -108,6 +108,7 @@ public class TutorialPageBean {
 					feedbackNLP = "\" " + result + " \"";
 				} catch (Exception e) {
 					e.printStackTrace();
+					resultSetFeedback += " Sorry, we were unable to produce a sound English translation for your query.";
 					// FIXME: log the error
 				}
 			}
