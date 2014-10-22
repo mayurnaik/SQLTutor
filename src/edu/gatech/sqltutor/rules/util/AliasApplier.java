@@ -45,18 +45,21 @@ public class AliasApplier {
 			// if we actually updated the table's alias, then we need to update its column references
 			if( generateCorrelationName(fromTable) ) {
 				for(int j = 0; j < tablesResultColumns.size(); j++) {
-					ResultColumn c = resultColumns.get(j);
-					if(c instanceof AllResultColumn) {
+					ResultColumn rc = resultColumns.get(j);
+					if(rc instanceof AllResultColumn) {
 						TableName tName = new TableName();
 						tName.init(null, fromTable.getCorrelationName());
 						try {
-							c.init(tName);
+							rc.init(tName);
+							log.info("Gave all result column the table alias={}", fromTable.getCorrelationName());
 						} catch (StandardException e) {
 							e.printStackTrace();
 						}
 					} else {		
 						try {
-							c.init(generateColumnReference(c.getName(), fromTable.getCorrelationName()), null);
+							ColumnReference cr = generateColumnReference(getColumnName(rc), fromTable.getCorrelationName());
+							rc.init(cr, null);
+							log.info("Gave column={} the table alias={}", getColumnName(rc), fromTable.getCorrelationName());
 						} catch (StandardException e) {
 							e.printStackTrace();
 						}
@@ -111,21 +114,53 @@ public class AliasApplier {
 		}
 		return whereNodes;
 	}
+	
+	private String getColumnName(ResultColumn resultColumn) {
+		String columnName = resultColumn.getColumnName();
+		if(columnName == null) {
+			if(resultColumn.getExpression() != null) 
+				columnName = resultColumn.getExpression().getColumnName();
+			if(columnName == null) {
+				if(resultColumn.getReference() != null)
+					columnName = resultColumn.getReference().getColumnName();
+			}
+			if(columnName == null)
+				log.error("Result column does not have a column name: {}", resultColumn);
+		}
+		return columnName;
+	}
 
 	private ResultColumnList getResultColumnsForTableAlias(String tableAlias,
 			ResultColumnList resultColumns) {
 		ResultColumnList columns = new ResultColumnList();
 		for (int i = 0; i < resultColumns.size(); i++) {
 			ResultColumn resultColumn = resultColumns.get(i);
-			String columnTableName = null;
-			if(resultColumn instanceof AllResultColumn)
-				columnTableName = ((AllResultColumn)resultColumn).getTableNameObject().getTableName();
-			else
-				columnTableName = resultColumn.getTableName();
-			if (tableAlias.equals(columnTableName))
+			String columnTableName = getTableName(resultColumn);
+			if (tableAlias.equals(columnTableName)) {
 				columns.add(resultColumn);
+				log.info("Matched column={} to table={}", getColumnName(resultColumn), tableAlias);
+			}
 		}
 		return columns;
+	}
+	
+	private String getTableName(ResultColumn col) {
+		// bad implementation keeps table name differently in AllResultColumn subclass
+		if( col instanceof AllResultColumn ) {
+			TableName tableNameObj = col.getTableNameObject();
+			if( tableNameObj != null )
+				return tableNameObj.getTableName();
+		}
+		String tableName = null;
+		if(col.getReference() != null)
+			tableName = col.getReference().getTableName();
+		if( tableName == null && col.getTableNameObject() != null) 
+			tableName = col.getTableNameObject().getTableName();
+		if( tableName == null ) 
+			tableName = col.getTableName();
+		if (tableName == null ) 
+			log.error("Result column does not have a table name: {}", col);
+		return tableName;
 	}
 
 	/**
@@ -144,9 +179,11 @@ public class AliasApplier {
 			for (int i = 0; i < len; i++)
 				sb.append(alphabet.charAt(rand.nextInt(alphabet.length())));
 			try {
-				fromTable.setCorrelationName(fromTable.getTableName()
+				String correlationName = fromTable.getTableName()
 						.getTableName().substring(0, 1)
-						+ sb.toString());
+						+ sb.toString();
+				fromTable.setCorrelationName(correlationName);
+				log.info("Set correlation name={} for table={}", correlationName, fromTable.getOrigTableName().getTableName());
 			} catch (StandardException e) {
 				e.printStackTrace();
 			}

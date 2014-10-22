@@ -79,7 +79,7 @@ public class ColumnReferenceResolver {
 				
 				TableName tableName = fromTables.get(0).getTableName();
 				ref.setTableNameNode(tableName);
-				log.debug("Set tablename={} for ref={}", tableName, ref.getColumnName());
+				log.info("Set tablename={} for ref={}", tableName, ref.getColumnName());
 			} else {
 				DatabaseTable colTable = null;
 				for( DatabaseTable dbTable: tables ) {
@@ -111,7 +111,7 @@ public class ColumnReferenceResolver {
 					
 					TableName tableName = fromTables.iterator().next().getTableName();
 					ref.setTableNameNode(tableName);
-					log.debug("Set tablename={} for ref={}", tableName, ref.getColumnName());
+					log.info("Set tablename={} for ref={}", tableName, ref.getColumnName());
 				}
 			}
 			

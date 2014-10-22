@@ -66,13 +66,14 @@ public class TutorialPageBean {
 		try {
 			tables = databaseManager.getTables(selectedSchema);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		setQuestionsAndAnswers();
 	}
 
 	public void processSQL() {
+		reset();
+		
 		try {
 			// check the answer
 			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
@@ -93,8 +94,6 @@ public class TutorialPageBean {
 				ERSerializer serializer = new ERSerializer();
 				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM));
 				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING));
-			} else {
-				nlpDisabled = true;
 			}
 
 			if(!nlpDisabled && getQueryIsCorrect() == false) {
@@ -104,16 +103,13 @@ public class TutorialPageBean {
 					queryTranslator.setSchemaMetaData(tables);
 					queryTranslator.setERDiagram(erDiagram);
 					queryTranslator.setERMapping(erMapping); 
-					String result = null;
-					result = queryTranslator.getTranslation();
+					String result = queryTranslator.getTranslation();
 					resultSetFeedback += " We determined the question that you actually answered was: ";
 					feedbackNLP = "\" " + result + " \"";
-				} catch (SymbolicException symException) {
-					feedbackNLP = "";
+				} catch (Exception e) {
+					e.printStackTrace();
 					// FIXME: log the error
 				}
-			} else {
-				feedbackNLP = "";
 			}
 		} catch(SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
@@ -123,13 +119,10 @@ public class TutorialPageBean {
 			databaseManager.log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	} 
@@ -285,12 +278,17 @@ public class TutorialPageBean {
 		if(questionIndex >= questions.size()) {
 			questionIndex = 0;
 		}
+		reset();
+	}
+	
+	private void reset() {
 		queryResult = null;
 		answerResult = null;
 		queryDiffResult = null;
 		answerDiffResult = null;
 		feedbackNLP = "";
 		resultSetFeedback = "";
+		nlpDisabled = true;
 	}
 	
 	public String getQuestion() {
