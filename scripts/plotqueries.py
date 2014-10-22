@@ -6,6 +6,7 @@ import numpy
 import argparse
 import csv
 import collections
+import itertools
 
 def create_plot(args):
     data = read_input(args.inputfile)
@@ -25,6 +26,13 @@ def create_plot(args):
     plt.yticks(range(min(counts), max(counts) + 1))
     # plt.title('Rule Distribution')
     plt.tight_layout(pad=0.0, rect=(0, 0, 0.925, 1))
+
+    values = list(itertools.chain( *[iter([g] * counter[g]) for g in groups] ))
+    mean = numpy.mean(values)
+    stddev = numpy.std(values)
+
+    plt.figtext(0.7, 0.9, '{:9} {:.2f}\n{:9} {:.2f}'.format('Mean:', mean, 'Std-dev:', stddev))
+    print('Mean: {}\nStddev: {}'.format(mean, stddev))
 
     if args.show:
         plt.show()
