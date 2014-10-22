@@ -45,6 +45,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicFacts;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicRules;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.SimplifyRepeatedAttributesRule;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicCreator;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicReader;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
@@ -312,6 +313,7 @@ public class SymbolicFragmentTranslator
 			// preprocessing
 			new ConjunctScopeComputationRule(),
 			// analysis rules
+			new SimplifyRepeatedAttributesRule(),
 			new JoinLabelRule(),
 			new DefaultTableLabelRule(),
 			new DefaultColumnLabelRule(),
