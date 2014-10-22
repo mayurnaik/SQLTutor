@@ -60,13 +60,7 @@ public class DevManageUsersPageBean implements Serializable {
 				e.getNextException().printStackTrace();
 			else
 				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 	}
 	
 	public void promoteUserToAdmin() {
