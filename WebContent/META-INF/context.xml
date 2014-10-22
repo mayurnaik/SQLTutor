@@ -14,34 +14,32 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---><!-- The contents of this file will be loaded for each web application --><Context>
-
+-->
+<!-- The contents of this file will be loaded for each web application -->
+<Context>
     <!-- Default set of monitored resources -->
     <WatchedResource>WEB-INF/web.xml</WatchedResource>
     
-   <Resource name="jdbc/sqltutorDB" auth="Container"
-        type="javax.sql.DataSource"
-        maxActive="100" maxIdle="30" maxWait="10000"
-        username="DB_Manager"
-        password="SQLTutor!!!"
-        driverClassName="org.postgresql.Driver"
-        url="jdbc:postgresql://localhost/sqltutor"/>
-
-   <Resource name="jdbc/sqltutorUserDB" auth="Container"
-        type="javax.sql.DataSource"
-        maxActive="100" maxIdle="30" maxWait="10000"
-        username="DB_Manager"
-        password="SQLTutor!!!"
-        driverClassName="org.postgresql.Driver"
-        url="jdbc:postgresql://localhost/sqltutorschemas"/>
-        
-   <Resource name="jdbc/sqltutorUserDBRead" auth="Container"
-        type="javax.sql.DataSource"
-        maxActive="100" maxIdle="30" maxWait="10000"
-        username="readonly_user"
-        password="SQLTutor!!!"
-        driverClassName="org.postgresql.Driver"
-        url="jdbc:postgresql://localhost/sqltutorschemas"/>
+    <resource-ref>
+        <description>Main DB Connection</description>
+        <res-ref-name>jdbc/sqltutorDB</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+    
+    <resource-ref>
+        <description>Schema DB Connection</description>
+        <res-ref-name>jdbc/sqltutorUserDB</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+    
+    <resource-ref>
+        <description>Schema DB Connection, Read Only</description>
+        <res-ref-name>jdbc/sqltutorUserDBRead</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
 
     <!-- Uncomment this to disable session persistence across Tomcat restarts -->
     <!--
