@@ -10,7 +10,7 @@ import csv
 import collections
 import itertools as it
 
-from rulecount import IGNORE_RULES, get_paper_name
+from rulecount import IGNORE_RULES, get_paper_name, get_rule_def
 
 RuleCount = collections.namedtuple('RuleCount', ('rule', 'count'))
 
@@ -23,7 +23,8 @@ def create_plot(args):
     if args.sort:
         data.sort(cmp=lambda x, y: cmp(x.count, y.count))
 
-    rules = [get_paper_name(d.rule) for d in data]
+    rules = [get_rule_def(d.rule) for d in data]
+    rules = [ '{} [{}]'.format(r.paper_name, r.category) for r in rules]
     counts = [d.count for d in data]
     fig = plt.figure()
     """:type : Figure"""

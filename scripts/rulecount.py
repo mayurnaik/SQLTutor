@@ -4,58 +4,72 @@ import subprocess
 import sys
 import re
 import os
+import collections
 from collections import OrderedDict
 import argparse
 import sqlite3
 
+
+def default_paper_name(name):
+    name = re.sub(r'Rule$', '', name)
+    name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
+    return name
+
+class RuleDef(object):
+    def __init__(self, name, category='L', paper_name=None):
+        self.name = name
+        self.paper_name = paper_name if paper_name else default_paper_name(name)
+        self.category = category
+
+    def __repr__(self):
+        return 'RuleDef({}, paper_name={}, category={})'.format(
+            map(repr, (self.name, self.paper_name, self.category)))
+
 ALL_RULES = [
-    'TransformationRule',
-    'InRelationshipLabelRule',
-    'DescribingAttributeLabelRule',
-    'JoinLabelRule',
-    'MergeCompositeAttributeRule',
-    'ValueTypeInferenceRule',
-    'TableEntityRefNeedsIdRule',
-    'AllAttributesLiteralLabelRule',
-    'AttributeLiteralLabelRule',
-    'BetweenLiteralsRule',
-    'BinaryComparisonRule',
-    'NumberLiteralRule',
-    'SelectLabelRule',
-    'WhereLiteralRule',
-    'ColumnReferenceLiteralRule',
-    'DefaultIsNullRule',
-    'InRelationshipLoweringRule',
-    'TableEntityRefLiteralRule',
-    'SimplifyConjunctionsRule',
-    'FixVerbTenseRule',
-    'InvalidDeterminerRule',
-    'ConjunctScopeComputationRule',
-    'DefaultColumnLabelRule',
-    'DefaultTableLabelRule',
-    'AnaphoricPronounRule',
-    'DeterminerRedundancyRule',
-    'RangeToBetweenRule',
-    'SimplifyRepeatedAttributesRule',
-    'SingleReferenceAnaphoraRule'
+    RuleDef('TransformationRule', 'L', paper_name='Select List Format'),
+    RuleDef('InRelationshipLabelRule', 'G'),
+    RuleDef('DescribingAttributeLabelRule', 'A', paper_name='Describing Attribute'),
+    RuleDef('JoinLabelRule', 'A', paper_name='Join Relationship'),
+    RuleDef('MergeCompositeAttributeRule', 'A'),
+    RuleDef('ValueTypeInferenceRule', 'A'),
+    RuleDef('TableEntityRefNeedsIdRule', 'G', paper_name='Entity Ref Needs Id'),
+    RuleDef('AllAttributesLiteralLabelRule', 'L'),
+    RuleDef('AttributeLiteralLabelRule', 'L'),
+    RuleDef('BetweenLiteralsRule', 'L'),
+    RuleDef('BinaryComparisonRule', 'L'),
+    RuleDef('NumberLiteralRule', 'L'),
+    RuleDef('SelectLabelRule', 'L'),
+    RuleDef('WhereLiteralRule', 'L'),
+    RuleDef('ColumnReferenceLiteralRule', 'L'),
+    RuleDef('DefaultIsNullRule', 'L'),
+    RuleDef('InRelationshipLoweringRule', 'L'),
+    RuleDef('TableEntityRefLiteralRule', 'L', paper_name='Entity Ref Lowering'),
+    RuleDef('SimplifyConjunctionsRule', 'G'),
+    RuleDef('FixVerbTenseRule', 'C'),
+    RuleDef('InvalidDeterminerRule', 'C'),
+    RuleDef('ConjunctScopeComputationRule', 'D'),
+    RuleDef('DefaultColumnLabelRule', 'D'),
+    RuleDef('DefaultTableLabelRule', 'D'),
+    RuleDef('AnaphoricPronounRule', 'G'),
+    RuleDef('DeterminerRedundancyRule', 'G'),
+    RuleDef('RangeToBetweenRule', 'A'),
+    RuleDef('SimplifyRepeatedAttributesRule', 'G'),
+    RuleDef('SingleReferenceAnaphoraRule', 'G')
 ]
+
+def get_rule_def(name):
+    for rule in ALL_RULES:
+        if rule.name == name:
+            return rule
+    return None
 
 # establish map from implementation name to name used in the paper
 RULE_TO_PAPER_NAME = OrderedDict()
 for rule in ALL_RULES:
-    # first common pattern
-    paper_name = re.sub(r'Rule$', '', rule)
-    paper_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', paper_name)
-    RULE_TO_PAPER_NAME[rule] = paper_name
-# then overrides
-RULE_TO_PAPER_NAME['TransformationRule'] = 'Select List Format'
-RULE_TO_PAPER_NAME['TableEntityRefNeedsIdRule'] = 'Entity Ref Needs Id'
-RULE_TO_PAPER_NAME['JoinLabelRule'] = 'Join Relationship'
-RULE_TO_PAPER_NAME['DescribingAttributeLabelRule'] = 'Describing Attribute'
-RULE_TO_PAPER_NAME['TableEntityRefLiteralRule'] = 'Entity Ref Lowering'
+    RULE_TO_PAPER_NAME[rule.name] = rule.paper_name
 
 def get_paper_name(rule):
-    return RULE_TO_PAPER_NAME[rule]
+    return get_rule_def(rule).paper_name
 
 
 IGNORE_RULES = [
