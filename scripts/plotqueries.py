@@ -28,11 +28,13 @@ def create_plot(args):
     plt.tight_layout(pad=0.0, rect=(0, 0, 0.925, 1))
 
     values = list(itertools.chain( *[iter([g] * counter[g]) for g in groups] ))
+    min_val = min(*values)
+    max_val = max(*values)
     mean = numpy.mean(values)
     stddev = numpy.std(values)
 
     plt.figtext(0.7, 0.9, '{:9} {:.2f}\n{:9} {:.2f}'.format('Mean:', mean, 'Std-dev:', stddev))
-    print('Mean: {}\nStddev: {}'.format(mean, stddev))
+    print('Min: {}\nMax: {}\nMean: {}\nStddev: {}'.format(min_val, max_val, mean, stddev))
 
     if args.show:
         plt.show()
