@@ -41,7 +41,8 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public String getSingularLabel() {
 		String label = null;
 		if( attribute != null ) {
-			label = attribute.getMetadata().getSingularLabel();
+			if(attribute.getMetadata() != null)
+				label = attribute.getMetadata().getSingularLabel();
 			if( label == null ) {
 				label = NLUtil.nameFormat(attribute.getName()).toLowerCase();
 			}
@@ -53,7 +54,8 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public String getPluralLabel() {
 		String label = null;
 		if( attribute != null ) {
-			label = attribute.getMetadata().getPluralLabel();
+			if(attribute.getMetadata() != null)
+				label = attribute.getMetadata().getPluralLabel();
 			if( label == null ) {
 				label = NLUtil.pluralize(getSingularLabel());
 			}
