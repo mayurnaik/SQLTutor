@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -104,11 +106,12 @@ public class TutorialPageBean {
 					queryTranslator.setERDiagram(erDiagram);
 					queryTranslator.setERMapping(erMapping); 
 					String result = queryTranslator.getTranslation();
+					result = format(result);
 					resultSetFeedback += " We determined the question that you actually answered was: ";
 					feedbackNLP = "\" " + result + " \"";
 				} catch (Exception e) {
 					e.printStackTrace();
-					resultSetFeedback += " Sorry, we were unable to produce a sound English translation for your query.";
+					resultSetFeedback += " (Sorry, we were unable to produce a sound English translation for your query.)";
 					// FIXME: log the error
 				}
 			}
@@ -128,7 +131,19 @@ public class TutorialPageBean {
 		}
 	} 
 	
-	public String getIpAddress() {
+	private String format(String translation) {
+		Pattern pattern = Pattern.compile("(_.*?_)");
+		Matcher matcher = pattern.matcher(translation);
+		while(matcher.find()) {
+		    String oldString = matcher.group(1);
+		    String newString = oldString.replaceFirst("_", "<i>");
+		    newString = newString.replaceFirst("_", "</i>");
+		    translation = translation.replace(oldString, newString);
+		}
+		return translation;
+	}
+	
+	private String getIpAddress() {
 		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
 		String ipAddress = request.getHeader("X-FORWARDED-FOR");
 		if (ipAddress == null) {
@@ -137,13 +152,13 @@ public class TutorialPageBean {
 		return ipAddress;
 	}
 	
-	public String getSessionId() {
+	private String getSessionId() {
 		FacesContext fCtx = FacesContext.getCurrentInstance();
 		HttpSession session = (HttpSession) fCtx.getExternalContext().getSession(false);
 		return session.getId();
 	}
 	
-	public void setResultSetDiffs() {
+	private void setResultSetDiffs() {
 		try {
 			answerResult = databaseManager.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isAdmin());
 			queryDiffResult = new QueryResult(queryResult);
@@ -164,7 +179,7 @@ public class TutorialPageBean {
 		}
 	}
 	
-	public void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
+	private void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
 		
 		if(!queryResult.getColumns().containsAll(answerResult.getColumns()) || !answerResult.getColumns().containsAll(queryResult.getColumns())) {
 			resultSetFeedback = "Incorrect.";
