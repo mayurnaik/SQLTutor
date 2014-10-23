@@ -15,20 +15,16 @@ import javax.faces.context.FacesContext;
 
 import org.primefaces.context.RequestContext;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 
 @ManagedBean
 @ViewScoped
-public class DevSchemaInstancesPageBean implements Serializable {
+public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 
 	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
@@ -43,7 +39,7 @@ public class DevSchemaInstancesPageBean implements Serializable {
 	
 	public void setupTables() {
 		try {
-			tables = databaseManager.getDevTables();
+			tables = getDatabaseManager().getDevTables();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
@@ -55,7 +51,7 @@ public class DevSchemaInstancesPageBean implements Serializable {
 		}
 		
 		try {
-			setTableData(databaseManager.getAllDevData(tableNames));
+			setTableData(getDatabaseManager().getAllDevData(tableNames));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -63,7 +59,7 @@ public class DevSchemaInstancesPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			queryResult = databaseManager.getDevQueryResult(query, userBean.isDeveloper());
+			queryResult = getDatabaseManager().getDevQueryResult(query, userBean.isDeveloper());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();
@@ -89,14 +85,6 @@ public class DevSchemaInstancesPageBean implements Serializable {
 
 	public void setTables(List<DatabaseTable> tables) {
 		this.tables = tables;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager dbManager) {
-		this.databaseManager = dbManager;
 	}
 	
 	public UserBean getUserBean() {

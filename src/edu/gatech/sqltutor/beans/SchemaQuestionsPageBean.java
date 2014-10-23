@@ -14,20 +14,16 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QuestionTuple;
 
 @ManagedBean
 @ViewScoped
-public class SchemaQuestionsPageBean implements Serializable {
+public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	private List<DatabaseTable> tables;
 	
@@ -44,7 +40,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
 		try {
-			tables = databaseManager.getTables(selectedSchema);
+			tables = getDatabaseManager().getTables(selectedSchema);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -55,7 +51,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 	
 	public void setupQuestionList() {
 		try {
-			questions = databaseManager.getQuestions(selectedSchema);
+			questions = getDatabaseManager().getQuestions(selectedSchema);
 			selectedQuestions = new ArrayList<QuestionTuple>();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -64,7 +60,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void reorderQuestions() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -72,7 +68,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 				return;
 			}
 			
-			databaseManager.reorderQuestions(questions);
+			getDatabaseManager().reorderQuestions(questions);
 			
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully reordered the questions.", "");
@@ -90,7 +86,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 	
 	public void deleteQuestions() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -104,7 +100,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 				FacesContext.getCurrentInstance().addMessage(null, msg);
 				return;
 			}
-			databaseManager.deleteQuestions(selectedQuestions);
+			getDatabaseManager().deleteQuestions(selectedQuestions);
 			setupQuestionList();
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully deleted the questions.", "");
@@ -122,7 +118,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void addQuestion() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"You do not have permissions for this schema.", "");
@@ -130,7 +126,7 @@ public class SchemaQuestionsPageBean implements Serializable {
 				return;
 			}
 			
-			databaseManager.addQuestion(selectedSchema, getQuestion(), getAnswer());
+			getDatabaseManager().addQuestion(selectedSchema, getQuestion(), getAnswer());
 			setupQuestionList();
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Successfully added this question.", "");
@@ -152,14 +148,6 @@ public class SchemaQuestionsPageBean implements Serializable {
 
 	public void setTables(List<DatabaseTable> tables) {
 		this.tables = tables;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager dbManager) {
-		this.databaseManager = dbManager;
 	}
 	
 	public UserBean getUserBean() {

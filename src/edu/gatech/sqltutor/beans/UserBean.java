@@ -2,7 +2,6 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
@@ -11,13 +10,11 @@ import java.util.List;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.util.SaltHasher;
 
 /**
@@ -28,12 +25,9 @@ import edu.gatech.sqltutor.util.SaltHasher;
  */
 @ManagedBean
 @SessionScoped
-public class UserBean implements Serializable {
+public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final byte[] SALT = "-JllYJaGhP+-0xfJ2+_-K~6YIJkF1ip8hg8qKTDis1TmCjQu*B|Mm TB-szu".getBytes();
-
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
@@ -189,14 +183,6 @@ public class UserBean implements Serializable {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 
 	public boolean isAdmin() {

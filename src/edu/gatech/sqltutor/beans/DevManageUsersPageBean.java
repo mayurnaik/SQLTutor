@@ -13,20 +13,15 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.UserTuple;
-import edu.gatech.sqltutor.util.SaltHasher;
 
 @ManagedBean
 @ViewScoped
-public class DevManageUsersPageBean implements Serializable {
+public class DevManageUsersPageBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	private List<UserTuple> users;
 	private UserTuple selectedUser;
@@ -207,14 +202,6 @@ public class DevManageUsersPageBean implements Serializable {
 
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 
 	public UserTuple getSelectedUser() {

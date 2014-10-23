@@ -1,6 +1,10 @@
 package edu.gatech.sqltutor;
 
-public class UserTuple {
+import java.io.Serializable;
+
+public class UserTuple implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private String email;
 	private boolean admin;
 	private String adminCode;

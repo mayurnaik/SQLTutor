@@ -1,8 +1,11 @@
 package edu.gatech.sqltutor;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class DatabaseTable {
+public class DatabaseTable implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private String tableName;	
 	private List<String> columns;
 	

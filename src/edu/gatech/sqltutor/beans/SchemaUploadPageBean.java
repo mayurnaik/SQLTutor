@@ -16,11 +16,9 @@ import javax.faces.context.FacesContext;
 
 import org.primefaces.event.FileUploadEvent;
 
-import edu.gatech.sqltutor.DatabaseManager;
-
 @ManagedBean
 @ViewScoped
-public class SchemaUploadPageBean implements Serializable {
+public class SchemaUploadPageBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
@@ -28,12 +26,9 @@ public class SchemaUploadPageBean implements Serializable {
 	
 	private String schemaDump;
 	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
-	
 	public void addSchema() {
 		try {
-			String schemaName = databaseManager.addSchema(schemaDump, userBean.getHashedEmail());
+			String schemaName = getDatabaseManager().addSchema(schemaDump, userBean.getHashedEmail());
 			userBean.setSelectedSchema(schemaName);
 	        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + "/SchemaOptionsPage.jsf");
@@ -75,13 +70,5 @@ public class SchemaUploadPageBean implements Serializable {
 	
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-	
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 }

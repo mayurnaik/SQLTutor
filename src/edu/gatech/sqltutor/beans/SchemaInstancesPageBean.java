@@ -17,20 +17,16 @@ import javax.faces.context.FacesContext;
 
 import org.primefaces.context.RequestContext;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 
 @ManagedBean
 @ViewScoped
-public class SchemaInstancesPageBean implements Serializable {
+public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 
 	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
@@ -48,7 +44,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	
 	public void setupTables() {
 		try {
-			tables = databaseManager.getTables(selectedSchema);
+			tables = getDatabaseManager().getTables(selectedSchema);
 		} catch (SQLException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -61,7 +57,7 @@ public class SchemaInstancesPageBean implements Serializable {
 		}
 		
 		try {
-			setTableData(databaseManager.getAllData(selectedSchema, tableNames));
+			setTableData(getDatabaseManager().getAllData(selectedSchema, tableNames));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -69,7 +65,7 @@ public class SchemaInstancesPageBean implements Serializable {
 	
 	public void processSQL() {
 		try {
-			boolean hasPermissions = databaseManager.checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
 
 			if(!hasPermissions) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -78,7 +74,7 @@ public class SchemaInstancesPageBean implements Serializable {
 				return;
 			}
 			
-			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
+			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();
@@ -110,14 +106,6 @@ public class SchemaInstancesPageBean implements Serializable {
 
 	public void setTables(List<DatabaseTable> tables) {
 		this.tables = tables;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager dbManager) {
-		this.databaseManager = dbManager;
 	}
 	
 	public UserBean getUserBean() {

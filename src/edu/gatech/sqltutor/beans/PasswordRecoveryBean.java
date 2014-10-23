@@ -16,20 +16,16 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.util.Emailer;
 import edu.gatech.sqltutor.util.SaltHasher;
 
 @ManagedBean
 @SessionScoped
-public class PasswordRecoveryBean implements Serializable {
+public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	private String password;
 	private String id;
@@ -37,7 +33,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void sendPasswordLink() {
 		try {
-			if(!databaseManager.emailExists(getHashedEmail())) {
+			if(!getDatabaseManager().emailExists(getHashedEmail())) {
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"The email you entered has not been registered.", "");
 				FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -45,7 +41,7 @@ public class PasswordRecoveryBean implements Serializable {
 			}
 			
 			UUID uuid = UUID.randomUUID();
-			databaseManager.addPasswordChangeRequest(getHashedEmail(), uuid);
+			getDatabaseManager().addPasswordChangeRequest(getHashedEmail(), uuid);
 			String to = getEmail(); 
 			String subject = "[SQL-Tutor] Password Recovery - Do Not Reply";
 			String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
@@ -69,7 +65,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void invalidRedirect() {
 		try {
-			if(!databaseManager.getPasswordChangeRequest(getHashedEmail(), getId())) {
+			if(!getDatabaseManager().getPasswordChangeRequest(getHashedEmail(), getId())) {
 				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			    try {
 					externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
@@ -91,7 +87,7 @@ public class PasswordRecoveryBean implements Serializable {
 	
 	public void updatePassword() {
 		try {
-			databaseManager.changePassword(getHashedEmail(), getPassword());
+			getDatabaseManager().changePassword(getHashedEmail(), getPassword());
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
 
@@ -117,14 +113,6 @@ public class PasswordRecoveryBean implements Serializable {
 
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 
 	public String getPassword() {

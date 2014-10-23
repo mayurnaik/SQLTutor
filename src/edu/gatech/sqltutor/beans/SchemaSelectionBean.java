@@ -16,18 +16,13 @@ import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
 import javax.servlet.http.HttpServletRequest;
 
-import edu.gatech.sqltutor.DatabaseManager;
-
 @ManagedBean
 @ViewScoped
-public class SchemaSelectionBean implements Serializable {
+public class SchemaSelectionBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
 	private List<SelectItem> userSchemas = new ArrayList<SelectItem>();
@@ -36,7 +31,7 @@ public class SchemaSelectionBean implements Serializable {
 	@PostConstruct
 	public void refreshList() {
 		try {
-			List<String> uSchemas = databaseManager.getUserSchemas(getUserBean().isAdmin());
+			List<String> uSchemas = getDatabaseManager().getUserSchemas(getUserBean().isAdmin());
 
 			SelectItemGroup itemGroup = new SelectItemGroup();
 			SelectItem[] schemaItems = new SelectItem[uSchemas.size()];
@@ -63,14 +58,6 @@ public class SchemaSelectionBean implements Serializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager dbManager) {
-		this.databaseManager = dbManager;
 	}
 
 	public void setSelectedSchema(String selectedSchema) {

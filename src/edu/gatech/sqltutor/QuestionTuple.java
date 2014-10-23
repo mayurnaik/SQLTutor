@@ -1,6 +1,10 @@
 package edu.gatech.sqltutor;
 
-public class QuestionTuple {
+import java.io.Serializable;
+
+public class QuestionTuple implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private int order;
 	private String question;
 	private String answer;

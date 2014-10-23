@@ -1,5 +1,6 @@
 package edu.gatech.sqltutor.beans;
 
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
@@ -34,18 +35,14 @@ import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 
 @ManagedBean
 @ViewScoped
-public class TutorialPageBean {
+public class TutorialPageBean extends AbstractDatabaseBean implements Serializable {
+	private static final long serialVersionUID = 1L;
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
-	
-	
-	@ManagedProperty(value="#{databaseManager}")
-	private DatabaseManager databaseManager;
 	
 	private String selectedSchema;
 	private List<DatabaseTable> tables;
@@ -66,7 +63,7 @@ public class TutorialPageBean {
 	public void init() {
 		selectedSchema = userBean.getSelectedSchema();
 		try {
-			tables = databaseManager.getTables(selectedSchema);
+			tables = getDatabaseManager().getTables(selectedSchema);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -78,7 +75,7 @@ public class TutorialPageBean {
 		
 		try {
 			// check the answer
-			queryResult = databaseManager.getQueryResult(selectedSchema, query, userBean.isAdmin());
+			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
 			setResultSetDiffs();
 			
 			// generate NLP feedback
@@ -120,7 +117,7 @@ public class TutorialPageBean {
 		}
 		
 		try {
-			databaseManager.log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
+			getDatabaseManager().log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -160,7 +157,7 @@ public class TutorialPageBean {
 	
 	private void setResultSetDiffs() {
 		try {
-			answerResult = databaseManager.getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isAdmin());
+			answerResult = getDatabaseManager().getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), userBean.isAdmin());
 			queryDiffResult = new QueryResult(queryResult);
 			queryDiffResult.getColumns().removeAll(answerResult.getColumns());
 			queryDiffResult.getData().removeAll(answerResult.getData());
@@ -195,6 +192,7 @@ public class TutorialPageBean {
 				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
 				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
 				try {
+					final DatabaseManager databaseManager = getDatabaseManager();
 					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isAdmin());
 					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isAdmin());
 					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
@@ -261,8 +259,9 @@ public class TutorialPageBean {
 	
 	public void setQuestionsAndAnswers() {
 		List<QuestionTuple> questionTuples = null;
+		final DatabaseManager databaseManager = getDatabaseManager();
 		try {
-			questionTuples = getDatabaseManager().getQuestions(selectedSchema);
+			questionTuples = databaseManager.getQuestions(selectedSchema);
 		} catch (SQLException e) {
 			e.getNextException().printStackTrace();
 		}
@@ -272,7 +271,7 @@ public class TutorialPageBean {
 		} else {
 			HashMap<String, Boolean> options = null;
 			try {
-				options = getDatabaseManager().getOptions(selectedSchema);
+				options = databaseManager.getOptions(selectedSchema);
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -391,13 +390,5 @@ public class TutorialPageBean {
 
 	public void setAnswers(HashMap<String, String> answers) {
 		this.answers = answers;
-	}
-
-	public DatabaseManager getDatabaseManager() {
-		return databaseManager;
-	}
-
-	public void setDatabaseManager(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
 	}
 }

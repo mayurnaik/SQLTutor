@@ -1,10 +1,13 @@
 package edu.gatech.sqltutor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QueryResult {
-    private List<String> columns = new ArrayList<String>();
+public class QueryResult implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	private List<String> columns = new ArrayList<String>();
     private List<List<String>> data = new ArrayList<List<String>>();
     
     public QueryResult() {}
