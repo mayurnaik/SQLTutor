@@ -965,7 +965,7 @@ public class DatabaseManager implements Serializable {
 		return isCorrect;
 	}
 	
-	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct) throws SQLException {
+	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -974,7 +974,7 @@ public class DatabaseManager implements Serializable {
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
-					+ "\"parsed\", \"correct\") VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+					+ "\"parsed\", \"correct\", \"nlp_feedback\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email);
 			preparedStatement.setString(3, schemaName);
@@ -983,6 +983,7 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setString(6, userQuery);
 			preparedStatement.setBoolean(7, parsed);
 			preparedStatement.setBoolean(8, correct);
+			preparedStatement.setString(9, nlpFeedback);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);

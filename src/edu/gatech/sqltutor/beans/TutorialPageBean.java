@@ -23,6 +23,8 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -73,6 +75,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 	public void processSQL() {
 		reset();
 		
+		if ( StringUtils.isEmpty(query) || questions.isEmpty() )
+			return;
+		
 		try {
 			// check the answer
 			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
@@ -117,8 +122,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		}
 		
 		try {
+			String nlpFeedback = StringUtils.isEmpty(getFeedbackNLP()) ? null : getFeedbackNLP();
 			getDatabaseManager().log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
-					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect());
+					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect(), nlpFeedback);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
