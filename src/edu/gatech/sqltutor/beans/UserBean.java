@@ -67,15 +67,11 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			selectedSchema = "company";
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getEmail());
+			}
 		} 
 	}
 
@@ -90,17 +86,15 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			login();
 		} catch(SQLException e) {
 			String msg = e.getMessage();
-			System.out.println(msg);
 			if(msg.contains("user_email")) {
 				msg = "The email you entered is already tied to an account.";
 				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, msg, null));
+			} else {
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, getEmail());
+				}
 			}
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -217,8 +211,19 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		this.developer = developer;
 	}
 	
-	public String getHashedEmail() throws NoSuchAlgorithmException, InvalidKeySpecException {
-		return Arrays.toString(SaltHasher.getEncryptedValue(email.toLowerCase(), SALT));
+	public String getHashedEmail() {
+		String encryptedEmail = null;
+
+		try {
+			byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), SALT);
+			encryptedEmail = Arrays.toString(hashedEmail);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		}
+		
+		return encryptedEmail;
 	}
 
 	public String getEmail() {

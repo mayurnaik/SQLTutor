@@ -25,6 +25,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -67,7 +68,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		try {
 			tables = getDatabaseManager().getTables(selectedSchema);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 		setQuestionsAndAnswers();
 	}
@@ -112,9 +116,16 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 					resultSetFeedback += " We determined the question that you actually answered was: ";
 					feedbackNLP = "\" " + result + " \"";
 				} catch (Exception e) {
-					e.printStackTrace();
 					resultSetFeedback += " (Sorry, we were unable to produce a sound English translation for your query.)";
-					// FIXME: log the error
+					if(e instanceof SQLException) {
+						for(Throwable t : (SQLException)e) {
+							t.printStackTrace();
+							logException(t, userBean.getEmail());
+						}
+					} else {
+						e.printStackTrace();
+						logException(e, userBean.getEmail());
+					}
 				}
 			}
 		} catch(SQLException e) {
@@ -123,14 +134,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		
 		try {
 			String nlpFeedback = StringUtils.isEmpty(getFeedbackNLP()) ? null : getFeedbackNLP();
-			getDatabaseManager().log(getSessionId(), userBean.getHashedEmail(), selectedSchema, 
+			getDatabaseManager().log(BeanUtils.getSessionId(), userBean.getHashedEmail(), selectedSchema, 
 					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect(), nlpFeedback);
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	} 
 	
@@ -144,21 +154,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		    translation = translation.replace(oldString, newString);
 		}
 		return translation;
-	}
-	
-	private String getIpAddress() {
-		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-		String ipAddress = request.getHeader("X-FORWARDED-FOR");
-		if (ipAddress == null) {
-		    ipAddress = request.getRemoteAddr();
-		}
-		return ipAddress;
-	}
-	
-	private String getSessionId() {
-		FacesContext fCtx = FacesContext.getCurrentInstance();
-		HttpSession session = (HttpSession) fCtx.getExternalContext().getSession(false);
-		return session.getId();
 	}
 	
 	private void setResultSetDiffs() {
@@ -179,6 +174,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			
 		} catch(SQLException e) {
 			resultSetFeedback = "The stored answer was malformed." + e.getMessage();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -211,7 +210,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
 					} else if(e.getMessage().contains("type")) {
 						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
-					} 
+					} else {
+						for(Throwable t : e) {
+							t.printStackTrace();
+							logException(t, userBean.getEmail());
+						}
+					}
 				}
 			} else if(!columnOrderMatters && rowOrderMatters) {
 				Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
@@ -269,7 +273,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		try {
 			questionTuples = databaseManager.getQuestions(selectedSchema);
 		} catch (SQLException e) {
-			e.getNextException().printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 		
 		if(questionTuples.isEmpty()) {
@@ -279,7 +286,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			try {
 				options = databaseManager.getOptions(selectedSchema);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getEmail());
+				}
 			}
 			
 			for(QuestionTuple question : questionTuples) {
@@ -313,6 +323,16 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 	}
 	
 	public String getQuestion() {
+		// Log that a question was retrieved
+		try {
+			getDatabaseManager().logQuestionPresentation(BeanUtils.getSessionId(), userBean.getHashedEmail(), selectedSchema, 
+					questions.get(questionIndex));
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		}
 		return questions.get(questionIndex);
 	}
 

@@ -45,9 +45,11 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 	public void setupTables() {
 		try {
 			tables = getDatabaseManager().getTables(selectedSchema);
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 
 		List<String> tableNames = new ArrayList<String>();
@@ -59,7 +61,10 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 		try {
 			setTableData(getDatabaseManager().getAllData(selectedSchema, tableNames));
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -91,12 +96,6 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					message, "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	} 
 

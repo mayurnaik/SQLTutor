@@ -37,23 +37,17 @@ public class SchemaUploadPageBean extends AbstractDatabaseBean implements Serial
 				"Argument error.", e.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch ( SQLException e ) {
-			String detailedMessage = e.getMessage();
-			if(detailedMessage.contains("getNextException")) {
-				detailedMessage = e.getNextException().getMessage();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Database error.", t.getMessage());
+				FacesContext.getCurrentInstance().addMessage(null, msg);
 			}
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-				"Database error.", detailedMessage);
-			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch ( IOException e ) {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 				"IO error.", e.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, msg);
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	

@@ -47,7 +47,10 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 			inOrderQuestions = options.get("in_order_questions");
 			deleteThisSchema = false;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -74,16 +77,14 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				FacesContext.getCurrentInstance().addMessage(null, msg);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+			logException(e, userBean.getEmail());
+		} 
 	}
 
 	public boolean isVisibleToUsers() {

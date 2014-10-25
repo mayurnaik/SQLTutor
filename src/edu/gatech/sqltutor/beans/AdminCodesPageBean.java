@@ -1,8 +1,6 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -32,14 +30,11 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 			selectedCode = "";
 			code = "";
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 	
 	public void unlinkCode() {
@@ -58,16 +53,10 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 					"Successfully unlinked \"" + selectedCode + "\".", "");
 				selectedCode = "";
 			} catch (SQLException e) {
-				if(e.getNextException() != null)
-					e.getNextException().printStackTrace();
-				else
-					e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidKeySpecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getEmail());
+				}
 			}
 		}
 		FacesContext.getCurrentInstance().addMessage("panel2", msg);
@@ -93,16 +82,10 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 			}
 			FacesContext.getCurrentInstance().addMessage("panel1", msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 

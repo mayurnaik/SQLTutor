@@ -1,9 +1,12 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 
 import javax.faces.application.Application;
 import javax.faces.context.FacesContext;
+
+import com.google.common.base.Throwables;
 
 import edu.gatech.sqltutor.DatabaseManager;
 
@@ -29,5 +32,14 @@ public class AbstractDatabaseBean implements Serializable {
 	
 	public void setDatabaseManager(DatabaseManager databaseManager) {
 		this.databaseManager = databaseManager;
+	}
+	
+	public void logException(Throwable e, String email) {
+		try {
+			getDatabaseManager().logException(BeanUtils.getSessionId(), email, Throwables.getStackTraceAsString(e));
+		} catch (SQLException e1) {
+			for(Throwable t : e1)
+				t.printStackTrace();
+		}
 	}
 }

@@ -42,8 +42,10 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		try {
 			tables = getDatabaseManager().getTables(selectedSchema);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 		
 		setupQuestionList();
@@ -54,7 +56,10 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			questions = getDatabaseManager().getQuestions(selectedSchema);
 			selectedQuestions = new ArrayList<QuestionTuple>();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 
@@ -74,14 +79,11 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 					"Successfully reordered the questions.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			e.getNextException().printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 	
 	public void deleteQuestions() {
@@ -106,14 +108,11 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 					"Successfully deleted the questions.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 
 	public void addQuestion() {
@@ -132,14 +131,11 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 					"Successfully added this question.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 
 	public List<DatabaseTable> getTables() {

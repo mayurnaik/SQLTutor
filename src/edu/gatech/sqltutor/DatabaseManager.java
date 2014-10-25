@@ -474,7 +474,7 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	
-	public void addPasswordChangeRequest(String email, UUID uuid) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public void addPasswordChangeRequest(String email, UUID uuid) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -491,13 +491,19 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setString(2, Arrays.toString(encryptedId));
 			preparedStatement.setString(3, Arrays.toString(salt));
 			preparedStatement.executeUpdate();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
 	}
 	
-	public boolean getPasswordChangeRequest(String email, String id) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public boolean getPasswordChangeRequest(String email, String id) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -524,6 +530,10 @@ public class DatabaseManager implements Serializable {
 				// use the password hasher to authenticate
 				autheticated = SaltHasher.authenticate(id, encryptedId, salt);
 			} 
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
@@ -532,7 +542,7 @@ public class DatabaseManager implements Serializable {
 		return autheticated;
 	}
 
-	public void changePassword(String email, String newPassword) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public void changePassword(String email, String newPassword) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -548,6 +558,10 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setString(2, Arrays.toString(salt));
 			preparedStatement.setString(3, email);
 			preparedStatement.execute();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
 		} finally {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
@@ -805,7 +819,7 @@ public class DatabaseManager implements Serializable {
 		return new QueryResult(columnNames, queryData);
 	}
 	
-	private void addUser(String email, String password) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	private void addUser(String email, String password) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -823,6 +837,10 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setString(2, Arrays.toString(salt));
 			preparedStatement.setString(3, email);
 			preparedStatement.executeUpdate();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
 		} finally {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
@@ -861,7 +879,7 @@ public class DatabaseManager implements Serializable {
 		}
 	}
 	
-	public void registerUser(String email, String password) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public void registerUser(String email, String password) throws SQLException {
 		addUser(email, password);
 		addUserToLinkedAdminCodes(email);
 	}
@@ -936,7 +954,7 @@ public class DatabaseManager implements Serializable {
 		return isEmailRegistered;
 	}
 	
-	public boolean isPasswordCorrect(String email, String attemptedPassword) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public boolean isPasswordCorrect(String email, String attemptedPassword) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -957,6 +975,10 @@ public class DatabaseManager implements Serializable {
 				// use the password hasher to authenticate
 				isCorrect = SaltHasher.authenticate(attemptedPassword, encryptedPassword, salt);
 			} 
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
@@ -984,6 +1006,45 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setBoolean(7, parsed);
 			preparedStatement.setBoolean(8, correct);
 			preparedStatement.setString(9, nlpFeedback);
+			preparedStatement.executeUpdate();
+		} finally {
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+	}
+	
+	public void logQuestionPresentation(String sessionId, String email, String schemaName, String question) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try { 
+			connection = dataSource.getConnection();
+			
+			preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
+					+ "\"email\", \"schema\", \"question\") VALUES (?, ?, ?, ?)");
+			preparedStatement.setString(1, sessionId);
+			preparedStatement.setString(2, email);
+			preparedStatement.setString(3, schemaName);
+			preparedStatement.setString(4, question);
+			preparedStatement.executeUpdate();
+		} finally {
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+	}
+	
+	public void logException(String sessionId, String email, String exception) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try { 
+			connection = dataSource.getConnection();
+			
+			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
+					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
+			preparedStatement.setString(1, sessionId);
+			preparedStatement.setString(2, email);
+			preparedStatement.setString(3, exception);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);

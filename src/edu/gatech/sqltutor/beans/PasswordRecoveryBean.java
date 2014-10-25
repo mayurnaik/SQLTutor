@@ -54,12 +54,12 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (MessagingException e) {
 			e.printStackTrace();
+			logException(e, userBean.getEmail());
 		} catch(SQLException e) {
-			e.printStackTrace();
-		} catch(InvalidKeySpecException e) {
-			e.printStackTrace();
-		} catch(NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -73,15 +73,11 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 					e.printStackTrace();
 				}
 			}
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -95,15 +91,13 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 					"Your password has been changed.", "");
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch(SQLException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			logException(e, userBean.getEmail());
 		}
 	}
 
@@ -139,7 +133,18 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 		this.email = email;
 	}
 	
-	public String getHashedEmail() throws NoSuchAlgorithmException, InvalidKeySpecException {
-		return Arrays.toString(SaltHasher.getEncryptedValue(getEmail().toLowerCase(), UserBean.SALT));
+	public String getHashedEmail() {
+		String encryptedEmail = null;
+
+		try {
+			byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), UserBean.SALT);
+			encryptedEmail = Arrays.toString(hashedEmail);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			e.printStackTrace();
+		}
+		
+		return encryptedEmail;
 	}
 }

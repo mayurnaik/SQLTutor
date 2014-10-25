@@ -32,7 +32,10 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 			users = getDatabaseManager().getUserTuples();
 			selectedUser = null;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -51,10 +54,10 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		} 
 	}
 	
@@ -72,17 +75,11 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 	
 	public void demoteUserFromAdmin() {
@@ -105,16 +102,10 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
@@ -135,17 +126,11 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 	
 	public void demoteUserFromDev() {
@@ -168,20 +153,14 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 			}
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
-			if(e.getNextException() != null)
-				e.getNextException().printStackTrace();
-			else
-				e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
+		} 
 	}
 	
-	public void updateSelectedUser() throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public void updateSelectedUser() throws SQLException {
 		UserTuple temp = getDatabaseManager().getUserTuple(selectedUser.getHashedEmail());
 		selectedUser.setAdmin(temp.isAdmin());
 		selectedUser.setDev(temp.isDev());

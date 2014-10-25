@@ -40,8 +40,11 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 	public void setupTables() {
 		try {
 			tables = getDatabaseManager().getDevTables();
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 
 		List<String> tableNames = new ArrayList<String>();
@@ -53,7 +56,10 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 		try {
 			setTableData(getDatabaseManager().getAllDevData(tableNames));
 		} catch (SQLException e) {
-			e.printStackTrace();
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getEmail());
+			}
 		}
 	}
 	
