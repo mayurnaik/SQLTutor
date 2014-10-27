@@ -8,6 +8,8 @@ import csv
 import collections
 import itertools
 
+plt.rcParams['figure.figsize'] = (8, 4)
+
 def create_plot(args):
     data = read_input(args.inputfile)
 
@@ -19,11 +21,11 @@ def create_plot(args):
     plt.bar(groups, counts, align='center', fill=True, color='grey')
     # plt.subplots_adjust(left=0.05, right=0.95, bottom=0, top=1.1)
 
-    plt.xlabel('# of rules')
-    plt.xticks(range(min(groups), max(groups) + 1))
+    plt.xlabel('# of rules', fontsize=20)
+    plt.xticks(range(min(groups), max(groups) + 1), fontsize=15)
     plt.xlim([min(groups) - 1, max(groups) + 1])
-    plt.ylabel('# of query translations')
-    plt.yticks(range(min(counts), max(counts) + 1))
+    plt.ylabel('# of translations', fontsize=20)
+    plt.yticks(range(min(counts), max(counts) + 1), fontsize=15)
     # plt.title('Rule Distribution')
     plt.tight_layout(pad=0.0, rect=(0, 0, 0.925, 1))
 
@@ -33,7 +35,7 @@ def create_plot(args):
     mean = numpy.mean(values)
     stddev = numpy.std(values)
 
-    plt.figtext(0.7, 0.9, '{:9} {:.2f}\n{:9} {:.2f}'.format('Mean:', mean, 'Std-dev:', stddev))
+    plt.figtext(0.6, 0.75, '{:9} {:.2f}\n{:9} {:.2f}'.format('Mean:', mean, 'Std-dev:', stddev), fontsize=18)
     print('Min: {}\nMax: {}\nMean: {}\nStddev: {}'.format(min_val, max_val, mean, stddev))
 
     if args.show:
