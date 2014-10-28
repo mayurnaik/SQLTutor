@@ -17,6 +17,7 @@ import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -98,20 +99,25 @@ public class TableEntityRefLiteralRule
 			// see if we need to insert a determiner
 			if( checkDeterminer ) {
 				ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(ref);
-				if( before == null || before.getPartOfSpeech() != PartOfSpeech.DETERMINER ) {
-					ISymbolicToken parent = ref.getParent();
-					List<ISymbolicToken> siblings = parent.getChildren();
-					int idx = siblings.indexOf(ref);
-					if( before.getPartOfSpeech().isPossessive() ) {
-						// FIXME we really need a smarter check here
+				PartOfSpeech bpos = before == null ? null : before.getPartOfSpeech();
+				if( bpos != null ) {
+					if( bpos.isPossessive() ) {
 						_log.warn("Skipping determiner insertion due to possessive ending.");
+					} else if( bpos == PartOfSpeech.DETERMINER ) {
+						_log.warn("Skipping determiner insertion due to existing determiner.");
+					} else if( bpos == PartOfSpeech.ADJECTIVE ) {
+						_log.warn("Skipping determiner insertion due to adjective.");
+					} else if ( ref.getTableEntity().getDescribed() == DescriptionType.APPEND ) {
+						_log.warn("Skipping determiner insertion due appended describing attribute.");
 					} else if ( insertIdAfter || !ref.getNeedsId() ) {
+						ISymbolicToken parent = ref.getParent();
+						List<ISymbolicToken> siblings = parent.getChildren();
+						int idx = siblings.indexOf(ref);
 						LiteralToken det = Literals.the(); // FIXME "a"/"an"?
 						siblings.add(idx, det);
 						det.setParent(parent);
 						_log.debug(Markers.SYMBOLIC, "Inserted determiner into: {}", parent);
 					}
-						
 				}
 			}
 			

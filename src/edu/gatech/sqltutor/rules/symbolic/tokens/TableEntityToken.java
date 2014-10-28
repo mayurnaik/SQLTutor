@@ -5,6 +5,7 @@ import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.Utils;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.EREdgeConstraint;
 import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
@@ -27,6 +28,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 	protected String singular;
 	protected String plural;
 	protected int cardinality = EREdgeConstraint.ANY_CARDINALITY;
+	protected DescriptionType described = DescriptionType.NONE;
 	
 	public TableEntityToken(TableEntityToken token) {
 		super(token);
@@ -37,6 +39,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 		this.singular = token.singular;
 		this.plural = token.plural;
 		this.cardinality = token.cardinality;
+		this.described = token.described;
 	}
 	
 	public TableEntityToken(FromTable table) {
@@ -100,6 +103,14 @@ public class TableEntityToken extends AbstractSymbolicToken
 	
 	public String getId() {
 		return id;
+	}
+	
+	public DescriptionType getDescribed() {
+		return described;
+	}
+	
+	public void setDescribed(DescriptionType type) {
+		this.described = type;
 	}
 	
 	public int getCardinality() {

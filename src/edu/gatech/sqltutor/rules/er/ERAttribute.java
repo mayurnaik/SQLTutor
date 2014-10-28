@@ -13,7 +13,7 @@ import edu.gatech.sqltutor.rules.er.converters.RelaxedEnumConverter;
 @XStreamConverter(AttributeConverter.class)
 public class ERAttribute extends AbstractERNamedNode implements ERNode {
 	public static enum DescriptionType {
-		PREPEND, REPLACE, NONE;
+		APPEND, PREPEND, REPLACE, NONE;
 	}
 	
 	@XStreamAsAttribute

@@ -23,6 +23,7 @@ import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
@@ -79,9 +80,15 @@ public class DescribingAttributeLabelRule
 			if( "prepend".equalsIgnoreCase(type) ) {
 				singular = value + " " + singular;
 				plural = value + " " + plural;
+				tableEntity.setDescribed(DescriptionType.PREPEND);
 			} else if( "replace".equalsIgnoreCase(type) ) {
 				singular = value;
 				plural = NLUtil.pluralize(value);
+				tableEntity.setDescribed(DescriptionType.REPLACE);
+			} else if( "append".equalsIgnoreCase(type) ) {
+				singular = singular + " " + value;
+				plural = plural + " " + value;
+				tableEntity.setDescribed(DescriptionType.APPEND);
 			} else {
 				throw new SymbolicException("Unsupported describing-attribute type: " + type);
 			}

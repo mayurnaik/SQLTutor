@@ -19,11 +19,13 @@ import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.Literals;
 
 public class AttributeLiteralLabelRule 
@@ -97,7 +99,7 @@ public class AttributeLiteralLabelRule
 		if( before == null )
 			return true;
 		PartOfSpeech pos = before.getPartOfSpeech();
-		if( pos.isPossessive() || pos == PartOfSpeech.DETERMINER || pos == PartOfSpeech.ADJECTIVE)
+		if( pos.isPossessive() || pos == PartOfSpeech.DETERMINER || pos == PartOfSpeech.ADJECTIVE )
 			return false;
 		return true;
 	}

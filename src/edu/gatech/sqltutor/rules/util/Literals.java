@@ -29,7 +29,15 @@ public class Literals {
 	public static LiteralToken the() {
 		return new LiteralToken("the", DETERMINER);
 	}
+	
+	public static LiteralToken all() {
+		return new LiteralToken("all", DETERMINER);
+	}
 
+	public static LiteralToken each() {
+		return new LiteralToken("each", DETERMINER);
+	}
+	
 	public static LiteralToken a() {
 		return new LiteralToken("a", DETERMINER);
 	}

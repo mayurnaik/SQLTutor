@@ -17,6 +17,7 @@
         </attribute>
         <attribute isKey="true">
         	<name>Number</name>
+        	<describesEntity>append</describesEntity>
         </attribute>
         <attribute isMultivalued="true">
         	<name>Locations</name>
@@ -55,6 +56,7 @@
         </attribute>
         <attribute>
         	<name>Bdate</name>
+        	<dataType>DATETIME</dataType>
         	<metadata>
         		<singularLabel>birth date</singularLabel>
         	</metadata>
@@ -70,9 +72,11 @@
       <attributes id="17">
         <attribute id="19" isKey="true">
           <name>Name</name>
+           <describesEntity>prepend</describesEntity>
         </attribute>
         <attribute id="20" isKey="true">
           <name>Number</name>
+          <describesEntity>append</describesEntity>
         </attribute>
         <attribute><name>Location</name></attribute>
       </attributes>
@@ -86,7 +90,7 @@
     			<name>Name</name>
     		</attribute>
     		<attribute><name>Sex</name></attribute>
-    		<attribute><name>Birth_date</name></attribute>
+    		<attribute><name>Birth_date</name><dataType>DATETIME</dataType></attribute>
     		<attribute><name>Relationship</name></attribute>
     	</attributes>
     </entity>
@@ -153,7 +157,7 @@
     <relationship>
     	<name>manages</name>
     	<attributes>
-    		<attribute><name>Start_date</name></attribute>
+    		<attribute><name>Start_date</name><dataType>DATETIME</dataType></attribute>
     	</attributes>
     	<leftEdge>
     		<entity reference="entityEmployee" />

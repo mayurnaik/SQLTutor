@@ -34,6 +34,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SQLPredicates;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -228,10 +229,13 @@ public class TransformationRule extends StandardSymbolicRule implements
 
 			// "of each" {entity} or "of all" {entity}s or "of the" {entity}
 			SequenceToken literals = new SequenceToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
-			String expr = entityToken.getCardinality() == 1 ? "the" : isDistinct ? "all" : "each";
-			LiteralToken determiner = new LiteralToken(expr, PartOfSpeech.DETERMINER);
 			literals.addChild(Literals.of());
-			literals.addChild(determiner);
+			if( !(entityToken.getDescribed() == DescriptionType.APPEND) ) {
+				LiteralToken determiner = entityToken.getCardinality() == 1 ? Literals.the() : 
+															isDistinct ? Literals.all() : 
+																Literals.each();
+				literals.addChild(determiner);
+			}
 			seq.addChild(literals);
 			
 			// now the reference
@@ -378,7 +382,6 @@ public class TransformationRule extends StandardSymbolicRule implements
 		seq.addChild(ref);
 		seq.addChild(new LiteralToken("'s", PartOfSpeech.POSSESSIVE_ENDING));
 		seq.addChild(token);
-		
 		
 		return seq;
 	}
