@@ -10,6 +10,16 @@
 		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form>
 			<h:outputText value="We encountered an error..." />
+			<br/><br/>
+			
+			<b>Message:</b> Please click the link below to be redirected to the homepage.
+			<br/><br/>
+			
+			<h:link value="Redirect me" outcome="HomePage" />
+			<br/><br/>
+			
+			<b>Trace:</b> <br/>
+			<h:outputText value="#{pfExceptionHandler.formattedStackTrace}" escape="false"/>
 		</h:form>
 	</h:body>
 </html>

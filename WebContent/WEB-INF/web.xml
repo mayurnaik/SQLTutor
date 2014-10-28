@@ -108,4 +108,8 @@
   <listener>
     <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
   </listener>
+  <error-page>
+  	<exception-type>java.lang.Throwable</exception-type>
+  	<location>/ErrorPage.jsf</location>
+  </error-page>
 </web-app>
