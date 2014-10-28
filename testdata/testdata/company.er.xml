@@ -157,7 +157,10 @@
     <relationship>
     	<name>manages</name>
     	<attributes>
-    		<attribute><name>Start_date</name><dataType>DATETIME</dataType></attribute>
+    		<attribute>
+    			<name>Start_date</name>
+    			<dataType>DATETIME</dataType>
+    		</attribute>
     	</attributes>
     	<leftEdge>
     		<entity reference="entityEmployee" />

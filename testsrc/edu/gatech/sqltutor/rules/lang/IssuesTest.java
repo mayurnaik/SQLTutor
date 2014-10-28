@@ -23,25 +23,25 @@ public class IssuesTest extends SymbolicFragmentTestBase {
 			
 			// 1
 			// Retrieve the ssn of each employee and the name of each project where the project is controlled by some department, the employee manages the project's controlling department, and the manager's start date is after 01-01-1990.
-			{"SELECT mgr_ssn, pname FROM project, department WHERE dnum = dnumber AND mgr_start_date > '1990-01-01'", 
-				Pattern.quote("Select the name of each project and the ssn of each employee where the project's employee's department managed's start date is greater than \"1990-01-01.\"")},
+			{"SELECT d.mgr_ssn, p.pname FROM project p, department d WHERE p.dnum = d.dnumber AND d.mgr_start_date > '1990-01-01'", 
+				Pattern.quote("Select the name of each project and the ssn of each employee where the project's employee's department managed's start date is later than 1990-01-01.")},
 			
 			// 2
 			// Select the name of each project that some employee has worked on for more than 30 hours.
-			{"SELECT pname FROM project, works_on WHERE hours > 30 AND pnumber = pno", 
+			{"SELECT p.pname FROM project p, works_on w WHERE w.hours > 30 AND p.pnumber = w.pno", 
 				Pattern.quote("Select the name of each project where the works on's hours is greater than 30 and the project's number is the works on's pno.")},
 			
 			// 3
 			// For each employee whose first name is John, retrieve that employee's dependents' names.
-			{"SELECT dependent_name FROM employee AS E, dependent AS D WHERE E.ssn = D.essn AND e.fname = 'John'", 
-				Pattern.quote("Select the name of each dependent where the employee dependents of the dependent and the employee's first name is \"John\".")},
+			{"SELECT D.dependent_name FROM employee AS E, dependent AS D WHERE E.ssn = D.essn AND e.fname = 'John'", 
+				Pattern.quote("Select the name of each dependent where the employee dependents of the dependent and the employee's first name is \"John.\"")},
 			
 			// 4
-			{"SELECT mgr_start_date FROM department d WHERE dname = 'Research'", 
+			{"SELECT d.mgr_start_date FROM department d WHERE d.dname = 'Research'", 
 				Pattern.quote("Select the start date of the Research department.")},
 			
 			// 5
-			{"SELECT fname, lname FROM employee, department", 
+			{"SELECT e.fname, e.lname FROM employee e, department d", 
 				Pattern.quote("Select the first name and last name of each employee.")},
 			
 			// 6
@@ -51,7 +51,7 @@ public class IssuesTest extends SymbolicFragmentTestBase {
 			
 			// 7
 			// First, this should say “supervises (a/some) employee”. Second, in this situation we should perhaps just apply e2 and e’s label from the ER (supervisor and supervisee) - or apply one of the two
-			{"Select super_ssn FROM employee", 
+			{"Select e.super_ssn FROM employee e", 
 				Pattern.quote("Select the ssn of each employee _e2_ who supervises the employee _e_.")},
 			
 			// 8
