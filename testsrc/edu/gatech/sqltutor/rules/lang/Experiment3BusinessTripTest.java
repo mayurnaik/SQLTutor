@@ -28,7 +28,7 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select all attributes of each salesperson.")},
 			//3
 			{"SELECT DISTINCT name FROM salesperson",
-				Pattern.quote("Select the distinct values of the names of all salespersons.")},
+				Pattern.quote("Select the distinct names of all salespersons.")},
 			//4
 			{"SELECT DISTINCT name, dept_no FROM salesperson",
 				Pattern.quote("Select the distinct values of the names and department numbers of all salespersons.")},
@@ -49,13 +49,13 @@ public class Experiment3BusinessTripTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select all attributes of each salesperson whose start year is later than 2012 and name is \"John Smith.\"")},
 			//10
 			{"SELECT DISTINCT start_year FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of the start years of all salespersons whose name is \"John Smith.\"")},
+				Pattern.quote("Select the distinct start years of all salespersons whose names are \"John Smith.\"")},
 			//11
 			{"SELECT DISTINCT start_year, dept_no FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of the start years and department numbers of all salespersons whose name is \"John Smith.\"")},
+				Pattern.quote("Select the distinct values of the start years and department numbers of all salespersons whose names are \"John Smith.\"")},
 			//12
 			{"SELECT DISTINCT * FROM salesperson WHERE name = 'John Smith'",
-				Pattern.quote("Select the distinct values of all attributes of all salespersons whose name is \"John Smith.\"")},
+				Pattern.quote("Select the distinct values of all attributes of all salespersons whose names are \"John Smith.\"")},
 			//13
 			{"SELECT s.name, t.to_city FROM salesperson s, trip t WHERE s.ssn = t.ssn",
 				Pattern.quote("Select the name of each salesperson and the destination of each trip where the salesperson takes the trip.")},
