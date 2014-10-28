@@ -1,17 +1,13 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.UserTuple;
 
@@ -22,6 +18,9 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
+	
+	private static final String EXAMPLES_EMAIL = "[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]";
+	private static final String CHOOSE_USER_ERROR = "Please select a user.";
 	
 	private List<UserTuple> users;
 	private UserTuple selectedUser;
@@ -34,129 +33,142 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
 	public void deleteUser() {
-		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+		if(selectedUser == null) {
+			BeanUtils.addErrorMessage(null, CHOOSE_USER_ERROR);
+			return;
+		}
+		if(selectedUser.getHashedEmail().equals(EXAMPLES_EMAIL)) {
+			final String message = "You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".";
+			BeanUtils.addErrorMessage(null, message);
 			return;
 		}
 		try {
 			getDatabaseManager().deleteUser(selectedUser.getHashedEmail(), selectedUser.getAdminCode());
 			users.remove(selectedUser);
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				"Successfully deleted \"" + selectedUser.getHashedEmail() + "\".", "");
-
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			final String message = "Successfully deleted \"" + selectedUser.getHashedEmail();
+			BeanUtils.addInfoMessage(null, message);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 	
 	public void promoteUserToAdmin() {
+		if(selectedUser == null) {
+			BeanUtils.addErrorMessage(null, CHOOSE_USER_ERROR);
+			return;
+		}
 		try {
-			FacesMessage msg;
 			if(!selectedUser.isAdmin()) {
 				getDatabaseManager().promoteUserToAdmin(selectedUser.getHashedEmail());
 				updateSelectedUser();
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to admin.", "");
+				final String message = "Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to admin.";
+				BeanUtils.addInfoMessage(null, message);
 			} else {
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"\"" + selectedUser.getHashedEmail() + "\" is already an admin.", "");
+				final String message = "\"" + selectedUser.getHashedEmail() + "\" is already an admin.";
+				BeanUtils.addInfoMessage(null, message);
 			}
-			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 	
 	public void demoteUserFromAdmin() {
-		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+		if(selectedUser == null) {
+			BeanUtils.addErrorMessage(null, CHOOSE_USER_ERROR);
+			return;
+		}
+		if(selectedUser.getHashedEmail().equals(EXAMPLES_EMAIL)) {
+			final String message = "You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".";
+			BeanUtils.addErrorMessage(null, message);
 			return;
 		}
 		try {
-			FacesMessage msg;
 			if(selectedUser.isAdmin()) {
 				getDatabaseManager().demoteUserFromAdmin(selectedUser.getHashedEmail(), selectedUser.getAdminCode());
 				updateSelectedUser();
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from admin.", "");
+				final String message = "Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from admin.";
+				BeanUtils.addInfoMessage(null, message);
 			} else {
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"\"" + selectedUser.getHashedEmail() + "\" is not an admin.", ""); 
+				final String message = "\"" + selectedUser.getHashedEmail() + "\" is not an admin."; 
+				BeanUtils.addInfoMessage(null, message);
 			}
-			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
 	public void promoteUserToDev() {
+		if(selectedUser == null) {
+			BeanUtils.addErrorMessage(null, CHOOSE_USER_ERROR);
+			return;
+		}
 		try {
-			FacesMessage msg;
 			if(!selectedUser.isDev()) {
 				if(!selectedUser.isAdmin()) {
 					promoteUserToAdmin();
 				}
 				getDatabaseManager().promoteUserToDev(selectedUser.getHashedEmail());
 				updateSelectedUser();
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to dev.", "");
+				final String message = "Successfully promoted \"" + selectedUser.getHashedEmail() + "\" to dev.";
+				BeanUtils.addInfoMessage(null, message);
 			} else {
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"\"" + selectedUser.getHashedEmail() + "\" is already a dev", "");
+				final String message = "\"" + selectedUser.getHashedEmail() + "\" is already a dev";
+				BeanUtils.addInfoMessage(null, message);
 			}
-			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 	
 	public void demoteUserFromDev() {
-		if(selectedUser.getHashedEmail().equals("[115, 104, 16, -32, -71, -83, -106, 116, -68, -27, -44, 69, -55, -88, 51, -25, 98, -6, -33, 66]")) {
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+		if(selectedUser == null) {
+			BeanUtils.addErrorMessage(null, CHOOSE_USER_ERROR);
+			return;
+		}
+		if(selectedUser.getHashedEmail().equals(EXAMPLES_EMAIL)) {
+			final String message = "You are not allowed to alter \"" + selectedUser.getHashedEmail() + "\".";
+			BeanUtils.addErrorMessage(null, message);
 			return;
 		}
 		try {
-			FacesMessage msg;
 			if(selectedUser.isDev()) {
 				getDatabaseManager().demoteUserFromDev(selectedUser.getHashedEmail());
 				updateSelectedUser();
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from dev.", "");
+				final String message = "Successfully demoted \"" + selectedUser.getHashedEmail() + "\" from dev.";
+				BeanUtils.addInfoMessage(null, message);
 			} else {
-				msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"\"" + selectedUser.getHashedEmail() + "\" is not a dev.", "");
+				final String message = "\"" + selectedUser.getHashedEmail() + "\" is not a dev.";
+				BeanUtils.addInfoMessage(null, message);
 			}
-			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 	

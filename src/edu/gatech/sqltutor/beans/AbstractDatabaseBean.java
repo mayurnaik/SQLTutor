@@ -17,6 +17,8 @@ public class AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private transient DatabaseManager databaseManager;
+	
+	protected static final String DATABASE_ERROR = "Internal database error. Please try again momentarily.";
 
 	public AbstractDatabaseBean() {
 	}

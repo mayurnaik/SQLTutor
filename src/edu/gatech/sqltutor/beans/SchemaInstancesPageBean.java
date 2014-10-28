@@ -1,19 +1,15 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 
 import org.primefaces.context.RequestContext;
 
@@ -28,6 +24,8 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
 
+	private static final String PERMISSIONS_ERROR = "You do not have permissions for this schema.";
+	
 	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
 	
@@ -48,8 +46,9 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 
 		List<String> tableNames = new ArrayList<String>();
@@ -63,22 +62,17 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
 	public void processSQL() {
+		if(!hasPermissions())
+			return;
+		
 		try {
-			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
-
-			if(!hasPermissions) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You do not have permissions for this schema.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
 			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
 		} catch(SQLException e) {
 			queryResult = null;
@@ -87,18 +81,31 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			if(message.equals("No results were returned by the query.")) {
 				RequestContext requestContext = RequestContext.getCurrentInstance();  
 				requestContext.execute("window.location.replace(window.location.href);");
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						message, "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+				BeanUtils.addInfoMessage(null, message);
 				return;
 			}
 			
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					message, "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			BeanUtils.addErrorMessage(null, message);
 		}
 	} 
 
+	private boolean hasPermissions() {
+		boolean hasPermissions = false;
+		try {
+			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+
+			if(!hasPermissions) 
+				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
+		} catch(SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+		}
+		return hasPermissions;
+	}
+	
 	public List<DatabaseTable> getTables() {
 		return tables;
 	}

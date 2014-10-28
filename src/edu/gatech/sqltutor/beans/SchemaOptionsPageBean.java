@@ -2,14 +2,11 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -25,6 +22,12 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
+	
+	private static final String PERMISSIONS_ERROR = "You do not have permissions for this schema.";
+	private static final String CONFIRMATION_MESSAGE = "Successfully submitted changes.";
+	private static final String ADMIN_PAGE_CONTEXT = "/AdminPage.jsf";
+	// FIXME: probably don't want to have a default schema here
+	private static final String DEFAULT_SCHEMA_NAME = "company";
 	
 	private List<DatabaseTable> tables;
 	
@@ -42,49 +45,58 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 			
 			HashMap<String, Boolean> options = 
 					getDatabaseManager().getOptions(selectedSchema);
-			
-			visibleToUsers = options.get("visible_to_users");
+			//FIXME: probably want to change from using concrete string names here
+			visibleToUsers = options.get("visible_to_users"); 
 			inOrderQuestions = options.get("in_order_questions");
 			deleteThisSchema = false;
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
-	public void submit() {
+	public void submit() throws IOException {
+		if(!hasPermissions())
+			return;
+		
 		try {
-			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
-			if(!hasPermissions) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You do not have permissions for this schema.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
 			if(deleteThisSchema) {
 				getDatabaseManager().deleteSchema(userBean.getSelectedSchema());
-				userBean.setSelectedSchema("company"); //TODO: may need to set a warning that company is the default schema
+				userBean.setSelectedSchema(DEFAULT_SCHEMA_NAME);
 
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-				externalContext.redirect(externalContext.getRequestContextPath() + "/AdminPage.jsf");
+				externalContext.redirect(externalContext.getRequestContextPath() + ADMIN_PAGE_CONTEXT);
 			} else {
 				getDatabaseManager().setOptions(userBean.getSelectedSchema(), visibleToUsers, inOrderQuestions);
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"Successfully submitted changes.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+				BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
 			}
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			logException(e, userBean.getEmail());
-		} 
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+		}
+	}
+	
+	private boolean hasPermissions() {
+		boolean hasPermissions = false;
+		try {
+			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+
+			if(!hasPermissions) 
+				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
+		} catch(SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+		}
+		return hasPermissions;
 	}
 
 	public boolean isVisibleToUsers() {

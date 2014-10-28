@@ -7,11 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 
 import org.primefaces.context.RequestContext;
 
@@ -43,8 +41,9 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 
 		List<String> tableNames = new ArrayList<String>();
@@ -58,8 +57,9 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
@@ -73,15 +73,9 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 			if(message.equals("No results were returned by the query.")) {
 				RequestContext requestContext = RequestContext.getCurrentInstance();  
 				requestContext.execute("window.location.replace(window.location.href);");
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						message, "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					message, "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+				BeanUtils.addInfoMessage(null, message);
+			} else
+				BeanUtils.addErrorMessage(null, message);
 		}
 	} 
 

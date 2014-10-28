@@ -1,8 +1,6 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,12 +18,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -70,8 +65,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 		setQuestionsAndAnswers();
 	}
@@ -90,6 +86,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			// generate NLP feedback
 			ERDiagram erDiagram = null;
 			ERMapping erMapping = null;
+			// FIXME: hard coded for now
 			if(userBean.getSelectedSchema().equals("company")) {
 				nlpDisabled = false;
 				Class<?> c = this.getClass();
@@ -120,11 +117,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 					if(e instanceof SQLException) {
 						for(Throwable t : (SQLException)e) {
 							t.printStackTrace();
-							logException(t, userBean.getEmail());
+							logException(t, userBean.getHashedEmail());
 						}
 					} else {
 						e.printStackTrace();
-						logException(e, userBean.getEmail());
+						logException(e, userBean.getHashedEmail());
 					}
 				}
 			}
@@ -139,8 +136,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	} 
 	
@@ -176,7 +174,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			resultSetFeedback = "The stored answer was malformed." + e.getMessage();
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
 		}
 	}
@@ -213,7 +211,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 					} else {
 						for(Throwable t : e) {
 							t.printStackTrace();
-							logException(t, userBean.getEmail());
+							logException(t, userBean.getHashedEmail());
 						}
 					}
 				}
@@ -275,8 +273,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 		
 		if(questionTuples.isEmpty()) {
@@ -288,8 +287,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			} catch (SQLException e) {
 				for(Throwable t : e) {
 					t.printStackTrace();
-					logException(t, userBean.getEmail());
+					logException(t, userBean.getHashedEmail());
 				}
+				BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 			}
 			
 			for(QuestionTuple question : questionTuples) {
@@ -330,8 +330,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 		return questions.get(questionIndex);
 	}

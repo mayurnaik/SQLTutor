@@ -1,18 +1,14 @@
 package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QuestionTuple;
@@ -24,6 +20,12 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
+	
+	private static final String PERMISSIONS_ERROR = "You do not have permissions for this schema.";
+	private static final String REORDER_CONFIRMATION_MESSAGE = "Successfully reordered the questions.";
+	private static final String CHOOSE_QUESTION_ERROR = "You must select questions to be deleted.";
+	private static final String DELETE_CONFIRMATION_MESSAGE = "Successfully deleted the questions.";
+	private static final String ADD_CONFIRMATION_MESSAGE = "Successfully added this question.";
 	
 	private List<DatabaseTable> tables;
 	
@@ -44,8 +46,9 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 		
 		setupQuestionList();
@@ -58,84 +61,81 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 
 	public void reorderQuestions() {
+		if(!hasPermissions())
+			return;
+		
 		try {
-			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
-			if(!hasPermissions) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You do not have permissions for this schema.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
 			getDatabaseManager().reorderQuestions(questions);
-			
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully reordered the questions.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			BeanUtils.addInfoMessage(null, REORDER_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 	
 	public void deleteQuestions() {
+		if(!hasPermissions())
+			return;
+		
 		try {
-			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
-			if(!hasPermissions) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You do not have permissions for this schema.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
 			if(selectedQuestions.isEmpty()) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You must select questions to be deleted.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+				BeanUtils.addErrorMessage(null, CHOOSE_QUESTION_ERROR);
 				return;
 			}
 			getDatabaseManager().deleteQuestions(selectedQuestions);
 			setupQuestionList();
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully deleted the questions.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			BeanUtils.addErrorMessage(null, DELETE_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
 	}
 
 	public void addQuestion() {
+		if(!hasPermissions())
+			return;
+		
 		try {
-			boolean hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
-			if(!hasPermissions) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-						"You do not have permissions for this schema.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
-				return;
-			}
-			
 			getDatabaseManager().addQuestion(selectedSchema, getQuestion(), getAnswer());
 			setupQuestionList();
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Successfully added this question.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			BeanUtils.addInfoMessage(null, ADD_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		} 
+	}
+	
+	private boolean hasPermissions() {
+		boolean hasPermissions = false;
+		try {
+			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+
+			if(!hasPermissions) 
+				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
+		} catch(SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+		}
+		return hasPermissions;
 	}
 
 	public List<DatabaseTable> getTables() {

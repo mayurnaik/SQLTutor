@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -27,77 +26,71 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 	@ManagedProperty(value="#{userBean}")
 	private UserBean userBean;
 	
+	private static final String NONEXISTANT_EMAIL_ERROR = "The email you entered has not been registered.";
+	private static final String SUBJECT = "[SQL-Tutor] Password Recovery - Do Not Reply";
+	private static final String EMAIL_CONFIRMATION_MESSAGE = "The password request has been sent to your email.";
+	private static final String CONFIRMATION_MESSAGE = "Your password has been changed.";
+	private static final String HOMEPAGE_CONTEXT = "/HomePage.jsf";
+	
 	private String password;
 	private String id;
 	private String email;
+	private String hashedEmail;
 	
-	public void sendPasswordLink() {
+	public void sendPasswordLink() throws MessagingException {
 		try {
 			if(!getDatabaseManager().emailExists(getHashedEmail())) {
-				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"The email you entered has not been registered.", "");
-				FacesContext.getCurrentInstance().addMessage(null, msg);
+				BeanUtils.addErrorMessage(null, NONEXISTANT_EMAIL_ERROR);
 				return;
 			}
 			
 			UUID uuid = UUID.randomUUID();
 			getDatabaseManager().addPasswordChangeRequest(getHashedEmail(), uuid);
 			String to = getEmail(); 
-			String subject = "[SQL-Tutor] Password Recovery - Do Not Reply";
-			String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
+			
+			final String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
 					+ "Go to this URL within 24 hours to reset your password: https://sqltutor.cc.gatech.edu/PasswordRecoveredPage.jsf?u=" + getEmail() + "&i=" + uuid.toString()
 					+ " \n\nDo not reply or send future correspondence to this email address. Please send any concerns to \"sql-tutor@googlegroups.com\".";
 			
-			Emailer.getInstance().sendMessage(to, subject, message);
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"The password request has been sent to your email.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
-		} catch (MessagingException e) {
-			e.printStackTrace();
-			logException(e, userBean.getEmail());
+			Emailer.getInstance().sendMessage(to, SUBJECT, message);
+			BeanUtils.addInfoMessage(null, EMAIL_CONFIRMATION_MESSAGE);
 		} catch(SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
-	public void invalidRedirect() {
+	public void invalidRedirect() throws IOException {
 		try {
 			if(!getDatabaseManager().getPasswordChangeRequest(getHashedEmail(), getId())) {
 				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			    try {
-					externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
 			}
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
-	public void updatePassword() {
+	public void updatePassword() throws IOException {
 		try {
 			getDatabaseManager().changePassword(getHashedEmail(), getPassword());
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+			externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
 
-			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Your password has been changed.", "");
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
 		} catch(SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, userBean.getEmail());
+				logException(t, userBean.getHashedEmail());
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			logException(e, userBean.getEmail());
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 
@@ -124,27 +117,32 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 	public void setId(String id) {
 		this.id = id;
 	}
-
+	
 	public String getEmail() {
 		return email;
 	}
-
+	
 	public void setEmail(String email) {
 		this.email = email;
+		setHashedEmail(email);
+	}
+
+	public void setHashedEmail(String email) {
+		String encryptedEmail = null;
+		if(email != null) {
+			try {
+				byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), UserBean.SALT);
+				encryptedEmail = Arrays.toString(hashedEmail);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				e.printStackTrace();
+			}
+		}
+		this.hashedEmail = encryptedEmail;
 	}
 	
 	public String getHashedEmail() {
-		String encryptedEmail = null;
-
-		try {
-			byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), UserBean.SALT);
-			encryptedEmail = Arrays.toString(hashedEmail);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		}
-		
-		return encryptedEmail;
+		return hashedEmail;
 	}
 }

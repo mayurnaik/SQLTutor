@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -42,22 +41,19 @@ public class SchemaSelectionBean extends AbstractDatabaseBean implements Seriali
 			userSchemas.clear();
 			userSchemas.add(itemGroup);
 		} catch( SQLException e ) {
-			e.printStackTrace();
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-				"Internal error retrieving the schema list.", null);
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	}
 	
-	public void submit() {
+	public void submit() throws IOException {
 		userBean.setSelectedSchema(selectedSchema);
 		//Refresh page
 		ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
-	    try {
-			ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	    ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
 	}
 
 	public void setSelectedSchema(String selectedSchema) {

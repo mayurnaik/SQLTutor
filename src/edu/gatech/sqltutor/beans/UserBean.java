@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
@@ -31,16 +30,24 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
-	private static final String REGISTRATION_ERROR = "The email you entered is already registered.";
+	private static final String REGISTRATION_ERROR = "The email you entered is already tied to an account.";
+	private static final String HOMEPAGE_CONTEXT = "/HomePage.jsf";
+	private static final String REGISTRATION_PAGE_CONTEXT = "/RegistrationPage.jsf";
+	private static final String REGISTRATION_MESSAGES_ID = ":registrationForm:registrationMessages";
+	private static final String LOGIN_MESSAGES_ID = ":loginForm:loginMessages";
+	// FIXME: probably don't want to have a default schema here
+	private static final String DEFAULT_SCHEMA_NAME = "company";
+	
 	private String password;
 	private String email;
+	private String hashedEmail;
 	private boolean loggedIn = false;
 	private boolean admin = false;
 	private boolean developer = false;
 	private String adminCode = null;
 	private List<String> linkedAdminCodes = null;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
-	private String selectedSchema = "company";
+	private String selectedSchema;
 
 	/** 
 	 * When the user submits his or her email and password this method will
@@ -50,12 +57,10 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 * allowed through to subsequent pages.
 	 */
 	public void login() throws IOException { 
-		String loginMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":loginForm:loginMessages").getClientId();
 		try {
 			if(!getDatabaseManager().isEmailRegistered(getHashedEmail()) || 
 					!getDatabaseManager().isPasswordCorrect(getHashedEmail(), password)) {
-				
-				FacesContext.getCurrentInstance().addMessage(loginMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, LOGIN_ERROR, null));
+				BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, LOGIN_ERROR);
 				return;
 			}
 
@@ -64,37 +69,32 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			developer = getDatabaseManager().isDeveloper(getHashedEmail());
 			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
 			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
-			selectedSchema = "company";
+			selectedSchema = DEFAULT_SCHEMA_NAME;
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+			externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
-				logException(t, getEmail());
+				logException(t, getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR);
 		} 
 	}
 
 	public void register() throws IOException {
-		String registrationMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":registrationForm:registrationMessages").getClientId();
 		try {
 			if(getDatabaseManager().isEmailRegistered(getHashedEmail())) {
-				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, REGISTRATION_ERROR, null));
+				BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, REGISTRATION_ERROR);
 				return;
 			}
 			getDatabaseManager().registerUser(getHashedEmail(), password);
 			login();
 		} catch(SQLException e) {
-			String msg = e.getMessage();
-			if(msg.contains("user_email")) {
-				msg = "The email you entered is already tied to an account.";
-				FacesContext.getCurrentInstance().addMessage(registrationMessagesId, new FacesMessage(FacesMessage.SEVERITY_ERROR, msg, null));
-			} else {
-				for(Throwable t : e) {
-					t.printStackTrace();
-					logException(t, getEmail());
-				}
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getHashedEmail());
 			}
+			BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, DATABASE_ERROR);
 		}
 	}
 	
@@ -106,7 +106,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 */
 	public void loginRedirect() throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith("/RegistrationPage.jsf");
+        boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith(REGISTRATION_PAGE_CONTEXT);
         if(!(loggedIn ^ onRegistrationPage)) {
         	externalContext.responseSendError(404, "");
         }
@@ -141,13 +141,13 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		this.loggedIn = loggedIn;
 		if(!loggedIn) {
 			password = null;
-			setEmail(null);
+			setHashedEmail(null);
 			admin = false;
 			developer = false;
 			adminCode = null;
 			linkedAdminCodes = null;
 			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(externalContext.getRequestContextPath() + "/HomePage.jsf");
+			externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
 		}
 	}
 
@@ -211,26 +211,31 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		this.developer = developer;
 	}
 	
-	public String getHashedEmail() {
-		String encryptedEmail = null;
-
-		try {
-			byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), SALT);
-			encryptedEmail = Arrays.toString(hashedEmail);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		}
-		
-		return encryptedEmail;
-	}
-
 	public String getEmail() {
 		return email;
 	}
-
+	
 	public void setEmail(String email) {
 		this.email = email;
+		setHashedEmail(email);
+	}
+
+	public void setHashedEmail(String email) {
+		String encryptedEmail = null;
+		if(email != null) {
+			try {
+				byte[] hashedEmail = SaltHasher.getEncryptedValue(email.toLowerCase(), UserBean.SALT);
+				encryptedEmail = Arrays.toString(hashedEmail);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				e.printStackTrace();
+			}
+		}
+		this.hashedEmail = encryptedEmail;
+	}
+	
+	public String getHashedEmail() {
+		return hashedEmail;
 	}
 }
