@@ -11,8 +11,10 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form>
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
 			<p:panel styleClass="panel" header="Tutorial Setup Options">
 				<h:link value="Upload a new schema" outcome="SchemaUploadPage" />
 				<br/><br/>

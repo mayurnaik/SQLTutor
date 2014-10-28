@@ -6,13 +6,15 @@
 	<f:event type="preRenderView" listener="#{userBean.adminRedirect}" />
 	<h:head>
 		<title>SQL Tutor</title>
-		<h:outputStylesheet library="css" name="styles.css"/>
 		<ui:insert name="menu">
 			<ui:include src="/Menubar.xhtml" />
 		</ui:insert>
 	</h:head>
 	<h:body>
 		<h:form>
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
 			<div class="left2">
 				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedSchema}&quot;">
 					<p:commandButton id="databaseButton" value="Show Schema" />

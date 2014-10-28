@@ -4,6 +4,9 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
 	<h:form>
+		<ui:insert name="template">
+			<ui:include src="/BodyTemplate.xhtml" />
+		</ui:insert>
 		<p:menubar autoDisplay="false">
 			<p:menuitem value="Home" icon="ui-icon-arrow-1-e" 
 				action="HomePage.xhtml?faces-redirect=true"
@@ -59,7 +62,6 @@
 				oncomplete="PF('schema_dlg').hide()"   
 				style="float:right;">
 			</p:commandButton>
-			
 		</h:form>
 	</p:dialog>
 	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg"  closeable="true" closeOnEscape="true"

@@ -10,8 +10,10 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form>
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
 			<p:panel header="Terms of Service" styleClass="panel">
 				<h:outputText value=
 				"By accessing this web site, you are agreeing to be bound by these web site Terms and Conditions of 

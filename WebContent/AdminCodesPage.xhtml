@@ -11,8 +11,10 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form id="form">
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
 			<p:panel header="Link an Admin Code" styleClass="panel">
 				<h:outputText value="Enter the admin code provided by your instructor to link it to your account. Afterward, you will be able 
 					to access their material whenever you visit the tutorial page."/>

@@ -10,8 +10,10 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:outputStylesheet library="css" name="styles.css"/>
 		<h:form>
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
 			<p:panel header="Welcome to SQL Tutor" styleClass="panel">
 				<h:outputText 
 					value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/>

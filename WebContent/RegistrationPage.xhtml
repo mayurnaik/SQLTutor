@@ -11,9 +11,11 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<div class="left">
-			<h:outputStylesheet library="css" name="styles.css"/>
-				<h:form id="registrationForm">
+		<h:form id="registrationForm">
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
+			<div class="left">
 					<p:panel header="Register" styleClass="panel">
 						<h:outputText value="Any field marked with an asterkisk (*) is required."/>
 						<br/><br/>
@@ -50,13 +52,12 @@
 						<p:commandButton value="Submit" ajax="false" action="#{userBean.register}" styleClass="panelbutton"/>
 					</p:panel>
 					<p:messages id="registrationMessages"/>
-				</h:form>
 			</div>
 			<div class="middle"/>
 			
 			<div class="right">
 				<p:panel header="Consent" styleClass="panel">
-					<div><center><h2>Consent Agreement</h2></center></div>
+					<div align="center"><h2>Consent Agreement</h2></div>
 					<p>
 						<b>You are being asked to be a volunteer in a research 
 						study. Participation is voluntary and neither 
@@ -152,6 +153,7 @@
 						to be in the study.
 					</p>
 				</p:panel>
-		</div>
+			</div>
+		</h:form>
 	</h:body>
 </html>

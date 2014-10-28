@@ -67,7 +67,7 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 		try {
 			if(!getDatabaseManager().getPasswordChangeRequest(getHashedEmail(), getId())) {
 				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-				externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
+				externalContext.responseSendError(404, "");
 			}
 		} catch (SQLException e) {
 			for(Throwable t : e) {

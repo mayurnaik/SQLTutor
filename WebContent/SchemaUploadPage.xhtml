@@ -11,8 +11,10 @@
 	</ui:insert>
 </h:head>
 <h:body>
-	<h:outputStylesheet library="css" name="styles.css"/>
 	<h:form enctype="multipart/form-data">  
+		<ui:insert name="template">
+			<ui:include src="/BodyTemplate.xhtml" />
+		</ui:insert>
 		<p:messages id="messages" showDetail="true" autoUpdate="true"/>
 		<p:panel header="Upload Schema" styleClass="panel">
 			<p:fileUpload id="schemaFile" mode="advanced" label="Choose Schema"

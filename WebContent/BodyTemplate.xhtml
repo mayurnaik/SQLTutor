@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<h:outputStylesheet library="css" name="styles.css"/>
+	<p:ajaxExceptionHandler type="javax.faces.application.ViewExpiredException"
+		update="sessionExpired" onexception="PF('sessionExpired').show();" />
+	<p:dialog id="sessionExpired" header="Session Expired"
+		widgetVar="sessionExpired">
+			<b>Overview:</b> Exception: #{pfExceptionHandler.type} occured!
+			<br/><br/>
+			
+			<b>Message:</b> Please click the button below to be redirected to the homepage.
+			<br/><br/>
+			
+			<p:button onclick="document.location = '/';" value="Redirect me" />
+	</p:dialog>
+</html>
