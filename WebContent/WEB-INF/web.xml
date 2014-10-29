@@ -20,6 +20,14 @@
     <filter-name>PrimeFaces FileUpload Filter</filter-name>
     <servlet-name>Faces Servlet</servlet-name>
 </filter-mapping>
+<filter>
+  <filter-name>NoCacheFilter</filter-name>
+  <filter-class>edu.gatech.sqltutor.util.NoCacheFilter</filter-class>
+</filter>
+<filter-mapping>
+  <filter-name>NoCacheFilter</filter-name>
+  <servlet-name>Faces Servlet</servlet-name>
+</filter-mapping>
 <context-param>
    <param-name>primefaces.UPLOADER</param-name>
    <param-value>commons</param-value>
@@ -67,8 +75,28 @@
   <context-param>
     <description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
     <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
-    <param-value>client</param-value>
+    <param-value>server</param-value>
   </context-param>
+  
+  
+  <context-param>
+    <param-name>org.apache.myfaces.SECRET</param-name>
+    <param-value>dUx5cmtiRGc=</param-value>
+  </context-param>
+  <context-param>
+        <param-name>org.apache.myfaces.MAC_SECRET</param-name>
+        <param-value>YWJjZDEyMzQ=</param-value>
+    </context-param>
+  <context-param>
+    <param-name>javax.faces.SERIALIZE_SERVER_STATE</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <context-param>
+    <param-name>org.apache.myfaces.LOG_WEB_CONTEXT_PARAMS</param-name>
+    <param-value>false</param-value>
+  </context-param>
+  
+  
   <context-param>
     <description>
 	This parameter tells MyFaces if javascript code should be allowed in
