@@ -331,7 +331,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
-		return questions.get(questionIndex);
+		return (questionIndex+1) + ". " + questions.get(questionIndex);
 	}
 
 	public String getQuery() {
