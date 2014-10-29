@@ -57,6 +57,11 @@ public class IssuesTest extends SymbolicFragmentTestBase {
 			// 8
 			{"SELECT E.lname AS employee_name, S.lname AS supervisor_name FROM employee AS E JOIN employee AS S ON (E.super_ssn = S.ssn)", 
 				Pattern.quote("Select the last names of each employee and their supervisor.")},
+				
+			// 9
+			// 
+			{"SELECT d.dependent_name, d.bdate FROM department d2, dependent d, dept_locations l WHERE l.dnumber = d2.dnumber AND d.essn = d2.mgr_ssn AND l.dlocation = 'Houston'", 
+				Pattern.quote("List the name and birthdate of the dependents of each employee who manages a department located in \"Houston.\"")},
 		};
 		return Arrays.asList(params);
 	}

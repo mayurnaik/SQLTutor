@@ -117,11 +117,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 					if(e instanceof SQLException) {
 						for(Throwable t : (SQLException)e) {
 							t.printStackTrace();
-							logException(t, userBean.getHashedEmail());
 						}
 					} else {
 						e.printStackTrace();
-						logException(e, userBean.getHashedEmail());
 					}
 				}
 			}
@@ -138,7 +136,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 	} 
 	
