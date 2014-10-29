@@ -3,6 +3,7 @@ package edu.gatech.sqltutor.rules.symbolic.lowering;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IPredicate;
@@ -17,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
-import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
@@ -35,6 +35,27 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.WhereToken;
 import edu.gatech.sqltutor.rules.util.Literals;
 
+/**
+ * Converts all references to a base entity instance to anaphoric references.
+ * 
+ * <p>This rule acts on a single entity instance reference <i>ref</i>, followed by all conditions 
+ * after the <tt>{WHERE}</tt> token being phrases that are either: 
+ * <ul><li>
+ *     a) possessive references to the same entity, 
+ *     e.g. "<i>ref</i>'s" or
+ *   </li><li> 
+ *     b) verb phrases with a ref to the same entity in the leading position, 
+ *     e.g. "<i>ref</i> works for ..."
+ * </li></ul>
+ * 
+ * <p>This rule replaces the above with anaphoric references based on the type of 
+ * the entity.  For example, from:<br />
+ * "... of each employee where the employee works for ... and the employee's salary is ..."<br />
+ * to<br />
+ * "... of each employee who works for ... and whose salary is ...."
+ * 
+ * @author Jake Cobb
+ */
 public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		ITranslationRule {
 	private static final Logger _log = LoggerFactory.getLogger(SingleReferenceAnaphoraRule.class);
@@ -52,6 +73,35 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		literal(SymbolicPredicates.type, "?where", SymbolicType.WHERE),
 		literal(GreaterBuiltin.class, "?token", "?where")
 	);
+	
+	private static enum PhraseType {
+		POSSESSIVE {
+			@Override
+			public boolean acceptsLiteralRef(LiteralToken theRef) {
+				return theRef.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_PRONOUN;
+			}
+			@Override
+			public boolean acceptsTokenFollowingRef(ISymbolicToken after) {
+				return after.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_ENDING;
+				
+			}
+		},
+		
+		VERBALIZING {
+			@Override
+			public boolean acceptsLiteralRef(LiteralToken theRef) {
+				return theRef.getPartOfSpeech() == PartOfSpeech.PERSONAL_PRONOUN;
+			}
+			
+			@Override
+			public boolean acceptsTokenFollowingRef(ISymbolicToken after) {
+				return after.getPartOfSpeech().isVerb();
+			}
+		};
+
+		public abstract boolean acceptsLiteralRef(LiteralToken theRef);
+		public abstract boolean acceptsTokenFollowingRef(ISymbolicToken after);
+	}
 
 	public SingleReferenceAnaphoraRule() {
 	}
@@ -61,12 +111,6 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 	}
 	
 	@Override
-	public boolean apply(SymbolicState state) {
-//		_log.info(Markers.SYMBOLIC, "SingleReferenceAnaphoraRule.apply:\n{}", SymbolicUtil.prettyPrint(state.getRootToken()));
-		return super.apply(state);
-	}
-
-	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		if( relation.size() != 1 )
 			throw new SymbolicException("Should only ever have one result, got: " + relation);
@@ -75,61 +119,15 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		TableEntityRefToken ref = ext.getToken("?ref");
 		WhereToken where = ext.getToken("?where");
 		List<ISymbolicToken> verbPhrases = getVerbPhrasesAfterWhere();
-		
-		if( areAllPossessive(ref, verbPhrases) ) {
-			_log.info(Markers.SYMBOLIC, "All verb phrases possessive for this reference: {}", ref);
-			replaceAllPossessives(ref, verbPhrases);
-			SymbolicUtil.replaceChild(where, Literals.whose());
-			return true;
-			
-		} else if( areAllVerbalizing(ref, verbPhrases)) {
-			_log.debug(Markers.SYMBOLIC, "All verb phrases verbalizing against ref: {}", ref);
-			replaceAllVerbalizations(ref, verbPhrases);
-			EntityType entityType = state.getQueries().getReferencedEntity(ref.getTableEntity()).getEntityType();
-			LiteralToken replacement;
-			if( entityType == EntityType.PERSON ) {
-				replacement = new LiteralToken("who", PartOfSpeech.WH_PRONOUN);
-			} else {
-				replacement = new LiteralToken("which", PartOfSpeech.WH_PRONOUN);
-			}
-			SymbolicUtil.replaceChild(where, replacement);
+		if( areAllPhraseType(ref, verbPhrases, EnumSet.of(PhraseType.POSSESSIVE, PhraseType.VERBALIZING)) ) {
+			_log.debug(Markers.SYMBOLIC, "Using single-reference anaphoric base: {}", ref);
+			replaceAllPhrases(ref, verbPhrases);
+			_log.debug(Markers.SYMBOLIC, "Deleting {}", where);
+			where.getParent().removeChild(where);
 			return true;
 		}
 		
 		return false;
-	}
-	
-	private void replaceAllPossessives(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
-		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
-		for( ISymbolicToken verbPhrase: verbPhrases ) {
-			if( TRACE ) {
-				_log.trace(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
-			}
-			
-			ISymbolicToken nounPhrase = getNounStartPhrase(verbPhrase);
-			List<ISymbolicToken> children = nounPhrase.getChildren();
-			ISymbolicToken token = children.get(0);
-			
-			if( token.getPartOfSpeech() == PartOfSpeech.DETERMINER ) {
-				_log.debug(Markers.SYMBOLIC, "Deleted determiner: {}", token);
-				token.getParent().removeChild(token);
-				token = children.get(0);
-			}
-			
-			if( token.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_PRONOUN ) {
-				_log.debug(Markers.SYMBOLIC, "Deleted possessive pronoun: {}", token);
-				token.getParent().removeChild(token);
-			} else {
-				if( !(token instanceof TableEntityRefToken) )
-					throw new SymbolicException("Expecting a reference token, not: " + token);
-				_log.debug(Markers.SYMBOLIC, "Deleting possessive reference: {}", token);
-				token.getParent().removeChild(token);
-				token = children.get(0);
-				if( token.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_ENDING )
-					throw new SymbolicException("Expecting a possessive ending, not: " + token);
-				token.getParent().removeChild(token);
-			}
-		}
 	}
 	
 	/**
@@ -154,63 +152,86 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		return phrase;
 	}
 	
-	private boolean areAllPossessive(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
+	/**
+	 * Gets the phrase type of a verb phrase with respect to a 
+	 * base reference <code>ref</code>.
+	 *  
+	 * @param ref         the base entity reference being considered
+	 * @param verbPhrase  the candidate verb phrase
+	 * @return {@link PhraseType#VERBALIZING}, {@link PhraseType#POSSESSIVE} or <code>null</code>
+	 */
+	private PhraseType getPhraseType(TableEntityRefToken ref, ISymbolicToken verbPhrase) {
 		TableEntityToken entity = ref.getTableEntity();
-		if( verbPhrases.size() < 1 )
-			return false;
-		for( ISymbolicToken verbPhrase: verbPhrases ) {
-			ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
-			
-			ISymbolicToken theRef = getPotentialReference(nounParent);
-			if(theRef == null)
-				return false;
-			if( theRef instanceof LiteralToken ) {
-				if( theRef.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_PRONOUN )
-					return false;
-			} else {
-				TableEntityRefToken otherRef = (TableEntityRefToken)theRef;
-				if( otherRef.getTableEntity() != entity )
-					return false;
-				ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
-				if( after.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_ENDING )
-					return false;
-			}
+		ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
+		ISymbolicToken theRef = getPotentialReference(nounParent);
+		if( theRef == null )
+			return null;
+		if( theRef instanceof LiteralToken ) {
+			LiteralToken literal = (LiteralToken)theRef;
+			return PhraseType.POSSESSIVE.acceptsLiteralRef(literal)  ? PhraseType.POSSESSIVE :
+			       PhraseType.VERBALIZING.acceptsLiteralRef(literal) ? PhraseType.VERBALIZING :
+			       null;
 		}
-		return true;
-	}
-	
-	private boolean areAllVerbalizing(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
-		TableEntityToken entity = ref.getTableEntity();
-		if( verbPhrases.size() < 1 )
-			return false;
 		
+		TableEntityRefToken otherRef = (TableEntityRefToken)theRef;
+		// must be the base reference regardless of phrase type
+		if( otherRef.getTableEntity() != entity )
+			return null;
+		
+		ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
+		return PhraseType.POSSESSIVE.acceptsTokenFollowingRef(after)  ? PhraseType.POSSESSIVE :
+		       PhraseType.VERBALIZING.acceptsTokenFollowingRef(after) ? PhraseType.VERBALIZING :
+		       null;
+	}
+	
+	/**
+	 * Indicates whether all verb phrases are candidate anaphoric references for <code>ref</code> 
+	 * and of one of the specified types.
+	 */
+	private boolean areAllPhraseType(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases, 
+			EnumSet<PhraseType> phraseTypes) {
+		if( verbPhrases.size() < 1 )
+			return false;
 		for( ISymbolicToken verbPhrase: verbPhrases ) {
-			ISymbolicToken nounParent = getNounStartPhrase(verbPhrase);
-			ISymbolicToken theRef = getPotentialReference(nounParent);
-			if(theRef == null)
+			PhraseType phraseType = getPhraseType(ref, verbPhrase);
+			if( !phraseTypes.contains(phraseType) ) {
 				return false;
-			if( theRef instanceof LiteralToken ) {
-				if( theRef.getPartOfSpeech() != PartOfSpeech.PERSONAL_PRONOUN )
-					return false;
-			} else {
-				TableEntityRefToken otherRef = (TableEntityRefToken)theRef;
-				if( otherRef.getTableEntity() != entity )
-					return false;
-				ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
-				if( !after.getPartOfSpeech().isVerb() )
-					return false;
 			}
 		}
 		return true;
+		
 	}
 	
-	private void replaceAllVerbalizations(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
+	private void replaceAllPhrases(TableEntityRefToken ref, List<ISymbolicToken> verbPhrases) {
 		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		
+		EntityType entityType = state.getQueries().getReferencedEntity(ref.getTableEntity()).getEntityType();
+		
+		PhraseType lastType = null;
 		for( ISymbolicToken verbPhrase: verbPhrases ) {
-			if( TRACE ) {
-				_log.trace(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
-			}
+			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Processing phrase:\n{}", SymbolicUtil.prettyPrint(verbPhrase));
+			
 			ISymbolicToken nounPhrase = getNounStartPhrase(verbPhrase);
+			PhraseType phraseType = getPhraseType(ref, verbPhrase);
+			
+			// WH_PRONOUN will be inserted if phrase type is changing, e.g.:
+			// "who <verbalize>, <verbalize>, whose <possessive>, and <possessive>"
+			ISymbolicToken replacement = null;
+			if( phraseType != lastType ) {
+				switch( phraseType ) {
+				case POSSESSIVE:
+					replacement = Literals.whose();
+					break;
+				case VERBALIZING:
+					if( entityType == EntityType.PERSON ) {
+						replacement = new LiteralToken("who", PartOfSpeech.WH_PRONOUN);
+					} else {
+						replacement = new LiteralToken("which", PartOfSpeech.WH_PRONOUN);
+					}
+					break;
+				}
+			}
+			
 			List<ISymbolicToken> children = nounPhrase.getChildren();
 			ISymbolicToken token = children.get(0);
 			
@@ -221,17 +242,39 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 			}
 
 			if( token.getPartOfSpeech().isPronoun() ) {
-				_log.debug(Markers.SYMBOLIC, "Deleting pronoun: {}", token);
+				// remove e.g. "their" or "they", inserting WH_PRONOUN if needed
+				if( replacement == null ) {
+					_log.debug(Markers.SYMBOLIC, "Deleting pronoun: {}", token);
+					token.getParent().removeChild(token);
+				} else {
+					_log.debug(Markers.SYMBOLIC, "Replacing pronoun {} with {}", token, replacement);
+					SymbolicUtil.replaceChild(token, replacement);
+				}
 			} else {
+				// remove the entity reference 
 				if( !(token instanceof TableEntityRefToken) )
 					throw new SymbolicException("Expecting a reference token, not: " + token);
-				_log.debug(Markers.SYMBOLIC, "Deleting reference: {}", token);
+				if( replacement == null ) {
+					_log.debug(Markers.SYMBOLIC, "Deleting reference: {}", token);
+					token.getParent().removeChild(token);
+				} else {
+					_log.debug(Markers.SYMBOLIC, "Replacing reference {} with {}", token, replacement);
+					SymbolicUtil.replaceChild(token, replacement);
+				}
+				
+				// cleanup the possessive token for possessive phrases
+				if( phraseType == PhraseType.POSSESSIVE ) {
+					token = children.get(replacement == null ? 0 : 1);
+					if( token.getPartOfSpeech() != PartOfSpeech.POSSESSIVE_ENDING )
+						throw new SymbolicException("Expecting a possessive ending, not: " + token);
+					_log.debug(Markers.SYMBOLIC, "Deleting possessive ending: {}", token);
+					token.getParent().removeChild(token);
+				}
 			}
-			token.getParent().removeChild(token);
+			
+			lastType = phraseType;
 		}
 	}
-	
-	
 	
 	private ISymbolicToken getPotentialReference(ISymbolicToken nounParent) {
 		List<ISymbolicToken> nounChildren = nounParent.getChildren();

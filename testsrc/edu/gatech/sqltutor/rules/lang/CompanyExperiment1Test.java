@@ -31,7 +31,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			// 3
 			{"SELECT * FROM employee WHERE (salary BETWEEN 30000 AND 40000) AND dno = 5", 
 				// Select all attributes of each employee whose salary is between $30,000 and $40,000 and who works for department 5.
-				Pattern.quote("Select all attributes of each employee whose salary is between $30,000 and $40,000 and dno is 5.")},
+				Pattern.quote("Select all attributes of each employee who works for department 5 and whose salary is between $30,000 and $40,000.")},
 			
 			// 4
 			{"SELECT e.fname, e.lname, e.address FROM employee e, department d WHERE d.dname = 'Research' AND d.dnumber = e.dno", 
