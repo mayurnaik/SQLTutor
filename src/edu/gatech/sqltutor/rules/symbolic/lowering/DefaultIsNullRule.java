@@ -44,8 +44,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.util.Literals;
 
 /**
- * Replaces <code><i>x</i> IS NULL</code> or <code><i>x</i> IS NOT NULL</code> with 
- * e.g. "<i>x</i> exists" or "<i>x</i> does not exist".
+ * Replaces <code><i>x</i> IS NULL</code> with e.g. "<i>x</i> does not exist".
  */
 public class DefaultIsNullRule extends StandardLoweringRule implements
 		ITranslationRule {
@@ -70,27 +69,16 @@ public class DefaultIsNullRule extends StandardLoweringRule implements
 		String origToken = null;
 		while( ext.nextTuple() ) {
 			SQLToken token = ext.getToken("?token");
-			QueryTreeNode astNode = token.getAstNode();
 			if( TRACE )
 				origToken = token.toString();
 			
 			SequenceToken seq = new SequenceToken(PartOfSpeech.VERB_PHRASE);
 			seq.addChildren(token.getChildren());
-			switch( astNode.getNodeType() ) {
-			case NodeTypes.IS_NOT_NULL_NODE:
-				seq.addChild(new LiteralToken("exists", PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT));
-				break;
-			case NodeTypes.IS_NULL_NODE:
-				seq.addChildren(Arrays.asList(
-					Literals.does(), Literals.not(),
-					new LiteralToken("exist", PartOfSpeech.VERB_BASE_FORM)
-				));
-				break;
-			default:
-				// should never happen
-				throw new SymbolicException("Unexpected node type in token: " + token);
-			}
-			
+			seq.addChildren(Arrays.asList(
+				Literals.does(), Literals.not(),
+				new LiteralToken("exist", PartOfSpeech.VERB_BASE_FORM)
+			));
+
 			SymbolicUtil.replaceChild(token, seq);
 			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", origToken, seq);
 			applied = true;
