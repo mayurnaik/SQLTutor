@@ -163,6 +163,10 @@
     <relationship>
     	<name>supervision</name>
     	<verbForm>supervises</verbForm>
+		<metadata>
+			<negatedSingularVerbForm>does not supervise</negatedSingularVerbForm>
+			<negatedPluralVerbForm>do not supervise</negatedPluralVerbForm>
+		</metadata>
     	<leftEdge>
     		<entity reference="entityEmployee" />
     		<constraint>
