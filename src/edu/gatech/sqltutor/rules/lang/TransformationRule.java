@@ -32,6 +32,7 @@ import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
 import com.akiban.sql.parser.FromTable;
+import com.akiban.sql.parser.IsNullNode;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
@@ -297,7 +298,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 		boolean keepExisting = false;
 		ISymbolicToken token = null;
 		int nodeType = node.getNodeType();
+		
 		switch(nodeType) {
+			case NodeTypes.NOT_NODE:
 			case NodeTypes.IS_NULL_NODE:
 			case NodeTypes.IS_NOT_NULL_NODE:
 				// types to preserve

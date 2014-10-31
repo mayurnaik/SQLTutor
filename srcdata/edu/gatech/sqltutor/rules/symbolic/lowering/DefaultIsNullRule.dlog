@@ -1,4 +1,7 @@
 
-ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNullNode').
-ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNotNullNode').
+ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNullNode'), !childOfNotToken(?token).
+ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNotNullNode'), !childOfNotToken(?token).
+ruleDefaultIsNull(?token) :- sqlNodeHasType(?token2, 'IsNullNode'), sqlNodeHasType(?token, 'NotNode'), sqlParentOf(?token, ?token2).
+ruleDefaultIsNull(?token) :- sqlNodeHasType(?token2, 'IsNotNullNode'), sqlNodeHasType(?token, 'NotNode'), sqlParentOf(?token, ?token2).
 
+childOfNotToken(?token) :- sqlNodeHasType(?token2, 'NotNode'), sqlParentOf(?token2, ?token).

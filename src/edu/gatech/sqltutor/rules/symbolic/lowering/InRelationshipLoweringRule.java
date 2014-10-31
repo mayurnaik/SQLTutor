@@ -137,8 +137,26 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 					case "does":
 						verb = unnegatedVerb.replaceFirst("does", "does not");
 						break;
+					case "did":
+						verb = unnegatedVerb.replaceFirst("did", "did not");
+						break;
+					case "have":
+						verb = unnegatedVerb.replaceFirst("have", "have not");
+						break;
+					case "has":
+						verb = unnegatedVerb.replaceFirst("has", "has not");
+						break;
+					case "had":
+						verb = unnegatedVerb.replaceFirst("had", "had not");
+						break;
 					case "is":
 						verb = unnegatedVerb.replaceFirst("is", "is not");
+						break;
+					case "were":
+						verb = unnegatedVerb.replaceFirst("were", "were not");
+						break;
+					case "was":
+						verb = unnegatedVerb.replaceFirst("was", "was not");
 						break;
 					default:
 						throw new SymbolicException("Unable to find negated verbalization for: " + unnegatedVerb);

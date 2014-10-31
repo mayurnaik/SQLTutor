@@ -38,6 +38,7 @@ import edu.gatech.sqltutor.rules.lang.StandardLoweringRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
@@ -73,6 +74,17 @@ public class DefaultIsNullRule extends StandardLoweringRule implements
 			QueryTreeNode astNode = token.getAstNode();
 			if( TRACE )
 				origToken = token.toString();
+			
+			if( astNode.getNodeType() == NodeTypes.NOT_NODE ) {
+				ISymbolicToken notToken = token;
+				// switch the token to the child IsNullNode or IsNotNullNode
+				token = (SQLToken) notToken.getChildren().get(0);
+				astNode = token.getAstNode();
+				// inverse the type
+				int newType = astNode.getNodeType() == NodeTypes.IS_NULL_NODE ? NodeTypes.IS_NOT_NULL_NODE : NodeTypes.IS_NULL_NODE;
+				astNode.setNodeType(newType);
+				SymbolicUtil.replaceChild(notToken, token);
+			}
 			
 			SequenceToken seq = new SequenceToken(PartOfSpeech.VERB_PHRASE);
 			seq.addChildren(token.getChildren());

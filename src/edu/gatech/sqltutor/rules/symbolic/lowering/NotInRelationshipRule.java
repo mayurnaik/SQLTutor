@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.NodeTypes;
+import com.akiban.sql.parser.NotNode;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
@@ -41,6 +42,7 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
+import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
@@ -54,14 +56,11 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		IrisUtil.literal(PREDICATE, "?isNull"),
 		
-		literal(SymbolicPredicates.type, "?seq", SymbolicType.SEQUENCE),
-		literal(SymbolicPredicates.parentOf, "?isNull", "?seq", "_"),
-		
 		literal(SymbolicPredicates.type, "?entityRef", SymbolicType.TABLE_ENTITY_REF),
-		literal(SymbolicPredicates.parentOf, "?seq", "?entityRef", "_"),
+		literal(SymbolicPredicates.ancestorOf, "?isNull", "?entityRef", "_"),
 		
 		literal(SymbolicPredicates.type, "?attr", SymbolicType.ATTRIBUTE),
-		literal(SymbolicPredicates.parentOf, "?seq", "?attr", "_"),
+		literal(SymbolicPredicates.ancestorOf, "?isNull", "?attr", "_"),
 		
 		literal(SymbolicPredicates.type, "?inRel", SymbolicType.IN_RELATIONSHIP)
 	);
@@ -84,15 +83,17 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			AttributeToken attr = ext.getToken("?attr");
 			
 			// if the attribute is a key value, get which side of the relationship it belongs to
+			boolean leftParticipating = inRelToken.isLeftParticipating();
+			boolean rightParticipating = inRelToken.isRightParticipating();
 			if( attr.getAttribute().isKey() ) {
 				String isNullRefId = ref.getTableEntity().getId();
 				String inRelLeftRefId = inRelToken.getLeftEntity().getId();
 				String inRelRightRefId = inRelToken.getRightEntity().getId();
 				if( isNullRefId.equals(inRelLeftRefId) ) {
-					inRelToken.setLeftParticipating(false);
+					leftParticipating = false;
 				}
 				if( isNullRefId.equals(inRelRightRefId) ) {
-					inRelToken.setRightParticipating(false);
+					rightParticipating = false;
 				} 
 				if( !isNullRefId.equals(inRelLeftRefId) && !isNullRefId.equals(inRelRightRefId) ) {
 					// FIXME: where returning false, we could probably catch this in .dlog
@@ -106,6 +107,18 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			
 			QueryTreeNode isNullNode = isNullToken.getAstNode();
 			
+			if( isNullNode.getNodeType() == NodeTypes.NOT_NODE ) {
+				ISymbolicToken notToken = isNullToken;
+				// switch the token to the child IsNullNode or IsNotNullNode
+				isNullToken = (SQLToken) notToken.getChildren().get(0);
+				isNullNode = isNullToken.getAstNode();
+				// inverse the type
+				int newType = isNullNode.getNodeType() == NodeTypes.IS_NULL_NODE ? NodeTypes.IS_NOT_NULL_NODE : NodeTypes.IS_NULL_NODE;
+				isNullNode.setNodeType(newType);
+				if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {}, as it has been consumed by {}", notToken, isNullToken);
+				SymbolicUtil.replaceChild(notToken, isNullToken);
+			}
+			
 			switch( isNullNode.getNodeType() ) {
 				case NodeTypes.IS_NOT_NULL_NODE:
 					// this is already implied by the relationship
@@ -113,6 +126,8 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				case NodeTypes.IS_NULL_NODE:
+					inRelToken.setLeftParticipating(leftParticipating);
+					inRelToken.setRightParticipating(rightParticipating);
 					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}. Updated {}", isNullToken, inRelToken);
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
