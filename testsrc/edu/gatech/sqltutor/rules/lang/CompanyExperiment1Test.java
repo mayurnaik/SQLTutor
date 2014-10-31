@@ -55,7 +55,7 @@ public class CompanyExperiment1Test extends SymbolicFragmentTestBase {
 			
 			// 5
 			{"SELECT fname, lname FROM employee WHERE super_ssn IS NULL", 
-				Pattern.quote("Select the first name and last name of each employee where their super ssn does not exist.")},
+				Pattern.quote("Select the first name and last name of each employee who does not have any supervisor.")},
 			
 			// 6
 			{"SELECT bdate, address FROM employee WHERE fname = 'John' AND minit = 'B' AND lname = 'Smith'", 
