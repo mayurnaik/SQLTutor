@@ -114,6 +114,10 @@
   <relationships id="21">
     <relationship id="22" isIdentifying="false">
       <name>works_on</name>
+      <metadata>
+      	<negatedSingularVerbForm>does not work on</negatedSingularVerbForm>
+      	<negatedPluralVerbForm>do not work on</negatedPluralVerbForm>
+      </metadata>
       <attributes id="23">
         <attribute id="25" isComposite="false" isKey="false" isDerived="false" isMultivalued="false">
           <name>Hours</name>
@@ -136,6 +140,10 @@
     </relationship>
     <relationship id="30" isIdentifying="false">
       <name>works_for</name>
+      <metadata>
+      	<negatedSingularVerbForm>does not work for</negatedSingularVerbForm>
+      	<negatedPluralVerbForm>do not work for</negatedPluralVerbForm>
+      </metadata>
       <attributes id="31"/>
       <leftEdge id="33">
         <entity reference="entityEmployee"/>
@@ -172,6 +180,10 @@
     </relationship>
     <relationship>
     	<name>manages</name>
+		<metadata>
+			<negatedSingularVerbForm>does not manage</negatedSingularVerbForm>
+			<negatedPluralVerbForm>do not manage</negatedPluralVerbForm>
+		</metadata>
     	<attributes>
     		<attribute>
     			<name>Start_date</name>
@@ -195,6 +207,10 @@
     </relationship>
     <relationship>
     	<name>controls</name>
+      <metadata>
+      	<negatedSingularVerbForm>does not control</negatedSingularVerbForm>
+      	<negatedPluralVerbForm>do not control</negatedPluralVerbForm>
+      </metadata>
     	<leftEdge>
     		<entity reference="entityDepartment" />
     		<constraint>
@@ -212,6 +228,12 @@
     </relationship>
     <relationship isIdentifying="true">
     	<name>dependents_of</name>
+      <metadata>
+      	<negatedSingularVerbForm>is not depended on by</negatedSingularVerbForm>
+      	<negatedPluralVerbForm>are not depended on by</negatedPluralVerbForm>
+      	<alternateSingularVerbForm>is depended on by</alternateSingularVerbForm>
+      	<alternatePluralVerbForm>are depended on by</alternatePluralVerbForm>
+      </metadata>
     	<leftEdge>
     		<entity reference="entityEmployee" />
     		<constraint>

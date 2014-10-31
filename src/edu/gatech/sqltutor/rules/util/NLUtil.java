@@ -20,8 +20,6 @@ import java.util.regex.Pattern;
 
 import org.atteo.evo.inflector.English;
 
-import edu.gatech.sqltutor.rules.er.ERRelationship;
-
 public final class NLUtil {
 	private static final Pattern splitPlural = Pattern.compile("^(.+ )(\\w+)$");
 	public static String pluralize(String value) {
@@ -34,10 +32,7 @@ public final class NLUtil {
 		return value;
 	}
 	
-	public static String getVerbForm(ERRelationship rel) {
-		String verb = rel.getVerbForm();
-		if( verb == null )
-			verb = rel.getName().toLowerCase().replace('_', ' ');
+	public static String getVerbForm(String verb) {
 		System.out.println("verb: " + verb);
 		Matcher m = splitPlural.matcher(verb);
 		if( m.matches() ) {

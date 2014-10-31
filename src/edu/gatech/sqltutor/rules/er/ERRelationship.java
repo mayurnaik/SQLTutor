@@ -56,6 +56,8 @@ public class ERRelationship extends AbstractERAttributeContainer {
 	
 	private String verbForm;
 	
+	private ERRelationshipMetadata metadata = new ERRelationshipMetadata();
+	
 	public ERRelationship(String name) {
 		super(name);
 	}
@@ -113,5 +115,13 @@ public class ERRelationship extends AbstractERAttributeContainer {
 
 	public void setVerbForm(String verbForm) {
 		this.verbForm = verbForm;
+	}
+
+	public ERRelationshipMetadata getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(ERRelationshipMetadata metadata) {
+		this.metadata = metadata;
 	}
 }

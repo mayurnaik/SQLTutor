@@ -85,6 +85,22 @@ public class ERPredicates {
 	 * ?label is the user-specified plural label for ?entity.?attribute */
 	public static final IPredicate erAttributeLabelPlural = predicate("erAttributeLabelPlural", 3); 
 	
+	/** <code>(?relationship:string,?alternate:string)</code> => 
+	 * ?label is the user-specified alternate singular name for ?relationship */
+	public static final IPredicate erRelationshipAlternateSingular = predicate("erRelationshipAlternateSingular", 2);
+	
+	/** <code>(?relationship:string,?alternate:string)</code> => 
+	 * ?label is the user-specified alternate plural name for ?relationship */
+	public static final IPredicate erRelationshipAlternatePlural = predicate("erRelationshipAlternatePlural", 2);
+	
+	/** <code>(?relationship:string,?negated:string)</code> => 
+	 * ?label is the user-specified negated singular name for ?relationship */
+	public static final IPredicate erRelationshipNegatedSingular = predicate("erRelationshipNegatedSingular", 2);
+	
+	/** <code>(?relationship:string,?negated:string)</code> => 
+	 * ?label is the user-specified negated plural name for ?relationship */
+	public static final IPredicate erRelationshipNegatedPlural = predicate("erRelationshipNegatedPlural", 2);
+	
 	/**
 	 * <code>erRelationshipEdgeEntity(?rel:string,?n:int,?ent:string)</code> =><br />
 	 *   The <code>n</code>th (0-based) edge of relationship <code>rel</code> refers 

@@ -74,6 +74,9 @@ public class InRelationshipLabelRule extends StandardSymbolicRule implements
 			
 			ERRelationship relationship = inrel.getRelationship();
 			
+			if( !inrel.isLeftParticipating() || !inrel.isRightParticipating() )
+				return false;
+			
 			boolean isLeftPossessor = ext.getInteger("?which") == 0;
 			TableEntityToken possessorEntity, possessedEntity;
 			String possessedLabel;

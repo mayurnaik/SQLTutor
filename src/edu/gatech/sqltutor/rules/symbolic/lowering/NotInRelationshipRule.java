@@ -42,7 +42,6 @@ import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.InRelationshipToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.NotInRelationshipToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 
@@ -84,16 +83,17 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			TableEntityRefToken ref = ext.getToken("?entityRef");
 			AttributeToken attr = ext.getToken("?attr");
 			
-			// TODO: Most of this could be moved into the datalog query
+			// FIXME: This doesn't take into account if there is a IS NULL for both primary and foreign key
 			// if the attribute is a key value, get which side of the relationship it belongs to
-			boolean leftEntityIsNull;
-			if ( attr.getAttribute().isKey() ) {
+			boolean leftParticipating;
+			if( attr.getAttribute().isKey() ) {
 				String id = ref.getTableEntity().getId();
-				if ( id.equals(inRelToken.getLeftEntity().getId()) ) {
-					leftEntityIsNull = true;
-				} else if ( id.equals(inRelToken.getRightEntity().getId()) ) {
-					leftEntityIsNull = false;
+				if( id.equals(inRelToken.getLeftEntity().getId()) ) {
+					leftParticipating = false;
+				} else if( id.equals(inRelToken.getRightEntity().getId()) ) {
+					leftParticipating = true;
 				} else {
+					// FIXME: where returning false, we could probably catch this in .dlog
 					// the value doesn't belong to this relationship
 					return false; 
 				}
@@ -111,8 +111,8 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}, as it is implied by {}", isNullToken, inRelToken);
 					break;
 				case NodeTypes.IS_NULL_NODE:
-					NotInRelationshipToken notInRelToken = new NotInRelationshipToken(inRelToken.getLeftEntity(), 
-							inRelToken.getRightEntity(), inRelToken.getRelationship(), leftEntityIsNull);
+					InRelationshipToken notInRelToken = new InRelationshipToken(inRelToken.getLeftEntity(), 
+							inRelToken.getRightEntity(), inRelToken.getRelationship(), leftParticipating, !leftParticipating);
 					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} and {} with {}", inRelToken, isNullToken, notInRelToken);
 					SymbolicUtil.replaceChild(inRelToken, notInRelToken);
 					isNullToken.getParent().removeChild(isNullToken);

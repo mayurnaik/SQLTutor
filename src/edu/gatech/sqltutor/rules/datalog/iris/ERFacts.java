@@ -33,6 +33,7 @@ import edu.gatech.sqltutor.rules.er.EREntity;
 import edu.gatech.sqltutor.rules.er.ERObjectMetadata;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.er.ERRelationship.ERRelationshipEdge;
+import edu.gatech.sqltutor.rules.er.ERRelationshipMetadata;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
@@ -148,6 +149,18 @@ public class ERFacts extends DynamicFacts {
 		
 		addRelationshipEdge(name, 0, rel.getLeftEdge());
 		addRelationshipEdge(name, 1, rel.getRightEdge());
+		
+		ERRelationshipMetadata metadata = rel.getMetadata();
+		if( metadata != null ) {
+			if( metadata.getAlternateSingularVerbForm() != null )
+				addFact(ERPredicates.erRelationshipAlternateSingular, name, metadata.getAlternateSingularVerbForm());
+			if( metadata.getAlternatePluralVerbForm() != null )
+				addFact(ERPredicates.erRelationshipAlternatePlural, name, metadata.getAlternatePluralVerbForm());
+			if( metadata.getNegatedSingularVerbForm() != null )
+				addFact(ERPredicates.erRelationshipNegatedSingular, name, metadata.getNegatedSingularVerbForm());
+			if( metadata.getNegatedPluralVerbForm() != null )
+				addFact(ERPredicates.erRelationshipNegatedPlural, name, metadata.getNegatedPluralVerbForm());
+		}
 	}
 	
 	private void addAttribute(String parent, ERAttribute attr) {
