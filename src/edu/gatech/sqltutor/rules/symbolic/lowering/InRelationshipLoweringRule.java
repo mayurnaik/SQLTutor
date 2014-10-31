@@ -69,15 +69,23 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
 		while( ext.nextTuple() ) {
 			InRelationshipToken inRelToken = ext.getToken("?token");
-			
 			ERRelationship rel = inRelToken.getRelationship();
-			String negatedSingularForm = rel.getMetadata() != null ? rel.getMetadata().getNegatedSingularVerbForm() : null;
-			String negatedPluralForm = rel.getMetadata() != null ? rel.getMetadata().getNegatedPluralVerbForm() : null;
-			boolean hasNegatedForm = negatedSingularForm != null && negatedPluralForm != null;
 			
 			TableEntityRefToken leftRef = new TableEntityRefToken(inRelToken.getLeftEntity());
-			TableEntityRefToken rightRef = new TableEntityRefToken(inRelToken.getRightEntity());		
-			
+			TableEntityRefToken rightRef = new TableEntityRefToken(inRelToken.getRightEntity());
+			TableEntityRefToken participater = null;
+			TableEntityRefToken nonparticipater = null;
+			String nonparticipaterLabel = null;
+			if( inRelToken.isLeftParticipating() ) {
+				participater = leftRef;
+				nonparticipater = rightRef;
+				nonparticipaterLabel = rel.getRightEdge().getConstraint().getLabel();
+			} else {
+				participater = rightRef;
+				nonparticipater = leftRef;
+				nonparticipaterLabel = rel.getLeftEdge().getConstraint().getLabel();
+			}
+		
 			SequenceToken seq = new SequenceToken(PartOfSpeech.VERB_PHRASE);
 			if( !(inRelToken.isLeftParticipating() ^ inRelToken.isRightParticipating()) ) {
 				// TODO is this ordering fixed?
@@ -87,46 +95,21 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 					verb = rel.getName().toLowerCase().replace('_', ' ');
 				verbalizeRelationship(NLUtil.getVerbForm(verb), seq);
 				seq.addChild(rightRef);
-			} else if( hasNegatedForm ) {
-				TableEntityRefToken participater = null;
-				TableEntityRefToken nonparticipater = null;
-				if( inRelToken.isLeftParticipating() ) {
-					participater = leftRef;
-					nonparticipater = rightRef;
-				} else {
-					participater = rightRef;
-					nonparticipater = leftRef;
-				}
+			} else if( nonparticipaterLabel != null && !nonparticipaterLabel.isEmpty() &&
+					!nonparticipaterLabel.equalsIgnoreCase(nonparticipater.getTableEntity().getSingularLabel()) ) {
+				seq.addChild(participater);
+				seq.addChild(Literals.does());
+				seq.addChild(Literals.not());
+				seq.addChild(Literals.have());
+				seq.addChild(Literals.any());
+				seq.addChild(new LiteralToken(nonparticipaterLabel.toLowerCase(), nonparticipater.getPartOfSpeech()));
+			} else {
 				String negatedRelationshipLabel = participater.getPartOfSpeech() == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getNegatedSingularVerbForm() :
 																											rel.getMetadata().getNegatedPluralVerbForm();
 				seq.addChild(participater);
 				verbalizeRelationship(NLUtil.getVerbForm(negatedRelationshipLabel), seq);
 				seq.addChild(Literals.any());
 				seq.addChild(nonparticipater);
-			} else {
-				TableEntityRefToken participater = null;
-				TableEntityRefToken nonparticipater = null;
-				String nonparticipaterLabel = null;
-				if( inRelToken.isLeftParticipating() ) {
-					participater = leftRef;
-					nonparticipater = rightRef;
-					nonparticipaterLabel = rel.getRightEdge().getConstraint().getLabel().toLowerCase();
-				} else {
-					participater = rightRef;
-					nonparticipater = leftRef;
-					nonparticipaterLabel = rel.getLeftEdge().getConstraint().getLabel().toLowerCase();
-				}
-				if( nonparticipaterLabel == null || nonparticipaterLabel.isEmpty() 
-						|| nonparticipaterLabel.equalsIgnoreCase(nonparticipater.getTableEntity().getSingularLabel()) ) {
-					continue;
-				}
-				
-				seq.addChild(participater);
-				seq.addChild(Literals.does());
-				seq.addChild(Literals.not());
-				seq.addChild(Literals.have());
-				seq.addChild(Literals.any());
-				seq.addChild(new LiteralToken(nonparticipaterLabel, nonparticipater.getPartOfSpeech()));
 			}
 			
 			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} with {}", inRelToken, seq);
