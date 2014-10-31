@@ -90,6 +90,10 @@ public class Literals {
 		return new LiteralToken("have", PartOfSpeech.VERB_BASE_FORM);
 	}
 
+	public static LiteralToken any() {
+		return new LiteralToken("any", PartOfSpeech.DETERMINER);
+	}
+	
 	private Literals() {
 	}
 }

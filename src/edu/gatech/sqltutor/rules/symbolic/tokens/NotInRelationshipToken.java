@@ -26,6 +26,7 @@ public class NotInRelationshipToken extends AbstractSymbolicToken implements
 		ISymbolicToken {
 	private TableEntityToken leftEntity, rightEntity;
 	private ERRelationship relationship;
+	private boolean leftNull;
 
 	public NotInRelationshipToken(NotInRelationshipToken toCopy) {
 		super(toCopy);
@@ -40,11 +41,12 @@ public class NotInRelationshipToken extends AbstractSymbolicToken implements
 	}
 	
 	public NotInRelationshipToken(TableEntityToken leftEntity, TableEntityToken rightEntity, 
-			ERRelationship relationship) {
+			ERRelationship relationship, boolean leftNull) {
 		this();
 		this.leftEntity = leftEntity;
 		this.rightEntity = rightEntity;
 		this.relationship = relationship;
+		this.leftNull = leftNull;
 	}
 
 	@Override
@@ -81,5 +83,13 @@ public class NotInRelationshipToken extends AbstractSymbolicToken implements
 
 	public void setRelationship(ERRelationship relationship) {
 		this.relationship = relationship;
+	}
+
+	public boolean isLeftNull() {
+		return leftNull;
+	}
+
+	public void setLeftNull(boolean leftNull) {
+		this.leftNull = leftNull;
 	}
 }

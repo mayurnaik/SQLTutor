@@ -90,11 +90,6 @@ public class DefaultIsNullRule extends StandardLoweringRule implements
 				// should never happen
 				throw new SymbolicException("Unexpected node type in token: " + token);
 			}
-			
-			seq.addChildren(Arrays.asList(
-				Literals.does(), Literals.not(),
-				new LiteralToken("exist", PartOfSpeech.VERB_BASE_FORM)
-			));
 
 			SymbolicUtil.replaceChild(token, seq);
 			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", origToken, seq);

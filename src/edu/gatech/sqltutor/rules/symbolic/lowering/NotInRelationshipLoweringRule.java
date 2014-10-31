@@ -70,13 +70,24 @@ public class NotInRelationshipLoweringRule extends StandardSymbolicRule implemen
 			TableEntityRefToken rightRef = new TableEntityRefToken(notInRelToken.getRightEntity());
 
 			SequenceToken seq = new SequenceToken(PartOfSpeech.VERB_PHRASE);
-			seq.addChild(rightRef);
-			seq.addChild(Literals.does());
-			seq.addChild(Literals.not());
-			seq.addChild(Literals.have());
-			//FIXME: do we want to take into account "any" vs "a" ?
-			seq.addChild(leftRef);
-			
+			if( notInRelToken.isLeftNull() ) {
+				seq.addChild(rightRef);
+				seq.addChild(Literals.does());
+				seq.addChild(Literals.not());
+				seq.addChild(Literals.have());
+				//FIXME: do we want to take into account "any" vs "a" ?
+				// FIXME: a VS an
+				seq.addChild(Literals.any());
+				seq.addChild(leftRef);
+			} else {
+				seq.addChild(leftRef);
+				seq.addChild(Literals.does());
+				seq.addChild(Literals.not());
+				seq.addChild(Literals.have());
+				seq.addChild(Literals.any());
+				seq.addChild(rightRef);
+			}
+
 			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} with {}", notInRelToken, seq);
 			SymbolicUtil.replaceChild(notInRelToken, seq);
 		}
