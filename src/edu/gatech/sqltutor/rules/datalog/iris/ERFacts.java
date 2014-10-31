@@ -151,16 +151,14 @@ public class ERFacts extends DynamicFacts {
 		addRelationshipEdge(name, 1, rel.getRightEdge());
 		
 		ERRelationshipMetadata metadata = rel.getMetadata();
-		if( metadata != null ) {
-			if( metadata.getAlternateSingularVerbForm() != null )
-				addFact(ERPredicates.erRelationshipAlternateSingular, name, metadata.getAlternateSingularVerbForm());
-			if( metadata.getAlternatePluralVerbForm() != null )
-				addFact(ERPredicates.erRelationshipAlternatePlural, name, metadata.getAlternatePluralVerbForm());
-			if( metadata.getNegatedSingularVerbForm() != null )
-				addFact(ERPredicates.erRelationshipNegatedSingular, name, metadata.getNegatedSingularVerbForm());
-			if( metadata.getNegatedPluralVerbForm() != null )
-				addFact(ERPredicates.erRelationshipNegatedPlural, name, metadata.getNegatedPluralVerbForm());
-		}
+		if( metadata.getAlternateSingularVerbForm() != null )
+			addFact(ERPredicates.erRelationshipAlternateSingular, name, metadata.getAlternateSingularVerbForm());
+		if( metadata.getAlternatePluralVerbForm() != null )
+			addFact(ERPredicates.erRelationshipAlternatePlural, name, metadata.getAlternatePluralVerbForm());
+		if( metadata.getNegatedSingularVerbForm() != null )
+			addFact(ERPredicates.erRelationshipNegatedSingular, name, metadata.getNegatedSingularVerbForm());
+		if( metadata.getNegatedPluralVerbForm() != null )
+			addFact(ERPredicates.erRelationshipNegatedPlural, name, metadata.getNegatedPluralVerbForm());
 	}
 	
 	private void addAttribute(String parent, ERAttribute attr) {

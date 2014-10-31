@@ -17,6 +17,9 @@ package edu.gatech.sqltutor.rules.symbolic.lowering;
 
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.deri.iris.api.basics.IQuery;
@@ -34,6 +37,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
@@ -90,10 +94,8 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 			if( !(inRelToken.isLeftParticipating() ^ inRelToken.isRightParticipating()) ) {
 				// TODO is this ordering fixed?
 				seq.addChild(leftRef);
-				String verb = rel.getVerbForm();
-				if( verb == null )
-					verb = rel.getName().toLowerCase().replace('_', ' ');
-				verbalizeRelationship(NLUtil.getVerbForm(verb), seq);
+				verbalizeRelationship(rel, seq, leftRef.getPartOfSpeech(), false);
+				seq.addChild(Literals.any());
 				seq.addChild(rightRef);
 			} else if( nonparticipaterLabel != null && !nonparticipaterLabel.isEmpty() &&
 					!nonparticipaterLabel.equalsIgnoreCase(nonparticipater.getTableEntity().getSingularLabel()) ) {
@@ -104,10 +106,8 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 				seq.addChild(Literals.any());
 				seq.addChild(new LiteralToken(nonparticipaterLabel.toLowerCase(), nonparticipater.getPartOfSpeech()));
 			} else {
-				String negatedRelationshipLabel = participater.getPartOfSpeech() == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getNegatedSingularVerbForm() :
-																											rel.getMetadata().getNegatedPluralVerbForm();
 				seq.addChild(participater);
-				verbalizeRelationship(NLUtil.getVerbForm(negatedRelationshipLabel), seq);
+				verbalizeRelationship(rel, seq, participater.getPartOfSpeech(), true);
 				seq.addChild(Literals.any());
 				seq.addChild(nonparticipater);
 			}
@@ -118,14 +118,65 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 		return true;
 	}
 	
-	private void verbalizeRelationship(String verb, ISymbolicToken parent) {
+	private void verbalizeRelationship(ERRelationship rel, ISymbolicToken parent, PartOfSpeech beforePartOfSpeech, boolean negated) {
+		String verb = null;
+		if( negated ) {
+			verb = beforePartOfSpeech == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getNegatedSingularVerbForm() :
+																				rel.getMetadata().getNegatedPluralVerbForm();
+			if( verb == null ) {
+				String unnegatedVerb = beforePartOfSpeech == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getAlternateSingularVerbForm() :
+																					rel.getMetadata().getAlternatePluralVerbForm();
+				if( verb == null)
+					unnegatedVerb = rel.getVerbForm() == null ? rel.getName().toLowerCase().replace('_', ' ') : rel.getVerbForm();
+				
+				String[] parts = unnegatedVerb.split("\\s+");
+				switch(parts[0]) {
+					case "do":
+						verb = unnegatedVerb.replaceFirst("do", "do not");
+						break;
+					case "does":
+						verb = unnegatedVerb.replaceFirst("does", "does not");
+						break;
+					case "is":
+						verb = unnegatedVerb.replaceFirst("is", "is not");
+						break;
+					default:
+						throw new SymbolicException("Unable to find negated verbalization for: " + unnegatedVerb);
+				}
+			}
+		} else {
+			verb = beforePartOfSpeech == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getAlternateSingularVerbForm() :
+																				rel.getMetadata().getAlternatePluralVerbForm();
+			if( verb == null ) 
+				verb = rel.getVerbForm() == null ? rel.getName().toLowerCase().replace('_', ' ') : rel.getVerbForm();
+		}
+		
 		String[] parts = verb.split("\\s+");
-		if( parts.length > 2 )
-			_log.warn("Unexpected number of verb tokens in: {}", verb);
-		LiteralToken verbToken = new LiteralToken(parts[0], PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT);
-		parent.addChild(verbToken);
-		if( parts.length > 1 )
-			parent.addChild(new LiteralToken(parts[1], PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION));
+		for(int i = 0; i < parts.length; i++) {
+			try {
+				Method method = Literals.class.getMethod(parts[i]);
+				LiteralToken verbToken = (LiteralToken) method.invoke(Literals.getInstance());
+				parent.addChild(verbToken);
+				continue;
+			} catch (NoSuchMethodException e) {}
+			catch (SecurityException e) {}
+			catch (IllegalAccessException e) {}
+			catch (IllegalArgumentException e) {} 
+			catch (InvocationTargetException e) {}
+
+			// try to guess:
+			// FIXME: For the sake of correctness, we probably shouldn't be guessing.
+			
+			// likely a "works for", "works on", "works with"... case
+			if( parts.length == 2 && i == 1 ) {
+				parent.addChild(new LiteralToken(parts[i], PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION));
+				continue;
+			}
+			
+			// guess based off of preceding token's plurality
+			LiteralToken verbToken = new LiteralToken(parts[i], beforePartOfSpeech == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT : PartOfSpeech.VERB_BASE_FORM);
+			parent.addChild(verbToken);
+		}
 	}
 	
 	@Override

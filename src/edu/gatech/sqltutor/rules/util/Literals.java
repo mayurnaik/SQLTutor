@@ -96,4 +96,12 @@ public class Literals {
 	
 	private Literals() {
 	}
+	
+	private static Literals instance;
+	
+	public static Literals getInstance() {
+		if( instance == null )
+			instance = new Literals();
+		return instance;
+	}
 }

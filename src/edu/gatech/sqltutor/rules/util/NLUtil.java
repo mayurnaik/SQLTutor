@@ -32,21 +32,6 @@ public final class NLUtil {
 		return value;
 	}
 	
-	public static String getVerbForm(String verb) {
-		System.out.println("verb: " + verb);
-		Matcher m = splitPlural.matcher(verb);
-		if( m.matches() ) {
-			String first = m.group(1).trim();
-			if( !first.endsWith("s") ) {
-				System.out.println("pluralizing: " + first);
-				first = English.plural(first);
-				System.out.println("result: " + first);
-				verb = first + " " + m.group(2);
-			}
-		}
-		return verb;
-	}
-	
 	public static String nameFormat(String name) {
 		return name.replace('_', ' ');
 	}

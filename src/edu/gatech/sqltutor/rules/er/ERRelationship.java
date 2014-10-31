@@ -118,6 +118,8 @@ public class ERRelationship extends AbstractERAttributeContainer {
 	}
 
 	public ERRelationshipMetadata getMetadata() {
+		if(metadata == null)
+			metadata = new ERRelationshipMetadata();
 		return metadata;
 	}
 

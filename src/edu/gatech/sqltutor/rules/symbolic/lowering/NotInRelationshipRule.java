@@ -83,16 +83,18 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			TableEntityRefToken ref = ext.getToken("?entityRef");
 			AttributeToken attr = ext.getToken("?attr");
 			
-			// FIXME: This doesn't take into account if there is a IS NULL for both primary and foreign key
 			// if the attribute is a key value, get which side of the relationship it belongs to
-			boolean leftParticipating;
 			if( attr.getAttribute().isKey() ) {
-				String id = ref.getTableEntity().getId();
-				if( id.equals(inRelToken.getLeftEntity().getId()) ) {
-					leftParticipating = false;
-				} else if( id.equals(inRelToken.getRightEntity().getId()) ) {
-					leftParticipating = true;
-				} else {
+				String isNullRefId = ref.getTableEntity().getId();
+				String inRelLeftRefId = inRelToken.getLeftEntity().getId();
+				String inRelRightRefId = inRelToken.getRightEntity().getId();
+				if( isNullRefId.equals(inRelLeftRefId) ) {
+					inRelToken.setLeftParticipating(false);
+				}
+				if( isNullRefId.equals(inRelRightRefId) ) {
+					inRelToken.setRightParticipating(false);
+				} 
+				if( !isNullRefId.equals(inRelLeftRefId) && !isNullRefId.equals(inRelRightRefId) ) {
 					// FIXME: where returning false, we could probably catch this in .dlog
 					// the value doesn't belong to this relationship
 					return false; 
@@ -107,14 +109,11 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			switch( isNullNode.getNodeType() ) {
 				case NodeTypes.IS_NOT_NULL_NODE:
 					// this is already implied by the relationship
-					isNullToken.getParent().removeChild(isNullToken);
 					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}, as it is implied by {}", isNullToken, inRelToken);
+					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				case NodeTypes.IS_NULL_NODE:
-					InRelationshipToken notInRelToken = new InRelationshipToken(inRelToken.getLeftEntity(), 
-							inRelToken.getRightEntity(), inRelToken.getRelationship(), leftParticipating, !leftParticipating);
-					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} and {} with {}", inRelToken, isNullToken, notInRelToken);
-					SymbolicUtil.replaceChild(inRelToken, notInRelToken);
+					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}. Updated {}", isNullToken, inRelToken);
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				default:
