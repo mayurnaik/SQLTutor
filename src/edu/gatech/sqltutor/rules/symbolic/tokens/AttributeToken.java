@@ -24,6 +24,7 @@ import edu.gatech.sqltutor.rules.util.NLUtil;
 public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken, INounToken {
 	
 	protected ERAttribute attribute;
+	protected boolean definite;
 
 	public AttributeToken(AttributeToken token) {
 		super(token);
@@ -108,5 +109,15 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	@Override
 	public String toString() {
 		return "{" + typeAndTag() + " attribute=" + (attribute == null ? "null" : attribute.getFullName()) + "}";
+	}
+
+	@Override
+	public boolean isDefinite() {
+		return definite;
+	}
+
+	@Override
+	public void setDefinite(boolean definite) {
+		this.definite = definite;
 	}
 }

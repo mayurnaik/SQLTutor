@@ -23,6 +23,7 @@ import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.POSSESSIVE_WH_PRON
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION;
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_BASE_FORM;
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 
 /**
@@ -83,6 +84,10 @@ public class Literals {
 
 	public static LiteralToken whose() {
 		return new LiteralToken("whose", POSSESSIVE_WH_PRONOUN);
+	}
+	
+	public static LiteralToken have() {
+		return new LiteralToken("have", PartOfSpeech.VERB_BASE_FORM);
 	}
 
 	private Literals() {

@@ -26,6 +26,7 @@ import edu.gatech.sqltutor.Utils;
 public class SQLNounToken extends SQLToken implements INounToken {
 	protected String singular;
 	protected String plural;
+	protected boolean definite;
 
 	public SQLNounToken(QueryTreeNode astNode) {
 		super(astNode);
@@ -35,6 +36,7 @@ public class SQLNounToken extends SQLToken implements INounToken {
 		super(token);
 		this.singular = token.singular;
 		this.plural = token.plural;
+		this.definite = token.definite;
 	}
 	
 	@Override
@@ -64,5 +66,15 @@ public class SQLNounToken extends SQLToken implements INounToken {
 	@Override
 	public void setPluralLabel(String plural) {
 		this.plural = plural;
+	}
+	
+	@Override
+	public boolean isDefinite() {
+		return definite;
+	}
+
+	@Override
+	public void setDefinite(boolean definite) {
+		this.definite = definite;
 	}
 }

@@ -1,3 +1,2 @@
 
 ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNullNode').
-ruleDefaultIsNull(?token) :- sqlNodeHasType(?token, 'IsNotNullNode').

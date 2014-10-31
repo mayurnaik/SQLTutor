@@ -164,6 +164,16 @@ public enum PartOfSpeech {
 		}
 	}
 	
+	public boolean isProperNoun() { 
+		switch (this) {
+		case PROPER_NOUN_SINGULAR:
+		case PROPER_NOUN_PLURAL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
 	public boolean isPronoun() { 
 		switch( this ) {
 		case PERSONAL_PRONOUN:

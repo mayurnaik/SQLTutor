@@ -21,6 +21,8 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 public interface INounToken extends ISymbolicToken {
 	public String getSingularLabel();
 	public String getPluralLabel();
+	public boolean isDefinite();
 	public void setSingularLabel(String label);
 	public void setPluralLabel(String label);
+	public void setDefinite(boolean definite);
 }

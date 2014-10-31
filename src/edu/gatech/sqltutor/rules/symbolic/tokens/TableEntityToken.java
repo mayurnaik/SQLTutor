@@ -42,6 +42,7 @@ public class TableEntityToken extends AbstractSymbolicToken
 	protected String id;
 	protected String singular;
 	protected String plural;
+	protected boolean definite;
 	protected int cardinality = EREdgeConstraint.ANY_CARDINALITY;
 	protected DescriptionType described = DescriptionType.NONE;
 	
@@ -160,5 +161,15 @@ public class TableEntityToken extends AbstractSymbolicToken
 		else
 			b.append(cardinality);
 		return b;
+	}
+
+	@Override
+	public boolean isDefinite() {
+		return definite;
+	}
+
+	@Override
+	public void setDefinite(boolean definite) {
+		this.definite = definite;
 	}
 }
