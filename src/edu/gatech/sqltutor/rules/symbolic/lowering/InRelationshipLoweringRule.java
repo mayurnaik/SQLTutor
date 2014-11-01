@@ -19,7 +19,6 @@ import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.deri.iris.api.basics.IQuery;
@@ -34,6 +33,7 @@ import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
@@ -46,7 +46,6 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.util.Literals;
-import edu.gatech.sqltutor.rules.util.NLUtil;
 
 public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 		ITranslationRule {
@@ -70,13 +69,15 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
+		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
+		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			InRelationshipToken inRelToken = ext.getToken("?token");
 			ERRelationship rel = inRelToken.getRelationship();
-			
 			TableEntityRefToken leftRef = new TableEntityRefToken(inRelToken.getLeftEntity());
 			TableEntityRefToken rightRef = new TableEntityRefToken(inRelToken.getRightEntity());
+			
 			TableEntityRefToken participater = null;
 			TableEntityRefToken nonparticipater = null;
 			String nonparticipaterLabel = null;
@@ -95,7 +96,8 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 				// TODO is this ordering fixed?
 				seq.addChild(leftRef);
 				verbalizeRelationship(rel, seq, leftRef.getPartOfSpeech(), false);
-				seq.addChild(Literals.any());
+				if( rightRef.getTableEntity().getDescribed() != DescriptionType.APPEND )
+					seq.addChild(rightRef.getTableEntity().isDefinite() ? Literals.the() : Literals.any());
 				seq.addChild(rightRef);
 			} else if( nonparticipaterLabel != null && !nonparticipaterLabel.isEmpty() &&
 					!nonparticipaterLabel.equalsIgnoreCase(nonparticipater.getTableEntity().getSingularLabel()) ) {
@@ -103,19 +105,23 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 				seq.addChild(Literals.does());
 				seq.addChild(Literals.not());
 				seq.addChild(Literals.have());
-				seq.addChild(Literals.any());
+				if( rightRef.getTableEntity().getDescribed() != DescriptionType.APPEND )
+					seq.addChild(nonparticipater.getTableEntity().isDefinite() ? Literals.the() : Literals.any());
 				seq.addChild(new LiteralToken(nonparticipaterLabel.toLowerCase(), nonparticipater.getPartOfSpeech()));
 			} else {
 				seq.addChild(participater);
 				verbalizeRelationship(rel, seq, participater.getPartOfSpeech(), true);
-				seq.addChild(Literals.any());
+				if( rightRef.getTableEntity().getDescribed() != DescriptionType.APPEND )
+					seq.addChild(nonparticipater.getTableEntity().isDefinite() ? Literals.the() : Literals.any());
 				seq.addChild(nonparticipater);
 			}
 			
-			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {} with {}", inRelToken, seq);
+			if( debug ) _log.debug(Markers.SYMBOLIC, "Replacing {} with {}", inRelToken, seq);
 			SymbolicUtil.replaceChild(inRelToken, seq);
+			
+			applied = true;
 		}
-		return true;
+		return applied;
 	}
 	
 	private void verbalizeRelationship(ERRelationship rel, ISymbolicToken parent, PartOfSpeech beforePartOfSpeech, boolean negated) {

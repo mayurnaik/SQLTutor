@@ -53,8 +53,9 @@ public class ColumnReferenceLiteralRule extends StandardLoweringRule implements
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		final boolean trace = _log.isTraceEnabled(Markers.SYMBOLIC);
 		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			SQLNounToken colRef = ext.getToken("?colRef");
 			PartOfSpeech pos = colRef.getPartOfSpeech();
@@ -71,10 +72,10 @@ public class ColumnReferenceLiteralRule extends StandardLoweringRule implements
 			LiteralToken literal = new LiteralToken(label, pos);
 			SymbolicUtil.replaceChild(colRef, literal);
 			
-			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", colRef, literal);
-			
+			if( trace ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", colRef, literal);
 			applied = true;
 		}
+		
 		return applied;
 	}
 

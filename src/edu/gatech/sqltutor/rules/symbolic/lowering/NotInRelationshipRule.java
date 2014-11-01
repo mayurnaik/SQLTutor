@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.NodeTypes;
-import com.akiban.sql.parser.NotNode;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
@@ -74,8 +73,9 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
-
+		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
+		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			SQLToken isNullToken = ext.getToken("?isNull");
 			InRelationshipToken inRelToken = ext.getToken("?inRel");
@@ -98,11 +98,11 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 				if( !isNullRefId.equals(inRelLeftRefId) && !isNullRefId.equals(inRelRightRefId) ) {
 					// FIXME: where returning false, we could probably catch this in .dlog
 					// the value doesn't belong to this relationship
-					return false; 
+					continue; 
 				}
 			} else {
 				// the value was not a key, so it doesn't imply anything about the relationship
-				return false; 
+				continue; 
 			}
 			
 			QueryTreeNode isNullNode = isNullToken.getAstNode();
@@ -115,27 +115,29 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 				// inverse the type
 				int newType = isNullNode.getNodeType() == NodeTypes.IS_NULL_NODE ? NodeTypes.IS_NOT_NULL_NODE : NodeTypes.IS_NULL_NODE;
 				isNullNode.setNodeType(newType);
-				if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Replacing {}, as it has been consumed by {}", notToken, isNullToken);
+				if( debug ) _log.debug(Markers.SYMBOLIC, "Replacing {}, as it has been consumed by {}", notToken, isNullToken);
 				SymbolicUtil.replaceChild(notToken, isNullToken);
 			}
 			
 			switch( isNullNode.getNodeType() ) {
 				case NodeTypes.IS_NOT_NULL_NODE:
 					// this is already implied by the relationship
-					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}, as it is implied by {}", isNullToken, inRelToken);
+					if( debug ) _log.debug(Markers.SYMBOLIC, "Removing {}, as it is implied by {}", isNullToken, inRelToken);
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				case NodeTypes.IS_NULL_NODE:
 					inRelToken.setLeftParticipating(leftParticipating);
 					inRelToken.setRightParticipating(rightParticipating);
-					if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Removing {}. Updated {}", isNullToken, inRelToken);
+					if( debug ) _log.debug(Markers.SYMBOLIC, "Removing {}. Updated {}", isNullToken, inRelToken);
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				default:
 					throw new SymbolicException("Unexpected node type in token: " + isNullToken);
 			}
+			
+			applied = true;
 		}
-		return true;
+		return applied;
 	}
 	
 	@Override

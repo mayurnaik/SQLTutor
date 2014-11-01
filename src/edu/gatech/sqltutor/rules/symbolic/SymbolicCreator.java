@@ -26,12 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.BetweenOperatorNode;
 import com.akiban.sql.parser.BinaryRelationalOperatorNode;
-import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.ConstantNode;
 import com.akiban.sql.parser.FromTable;
-import com.akiban.sql.parser.NodeTypes;
-import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.SelectNode;
 
@@ -40,8 +37,6 @@ import edu.gatech.sqltutor.rules.SymbolicState;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNumberToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.SQLStringToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLValueToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;

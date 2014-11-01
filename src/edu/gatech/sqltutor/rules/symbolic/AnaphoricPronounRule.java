@@ -173,7 +173,7 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 		
 		for( TableEntityRefToken otherRef: otherRefs ) {
 			ISymbolicToken parent = otherRef.getParent(),
-				after = SymbolicUtil.getFollowingToken(otherRef),
+				after = SymbolicUtil.getSucceedingToken(otherRef),
 				before = SymbolicUtil.getPrecedingToken(otherRef),
 				replacement;
 			if( after.getPartOfSpeech() == PartOfSpeech.POSSESSIVE_ENDING ) {
@@ -289,6 +289,7 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 			_log.trace(Markers.SYMBOLIC, "Considering {} potential blockers: {}", rel.size(), rel);
 		}
 		
+		boolean applied = false;
 		while( ext.nextTuple() ) {
 			TableEntityRefToken firstRef = ext.getToken("?baseRef"), 
 				blockingRef = ext.getToken("?blockingRef");
@@ -306,9 +307,9 @@ public class AnaphoricPronounRule extends StandardSymbolicRule implements
 				}
 			}
 			
-			return true;
+			applied = true;
 		}
-		return false;
+		return applied;
 	}
 	
 	@Override

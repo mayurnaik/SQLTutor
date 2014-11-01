@@ -54,7 +54,6 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 		literal(SymbolicPredicates.parentOf, "?gparent", "?parent2", "?gpos2"),
 		literal(SymbolicPredicates.lastChild, "?parent1", "?lastChild1", UNUSED),
 		literal(SymbolicPredicates.lastChild, "?parent2", "?lastChild2", UNUSED)
-		
 	);
 	
 	private SymbolicReader tokenReader = new SymbolicReader();
@@ -68,6 +67,8 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			AttributeListToken attrList1 = ext.getToken("?attrList1"),
 				attrList2 = ext.getToken("?attrList2");
@@ -102,9 +103,10 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 				checkPlurality(attrList2);
 				_log.debug(Markers.SYMBOLIC, "Consolidated attributes to: {}", parent2);
 			}
-			return true;
+			applied = true;
 		}
-		return false;
+		
+		return applied;
 	}
 	
 	/**

@@ -66,13 +66,14 @@ public class DefaultIsNullRule extends StandardLoweringRule implements
 	}
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		final boolean trace = _log.isTraceEnabled(Markers.SYMBOLIC);
 		boolean applied = false;
-		final boolean TRACE = _log.isTraceEnabled(Markers.SYMBOLIC);
+		
 		String origToken = null;
 		while( ext.nextTuple() ) {
 			SQLToken token = ext.getToken("?token");
 			QueryTreeNode astNode = token.getAstNode();
-			if( TRACE )
+			if( trace )
 				origToken = token.toString();
 			
 			if( astNode.getNodeType() == NodeTypes.NOT_NODE ) {
@@ -102,11 +103,12 @@ public class DefaultIsNullRule extends StandardLoweringRule implements
 				// should never happen
 				throw new SymbolicException("Unexpected node type in token: " + token);
 			}
-
 			SymbolicUtil.replaceChild(token, seq);
-			if( TRACE ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", origToken, seq);
+			
+			if( trace ) _log.trace(Markers.SYMBOLIC, "Replaced {} with {}", origToken, seq);
 			applied = true;
 		}
+		
 		return applied;
 	}
 

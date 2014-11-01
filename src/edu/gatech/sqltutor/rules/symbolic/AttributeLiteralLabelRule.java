@@ -21,7 +21,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.api.basics.IRule;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -32,15 +31,12 @@ import edu.gatech.sqltutor.rules.ISymbolicTranslationRule;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
-import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
-import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
-import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
 import edu.gatech.sqltutor.rules.util.Literals;
 
 public class AttributeLiteralLabelRule 
@@ -61,6 +57,8 @@ public class AttributeLiteralLabelRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		boolean applied = false;
+		
 		while ( ext.nextTuple() ) {
 			AttributeToken token = ext.getToken("?token");
 			ISymbolicToken parent = ext.getToken("?parent");
@@ -69,7 +67,7 @@ public class AttributeLiteralLabelRule
 			String label;
 			if( speech.isSingular() )
 				label = token.getSingularLabel();
-			else if( speech.isPlural() )
+			else if( !speech.isSingular() )
 				label = token.getPluralLabel();
 			else
 				throw new SymbolicException("Can't tell if singular or plural: " + token);
@@ -82,7 +80,7 @@ public class AttributeLiteralLabelRule
 			List<ISymbolicToken> siblings = parent.getChildren();
 			LiteralToken determiner = null;
 			if( needsDeterminer(token) )
-				determiner = Literals.the(); // FIXME "a"/"an"?
+				determiner = token.isDefinite() ? Literals.the() : Literals.any(); // FIXME "a"/"an"?
 			
 			if( parent.getType() == SymbolicType.ATTRIBUTE_LIST || pos == 0 ) {
 				if( determiner != null ) {
@@ -104,8 +102,9 @@ public class AttributeLiteralLabelRule
 			
 			SymbolicUtil.replaceChild(parent, token, replacement);
 			_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", token, replacement);
+			applied = true;
 		}
-		return true;
+		return applied;
 		
 	}
 	

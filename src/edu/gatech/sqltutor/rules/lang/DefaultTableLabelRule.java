@@ -62,6 +62,8 @@ public class DefaultTableLabelRule extends StandardSymbolicRule implements ISymb
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {	
 		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
+		boolean applied = false;
+		
 		SymbolicQueries queries = state.getQueries();
 		while( ext.nextTuple() ) {
 			SQLNounToken table = ext.getToken("?table");
@@ -74,11 +76,11 @@ public class DefaultTableLabelRule extends StandardSymbolicRule implements ISymb
 			tableEntity.setSingularLabel(singular);
 			tableEntity.setPluralLabel(plural);
 			
-			if( debug )  {
-				_log.debug(Markers.SYMBOLIC, "Updated labels for {} and {}", table, tableEntity);
-			}
+			if( debug )	_log.debug(Markers.SYMBOLIC, "Updated labels for {} and {}", table, tableEntity);
+			applied = true;
 		}
-		return true;
+		
+		return applied;
 	}
 	
 	@Override

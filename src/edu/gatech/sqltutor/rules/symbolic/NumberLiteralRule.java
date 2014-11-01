@@ -24,7 +24,6 @@ import java.util.EnumSet;
 import java.util.Locale;
 
 import org.deri.iris.api.basics.IQuery;
-import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
@@ -60,6 +59,8 @@ public class NumberLiteralRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
+		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			ISymbolicToken parent = ext.getToken("?parent");
 			NumberToken numberToken = (NumberToken)ext.getToken("?token");
@@ -82,8 +83,9 @@ public class NumberLiteralRule
 			
 			SymbolicUtil.replaceChild(parent, numberToken, literal);
 			_log.debug(Markers.SYMBOLIC, "Replaced {} with {}", numberToken, literal);
+			applied = true;
 		}
-		return true;
+		return applied;
 	}
 	
 	@Override

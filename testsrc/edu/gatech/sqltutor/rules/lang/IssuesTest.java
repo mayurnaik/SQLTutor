@@ -74,14 +74,13 @@ public class IssuesTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select the last names of each employee and their supervisor.")},
 				
 			// 9
-			// 
 			{"SELECT d.dependent_name, d.bdate FROM department d2, dependent d, dept_locations l WHERE l.dnumber = d2.dnumber AND d.essn = d2.mgr_ssn AND l.dlocation = 'Houston'", 
 				Pattern.quote("List the name and birthdate of the dependents of each employee who manages a department located in \"Houston.\"")},
 		
 			// 10
-			{"SELECT fname FROM employee WHERE super_ssn IS NOT NULL", 
-				Pattern.quote("Select the first name of each employee who has a supervisor.")},
-			
+			{"SELECT E.fname, M.fname, D.fname FROM employee E, employee M, employee D WHERE E.salary > M.salary AND E.dno = D.dno AND D.mgr_ssn = M.ssn", 
+				Pattern.quote("")},
+				
 		};
 		return Arrays.asList(params);
 	}

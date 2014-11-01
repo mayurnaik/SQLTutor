@@ -67,6 +67,7 @@ public class InRelationshipLabelRule extends StandardSymbolicRule implements
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		SymbolicQueries queries = state.getQueries();
 		
+		boolean applied = false;
 		while( ext.nextTuple() ) {
 			InRelationshipToken inrel = ext.getToken("?inrel");
 			TableEntityToken leftEntity = ext.getToken("?leftEntity"),
@@ -75,7 +76,7 @@ public class InRelationshipLabelRule extends StandardSymbolicRule implements
 			ERRelationship relationship = inrel.getRelationship();
 			
 			if( !inrel.isLeftParticipating() || !inrel.isRightParticipating() )
-				return false;
+				continue;
 			
 			boolean isLeftPossessor = ext.getInteger("?which") == 0;
 			TableEntityToken possessorEntity, possessedEntity;
@@ -107,9 +108,9 @@ public class InRelationshipLabelRule extends StandardSymbolicRule implements
 				makePossessiveRef(ref, possessorEntity);
 			}
 			
-			return true;
+			applied = true;
 		}
-		return false;
+		return applied;
 	}
 
 	private void makePossessiveRef(TableEntityRefToken ref,

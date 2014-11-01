@@ -59,7 +59,7 @@ public class WhereLiteralRule
 		ISymbolicToken token = ext.getToken("?token", result);
 		ISymbolicToken parent = ext.getToken("?parent", result);
 		
-		ISymbolicToken following = SymbolicUtil.getFollowingToken(token);
+		ISymbolicToken following = SymbolicUtil.getSucceedingToken(token);
 		if( following == null ) {
 			_log.debug(Markers.SYMBOLIC, "Deleting {WHERE} as there is nothing following.");
 			parent.removeChild(token);

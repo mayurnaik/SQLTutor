@@ -39,6 +39,7 @@ import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.StaticRules;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
+import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicQueries;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SQLNounToken;
@@ -65,9 +66,10 @@ public class DescribingAttributeLabelRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		final boolean DEBUG = _log.isDebugEnabled(Markers.SYMBOLIC);
-		SymbolicQueries queries = state.getQueries();
+		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
 		boolean applied = false;
+		
+		SymbolicQueries queries = state.getQueries();
 		while( ext.nextTuple() ) {
 			// FIXME needs to handle cscopes / {TABLE_ENTITY}
 			// and should insert {IS} token, simplifying if possible
@@ -93,6 +95,8 @@ public class DescribingAttributeLabelRule
 			if( singular == null || plural == null )
 				continue; // wait for another rule to give a label we can use
 			if( "prepend".equalsIgnoreCase(type) ) {
+				// FIXME: We probably want some way to group words instead of just concatenating them. 
+				// SequenceToken doesn't quite fit this because this doesn't necessarily need a PartOfSpeech
 				singular = value + " " + singular;
 				plural = value + " " + plural;
 				tableEntity.setDescribed(DescriptionType.PREPEND);
@@ -108,6 +112,10 @@ public class DescribingAttributeLabelRule
 				throw new SymbolicException("Unsupported describing-attribute type: " + type);
 			}
 			
+			tableEntity.setPartOfSpeech(
+					PartOfSpeech.getProperNoun(
+							tableEntity.getPartOfSpeech()));
+			tableEntity.setDefinite(true);
 			tableEntity.setSingularLabel(singular);
 			tableEntity.setPluralLabel(plural);
 			if( attr.isKey() )
@@ -117,7 +125,7 @@ public class DescribingAttributeLabelRule
 			fromTable.setSingularLabel(singular);
 			fromTable.setPluralLabel(plural);
 			
-			if( DEBUG ) _log.debug(Markers.SYMBOLIC, "Updated labels in: {}", fromTable);
+			if( debug ) _log.debug(Markers.SYMBOLIC, "Updated labels in: {}", fromTable);
 
 			// delete the comparison
 			state.deleteNode(binop);

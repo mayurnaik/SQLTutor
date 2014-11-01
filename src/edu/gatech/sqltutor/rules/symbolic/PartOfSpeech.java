@@ -129,6 +129,19 @@ public enum PartOfSpeech {
 		}
 	}
 	
+	public static PartOfSpeech getProperNoun(PartOfSpeech noun) {
+		if(noun.isProperNoun())
+			return noun;
+		switch(noun) {
+		case NOUN_SINGULAR_OR_MASS:
+			return PROPER_NOUN_SINGULAR;
+		case NOUN_PLURAL:
+			return PROPER_NOUN_PLURAL;
+		default:
+			throw new SymbolicException("Unable to convert part of speech " + noun + " to a proper noun.");
+		}
+	}
+	
 	private final boolean isChunk;
 	private final String tag;
 
@@ -156,8 +169,28 @@ public enum PartOfSpeech {
 		switch (this) {
 		case NOUN_PLURAL:
 		case NOUN_SINGULAR_OR_MASS:
-		case PROPER_NOUN_SINGULAR:
-		case PROPER_NOUN_PLURAL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isDeterminer() {
+		switch(this) {
+		case DETERMINER:
+		case PREDETERMINER:
+		case WH_DETERMINER:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	public boolean isAdjective() {
+		switch(this) {
+		case ADJECTIVE:
+		case ADJECTIVE_COMPARATIVE:
+		case ADJECTIVE_SUPERLATIVE:
 			return true;
 		default:
 			return false;
@@ -200,16 +233,8 @@ public enum PartOfSpeech {
 		switch( this ) {
 		case NOUN_SINGULAR_OR_MASS:
 		case PROPER_NOUN_SINGULAR:
-			return true;
-		default:
-			return false;
-		}
-	}
-	
-	public boolean isPlural() {
-		switch( this ) {
-		case NOUN_PLURAL:
-		case PROPER_NOUN_PLURAL:
+		case VERB_NON_RD_PERSON_SINGULAR_PRESENT:
+		case VERB_RD_PERSON_SINGULAR_PRESENT:
 			return true;
 		default:
 			return false;

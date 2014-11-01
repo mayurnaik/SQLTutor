@@ -202,6 +202,7 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 		SymbolicQueries queries = state.getQueries();
 		ERDiagram erDiagram = state.getErDiagram();
 		
+		boolean applied = false;
 		while( ext.nextTuple() ) {
 			ITerm relationship = ext.getTerm("?rel");
 			if( DEBUG ) _log.debug(Markers.METARULE, "Matched on relationship: {}", relationship);
@@ -235,14 +236,13 @@ public class JoinLabelRule extends AbstractSymbolicRule implements ISymbolicTran
 				pkEntityToken, fkEntityToken, rel
 			);
 
-			
 			SymbolicUtil.replaceChild(binop1, inRelationship);
 			_log.trace(Markers.SYMBOLIC, "Replaced {} and {} with {}", binop1, binop2, inRelationship);
 			
-			return true;
+			applied = true;
 		}
 		
-		return false;
+		return applied;
 	}
 	
 	@Override

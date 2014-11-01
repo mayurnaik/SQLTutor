@@ -29,6 +29,7 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public AttributeToken(AttributeToken token) {
 		super(token);
 		this.attribute = token.attribute;
+		this.definite = token.definite;
 	}
 	
 	public AttributeToken(ERAttribute attr) {
@@ -38,6 +39,7 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public AttributeToken(ERAttribute attr, PartOfSpeech pos) {
 		super(pos);
 		this.attribute = attr;
+		this.definite = true;
 	}
 
 	@Override

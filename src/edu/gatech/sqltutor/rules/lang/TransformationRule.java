@@ -31,8 +31,6 @@ import com.akiban.sql.parser.AllResultColumn;
 import com.akiban.sql.parser.CharConstantNode;
 import com.akiban.sql.parser.ColumnReference;
 import com.akiban.sql.parser.FromBaseTable;
-import com.akiban.sql.parser.FromTable;
-import com.akiban.sql.parser.IsNullNode;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.NumericConstantNode;
 import com.akiban.sql.parser.QueryTreeNode;
@@ -247,7 +245,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 			SequenceToken literals = new SequenceToken(PartOfSpeech.PREPOSITIONAL_PHRASE);
 			literals.addChild(Literals.of());
 			if( !(entityToken.getDescribed() == DescriptionType.APPEND) ) {
-				LiteralToken determiner = entityToken.getCardinality() == 1 ? Literals.the() : 
+				LiteralToken determiner = entityToken.getCardinality() == 1 || entityToken.isDefinite() ? Literals.the() : 
 															isDistinct ? Literals.all() : 
 																Literals.each();
 				literals.addChild(determiner);

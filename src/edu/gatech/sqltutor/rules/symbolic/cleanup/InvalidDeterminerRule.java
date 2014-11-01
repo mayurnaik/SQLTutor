@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.ITranslationRule;
-import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
@@ -59,24 +58,48 @@ public class InvalidDeterminerRule extends StandardSymbolicRule implements
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		boolean applied = false;
-		
-		mainLoop:
+
 		while( ext.nextTuple() ) {
-			LiteralToken determiner = ext.getToken("?det");
-			ISymbolicToken after = SymbolicUtil.getFollowingToken(determiner);
-			switch( after.getPartOfSpeech() ) {
-			case PERSONAL_PRONOUN:
-			case POSSESSIVE_PRONOUN:
-			case PROPER_NOUN_SINGULAR:
-			case PROPER_NOUN_PLURAL:
-				_log.debug(Markers.SYMBOLIC, "Deleting determiner {} followed by {}", determiner, after);
-				determiner.getParent().removeChild(determiner);
-				applied = true;
-				continue mainLoop;
-			default:
-				break;
+			final LiteralToken determiner = ext.getToken("?det");
+			boolean deleteDeterminer = false;
+			
+			ISymbolicToken before = SymbolicUtil.getPrecedingToken(determiner);
+			if( before != null ) {
+				PartOfSpeech bpos = before.getPartOfSpeech();
+				if( bpos.isProperNoun() || bpos.isDeterminer() || bpos.isAdjective() || bpos.isPronoun() ) {
+					_log.warn("Deleting determiner {} due to preceding token {} with part of speech {}.", determiner, before, bpos);
+					deleteDeterminer = true;
+				}
 			}
 			
+			if( deleteDeterminer == false ) {
+				ISymbolicToken after = SymbolicUtil.getSucceedingToken(determiner);
+				if ( after != null ) {
+					PartOfSpeech apos = after.getPartOfSpeech();
+					
+					// FIXME: Sometimes we can not include a determiner based on if the token is plural.
+					// Perhaps has something to do with "count vs uncount" nouns
+					if( apos.isPronoun() ) {
+						_log.warn("Deleting determiner {} due to succeeding token {} with part of speech {}.", determiner, after, apos);
+						deleteDeterminer = true;
+					}
+					
+					if( deleteDeterminer == false ) {
+						// FIXME: Proper nouns shouldn't always have a determiner.
+						ISymbolicToken afterAfter = SymbolicUtil.getSucceedingToken(after);
+						if( apos.isProperNoun() && afterAfter != null &&
+								SymbolicUtil.getSucceedingToken(after).getPartOfSpeech().isPossessive()) {
+							_log.warn("Deleting determiner {} due to succeeding possessive token {} with part of speech {}.", determiner, after, apos);
+							deleteDeterminer = true;
+						}
+					}
+				}
+			}
+			
+			if( deleteDeterminer ) {
+				determiner.getParent().removeChild(determiner);
+				applied = true;
+			}
 		}
 		return applied;
 	}

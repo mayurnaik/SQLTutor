@@ -194,7 +194,7 @@ public class SymbolicUtil {
 	 * @param token the token to find the predecessor of
 	 * @return the predecessor or <code>null</code> if there is no predecessor
 	 */
-	public static ISymbolicToken getFollowingToken(ISymbolicToken token) {
+	public static ISymbolicToken getSucceedingToken(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
 		ISymbolicToken parent = token.getParent();
 		if( parent == null ) return null; // the root token, has no following token
@@ -206,7 +206,7 @@ public class SymbolicUtil {
 			return getLeftmostDescendant(siblings.get(idx+1));
 		
 		// otherwise, up one level and check
-		return getFollowingToken(parent);
+		return getSucceedingToken(parent);
 	}
 	
 	/**

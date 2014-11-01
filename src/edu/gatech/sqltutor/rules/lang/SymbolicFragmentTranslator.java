@@ -40,7 +40,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.AbstractQueryTranslator;

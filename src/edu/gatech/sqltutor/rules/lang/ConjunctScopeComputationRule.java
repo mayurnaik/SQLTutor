@@ -24,11 +24,14 @@ import org.deri.iris.api.basics.ITuple;
 import org.deri.iris.api.terms.ITerm;
 import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.akiban.sql.parser.OrNode;
 import com.akiban.sql.parser.QueryTreeNode;
 
 import edu.gatech.sqltutor.rules.ITranslationRule;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.IrisUtil;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
@@ -44,6 +47,8 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.SQLToken;
  */
 public class ConjunctScopeComputationRule extends StandardSymbolicRule
 		implements ITranslationRule {
+	
+	private static final Logger _log = LoggerFactory.getLogger(DefaultTableLabelRule.class);
 	// there is an SQL token without an assigned conjunct-scope
 	private static final IQuery QUERY = Factory.BASIC.createQuery(
 		literal(SymbolicPredicates.type, "?token", SymbolicType.SQL_AST),
@@ -61,13 +66,18 @@ public class ConjunctScopeComputationRule extends StandardSymbolicRule
 	
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		ext.nextTuple();
-
-		SQLToken selectToken = ext.getToken("?select");
-		QueryTreeNode cscope = selectToken.getAstNode();
-		processToken(cscope, selectToken);
+		final boolean debug = _log.isDebugEnabled(Markers.SYMBOLIC);
+		boolean applied = false;
 		
-		return true;
+		while( ext.nextTuple() ) {
+			SQLToken selectToken = ext.getToken("?select");
+			QueryTreeNode cscope = selectToken.getAstNode();
+			processToken(cscope, selectToken);
+			
+			applied = true;
+		}
+		
+		return applied;
 	}
 	
 	protected void processToken(QueryTreeNode cscope, SQLToken token) {

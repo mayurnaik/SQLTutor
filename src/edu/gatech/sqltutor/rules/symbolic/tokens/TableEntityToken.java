@@ -74,14 +74,8 @@ public class TableEntityToken extends AbstractSymbolicToken
 	
 	@Override
 	public void setPartOfSpeech(PartOfSpeech partOfSpeech) {
-		switch( partOfSpeech ) {
-			case NOUN_SINGULAR_OR_MASS:
-			case NOUN_PLURAL:
-			case NOUN_PHRASE:
-				break;
-			default:
-				throw new SymbolicException("Table entities must be nouns or noun phrases: " + partOfSpeech);
-		}
+		if( !partOfSpeech.isNoun() && !partOfSpeech.isProperNoun() ) // TODO: || !partOfSpeech.isPronoun() ?
+			throw new SymbolicException("Table entities must be nouns, proper nouns, or noun phrases: " + partOfSpeech);
 		super.setPartOfSpeech(partOfSpeech);
 	}
 	

@@ -193,7 +193,7 @@ public class SingleReferenceAnaphoraRule extends StandardLoweringRule implements
 		if( otherRef.getTableEntity() != entity )
 			return null;
 		
-		ISymbolicToken after = SymbolicUtil.getFollowingToken(otherRef);
+		ISymbolicToken after = SymbolicUtil.getSucceedingToken(otherRef);
 		return PhraseType.POSSESSIVE.acceptsTokenFollowingRef(after)  ? PhraseType.POSSESSIVE :
 		       PhraseType.VERBALIZING.acceptsTokenFollowingRef(after) ? PhraseType.VERBALIZING :
 		       null;

@@ -67,6 +67,7 @@ public class TableEntityRefNeedsIdRule extends StandardSymbolicRule {
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
 		boolean applied = false;
+		
 		while( ext.nextTuple() ) {
 			TableEntityRefToken ref1 = ext.getToken("?ref1"),
 			                    ref2 = ext.getToken("?ref2");
