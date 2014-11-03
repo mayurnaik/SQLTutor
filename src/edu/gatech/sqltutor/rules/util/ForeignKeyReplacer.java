@@ -46,11 +46,13 @@ import com.akiban.sql.parser.ValueNode;
 import com.akiban.sql.parser.ValueNodeList;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.er.mapping.ERForeignKeyJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap;
 import edu.gatech.sqltutor.rules.er.mapping.ERLookupTableJoin;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
+import edu.gatech.sqltutor.rules.symbolic.MergeCompositeAttributeRule;
 
 /**
  * Replaces any foreign keys within a query with their corresponding primary keys from another table.
@@ -61,8 +63,8 @@ import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
  *
  */
 public class ForeignKeyReplacer {
-	private static final Logger log = LoggerFactory
-			.getLogger(ForeignKeyReplacer.class);
+	private static final Logger _log = LoggerFactory.getLogger(ForeignKeyReplacer.class);
+	
 	private ERMapping mapping;
 
 	public ForeignKeyReplacer(ERMapping mapping) {
@@ -152,6 +154,7 @@ public class ForeignKeyReplacer {
 			for (Integer j : addAndRemoveMap.keySet()) {
 				resultColumns.remove(j);
 				resultColumns.add(j, addAndRemoveMap.get(j));
+				_log.debug(Markers.SYMBOLIC, "Applied rule: ForeignKeyReplacementRule");
 			}
 		}
 		// now that we're done iterating over the FromList, add the new table
@@ -387,7 +390,7 @@ public class ForeignKeyReplacer {
 					columnName = resultColumn.getReference().getColumnName();
 			}
 			if(columnName == null)
-				log.error("Result column does not have a column name: {}", resultColumn);
+				_log.error("Result column does not have a column name: {}", resultColumn);
 		}
 		return columnName;
 	}
@@ -408,7 +411,7 @@ public class ForeignKeyReplacer {
 				if(cr != null)
 					tableName = cr.getTableName();
 				else
-					log.error("Result column does not have a table name: {}", col);
+					_log.error("Result column does not have a table name: {}", col);
 			}
 		}
 		return tableName;
