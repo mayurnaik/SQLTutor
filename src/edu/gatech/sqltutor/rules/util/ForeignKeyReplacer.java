@@ -244,6 +244,7 @@ public class ForeignKeyReplacer {
 					addJoin(select, columnReference, cr);
 					whereNodes = getWhereNodes(select.getWhereClause());
 				}
+				_log.debug(Markers.SYMBOLIC, "Applied rule: ForeignKeyReplacementRule");
 			}
 		}
 	}
