@@ -206,6 +206,9 @@ public class TransformationRule extends StandardSymbolicRule implements
 				continue;
 			
 			SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
+			
+			// the token to be referenced
+			TableEntityToken entityToken = queries.getTableEntityForScope(fromTable, null);
 
 			// list of attributes
 			AttributeListToken attrList = new AttributeListToken();
@@ -231,14 +234,14 @@ public class TransformationRule extends StandardSymbolicRule implements
 					}
 					attr.setPartOfSpeech(isDistinct ? PartOfSpeech.NOUN_PLURAL : PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 				}
+				if( attr instanceof AttributeToken ) {
+					((AttributeToken)attr).setEntityInstance(entityToken);
+				}
 
 				attrList.addChild(attr);
 			}
 
 			seq.addChild(attrList);			
-			
-			// the token to be referenced
-			TableEntityToken entityToken = queries.getTableEntityForScope(fromTable, null);
 
 
 			// "of each" {entity} or "of all" {entity}s or "of the" {entity}
@@ -378,10 +381,17 @@ public class TransformationRule extends StandardSymbolicRule implements
 		String tableCol = ext.getString("?tableName") + "." + ((ColumnReference)colRef.getAstNode()).getColumnName();
 		ERMapping erMapping = state.getErMapping();
 		
+		TableEntityToken tableEntity = state.getQueries().getTableEntityForScope(
+			ext.getString("?tableAlias"), colRef.getConjunctScope());
+		if( tableEntity == null )
+			throw new SymbolicException("FIXME: No table entity for scope of " + colRef);
+		
 		ISymbolicToken token;
 		ERAttribute attr = erMapping.getAttribute(tableCol);
 		if( attr != null ) {
-			token = new AttributeToken(attr);
+			AttributeToken attrToken = new AttributeToken(attr);
+			attrToken.setEntityInstance(tableEntity);
+			token = attrToken;
 		} else {
 			// column doesn't map to an attribute, refer to it as is
 			token = colRef;
@@ -389,11 +399,6 @@ public class TransformationRule extends StandardSymbolicRule implements
 		token.setPartOfSpeech(isDistinct ? PartOfSpeech.NOUN_PLURAL : PartOfSpeech.NOUN_SINGULAR_OR_MASS);
 		
 		SequenceToken seq = new SequenceToken(PartOfSpeech.NOUN_PHRASE);
-		
-		TableEntityToken tableEntity = state.getQueries().getTableEntityForScope(
-			ext.getString("?tableAlias"), colRef.getConjunctScope());
-		if( tableEntity == null )
-			throw new SymbolicException("FIXME: No table entity for scope of " + colRef);
 		TableEntityRefToken ref = new TableEntityRefToken(tableEntity);
 		seq.addChild(ref);
 		seq.addChild(new LiteralToken("'s", PartOfSpeech.POSSESSIVE_ENDING));
