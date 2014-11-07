@@ -23,6 +23,7 @@ import edu.gatech.sqltutor.rules.util.NLUtil;
 
 public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken, INounToken {
 	
+	protected TableEntityToken entityInstance;
 	protected ERAttribute attribute;
 	protected boolean definite = true;
 
@@ -132,5 +133,13 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	@Override
 	public void setIndividual(boolean individual) {
 		this.individual = individual;
+	}
+	
+	public TableEntityToken getEntityInstance() {
+		return entityInstance;
+	}
+	
+	public void setEntityInstance(TableEntityToken instance) {
+		this.entityInstance = instance;
 	}
 }

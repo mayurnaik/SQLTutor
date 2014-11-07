@@ -36,6 +36,7 @@ import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.er.ERAttribute;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
+import edu.gatech.sqltutor.rules.symbolic.tokens.AllAttributesToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.AttributeToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.BinaryComparisonToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.IHasValueType;
@@ -198,6 +199,9 @@ public class SymbolicFacts extends DynamicFacts {
 			case ATTRIBUTE: 
 				addAttributeFacts(tokenId, (AttributeToken)token); 
 				break;
+			case ALL_ATTRIBUTES:
+				addAllAttributeFacts(tokenId, (AllAttributesToken)token);
+				break;
 			case TABLE_ENTITY: 
 				addTableEntityFacts(tokenId, (TableEntityToken)token); 
 				break;
@@ -228,6 +232,11 @@ public class SymbolicFacts extends DynamicFacts {
 		}
 	}
 	
+	private void addAllAttributeFacts(Integer tokenId, AllAttributesToken token) {
+		addFact(SymbolicPredicates.refsTableEntity, tokenId, 
+				tokenMap.getObjectId(token.getEntityInstance()));
+	}
+
 	private void addTableEntityRefFacts(Integer tokenId, TableEntityRefToken token) {
 		Integer tableEntityId = tokenMap.getObjectId(token.getTableEntity());
 		addFact(SymbolicPredicates.refsTableEntity, tokenId, tableEntityId);
@@ -269,6 +278,8 @@ public class SymbolicFacts extends DynamicFacts {
 			throw new NullPointerException("No attr for token: " + token);
 		String[] parts = attr.getFullName().split("\\.");
 		addFact(SymbolicPredicates.refsAttribute, tokenId, parts[0], parts[parts.length-1]);
+		addFact(SymbolicPredicates.refsTableEntity, tokenId, 
+			tokenMap.getObjectId(token.getEntityInstance()));
 	}
 	
 	private void addTableEntityFacts(Integer tokenId, TableEntityToken token) {

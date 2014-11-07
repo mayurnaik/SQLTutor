@@ -21,12 +21,17 @@ class RuleDef(object):
         self.paper_name = paper_name if paper_name else default_paper_name(name)
         self.category = category
 
+    def __str__(self):
+        return self.name if isinstance(self.name, basestring) else str(self.name)
+
     def __repr__(self):
-        return 'RuleDef({}, paper_name={}, category={})'.format(
-            map(repr, (self.name, self.paper_name, self.category)))
+        args = map(repr, (self.name, self.paper_name, self.category))
+        return 'RuleDef({}, paper_name={}, category={})'.format(*args)
 
 ALL_RULES = [
     RuleDef('TransformationRule', 'L', paper_name='Select List Format'),
+    RuleDef('ForeignKeyReplacementRule', 'A', paper_name='Implicit Relationship'),
+    RuleDef('NotInRelationshipRule', 'A'),
     RuleDef('InRelationshipLabelRule', 'G'),
     RuleDef('DescribingAttributeLabelRule', 'A', paper_name='Describing Attribute'),
     RuleDef('JoinLabelRule', 'A', paper_name='Join Relationship'),
@@ -101,7 +106,7 @@ class RuleStats(object):
     def __init__(self):
         self.rules = OrderedDict()
         for rule in ALL_RULES:
-            self.rules[rule] = 0
+            self.rules[rule.name] = 0
 
     def applied(self, rule, times=1):
         try:
