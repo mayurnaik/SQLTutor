@@ -248,6 +248,7 @@ public class TransformationRule extends StandardSymbolicRule implements
 				LiteralToken determiner = entityToken.getCardinality() == 1 || entityToken.isDefinite() ? Literals.the() : 
 															isDistinct ? Literals.all() : 
 																Literals.each();
+				entityToken.setDefinite(true);
 				literals.addChild(determiner);
 			}
 			seq.addChild(literals);

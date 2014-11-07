@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 
 import org.atteo.evo.inflector.English;
 
+import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
+
 public final class NLUtil {
 	private static final Pattern splitPlural = Pattern.compile("^(.+ )(\\w+)$");
 	public static String pluralize(String value) {
@@ -30,6 +32,42 @@ public final class NLUtil {
 			value = m.group(1) + English.plural(m.group(2));
 		}
 		return value;
+	}
+	
+	public static String negateVerb(String unnegatedVerbPhrase, String unnegatedVerb) {
+		final String negatedVerbPhrase;
+		switch(unnegatedVerb) {
+			case "do":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("do", "do not");
+				break;
+			case "does":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("does", "does not");
+				break;
+			case "did":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("did", "did not");
+				break;
+			case "have":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("have", "have not");
+				break;
+			case "has":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("has", "has not");
+				break;
+			case "had":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("had", "had not");
+				break;
+			case "is":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("is", "is not");
+				break;
+			case "were":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("were", "were not");
+				break;
+			case "was":
+				negatedVerbPhrase = unnegatedVerbPhrase.replaceFirst("was", "was not");
+				break;
+			default:
+				throw new SymbolicException("Unable to find negated verbalization for: " + unnegatedVerbPhrase);
+		}
+		return negatedVerbPhrase;
 	}
 	
 	public static String nameFormat(String name) {

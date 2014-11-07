@@ -84,15 +84,8 @@ public class InvalidDeterminerRule extends StandardSymbolicRule implements
 						deleteDeterminer = true;
 					}
 					
-					if( deleteDeterminer == false ) {
-						// FIXME: Proper nouns shouldn't always have a determiner.
-						ISymbolicToken afterAfter = SymbolicUtil.getSucceedingToken(after);
-						if( apos.isProperNoun() && afterAfter != null &&
-								SymbolicUtil.getSucceedingToken(after).getPartOfSpeech().isPossessive()) {
-							_log.warn("Deleting determiner {} due to succeeding possessive token {} with part of speech {}.", determiner, after, apos);
-							deleteDeterminer = true;
-						}
-					}
+					// FIXME: Proper nouns shouldn't always have a determiner.
+					// if( apos.isProperNoun() ) {
 				}
 			}
 			

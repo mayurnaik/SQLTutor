@@ -88,7 +88,7 @@ public class BetweenLiteralsRule extends StandardSymbolicRule implements ISymbol
 	
 	@Override
 	protected int getDefaultPrecedence() {
-		return DefaultPrecedence.LOWERING;
+		return DefaultPrecedence.PARTIAL_LOWERING;
 	}
 
 }

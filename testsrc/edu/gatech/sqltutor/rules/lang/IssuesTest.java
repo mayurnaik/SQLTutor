@@ -65,7 +65,7 @@ public class IssuesTest extends SymbolicFragmentTestBase {
 				Pattern.quote("Select the ssn of each employee _e2_ who supervises the employee _e_ and works for the Research department.")},
 			
 			// 7
-			// First, this should say “supervises (a/some) employee”. Second, in this situation we should perhaps just apply e2 and e’s label from the ER (supervisor and supervisee) - or apply one of the two
+			// First, this should say "supervises (a/some) employee". Second, in this situation we should perhaps just apply e2 and e's label from the ER (supervisor and supervisee) - or apply one of the two
 			{"Select e.super_ssn FROM employee e", 
 				Pattern.quote("Select the ssn of each employee _e2_ who supervises the employee _e_.")},
 			

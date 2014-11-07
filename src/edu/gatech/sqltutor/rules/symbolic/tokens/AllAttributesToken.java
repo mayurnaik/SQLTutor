@@ -23,6 +23,7 @@ public class AllAttributesToken extends AttributeToken {
 
 	public AllAttributesToken(AttributeToken token) {
 		super(token);
+		this.definite = false;
 	}
 	
 	public AllAttributesToken(ERAttribute attr) {

@@ -18,6 +18,7 @@ package edu.gatech.sqltutor.rules.symbolic.lowering;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import org.deri.iris.api.basics.IQuery;
 import org.deri.iris.factory.Factory;
@@ -31,6 +32,7 @@ import edu.gatech.sqltutor.rules.Markers;
 import edu.gatech.sqltutor.rules.TranslationPhase;
 import edu.gatech.sqltutor.rules.datalog.iris.RelationExtractor;
 import edu.gatech.sqltutor.rules.datalog.iris.SymbolicPredicates;
+import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
@@ -42,6 +44,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityToken;
+import edu.gatech.sqltutor.rules.util.Literals;
 
 public class TableEntityRefLiteralRule 
 		extends StandardSymbolicRule implements ISymbolicTranslationRule {
@@ -64,24 +67,13 @@ public class TableEntityRefLiteralRule
 		while( ext.nextTuple() ) {
 			TableEntityRefToken ref = ext.getToken("?ref");
 			TableEntityToken token = ref.getTableEntity();
+
+			final boolean isSingular = ref.getPartOfSpeech().isSingular();
 			
-			PartOfSpeech pos = ref.getPartOfSpeech();
-			boolean isSingular;
-			switch( pos ) {
-			case NOUN_SINGULAR_OR_MASS:
-			case PROPER_NOUN_SINGULAR:
-				isSingular = true;
-				break;
-			case NOUN_PLURAL:
-			case PROPER_NOUN_PLURAL:
-				isSingular = false;
-				break;
-			default:
-				throw new SymbolicException("FIXME: Can't handle part of speech: " + pos);
-			}
-
+			// some references need to use an id/variable due to ambiguous labels
+			boolean insertIdAfter = false;
 			ISymbolicToken replacementToken = null;
-
+			boolean checkDeterminer = true;
 			if( ref.getNeedsId() ) {
 				TableEntityRefToken earliest = queries.getEarliestRef(token);
 				String idLabel = "_" + token.getId() + "_";
@@ -95,9 +87,11 @@ public class TableEntityRefLiteralRule
 							ref.getPartOfSpeech()));
 					seq.addChild(idToken);
 					replacementToken = seq;
+					insertIdAfter = true;
 				} else {
 					_log.trace(Markers.SYMBOLIC, "Replacing non-earliest id'd ref: {}", ref);
 					replacementToken = idToken;
+					checkDeterminer = false;
 				}
 				
 			} else {
@@ -105,12 +99,35 @@ public class TableEntityRefLiteralRule
 				replacementToken = new LiteralToken(isSingular ? token.getSingularLabel() : token.getPluralLabel(), ref.getPartOfSpeech());
 			}
 			
-			SymbolicUtil.replaceChild(ref, replacementToken);
+			// see if we need to insert a determiner
+			if( checkDeterminer ) {
+				ISymbolicToken before = SymbolicUtil.getPotentialDeterminer(ref);
+				PartOfSpeech bpos = before == null ? null : before.getPartOfSpeech();
+				if( bpos != null ) {
+					if( bpos.isPossessive() ) {
+						_log.debug("Skipping determiner insertion due to possessive ending.");
+					} else if( bpos == PartOfSpeech.DETERMINER ) {
+						_log.debug("Skipping determiner insertion due to existing determiner.");
+					} else if( bpos == PartOfSpeech.ADJECTIVE ) {
+						_log.debug("Skipping determiner insertion due to adjective.");
+					} else if ( ref.getTableEntity().getDescribed() == DescriptionType.APPEND ) {
+						_log.debug("Skipping determiner insertion due to appended describing attribute.");
+					} else if ( insertIdAfter || !ref.getNeedsId() ) {
+						ISymbolicToken parent = ref.getParent();
+						List<ISymbolicToken> siblings = parent.getChildren();
+						int idx = siblings.indexOf(ref);
+						LiteralToken det = Literals.the(); // FIXME "a"/"an"?
+						siblings.add(idx, det);
+						det.setParent(parent);
+						_log.debug(Markers.SYMBOLIC, "Inserted determiner into: {}", parent);
+					}
+				}
+			}
 			
+			SymbolicUtil.replaceChild(ref, replacementToken);
 			_log.debug(Markers.SYMBOLIC, "Replaced token {} with {}", ref, replacementToken);
 			applied = true;
 		}
-		
 		return applied;
 	}
 	

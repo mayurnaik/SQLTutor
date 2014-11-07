@@ -23,6 +23,7 @@ import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.POSSESSIVE_WH_PRON
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.PREPOSITION_OR_SUBORDINATING_CONJUNCTION;
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_BASE_FORM;
 import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.VERB_RD_PERSON_SINGULAR_PRESENT;
+import static edu.gatech.sqltutor.rules.symbolic.PartOfSpeech.COORDINATING_CONJUNCTION;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
 import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 
@@ -30,6 +31,11 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
  * Short-hand methods for commonly used literal expressions.
  */
 public class Literals {
+	
+	public static LiteralToken and() {
+		return new LiteralToken("and", COORDINATING_CONJUNCTION);
+	}
+	
 	public static LiteralToken of() {
 		return new LiteralToken("of", PREPOSITION_OR_SUBORDINATING_CONJUNCTION);
 	}
@@ -92,6 +98,14 @@ public class Literals {
 
 	public static LiteralToken any() {
 		return new LiteralToken("any", PartOfSpeech.DETERMINER);
+	}
+	
+	public static LiteralToken some() {
+		return new LiteralToken("some", PartOfSpeech.DETERMINER);
+	}
+	
+	public static LiteralToken comma() {
+		return new LiteralToken(",", PartOfSpeech.COMMA);
 	}
 	
 	private Literals() {

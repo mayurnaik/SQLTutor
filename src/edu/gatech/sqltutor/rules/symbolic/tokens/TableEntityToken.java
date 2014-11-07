@@ -166,4 +166,16 @@ public class TableEntityToken extends AbstractSymbolicToken
 	public void setDefinite(boolean definite) {
 		this.definite = definite;
 	}
+	
+	protected boolean individual;
+
+	@Override
+	public boolean isIndividual() {
+		return individual;
+	}
+
+	@Override
+	public void setIndividual(boolean individual) {
+		this.individual = individual;
+	}
 }

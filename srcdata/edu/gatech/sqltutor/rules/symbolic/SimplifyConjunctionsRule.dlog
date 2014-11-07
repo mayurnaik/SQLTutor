@@ -7,4 +7,3 @@ ruleSimplifyConjunctions(?parent,?child,?pos,?type) :-
   ruleSimplifyConjunctionsAndOr(?parent,?type),
   ruleSimplifyConjunctionsAndOr(?child,?type),
   symParentOf(?parent,?child,?pos).
-  

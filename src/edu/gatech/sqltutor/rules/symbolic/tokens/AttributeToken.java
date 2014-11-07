@@ -24,7 +24,7 @@ import edu.gatech.sqltutor.rules.util.NLUtil;
 public class AttributeToken extends AbstractSymbolicToken implements ISymbolicToken, INounToken {
 	
 	protected ERAttribute attribute;
-	protected boolean definite;
+	protected boolean definite = true;
 
 	public AttributeToken(AttributeToken token) {
 		super(token);
@@ -39,7 +39,6 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	public AttributeToken(ERAttribute attr, PartOfSpeech pos) {
 		super(pos);
 		this.attribute = attr;
-		this.definite = true;
 	}
 
 	@Override
@@ -121,5 +120,17 @@ public class AttributeToken extends AbstractSymbolicToken implements ISymbolicTo
 	@Override
 	public void setDefinite(boolean definite) {
 		this.definite = definite;
+	}
+	
+	protected boolean individual;
+
+	@Override
+	public boolean isIndividual() {
+		return individual;
+	}
+
+	@Override
+	public void setIndividual(boolean individual) {
+		this.individual = individual;
 	}
 }

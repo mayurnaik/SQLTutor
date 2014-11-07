@@ -21,8 +21,16 @@ package edu.gatech.sqltutor.rules.symbolic.tokens;
 public interface INounToken extends ISymbolicToken {
 	public String getSingularLabel();
 	public String getPluralLabel();
+	/**
+	 * The difference between using "the" and "a/an"
+	 */
 	public boolean isDefinite();
+	/**
+	 * The difference between using "each" and "all"
+	 */
+	public boolean isIndividual();
 	public void setSingularLabel(String label);
 	public void setPluralLabel(String label);
 	public void setDefinite(boolean definite);
+	public void setIndividual(boolean individual);
 }

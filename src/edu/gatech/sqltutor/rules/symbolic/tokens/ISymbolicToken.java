@@ -55,6 +55,15 @@ public interface ISymbolicToken {
 	public void addChild(ISymbolicToken child);
 	
 	/**
+	 * Adds a child token.
+	 * @param child the child token
+	 * @param position the position to add the child
+	 * @throws SymbolicException if this token does not accept children or 
+	 *                           does not permit the type of token <code>child</code> is 
+	 */
+	public void addChild(ISymbolicToken child, int position);
+	
+	/**
 	 * Removes a child token.
 	 * @param child the child to remove
 	 * @return whether the child was removed
@@ -95,4 +104,7 @@ public interface ISymbolicToken {
 	
 	/** Returns the type of this token. */
 	public SymbolicType getType();
+
+	/** Returns the index of the given token. */
+	int indexOf(ISymbolicToken token);
 }

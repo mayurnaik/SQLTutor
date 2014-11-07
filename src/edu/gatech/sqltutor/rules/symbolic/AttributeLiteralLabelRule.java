@@ -95,8 +95,8 @@ public class AttributeLiteralLabelRule
 				replacement = literal;
 				
 				if( determiner != null ) {
-					_log.debug(Markers.SYMBOLIC, "Inserting {} in front of {}", determiner, parent);
-					siblings.add(0, determiner);
+					//_log.debug(Markers.SYMBOLIC, "Inserting {} in front of {}", determiner, parent);
+					//siblings.add(0, determiner);
 				}
 			}
 			

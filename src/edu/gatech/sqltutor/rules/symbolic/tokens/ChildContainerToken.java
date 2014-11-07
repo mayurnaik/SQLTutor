@@ -58,6 +58,20 @@ public abstract class ChildContainerToken
 		token.setParent(this);
 	}
 	
+	/**
+	 * Adds a new child at the given position.
+	 * @param token the child to add
+	 * @parem the position to add the child at
+	 * @throws SQLTutorException if <code>token</code> is not an acceptable child type
+	 */
+	@Override
+	public void addChild(ISymbolicToken token, int position) {
+		if( token == null ) throw new NullPointerException("token is null");
+		acceptOrThrow(token);
+		children.add(position, token);
+		token.setParent(this);
+	}
+	
 	@Override
 	public boolean removeChild(ISymbolicToken token) {
 		if( token == null ) throw new NullPointerException("token is null");
@@ -90,6 +104,19 @@ public abstract class ChildContainerToken
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Gets the index of a child token.
+	 * 
+	 * @param token the token being looked for
+	 * @throws SQLTutorException if any child is not an acceptable type,
+	 *                           the child list is undefined if this is thrown
+	 */
+	@Override
+	public int indexOf(ISymbolicToken token) {
+		if( token == null ) throw new NullPointerException("token is null");
+		return children.indexOf(token);
 	}
 	
 	/**

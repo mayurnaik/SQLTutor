@@ -37,7 +37,6 @@ import edu.gatech.sqltutor.rules.er.ERAttribute.DescriptionType;
 import edu.gatech.sqltutor.rules.er.ERRelationship;
 import edu.gatech.sqltutor.rules.lang.StandardSymbolicRule;
 import edu.gatech.sqltutor.rules.symbolic.PartOfSpeech;
-import edu.gatech.sqltutor.rules.symbolic.SymbolicException;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicType;
 import edu.gatech.sqltutor.rules.symbolic.SymbolicUtil;
 import edu.gatech.sqltutor.rules.symbolic.tokens.ISymbolicToken;
@@ -46,6 +45,7 @@ import edu.gatech.sqltutor.rules.symbolic.tokens.LiteralToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.SequenceToken;
 import edu.gatech.sqltutor.rules.symbolic.tokens.TableEntityRefToken;
 import edu.gatech.sqltutor.rules.util.Literals;
+import edu.gatech.sqltutor.rules.util.NLUtil;
 
 public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 		ITranslationRule {
@@ -136,37 +136,7 @@ public class InRelationshipLoweringRule extends StandardSymbolicRule implements
 					unnegatedVerb = rel.getVerbForm() == null ? rel.getName().toLowerCase().replace('_', ' ') : rel.getVerbForm();
 				
 				String[] parts = unnegatedVerb.split("\\s+");
-				switch(parts[0]) {
-					case "do":
-						verb = unnegatedVerb.replaceFirst("do", "do not");
-						break;
-					case "does":
-						verb = unnegatedVerb.replaceFirst("does", "does not");
-						break;
-					case "did":
-						verb = unnegatedVerb.replaceFirst("did", "did not");
-						break;
-					case "have":
-						verb = unnegatedVerb.replaceFirst("have", "have not");
-						break;
-					case "has":
-						verb = unnegatedVerb.replaceFirst("has", "has not");
-						break;
-					case "had":
-						verb = unnegatedVerb.replaceFirst("had", "had not");
-						break;
-					case "is":
-						verb = unnegatedVerb.replaceFirst("is", "is not");
-						break;
-					case "were":
-						verb = unnegatedVerb.replaceFirst("were", "were not");
-						break;
-					case "was":
-						verb = unnegatedVerb.replaceFirst("was", "was not");
-						break;
-					default:
-						throw new SymbolicException("Unable to find negated verbalization for: " + unnegatedVerb);
-				}
+				verb = NLUtil.negateVerb(unnegatedVerb, parts[0]);
 			}
 		} else {
 			verb = beforePartOfSpeech == PartOfSpeech.NOUN_SINGULAR_OR_MASS ? rel.getMetadata().getAlternateSingularVerbForm() :

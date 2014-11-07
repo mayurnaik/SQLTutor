@@ -72,6 +72,16 @@ public abstract class AbstractSymbolicToken implements ISymbolicToken {
 	}
 	
 	@Override
+	public void addChild(ISymbolicToken child, int position) {
+		throw new SymbolicException(this + " does not support children.");
+	}
+	
+	@Override
+	public int indexOf(ISymbolicToken child) {
+		throw new SymbolicException(this + " does not support children.");
+	}
+	
+	@Override
 	public boolean removeChild(ISymbolicToken child) {
 		return false;
 	}

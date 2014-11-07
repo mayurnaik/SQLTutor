@@ -18,6 +18,7 @@ package edu.gatech.sqltutor.rules.symbolic;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.UNUSED;
 import static edu.gatech.sqltutor.rules.datalog.iris.IrisUtil.literal;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.deri.iris.api.basics.IQuery;
@@ -27,6 +28,9 @@ import org.deri.iris.factory.Factory;
 import org.deri.iris.storage.IRelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 import edu.gatech.sqltutor.rules.DefaultPrecedence;
 import edu.gatech.sqltutor.rules.Markers;
@@ -137,6 +141,10 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 			// FIXME this is too crude, does not account for ordering differences
 			String attrRead1 = tokenReader.readToken(attrList1),
 					attrRead2 = tokenReader.readToken(attrList2);
+			Multiset<String> attrBag1 = HashMultiset.create();
+			Multiset<String> attrBag2 = HashMultiset.create();
+			attrBag1.addAll(Arrays.asList(attrRead1.split("\\s+")));
+			attrBag2.addAll(Arrays.asList(attrRead2.split("\\s+")));
 			return attrRead1.equals(attrRead2);
 		} catch( UnhandledSymbolicTypeException e ) {
 			return false;
