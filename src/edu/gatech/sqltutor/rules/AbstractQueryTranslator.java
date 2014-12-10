@@ -29,7 +29,6 @@ import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 
 import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.IQueryTranslator;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.rules.util.ColumnReferenceResolver;

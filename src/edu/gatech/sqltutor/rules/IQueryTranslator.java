@@ -13,9 +13,12 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package edu.gatech.sqltutor;
+package edu.gatech.sqltutor.rules;
 
 import java.util.List;
+
+import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.SQLTutorException;
 
 /**
  * Query translators produce natural language 
