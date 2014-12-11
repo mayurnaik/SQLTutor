@@ -43,7 +43,6 @@ import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.QuestionTuple;
-import edu.gatech.sqltutor.TestConst;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -106,14 +105,14 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 				nlpDisabled = false;
 				Class<?> c = this.getClass();
 				ERSerializer serializer = new ERSerializer();
-				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_DIAGRAM));
-				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.COMPANY_MAPPING));
+				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream("/testdata/company.er.xml"));
+				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream("/testdata/company.mapping.xml"));
 			} else if(userBean.getSelectedSchema().equals("business_trip")) {
 				nlpDisabled = false;
 				Class<?> c = this.getClass();
 				ERSerializer serializer = new ERSerializer();
-				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_DIAGRAM));
-				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream(TestConst.Resources.BUSINESS_TRIP_MAPPING));
+				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream("/testdata/business_trip.er.xml"));
+				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream("/testdata/business_trip.mapping.xml"));
 			}
 
 			if(!nlpDisabled && getQueryIsCorrect() == false) {
