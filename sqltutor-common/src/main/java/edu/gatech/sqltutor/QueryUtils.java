@@ -29,8 +29,8 @@ import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.unparser.NodeToString;
 
+import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
 import edu.gatech.sqltutor.util.Pair;
-import edu.gatech.sqltutor.util.ParserVisitorAdapter;
 
 /**
  * Static utility functions related to SQL queries.

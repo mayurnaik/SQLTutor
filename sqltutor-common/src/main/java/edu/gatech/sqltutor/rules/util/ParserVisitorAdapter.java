@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package edu.gatech.sqltutor.util;
+package edu.gatech.sqltutor.rules.util;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.QueryTreeNode;

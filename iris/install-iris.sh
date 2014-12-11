@@ -17,3 +17,14 @@ for jfile in "$SCRIPTDIR"/iris*.jar; do
 		echo "Unexpected file: $fname" >&2
 	fi
 done
+
+for pfile in "$SCRIPTDIR"/pom-iris-*.xml; do
+	fname=`basename "$pfile"`
+	if [[ "$fname" =~ pom-iris-([0-9][0-9\.]+)\.xml ]]; then
+		version="${BASH_REMATCH[1]}"
+		set -x
+		mvn install:install-file -Dpackaging=pom -DgroupId="$groupId" -DartifactId=iris \
+		                 -Dversion="$version" -Dfile="$pfile"
+		set +x
+	fi
+done

@@ -7,6 +7,20 @@
   <packaging>pom</packaging>
   <name>sqltutor-parent</name>
   
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -23,8 +37,12 @@
       <artifactId>guava</artifactId>
       <version>18.0</version>
     </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>[4.11,5.0)</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-  <modules>
-    <module>../sqltutor-common</module>
-  </modules>
 </project>
