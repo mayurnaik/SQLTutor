@@ -91,6 +91,7 @@
 		</snapshotRepository>
 	</distributionManagement>
 
+<!--
 	<repositories>
 		<repository>
 			<id>sti2-archiva-external</id>
@@ -101,4 +102,5 @@
 			<url>http://maven.sti2.at/archiva/repository/snapshots</url>
 		</repository>
 	</repositories>
+-->
 </project>
