@@ -38,6 +38,7 @@ import com.google.common.collect.Multimap;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.util.ParserVisitorAdapter;
 
 /**
  * A resolver for unqualified column names.  Attempts to 

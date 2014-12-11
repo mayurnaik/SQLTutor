@@ -22,6 +22,7 @@ import com.akiban.sql.parser.QueryTreeNode;
 import com.google.common.collect.Lists;
 
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.util.ParserVisitorAdapter;
 
 /**
  * AST visitor that collects immediate children of the 
