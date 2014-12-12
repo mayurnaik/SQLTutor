@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -692,15 +693,23 @@ public class DatabaseManager implements Serializable {
 				Utils.tryClose(statement);
 				Utils.tryClose(connection);
 			}
-			allData.put(tableName, new QueryResult(columnNames, queryData));
+			Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
+			for(int i = 0; i < columnNames.size(); i++) 
+				columnDataMap.put(columnNames.get(i), queryData.get(i));
+			allData.put(tableName, new QueryResult(columnDataMap));
 		}
 		return allData;
 	}
 	
-	public HashMap<String, QueryResult> getAllDevData(List<String> tables) throws SQLException {
+	public HashMap<String, QueryResult> getAllDevData() throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
+		
+		List<DatabaseTable> devTables = getDevTables();
+		List<String> tables = new ArrayList<String>();
+		for(DatabaseTable dt : devTables)
+			tables.add(dt.getTableName());
 		
 		try {
 			connection = dataSource.getConnection();
@@ -740,7 +749,10 @@ public class DatabaseManager implements Serializable {
 				Utils.tryClose(statement);
 				Utils.tryClose(connection);
 			}
-			allData.put(tableName, new QueryResult(columnNames, queryData));
+			Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
+			for(int i = 0; i < columnNames.size(); i++) 
+				columnDataMap.put(columnNames.get(i), queryData.get(i));
+			allData.put(tableName, new QueryResult(columnDataMap));
 		}
 		return allData;
 	}
@@ -795,7 +807,10 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		return new QueryResult(columnNames, queryData);
+		Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
+		for(int i = 0; i < columnNames.size(); i++) 
+			columnDataMap.put(columnNames.get(i), queryData.get(i));
+		return new QueryResult(columnDataMap);
 	}
 	
 	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
@@ -831,7 +846,10 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		return new QueryResult(columnNames, queryData);
+		Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
+		for(int i = 0; i < columnNames.size(); i++) 
+			columnDataMap.put(columnNames.get(i), queryData.get(i));
+		return new QueryResult(columnDataMap);
 	}
 	
 	private void addUser(String email, String password) throws SQLException {

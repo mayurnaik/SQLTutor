@@ -68,7 +68,7 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 		}
 		
 		try {
-			setTableData(getDatabaseManager().getAllDevData(tableNames));
+			setTableData(getDatabaseManager().getAllDevData());
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
