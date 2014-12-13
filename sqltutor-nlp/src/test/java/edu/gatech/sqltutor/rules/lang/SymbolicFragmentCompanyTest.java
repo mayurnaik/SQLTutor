@@ -33,37 +33,37 @@ public class SymbolicFragmentCompanyTest extends SymbolicFragmentTestBase {
 	@Parameters
 	public static Collection<Object[]> parameters() {
 		Object[][] queries = {
-			{"SELECT e.first_name FROM employee e, department d WHERE e.ssn=d.manager_ssn"},
+			{"SELECT e.fname FROM employee e, department d WHERE e.ssn=d.mgr_ssn"},
 			
-			{"SELECT * FROM employee e, works_on wo, project p WHERE e.ssn=wo.employee_ssn AND p.id=wo.project_id"},
+			{"SELECT * FROM employee e, works_on wo, project p WHERE e.ssn=wo.essn AND p.pnumber=wo.pno"},
 			
-			{"SELECT e.birthdate, e.address FROM employee e WHERE first_name = 'John' AND middle_initial = 'B' AND last_name = 'Smith'"},
+			{"SELECT e.bdate, e.address FROM employee e WHERE fname = 'John' AND minit = 'B' AND lname = 'Smith'"},
 
-			{"SELECT e.first_name, e.middle_initial, e.last_name, e.address FROM employee e, department d WHERE d.name = 'Research' AND d.id = e.department_id"},
+			{"SELECT e.fname, e.minit, e.lname, e.address FROM employee e, department d WHERE d.dname = 'Research' AND d.dnumber = e.dno"},
 
-			{"SELECT E.first_name, E.last_name, S.first_name, S.last_name FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
+			{"SELECT E.fname, E.lname, S.fname, S.lname FROM employee AS E, employee AS S WHERE E.mgr_ssn = S.ssn"},
 
-			{"SELECT e.first_name, e.ssn FROM employee e"},
+			{"SELECT e.fname, e.ssn FROM employee e"},
 
-			{"SELECT e.ssn, d.name FROM employee e, department d"},
+			{"SELECT e.ssn, d.dname FROM employee e, department d"},
 
 			{"SELECT ALL e.salary FROM employee e WHERE e.salary > 10000"},
 
 			{"SELECT DISTINCT e.salary FROM employee e"},
 			
-			{"SELECT p.id, e.first_name, e.middle_initial, e.last_name FROM project p, works_on w, employee e WHERE p.id=w.project_id AND w.employee_ssn=e.ssn"},
+			{"SELECT p.pnumber, e.fname, e.minit, e.lname FROM project p, works_on w, employee e WHERE p.pnumber=w.pno AND w.essn=e.ssn"},
 
-			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary > 100000 AND S.salary < 1000000"},
+			{"SELECT E.fname, E.lname, S.salary FROM employee AS E, employee AS S WHERE E.mgr_ssn = S.ssn AND S.salary > 100000 AND S.salary < 1000000"},
 
-			{"SELECT E.first_name, E.last_name, S.salary FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND S.salary BETWEEN 100000 AND 1000000"},
+			{"SELECT E.fname, E.lname, S.salary FROM employee AS E, employee AS S WHERE E.mgr_ssn = S.ssn AND S.salary BETWEEN 100000 AND 1000000"},
 			
 			// FIXME: what about "SELECT E.*, E.first_name" - should we delete E.first_name? 
 			// Or keep it to remove ambiguity (it should be printed twice)?
-			{"SELECT E.*, S.* FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn"},
+			{"SELECT E.*, S.* FROM employee AS E, employee AS S WHERE E.mgr_ssn = S.ssn"},
 			
-			{"SELECT * FROM employee AS E, employee AS S WHERE E.manager_ssn = S.ssn AND E.salary > 50000 AND S.salary > 100000"},
+			{"SELECT * FROM employee AS E, employee AS S WHERE E.mgr_ssn = S.ssn AND E.salary > 50000 AND S.salary > 100000"},
 			
-			{"SELECT name FROM department WHERE name = 'Research' OR name = 'Sales'"}
+			{"SELECT dname FROM department WHERE dname = 'Research' OR dname = 'Sales'"}
 		};
 		return Arrays.asList(queries);
 	}

@@ -28,6 +28,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
 import javax.mail.MessagingException;
 
 import edu.gatech.sqltutor.util.Emailer;
@@ -78,7 +79,7 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 		}
 	}
 	
-	public void invalidRedirect() throws IOException {
+	public void invalidRedirect(ComponentSystemEvent event) throws IOException {
 		try {
 			if(!getDatabaseManager().getPasswordChangeRequest(getHashedEmail(), getId())) {
 				final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();

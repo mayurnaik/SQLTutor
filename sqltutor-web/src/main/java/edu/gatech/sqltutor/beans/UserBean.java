@@ -27,6 +27,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
 import javax.servlet.http.HttpServletRequest;
 
 import edu.gatech.sqltutor.util.SaltHasher;
@@ -119,7 +120,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 * 
 	 * @throws IOException		The IOException will be thrown by the redirect method if the URI is not valid.
 	 */
-	public void loginRedirect() throws IOException {
+	public void loginRedirect(ComponentSystemEvent event) throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith(REGISTRATION_PAGE_CONTEXT);
         if(!(loggedIn ^ onRegistrationPage)) {
@@ -127,14 +128,14 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
         }
 	}
 	
-	public void devRedirect() throws IOException {
+	public void devRedirect(ComponentSystemEvent event) throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		if (!isDeveloper()) {
 			externalContext.responseSendError(404, "");
 	    }
 	}
 	
-	public void adminRedirect() throws IOException {
+	public void adminRedirect(ComponentSystemEvent event) throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 		if (!isAdmin()) {
 			externalContext.responseSendError(404, "");

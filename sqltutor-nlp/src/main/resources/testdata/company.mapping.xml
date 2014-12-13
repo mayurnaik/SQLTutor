@@ -74,7 +74,7 @@
       <column>dependent.dependent_name</column>
     </entry>
     <entry>
-      <attribute>Dependent.Bdate</attribute>
+      <attribute>Dependent.Birth_date</attribute>
       <column>dependent.bdate</column>
     </entry>
     <entry>
@@ -92,6 +92,10 @@
     <entry>
     	<attribute>manages.Start_date</attribute>
     	<column>department.mgr_start_date</column>
+    </entry>
+    <entry>
+    	<attribute>Department.Locations</attribute>
+    	<column>dept_locations.dlocation</column>
     </entry>
   </attribute-map>
   <join-map>

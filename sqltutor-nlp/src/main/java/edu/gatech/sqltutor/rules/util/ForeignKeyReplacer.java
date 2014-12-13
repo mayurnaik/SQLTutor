@@ -78,7 +78,11 @@ public class ForeignKeyReplacer {
 
 		FromList toAddToFromList = new FromList();
 		for (int i = 0; i < fromList.size(); i++) {
-			FromBaseTable fromTable = (FromBaseTable) fromList.get(i);
+			FromBaseTable fromTable;
+			if(fromList.get(i) instanceof FromBaseTable)
+				fromTable = (FromBaseTable) fromList.get(i);
+			else 
+				return;
 
 			String tableAlias = fromTable.getExposedName();
 			ResultColumnList tablesResultColumns = getResultColumnsForTableAlias(
@@ -92,10 +96,8 @@ public class ForeignKeyReplacer {
 				ResultColumn resultColumn = tablesResultColumns.get(j);
 				if (!(resultColumn.getNodeType() == NodeTypes.ALL_RESULT_COLUMN)) {
 					String columnName = getColumnName(resultColumn);
-					String attrName = fromTable.getOrigTableName()
-							.getTableName()
-							+ "."
-							+ columnName;
+					String tableName = fromTable.getOrigTableName().getTableName();
+					String attrName = tableName + "." + columnName;
 					ERAttribute erAttr = mapping.getAttribute(attrName);
 					// If there is no mapped attribute, then we've found a foreign key.
 					if (erAttr == null) {
