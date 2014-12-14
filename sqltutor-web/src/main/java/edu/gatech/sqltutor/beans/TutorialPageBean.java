@@ -203,7 +203,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 					final DatabaseManager databaseManager = getDatabaseManager();
 					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isAdmin());
 					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isAdmin());
-					if(queryDiffResult.isEmpty() && answerDiffResult.isEmpty()) {
+					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
 						resultSetFeedback = "Correct.";
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";			
@@ -223,15 +223,23 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			} else if(!columnOrderMatters && rowOrderMatters) {
 				Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
 				Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
-				List<String> columns = queryResult.getColumns();
-				for(int i = 0; i < columns.size(); i++) {
-					List<String> columnData = new ArrayList<String>(queryResult.getData(columns.get(i)));
+	
+				for(int i = 0; i < queryResult.getColumns().size(); i++) {
+					List<String> columnData = new ArrayList<String>();
+					for(int j = 0; j < queryResult.getData().size(); j++) {
+						columnData.add(queryResult.getData().get(j).get(i));
+					}
 					queryTree.put(queryResult.getColumns().get(i), columnData);
 				}
+				
 				for(int i = 0; i < answerResult.getColumns().size(); i++) {
-					List<String> columnData = new ArrayList<String>(answerResult.getData(columns.get(i)));
+					List<String> columnData = new ArrayList<String>();
+					for(int j = 0; j < answerResult.getData().size(); j++) {
+						columnData.add(answerResult.getData().get(j).get(i));
+					}
 					answerTree.put(answerResult.getColumns().get(i), columnData);
 				}
+				
 				if(queryTree.equals(answerTree)) {
 					resultSetFeedback = "Correct.";
 				} else {
@@ -240,11 +248,19 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 			} else {
 				Multiset<String> queryBag = HashMultiset.create();
 				Multiset<String> answerBag = HashMultiset.create();
-				List<String> columns = queryResult.getColumns();
-				for(int i = 0; i < columns.size(); i++) 
-					queryBag.addAll(queryResult.getData(columns.get(i)));
-				for(int i = 0; i < answerResult.getColumns().size(); i++) 
-					queryBag.addAll(answerResult.getData(columns.get(i)));
+				
+				for(int i = 0; i < queryResult.getColumns().size(); i++) {
+					for(int j = 0; j < queryResult.getData().size(); j++) {
+						queryBag.add(queryResult.getData().get(j).get(i));
+					}
+				}
+				
+				for(int i = 0; i < answerResult.getColumns().size(); i++) {
+					for(int j = 0; j < answerResult.getData().size(); j++) {
+						answerBag.add(answerResult.getData().get(j).get(i));
+					}
+				}
+				
 				if(queryBag.equals(answerBag)) {
 					resultSetFeedback = "Correct.";
 				} else {

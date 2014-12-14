@@ -30,21 +30,21 @@
 			<p:menuitem value="Tutorial" 
 				action="TutorialPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
-				rendered="#{userBean.isLoggedIn}"
+				rendered="#{userBean.loggedIn}"
 				styleClass="menubutton"/>
 			<p:menuitem value="Schema Options" icon="ui-icon-disk" 
 				type="button" styleClass="menubutton"
 				onclick="PF('schema_dlg').show();" 
-				rendered="#{userBean.isLoggedIn}"/>
+				rendered="#{userBean.loggedIn}"/>
 			<p:menuitem value="Admin Options" 
 				action="AdminPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
-				rendered="#{userBean.isAdmin}"
+				rendered="#{userBean.admin}"
 				styleClass="menubutton"/>
 			<p:menuitem value="Developer Options" 
 				action="DevInstancesPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
-				rendered="#{userBean.isDeveloper}"
+				rendered="#{userBean.developer}"
 				styleClass="menubutton"/>
 			<p:menuitem value="Login" onclick="PF('login_dlg').show();" 
 				type="button" icon="ui-icon-arrowreturnthick-1-e"
@@ -53,7 +53,7 @@
 			<p:menuitem value="Logout" type="button" 
 				icon="ui-icon-arrowreturnthick-1-w" ajax="false"
 				styleClass="menubutton"
-				rendered="#{userBean.isLoggedIn}" 
+				rendered="#{userBean.loggedIn}" 
 				action="#{userBean.setLoggedIn(false)}" />
 		</p:menubar>
 	</h:form>

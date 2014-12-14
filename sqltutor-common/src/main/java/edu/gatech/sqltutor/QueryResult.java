@@ -17,49 +17,41 @@ package edu.gatech.sqltutor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class QueryResult implements Serializable {
 	private static final long serialVersionUID = 1L;
-
-    private Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
+	
+	private List<String> columns = new ArrayList<String>();
+    private List<List<String>> data = new ArrayList<List<String>>();
     
     public QueryResult() {}
-
+    
+    @SuppressWarnings("unchecked")
 	public QueryResult(QueryResult queryResult) {
-    	this.columnDataMap = new HashMap<String, List<String>>(queryResult.getColumnDataMap());
+    	this.columns = (List<String>) ((ArrayList<String>)queryResult.getColumns()).clone();
+    	this.data = (List<List<String>>) ((ArrayList<List<String>>)queryResult.getData()).clone();
     }
     
-    public QueryResult(Map<String, List<String>> columnDataMap) {
-    	this.columnDataMap = new HashMap<String, List<String>>(columnDataMap);
+    public QueryResult(List<String> columns, List<List<String>> data) {
+    	this.columns = columns;
+    	this.data = data;
     }
-    
-    public boolean isEmpty() {
-    	for( String c : columnDataMap.keySet() ) {
-    		if( !columnDataMap.get(c).isEmpty() )
-    			return false;
-    	}
-    	return true;
-    }
-    
-	public List<String> getData(String column) {
-		return columnDataMap.get(column);
+
+	public void setData(List<List<String>> data) {
+		this.data = data;
+	}
+
+	public List<List<String>> getData() {
+		return data;
 	}
 	
-	public List<List<String>> getData() {
-		List<List<String>> data = new ArrayList<List<String>>();
-		for(String c : columnDataMap.keySet()) 
-			data.add(columnDataMap.get(c));
-		return data;
+
+	public void setColumns(List<String> columns) {
+		this.columns = columns;
 	}
 
 	public List<String> getColumns() {
-		return new ArrayList<String>(columnDataMap.keySet());
-	}
-
-	public Map<String, List<String>> getColumnDataMap() {
-		return columnDataMap;
+		return columns;
 	}
 }

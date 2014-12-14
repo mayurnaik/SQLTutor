@@ -693,10 +693,7 @@ public class DatabaseManager implements Serializable {
 				Utils.tryClose(statement);
 				Utils.tryClose(connection);
 			}
-			Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
-			for(int i = 0; i < columnNames.size(); i++) 
-				columnDataMap.put(columnNames.get(i), queryData.get(i));
-			allData.put(tableName, new QueryResult(columnDataMap));
+			allData.put(tableName, new QueryResult(columnNames, queryData));
 		}
 		return allData;
 	}
@@ -749,10 +746,7 @@ public class DatabaseManager implements Serializable {
 				Utils.tryClose(statement);
 				Utils.tryClose(connection);
 			}
-			Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
-			for(int i = 0; i < columnNames.size(); i++) 
-				columnDataMap.put(columnNames.get(i), queryData.get(i));
-			allData.put(tableName, new QueryResult(columnDataMap));
+			allData.put(tableName, new QueryResult(columnNames, queryData));
 		}
 		return allData;
 	}
@@ -796,7 +790,7 @@ public class DatabaseManager implements Serializable {
 			}
 			
 			while(resultSet.next()) {
-				ArrayList<String> rowData = new ArrayList<String>();
+				List<String> rowData = new ArrayList<String>();
 				for (int i = 1; i <= columnCount; i++) {
 					rowData.add(resultSet.getString(i));
 				}
@@ -807,10 +801,7 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
-		for(int i = 0; i < columnNames.size(); i++) 
-			columnDataMap.put(columnNames.get(i), queryData.get(i));
-		return new QueryResult(columnDataMap);
+		return new QueryResult(columnNames, queryData);
 	}
 	
 	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
@@ -846,10 +837,7 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		Map<String, List<String>> columnDataMap = new HashMap<String, List<String>>();
-		for(int i = 0; i < columnNames.size(); i++) 
-			columnDataMap.put(columnNames.get(i), queryData.get(i));
-		return new QueryResult(columnDataMap);
+		return new QueryResult(columnNames, queryData);
 	}
 	
 	private void addUser(String email, String password) throws SQLException {
@@ -1076,7 +1064,7 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
 					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
 			preparedStatement.setString(1, sessionId);
-			preparedStatement.setString(2, email);
+			preparedStatement.setString(2, email != null ? email : "not logged in");
 			preparedStatement.setString(3, exception);
 			preparedStatement.executeUpdate();
 		} finally {
