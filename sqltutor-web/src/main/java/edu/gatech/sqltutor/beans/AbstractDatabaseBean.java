@@ -17,13 +17,17 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.faces.application.Application;
 import javax.faces.context.FacesContext;
 
 import com.google.common.base.Throwables;
 
+import edu.gatech.sqltutor.ColumnInfo;
 import edu.gatech.sqltutor.DatabaseManager;
+import edu.gatech.sqltutor.DatabaseTable;
 
 /**
  * Base class for beans using the database manager.
@@ -58,5 +62,14 @@ public class AbstractDatabaseBean implements Serializable {
 			for(Throwable t : e1)
 				t.printStackTrace();
 		}
+	}
+	
+	// TODO find an appropriate place for this
+	public List<String> getColumnNames(DatabaseTable tableInfo) {
+		List<ColumnInfo> cols = tableInfo.getColumns();
+		List<String> names = new ArrayList<>(cols.size());
+		for( ColumnInfo col: cols )
+			names.add(col.getName());
+		return names;
 	}
 }

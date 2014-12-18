@@ -1142,110 +1142,16 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	public List<DatabaseTable> getTables(String schemaName) throws SQLException {
-		Connection connection = null;
-		ResultSet resultSet = null;
-		DatabaseMetaData metadata = null;
-		
-		ArrayList<DatabaseTable> tables = new ArrayList<DatabaseTable>();
-		try {
-			connection = userDataSource.getConnection();
-
-			metadata = connection.getMetaData();
-		
-			resultSet = metadata.getTables(null, schemaName, "%", new String[] {"TABLE"});
-			while(resultSet.next()) {
-				// the API tells us the third element is the TABLE_NAME string.
-				tables.add(new DatabaseTable(resultSet.getString(3)));
-			}
-		} finally {
-			Utils.tryClose(metadata);
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
+		try (Connection conn = userDataSource.getConnection()) {
+			DatabaseMetaData metadata = conn.getMetaData();
+			return QueryUtils.readTableInfo(metadata, schemaName);
 		}
-		
-		for(int i=0; i < tables.size(); i++) {
-			ArrayList<String> columns = getColumns(schemaName, tables.get(i).getTableName());
-			tables.get(i).setColumns(columns);
-		}
-		return tables;
-	}
-	
-	private ArrayList<String> getColumns(String schemaName, String tableName) throws SQLException {
-		Connection connection = null;
-		ResultSet resultSet = null;
-		DatabaseMetaData metadata = null;
-		
-		ArrayList<String> columns = new ArrayList<String>();
-		try {
-			connection = userDataSource.getConnection();
-			
-			metadata = connection.getMetaData();
-			
-			resultSet = metadata.getColumns(null, schemaName, tableName, null);
-			
-			while(resultSet.next()) {
-				columns.add(resultSet.getString(4));
-			}
-		} finally {
-			Utils.tryClose(metadata);
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
-		}
-		return columns;
 	}
 	
 	public List<DatabaseTable> getDevTables() throws SQLException {
-		Connection connection = null;
-		ResultSet resultSet = null;
-		DatabaseMetaData metadata = null;
-		
-		ArrayList<DatabaseTable> tables = new ArrayList<DatabaseTable>();
-		try { 
-			connection = dataSource.getConnection();
-	
-			metadata = connection.getMetaData();
-			
-			resultSet = metadata.getTables(null, "public", "%", new String[] {"TABLE"});
-			while(resultSet.next()) {
-				// the API tells us the third element is the TABLE_NAME string.
-				tables.add(new DatabaseTable(resultSet.getString(3)));
-			}
-		} finally {
-			Utils.tryClose(metadata);
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
+		try (Connection conn = dataSource.getConnection()) {
+			return QueryUtils.readTableInfo(conn.getMetaData(), "public");
 		}
-		
-		for(int i = 0; i < tables.size(); i++) {
-			ArrayList<String> columns = getDevColumns(tables.get(i).getTableName());
-			tables.get(i).setColumns(columns);
-		}
-
-		return tables;
-	}
-	
-	private ArrayList<String> getDevColumns(String tableName) throws SQLException {
-		Connection connection = null;
-		ResultSet resultSet = null;
-		DatabaseMetaData metadata = null;
-		
-		ArrayList<String> columns = new ArrayList<String>();
-		try {
-			connection = dataSource.getConnection();
-			
-			metadata = connection.getMetaData();
-			
-			resultSet = metadata.getColumns(null, "public", tableName, null); 
-			
-			while(resultSet.next())
-				columns.add(resultSet.getString(4));
-		} finally {
-			Utils.tryClose(metadata);
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
-		}
-		
-		return columns;
 	}
 
 	public String getAdminCode(String email) throws SQLException {
