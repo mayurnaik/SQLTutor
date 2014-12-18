@@ -16,21 +16,59 @@
 package edu.gatech.sqltutor;
 
 import java.io.Serializable;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+
+import edu.gatech.sqltutor.JDBCConstants.ColumnPositions.GetTables;
 
 public class DatabaseTable implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	private String tableName;	
-	private List<String> columns;
+	private String catalog;
+	private String schema;
+	private String tableName;
+	private String type;
 	
-	public DatabaseTable(String tableName) {
-		this.tableName = tableName;
+	private List<ColumnInfo> columns = new ArrayList<>();
+	
+	/**
+	 * Fully loads the table metadata.
+	 * 
+	 * @param tableInfo the result of <code>DatabaseMetaData.getTables</code> pointing to the 
+	 *                  row to load 
+	 * @param meta      the metadata object used to load column metadata
+	 * @throws SQLException if thrown by the underlying API
+	 * @see DatabaseMetaData#getTables(String, String, String, String[])
+	 */
+	public DatabaseTable(ResultSet tableInfo, DatabaseMetaData meta) throws SQLException {
+		if( tableInfo == null ) throw new NullPointerException("tableInfo is null");
+		catalog = tableInfo.getString(GetTables.TABLE_CAT);
+		schema = tableInfo.getString(GetTables.TABLE_SCHEM);
+		tableName = tableInfo.getString(GetTables.TABLE_NAME);
+		type = tableInfo.getString(GetTables.TABLE_TYPE);
+		
+		if( meta != null )
+			loadColumnMetaData(meta);
 	}
 	
-	public DatabaseTable(String tableName, List<String> columns) {
-		this.tableName = tableName;
-		this.columns = columns;
+	/**
+	 * Loads the column metadata for this table.  This clears any 
+	 * current column metadata.
+	 * 
+	 * @param meta the database metadata source
+	 * @throws SQLException thrown by underlying API
+	 */
+	public void loadColumnMetaData(DatabaseMetaData meta) throws SQLException {
+		if( meta == null ) throw new NullPointerException("meta is null");
+		columns.clear();
+		try (ResultSet rs = meta.getColumns(catalog, schema, tableName, null)) {
+			while( rs.next() ) {
+				columns.add(new ColumnInfo(rs));
+			}
+		}
 	}
 	
 	public void setTableName(String tableName) {
@@ -41,12 +79,35 @@ public class DatabaseTable implements Serializable {
 		return tableName;
 	}
 	
+	public String getCatalog() {
+		return catalog;
+	}
 
-	public List<String> getColumns() {
+	public void setCatalog(String catalog) {
+		this.catalog = catalog;
+	}
+
+	public String getSchema() {
+		return schema;
+	}
+
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<ColumnInfo> getColumns() {
 		return columns;
 	}
 
-	public void setColumns(List<String> columns) {
+	public void setColumns(List<ColumnInfo> columns) {
 		this.columns = columns;
-	}	
+	}
 }

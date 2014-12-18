@@ -15,6 +15,11 @@
  */
 package edu.gatech.sqltutor;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -197,5 +202,41 @@ public class QueryUtils {
 			generated = true;
 		}
 		return generated;
+	}
+	
+	/**
+	 * Reads the database metadata for a set of tables.
+	 * 
+	 * @param meta            the database connection metadata
+	 * @param catalog        a catalog restriction or <code>null</code>
+	 * @param schemaPattern  a schema restriction or <code>null</code>
+	 * @param tablePattern   a table restriction or <code>null</code>
+	 * @param types          table type restrictions or <code>null</code>
+	 * @return the table information
+	 * @throws SQLException if thrown by the JDBC API
+	 */
+	public static List<DatabaseTable> readTableInfo(DatabaseMetaData meta, String catalog, 
+			String schemaPattern, String tablePattern, String[] types)
+			throws SQLException {
+		List<DatabaseTable> tables = new ArrayList<>();
+		try (ResultSet rs = meta.getTables(catalog, schemaPattern, tablePattern, types)) {
+			while (rs.next())
+				tables.add(new DatabaseTable(rs, meta));
+		}
+		return tables;
+	}
+	
+	/**
+	 * Reads the database metadata for a set of tables.  This version 
+	 * filters the schema by <code>schemaPattern</code> and the 
+	 * types to be either <code>TABLE</code> or <code>VIEW</code>.
+	 * 
+	 * @param meta            the database connection metadata
+	 * @param schemaPattern  a schema restriction or <code>null</code>
+	 * @return the table information
+	 * @throws SQLException if thrown by the JDBC API
+	 */
+	public static List<DatabaseTable> readTableInfo(DatabaseMetaData meta, String schemaPattern) throws SQLException {
+		return readTableInfo(meta, null, schemaPattern, null, new String[] {"TABLE", "VIEW"});
 	}
 }
