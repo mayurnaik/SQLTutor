@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import edu.gatech.sqltutor.JDBCConstants.ColumnPositions.GetTables;
 
@@ -109,5 +110,32 @@ public class DatabaseTable implements Serializable {
 
 	public void setColumns(List<ColumnInfo> columns) {
 		this.columns = columns;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(catalog, schema, tableName, type, columns);
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if( this == obj )
+			return true;
+		if( obj == null || !obj.getClass().equals(this.getClass()) )
+			return false;
+		DatabaseTable that = (DatabaseTable)obj;
+		return Objects.equals(this.catalog, that.catalog) &&
+				Objects.equals(this.schema, that.schema) &&
+				Objects.equals(this.tableName, that.tableName) &&
+				Objects.equals(this.type, that.type) &&
+				Objects.equals(this.columns, that.columns);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format(
+			"DatabaseTable{catalog=%s, schema=%s, tableName=%s, type=%s, columns=%s}", 
+			catalog, schema, tableName, type, columns
+		);
 	}
 }
