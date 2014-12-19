@@ -1,4 +1,4 @@
-package edu.gatech.sqltutor.clustering;
+package edu.gatech.sqltutor.sql;
 
 import com.akiban.sql.parser.NodeFactory;
 import com.akiban.sql.parser.SQLParserContext;

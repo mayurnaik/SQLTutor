@@ -9,6 +9,8 @@ import com.akiban.sql.parser.SQLParserContext;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.parser.Visitor;
 
+import edu.gatech.sqltutor.sql.ContextVisitorAdapter;
+
 /**
  * Removes unnecessary boolean constants.  
  * 

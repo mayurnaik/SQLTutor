@@ -15,6 +15,7 @@ import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.parser.Visitor;
 
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.sql.ContextVisitorAdapter;
 
 public class ExpressionSorter extends ContextVisitorAdapter implements Visitor {
 	private static final Logger _log = LoggerFactory.getLogger(ExpressionSorter.class);
