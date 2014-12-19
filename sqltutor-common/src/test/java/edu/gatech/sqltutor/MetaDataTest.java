@@ -25,39 +25,48 @@ import java.sql.Types;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.gatech.sqltutor.sql.SchemaInfo;
+
 public class MetaDataTest {
-	private static final String DB_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-	private static final String CONN_URL = "jdbc:derby:memory:testDB";
+	
+	private static Connection conn;
 	
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		Class.forName(DB_DRIVER);
-	}
-	
-	private Connection conn;
-	
-	@Before
-	public void before() throws Exception {
-		conn = DriverManager.getConnection(CONN_URL + ";create=true");
+		Class.forName(TestConst.DRIVER_CLASS);
+		conn = DriverManager.getConnection(TestConst.CONNECTION_URL + ";create=true");
 		Statement s = conn.createStatement();
 		
 		s.execute("CREATE TABLE t1 ( c1 INT NOT NULL, c2 VARCHAR(10), c3 VARCHAR(255) NOT NULL WITH DEFAULT 'foo')");
 		s.execute("CREATE TABLE t2 ( c4 CHAR(5) NOT NULL PRIMARY KEY )");
 	}
 	
-	@After
-	public void after() throws Exception {
+	@AfterClass
+	public static void afterClass() throws Exception {
 		Utils.tryClose(conn);
 		conn = null;
+		Connection c = DriverManager.getConnection(TestConst.CONNECTION_URL + ";drop=true");
+		Utils.tryClose(c);
 	}
 	
 	@Test
 	public void testReadTableInfo() throws Exception {
 		List<DatabaseTable> tableInfos = QueryUtils.readTableInfo(conn.getMetaData(), null);
+		assertStructure(tableInfos);
+	}
+	
+	@Test
+	public void testReadSchemaInfo() throws Exception {
+		SchemaInfo schemaInfo = QueryUtils.readSchemaInfo(conn.getMetaData(), "APP"); // APP is the Derby default schema
+		assertStructure(schemaInfo.getTables());
+	}
+	
+	private void assertStructure(List<DatabaseTable> tableInfos) throws Exception {
 		
 		assertEquals("Wrong number of tables.", 2, tableInfos.size());
 		DatabaseTable t1 = tableInfos.get(0), t2 = tableInfos.get(1);
@@ -95,5 +104,6 @@ public class MetaDataTest {
 		assertEquals("t2.c4 should not be nullable", DatabaseMetaData.columnNoNulls, cinfo.getNullable());
 		assertEquals(Types.CHAR, cinfo.getType());
 		assertEquals(1, cinfo.getPosition());
+		
 	}
 }

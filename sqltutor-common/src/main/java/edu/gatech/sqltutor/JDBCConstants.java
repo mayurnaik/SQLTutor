@@ -24,6 +24,13 @@ public class JDBCConstants {
 	/** Constant column positions for <code>ResultSet</code>s that are specified by the API. */ 
 	public static class ColumnPositions {
 		
+		/** Constants for {@link DatabaseMetaData#getSchemas(String, String)}. */
+		public static class GetSchemas {
+			public static final int
+				TABLE_SCHEM = 1,
+				TABLE_CAT = 2;
+		}
+		
 		/** Constants for {@link DatabaseMetaData#getTables(String, String, String, String[])} */
 		public static class GetTables {
 			public static final int 

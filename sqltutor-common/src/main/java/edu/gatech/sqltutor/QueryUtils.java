@@ -35,6 +35,7 @@ import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.unparser.NodeToString;
 
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
+import edu.gatech.sqltutor.sql.SchemaInfo;
 import edu.gatech.sqltutor.util.Pair;
 
 /**
@@ -204,10 +205,49 @@ public class QueryUtils {
 		return generated;
 	}
 	
+	
+	/**
+	 * Reads info for a single schema from the database.
+	 * 
+	 * @param meta    the database metadata
+	 * @param schema  the schema name to restrict, may be <code>null</code>
+	 * @return the single matching schema
+	 * @throws SQLException if thrown by the API
+	 * @throws SQLTutorException if there is not exactly one schema
+	 */
+	public static SchemaInfo readSchemaInfo(DatabaseMetaData meta, String schema) throws SQLException {
+		return readSchemaInfo(meta, null, schema);
+	}
+	
+	/**
+	 * Reads info for a single schema from the database.
+	 * 
+	 * @param meta    the database metadata
+	 * @param catalog the catalog pattern, may be <code>null</code> or empty
+	 * @param schema  the schema name to restrict, may be <code>null</code>
+	 * @return the single matching schema
+	 * @throws SQLException if thrown by the API
+	 * @throws SQLTutorException if there is not exactly one schema
+	 */
+	public static SchemaInfo readSchemaInfo(DatabaseMetaData meta, String catalog, String schema) throws SQLException {
+		try (ResultSet rs = meta.getSchemas(catalog, schema)) {
+			if( rs.next() ) {
+				SchemaInfo schemaInfo = new SchemaInfo(rs);
+				if( rs.next() ) {
+					SchemaInfo next = new SchemaInfo(rs);
+					throw new SQLTutorException("Multiple schemas matched, pattern=" + schema + ", s1=" + schemaInfo + ", s2=" + next);
+				}
+				schemaInfo.loadTableInfo(meta);
+				return schemaInfo;
+			}
+		}
+		throw new SQLTutorException("No schema for pattern: " + schema);
+	}
+	
 	/**
 	 * Reads the database metadata for a set of tables.
 	 * 
-	 * @param meta            the database connection metadata
+	 * @param meta           the database connection metadata
 	 * @param catalog        a catalog restriction or <code>null</code>
 	 * @param schemaPattern  a schema restriction or <code>null</code>
 	 * @param tablePattern   a table restriction or <code>null</code>
