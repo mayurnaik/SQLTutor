@@ -66,7 +66,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
 
-		List<String> tableNames = new ArrayList<String>();
+		List<String> tableNames = new ArrayList<String>(tables.size());
 		
 		for(DatabaseTable table : tables) {
 			tableNames.add(table.getTableName());

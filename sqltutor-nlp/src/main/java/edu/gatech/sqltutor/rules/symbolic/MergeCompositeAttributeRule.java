@@ -90,7 +90,7 @@ public class MergeCompositeAttributeRule
 		_log.debug(Markers.SYMBOLIC, "Merging {} into {}", childTokens, compositeToken);
 		for( int i = childTokens.size() - 1; i >= 1; --i )
 			attrList.removeChild(childTokens.get(i));
-		AttributeToken firstChild = (AttributeToken)childTokens.get(0);
+		AttributeToken firstChild = childTokens.get(0);
 		compositeToken.setEntityInstance(firstChild.getEntityInstance()); // composite has same instance
 		attrList.replaceChild(firstChild, compositeToken);
 		

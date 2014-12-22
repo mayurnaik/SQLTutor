@@ -17,7 +17,7 @@ package edu.gatech.sqltutor.beans;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -72,7 +72,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	public void setupQuestionList() {
 		try {
 			questions = getDatabaseManager().getQuestions(selectedSchema);
-			selectedQuestions = new ArrayList<QuestionTuple>();
+			selectedQuestions = new LinkedList<QuestionTuple>();
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();

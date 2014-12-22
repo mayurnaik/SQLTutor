@@ -58,7 +58,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 	
 	private String selectedSchema;
 	private List<DatabaseTable> tables;
-	private List<String> questions = new ArrayList<String>();
+	private List<String> questions;
 	private HashMap<String, String> answers = new HashMap<String, String>();
 	private int questionIndex;
 	private String query;
@@ -225,7 +225,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 				Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
 	
 				for(int i = 0; i < queryResult.getColumns().size(); i++) {
-					List<String> columnData = new ArrayList<String>();
+					List<String> columnData = new ArrayList<String>(queryResult.getData().size());
 					for(int j = 0; j < queryResult.getData().size(); j++) {
 						columnData.add(queryResult.getData().get(j).get(i));
 					}
@@ -233,7 +233,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 				}
 				
 				for(int i = 0; i < answerResult.getColumns().size(); i++) {
-					List<String> columnData = new ArrayList<String>();
+					List<String> columnData = new ArrayList<String>(answerResult.getData().size());
 					for(int j = 0; j < answerResult.getData().size(); j++) {
 						columnData.add(answerResult.getData().get(j).get(i));
 					}
@@ -292,6 +292,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		if(questionTuples.isEmpty()) {
 			questions.add("There are no questions available for this schema.");
 		} else {
+			questions = new ArrayList<String>(questionTuples.size());
+			for(QuestionTuple question : questionTuples) {
+				questions.add(question.getQuestion());
+				getAnswers().put(question.getQuestion(), question.getAnswer());
+			}
+			
 			HashMap<String, Boolean> options = null;
 			try {
 				options = databaseManager.getOptions(selectedSchema);
@@ -303,15 +309,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 			}
 			
-			for(QuestionTuple question : questionTuples) {
-				questions.add(question.getQuestion());
-				getAnswers().put(question.getQuestion(), question.getAnswer());
-			}
-			
 			if(!options.get("in_order_questions")) {
 				Collections.shuffle(questions, new Random(System.nanoTime()));
 			}
-			
 		}
 	}
 	

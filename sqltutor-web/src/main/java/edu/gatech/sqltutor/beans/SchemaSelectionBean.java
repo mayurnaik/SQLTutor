@@ -17,7 +17,7 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -39,7 +39,7 @@ public class SchemaSelectionBean extends AbstractDatabaseBean implements Seriali
 	private UserBean userBean;
 	
 	/** Databases consists of a list of currently available database instances grouped by types, such as MySQL and PostgreSQL. */
-	private List<SelectItem> userSchemas = new ArrayList<SelectItem>();
+	private List<SelectItem> userSchemas = new LinkedList<SelectItem>();
 	private String selectedSchema;
 	
 	@PostConstruct

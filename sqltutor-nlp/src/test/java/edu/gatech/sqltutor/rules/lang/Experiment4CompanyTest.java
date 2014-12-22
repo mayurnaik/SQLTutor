@@ -17,8 +17,6 @@ package edu.gatech.sqltutor.rules.lang;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.regex.Pattern;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;

@@ -1,7 +1,5 @@
 package edu.gatech.sqltutor.clustering;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.akiban.sql.parser.SQLParser;
