@@ -74,7 +74,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 */
 	public void login() throws IOException { 
 		try {
-			if(!getDatabaseManager().isEmailRegistered(getHashedEmail()) || 
+			if(!getDatabaseManager().isEmailRegistered(getHashedEmail(), email) || 
 					!getDatabaseManager().isPasswordCorrect(getHashedEmail(), password)) {
 				BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, LOGIN_ERROR);
 				return;
@@ -99,11 +99,11 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 
 	public void register() throws IOException {
 		try {
-			if(getDatabaseManager().isEmailRegistered(getHashedEmail())) {
+			if(getDatabaseManager().isEmailRegistered(getHashedEmail(), email)) {
 				BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, REGISTRATION_ERROR);
 				return;
 			}
-			getDatabaseManager().registerUser(getHashedEmail(), password);
+			getDatabaseManager().registerUser(getHashedEmail(), email, password);
 			login();
 		} catch(SQLException e) {
 			for(Throwable t : e) {
@@ -157,7 +157,8 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		this.loggedIn = loggedIn;
 		if(!loggedIn) {
 			password = null;
-			setHashedEmail(null);
+			hashedEmail = null;
+			email = null;
 			admin = false;
 			developer = false;
 			adminCode = null;

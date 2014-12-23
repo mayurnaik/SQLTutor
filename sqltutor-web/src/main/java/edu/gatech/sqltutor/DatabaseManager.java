@@ -839,7 +839,7 @@ public class DatabaseManager implements Serializable {
 		return new QueryResult(columnNames, queryData);
 	}
 	
-	private void addUser(String email, String password) throws SQLException {
+	private void addUser(String hashedEmail, String email, String password) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -850,12 +850,13 @@ public class DatabaseManager implements Serializable {
 			byte[] salt = SaltHasher.generateSalt();
 			byte[] encryptedPassword = SaltHasher.getEncryptedValue(password, salt);
 			
-			final String query = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\") VALUES (?, ?, ?)";
+			final String query = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\", \"email_plain\") VALUES (?, ?, ?, ?)";
 			
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
 			preparedStatement.setString(2, Arrays.toString(salt));
-			preparedStatement.setString(3, email);
+			preparedStatement.setString(3, hashedEmail);
+			preparedStatement.setString(4, email);
 			preparedStatement.executeUpdate();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
@@ -899,9 +900,9 @@ public class DatabaseManager implements Serializable {
 		}
 	}
 	
-	public void registerUser(String email, String password) throws SQLException {
-		addUser(email, password);
-		addUserToLinkedAdminCodes(email);
+	public void registerUser(String hashedEmail, String email, String password) throws SQLException {
+		addUser(hashedEmail, email, password);
+		addUserToLinkedAdminCodes(hashedEmail);
 	}
 	
 	private void deleteUserEmail(String email) throws SQLException {
@@ -945,11 +946,11 @@ public class DatabaseManager implements Serializable {
 	/**
 	 * Returns whether the given email is registered.
 	 * 
-	 * @param email	email to check
+	 * @param hashedEmail	email to check
 	 * @return	whether the email is registered
 	 * @throws SQLException
 	 */
-	public boolean isEmailRegistered(String email) throws SQLException {
+	public boolean isEmailRegistered(String hashedEmail, String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -960,18 +961,71 @@ public class DatabaseManager implements Serializable {
 	
 			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
 			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setString(1, email);
+			preparedStatement.setString(1, hashedEmail);
 			
 			resultSet = preparedStatement.executeQuery();
 			
-			if (resultSet.next())
+			if ( resultSet.next() )
 				isEmailRegistered = true;
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
+		
+		// if the email is registered, make sure their "email_plain" isn't null in the DB
+		if( isEmailRegistered && !hasPlainTextEmail(hashedEmail) ) {
+			updatePlainTextEmail(hashedEmail, email);
+		}
+
 		return isEmailRegistered;
+	}
+	
+	public boolean hasPlainTextEmail(String hashedEmail) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
+		boolean hasPlainTextEmail = false;
+		try {
+			connection = dataSource.getConnection();
+	
+			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ? AND \"email_plain\" != NULL";
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setString(1, hashedEmail);
+			
+			resultSet = preparedStatement.executeQuery();
+			
+			if ( resultSet.next() )
+				hasPlainTextEmail = true;
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		
+		return hasPlainTextEmail;
+	}
+	
+	public void updatePlainTextEmail(String hashedEmail, String email) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+
+		try {
+			connection = dataSource.getConnection();
+	
+			final String query = "UPDATE \"user\" SET \"email_plain\" = ? WHERE \"email\" = ?";
+			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setString(1, email);
+			preparedStatement.setString(2, hashedEmail);
+			
+			resultSet = preparedStatement.executeQuery();
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
 	}
 	
 	public boolean isPasswordCorrect(String email, String attemptedPassword) throws SQLException {
