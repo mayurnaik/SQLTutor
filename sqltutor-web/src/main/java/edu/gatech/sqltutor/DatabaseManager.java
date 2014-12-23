@@ -1010,7 +1010,6 @@ public class DatabaseManager implements Serializable {
 	public void updatePlainTextEmail(String hashedEmail, String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
 
 		try {
 			connection = dataSource.getConnection();
@@ -1019,10 +1018,8 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, hashedEmail);
-			
-			resultSet = preparedStatement.executeQuery();
+			preparedStatement.executeUpdate();
 		} finally {
-			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
