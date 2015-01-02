@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,7 +32,7 @@ public class DatabaseTable implements Serializable {
 	private String tableName;
 	private String type;
 	
-	private List<ColumnInfo> columns = new ArrayList<>();
+	private ColumnInfoList columns = new ColumnInfoList();
 	
 	/**
 	 * Fully loads the table metadata.
@@ -104,12 +103,15 @@ public class DatabaseTable implements Serializable {
 		this.type = type;
 	}
 
-	public List<ColumnInfo> getColumns() {
+	public ColumnInfoList getColumns() {
 		return columns;
 	}
 
 	public void setColumns(List<ColumnInfo> columns) {
-		this.columns = columns;
+		if( columns instanceof ColumnInfoList )
+			this.columns = (ColumnInfoList)columns;
+		else
+			this.columns = new ColumnInfoList(columns);
 	}
 	
 	@Override

@@ -15,11 +15,13 @@
  */
 package edu.gatech.sqltutor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
@@ -31,6 +33,8 @@ import org.junit.Test;
 import edu.gatech.sqltutor.sql.SchemaInfo;
 
 public class MetaDataTest {
+	
+	private static final String SCHEMA = "APP"; // APP is the Derby default schema
 	
 	private static Connection conn;
 	
@@ -48,19 +52,23 @@ public class MetaDataTest {
 	public static void afterClass() throws Exception {
 		Utils.tryClose(conn);
 		conn = null;
-		Connection c = DriverManager.getConnection(TestConst.CONNECTION_URL + ";drop=true");
-		Utils.tryClose(c);
+		try (Connection c = DriverManager.getConnection(TestConst.CONNECTION_URL + ";drop=true")) {
+			// nothing
+		} catch( SQLNonTransientConnectionException expected ) {
+			if( !"08006".equals(expected.getSQLState()) )
+				throw expected;
+		}
 	}
 	
 	@Test
 	public void testReadTableInfo() throws Exception {
-		List<DatabaseTable> tableInfos = QueryUtils.readTableInfo(conn.getMetaData(), null);
+		List<DatabaseTable> tableInfos = QueryUtils.readTableInfo(conn.getMetaData(), SCHEMA);
 		assertStructure(tableInfos);
 	}
 	
 	@Test
 	public void testReadSchemaInfo() throws Exception {
-		SchemaInfo schemaInfo = QueryUtils.readSchemaInfo(conn.getMetaData(), "APP"); // APP is the Derby default schema
+		SchemaInfo schemaInfo = QueryUtils.readSchemaInfo(conn.getMetaData(), SCHEMA);
 		assertStructure(schemaInfo.getTables());
 	}
 	

@@ -104,7 +104,7 @@ public class ColumnReferenceResolver {
 					
 					// table must be in query and column must be in table
 					if( !tableMap.containsKey(dbTableName) || 
-							!dbTable.getColumns().contains(name) ) {
+							!dbTable.getColumns().containsName(name) ) {
 						continue;
 					}
 					
