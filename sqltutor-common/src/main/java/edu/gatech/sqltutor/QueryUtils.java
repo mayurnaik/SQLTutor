@@ -23,18 +23,24 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.akiban.sql.StandardException;
 import com.akiban.sql.parser.CursorNode;
 import com.akiban.sql.parser.FromTable;
 import com.akiban.sql.parser.NodeTypes;
 import com.akiban.sql.parser.QueryTreeNode;
 import com.akiban.sql.parser.ResultSetNode;
+import com.akiban.sql.parser.SQLParser;
+import com.akiban.sql.parser.SQLParserContext.IdentifierCase;
 import com.akiban.sql.parser.SelectNode;
 import com.akiban.sql.parser.StatementNode;
 import com.akiban.sql.parser.Visitable;
 import com.akiban.sql.unparser.NodeToString;
 
 import edu.gatech.sqltutor.rules.util.ParserVisitorAdapter;
+import edu.gatech.sqltutor.sql.ConfigurableSQLParser;
 import edu.gatech.sqltutor.sql.SchemaInfo;
 import edu.gatech.sqltutor.util.Pair;
 
@@ -42,6 +48,8 @@ import edu.gatech.sqltutor.util.Pair;
  * Static utility functions related to SQL queries.
  */
 public class QueryUtils {
+	private static final Logger log = LoggerFactory.getLogger(QueryUtils.class);
+	
 	private static final Pattern sanitizer = 
 		Pattern.compile("[;\\s]+$");
 	
@@ -278,5 +286,31 @@ public class QueryUtils {
 	 */
 	public static List<DatabaseTable> readTableInfo(DatabaseMetaData meta, String schemaPattern) throws SQLException {
 		return readTableInfo(meta, null, schemaPattern, null, new String[] {"TABLE", "VIEW"});
+	}
+	
+	/**
+	 * Creates a new parser that is configured for a particular database.
+	 * 
+	 * @param meta the database metadata to configure against
+	 * @return the parser
+	 * @throws SQLTutorException if there is a problem configuring the parser
+	 */
+	public static SQLParser newParser(DatabaseMetaData meta) throws SQLTutorException {
+		if( meta == null ) throw new NullPointerException("meta is null");
+		ConfigurableSQLParser parser = new ConfigurableSQLParser();
+		try {
+			// for now we just handle identifier casing
+			if( meta.storesLowerCaseIdentifiers() )
+				parser.setIdentifierCase(IdentifierCase.LOWER);
+			else if( meta.storesUpperCaseIdentifiers() )
+				parser.setIdentifierCase(IdentifierCase.UPPER);
+			else if( meta.storesMixedCaseIdentifiers() )
+				parser.setIdentifierCase(IdentifierCase.PRESERVE);
+			else
+				log.warn("Could not determine identifier case handling for {}", meta);
+		} catch (SQLException e) {
+			throw new SQLTutorException(e);
+		}
+		return parser;
 	}
 }

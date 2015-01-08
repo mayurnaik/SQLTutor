@@ -13,10 +13,27 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package edu.gatech.sqltutor;
+package edu.gatech.sqltutor.sql;
 
-public class TestConst {
+import com.akiban.sql.parser.SQLParser;
+import com.akiban.sql.parser.SQLParserContext;
+
+/**
+ * <code>SQLParser</code> with some additional configuration options.
+ */
+public class ConfigurableSQLParser extends SQLParser implements
+		SQLParserContext {
+	protected IdentifierCase identifierCase = super.getIdentifierCase();
+
+	public ConfigurableSQLParser() {
+	}
 	
-	public static final String DRIVER_CLASS = "org.h2.Driver";
-	public static final String CONNECTION_URL = "jdbc:h2:mem:";
+	@Override
+	public IdentifierCase getIdentifierCase() {
+		return identifierCase;
+	}
+	
+	public void setIdentifierCase(IdentifierCase identifierCase) {
+		this.identifierCase = identifierCase;
+	}
 }
