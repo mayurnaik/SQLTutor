@@ -71,8 +71,6 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 
 	@Override
 	protected boolean handleResult(IRelation relation, RelationExtractor ext) {
-		boolean applied = false;
-		
 		while( ext.nextTuple() ) {
 			AttributeListToken attrList1 = ext.getToken("?attrList1"),
 				attrList2 = ext.getToken("?attrList2");
@@ -106,11 +104,11 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 				gparent.removeChild(parent1);
 				checkPlurality(attrList2);
 				_log.debug(Markers.SYMBOLIC, "Consolidated attributes to: {}", parent2);
+				_log.debug(Markers.SYMBOLIC, "gparent now: {}", gparent);
 			}
-			applied = true;
+			return true;
 		}
-		
-		return applied;
+		return false;
 	}
 	
 	/**
@@ -145,7 +143,7 @@ public class SimplifyRepeatedAttributesRule extends StandardSymbolicRule {
 			Multiset<String> attrBag2 = HashMultiset.create();
 			attrBag1.addAll(Arrays.asList(attrRead1.split("\\s+")));
 			attrBag2.addAll(Arrays.asList(attrRead2.split("\\s+")));
-			return attrRead1.equals(attrRead2);
+			return attrBag1.equals(attrBag2);
 		} catch( UnhandledSymbolicTypeException e ) {
 			return false;
 		}
