@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor;
 
+import java.io.StringWriter;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -312,5 +313,11 @@ public class QueryUtils {
 			throw new SQLTutorException(e);
 		}
 		return parser;
+	}
+	
+	public static String treeString(QueryTreeNode node) {
+		StringWriter writer = new StringWriter();
+		node.treePrint(writer);
+		return writer.toString();
 	}
 }
