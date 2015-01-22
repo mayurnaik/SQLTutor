@@ -18,7 +18,8 @@
 	xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
-	xmlns:p="http://primefaces.org/ui">
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
 	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" />
 	<h:head>
 		<title>SQL Tutor</title>
@@ -56,9 +57,8 @@
 				<div class="seperator"/>
 				
 				<p:panel header="Query Input" styleClass="panel">
-					<p:inputTextarea rows="12" id="query" reRender="results" style="width:100%;resize:none"
-						autoResize="false" value="#{tutorialPageBean.query}" />
-
+					<pe:codeMirror id="codeMirror" mode="text/x-plsql"
+					    theme="eclipse" value="#{tutorialPageBean.query}" lineNumbers="true"/>
 					<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
 						update="@form" styleClass="panelbutton"/>
