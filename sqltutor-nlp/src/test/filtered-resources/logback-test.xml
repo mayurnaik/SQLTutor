@@ -26,5 +26,6 @@
 
   <root level="debug">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="DEBUGLOG" />
   </root>
 </configuration>
