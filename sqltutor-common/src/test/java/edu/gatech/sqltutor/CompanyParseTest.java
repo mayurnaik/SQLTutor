@@ -47,7 +47,7 @@ public class CompanyParseTest {
 	
 	private static Connection conn;
 	private static SchemaInfo schemaInfo;
-	private static String schemaName = "company";
+	private static String schemaName = "COMPANY";
 	
 	@BeforeClass
 	public static void beforeClass() throws Exception {

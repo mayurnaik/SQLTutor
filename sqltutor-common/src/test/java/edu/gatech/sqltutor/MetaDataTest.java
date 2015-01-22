@@ -34,17 +34,15 @@ import edu.gatech.sqltutor.sql.SchemaInfo;
 
 public class MetaDataTest {
 	
-	private static final String SCHEMA = "APP"; // APP is the Derby default schema
-	
 	private static Connection conn;
 	
 	@BeforeClass
 	public static void beforeClass() throws Exception {
 		Class.forName(TestConst.DRIVER_CLASS);
-		conn = DriverManager.getConnection(TestConst.CONNECTION_URL + ";create=true");
+		conn = DriverManager.getConnection(TestConst.CONNECTION_URL + ";mode=PostgreSQL");
 		Statement s = conn.createStatement();
 		
-		s.execute("CREATE TABLE t1 ( c1 INT NOT NULL, c2 VARCHAR(10), c3 VARCHAR(255) NOT NULL WITH DEFAULT 'foo')");
+		s.execute("CREATE TABLE t1 ( c1 INT NOT NULL, c2 VARCHAR(10), c3 VARCHAR(255) NOT NULL DEFAULT 'foo')");
 		s.execute("CREATE TABLE t2 ( c4 CHAR(5) NOT NULL PRIMARY KEY )");
 	}
 	
@@ -52,23 +50,17 @@ public class MetaDataTest {
 	public static void afterClass() throws Exception {
 		Utils.tryClose(conn);
 		conn = null;
-		try (Connection c = DriverManager.getConnection(TestConst.CONNECTION_URL + ";drop=true")) {
-			// nothing
-		} catch( SQLNonTransientConnectionException expected ) {
-			if( !"08006".equals(expected.getSQLState()) )
-				throw expected;
-		}
 	}
 	
 	@Test
 	public void testReadTableInfo() throws Exception {
-		List<DatabaseTable> tableInfos = QueryUtils.readTableInfo(conn.getMetaData(), SCHEMA);
+		List<DatabaseTable> tableInfos = QueryUtils.readTableInfo(conn.getMetaData(), TestConst.DEFAULT_SCHEMA);
 		assertStructure(tableInfos);
 	}
 	
 	@Test
 	public void testReadSchemaInfo() throws Exception {
-		SchemaInfo schemaInfo = QueryUtils.readSchemaInfo(conn.getMetaData(), SCHEMA);
+		SchemaInfo schemaInfo = QueryUtils.readSchemaInfo(conn.getMetaData(), TestConst.DEFAULT_SCHEMA);
 		assertStructure(schemaInfo.getTables());
 	}
 	

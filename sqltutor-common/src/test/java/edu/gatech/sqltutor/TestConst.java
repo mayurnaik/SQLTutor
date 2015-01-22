@@ -19,4 +19,5 @@ public class TestConst {
 	
 	public static final String DRIVER_CLASS = "org.h2.Driver";
 	public static final String CONNECTION_URL = "jdbc:h2:mem:";
+	public static final String DEFAULT_SCHEMA = "PUBLIC";
 }
