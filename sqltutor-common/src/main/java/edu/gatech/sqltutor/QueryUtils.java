@@ -99,6 +99,8 @@ public class QueryUtils {
 	 */
 	public static QueryTreeNode findParent(QueryTreeNode root, final QueryTreeNode child) 
 			throws SQLTutorException {
+		if (root == child)
+			return null;
 		
 		class HasChildVisitor extends ParserVisitorAdapter {
 			QueryTreeNode parent;
@@ -292,13 +294,14 @@ public class QueryUtils {
 	/**
 	 * Creates a new parser that is configured for a particular database.
 	 * 
-	 * @param meta the database metadata to configure against
+	 * @param meta the database metadata to configure against, or <code>null</code> for default settings
 	 * @return the parser
 	 * @throws SQLTutorException if there is a problem configuring the parser
 	 */
 	public static SQLParser newParser(DatabaseMetaData meta) throws SQLTutorException {
-		if( meta == null ) throw new NullPointerException("meta is null");
 		ConfigurableSQLParser parser = new ConfigurableSQLParser();
+		if( meta == null )
+			return parser;
 		try {
 			// for now we just handle identifier casing
 			if( meta.storesLowerCaseIdentifiers() )
