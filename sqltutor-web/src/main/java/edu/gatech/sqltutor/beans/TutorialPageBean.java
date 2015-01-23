@@ -94,7 +94,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		
 		try {
 			// check the answer
-			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
+			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, false);
 			setResultSetDiffs();
 			
 			// generate NLP feedback
