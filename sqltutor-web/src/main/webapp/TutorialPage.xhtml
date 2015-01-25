@@ -22,6 +22,7 @@
 	xmlns:pe="http://primefaces.org/ui/extensions">
 	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" />
 	<h:head>
+		<h:outputScript library="js" name="sql-hint.js" />
 		<title>SQL Tutor</title>
 		<ui:insert name="menu">
 			<ui:include src="/Menubar.xhtml" />
@@ -57,9 +58,10 @@
 				<div class="seperator"/>
 				
 				<p:panel header="Query Input" styleClass="panel">
-					<pe:codeMirror id="codeMirror" mode="text/x-plsql"
-					    theme="eclipse" value="#{tutorialPageBean.query}" lineNumbers="true"/>
-					<p:commandButton id="try" value="Try Query"
+				<pe:codeMirror id="codeMirror" mode="text/x-plsql" theme="eclipse"
+					value="#{tutorialPageBean.query}" lineNumbers="true" extraKeys="{
+					'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
+				<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
 						update="@form" styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
