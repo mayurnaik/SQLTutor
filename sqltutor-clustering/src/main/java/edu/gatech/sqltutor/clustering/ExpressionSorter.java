@@ -73,7 +73,7 @@ public class ExpressionSorter extends ContextVisitorAdapter implements Visitor {
 			ColumnReference ref = (ColumnReference)node;
 			ResultColumn resultColumn = ref.getSourceResultColumn();
 			String sqlColumnName = ref.getSQLColumnName();
-			_log.info("\nsqlColumnName: {}\nresultColumn: {}", sqlColumnName, resultColumn);
+//			_log.info("\nsqlColumnName: {}\nresultColumn: {}", sqlColumnName, resultColumn);
 			return sqlColumnName;
 		}
 		}

@@ -16,9 +16,7 @@
 package edu.gatech.sqltutor.clustering;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.akiban.sql.StandardException;
 import com.akiban.sql.compiler.BooleanNormalizer;
@@ -31,16 +29,28 @@ import com.google.common.collect.Multiset;
 
 import edu.gatech.sqltutor.QueryUtils;
 import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.sql.SchemaInfo;
 
+/**
+ * Normalizes a query using a series of rewriting actions.
+ *
+ * @author Jake Cobb
+ */
 public class QueryNormalizer {
+	
+	private SchemaInfo schemaInfo;
 
 	public QueryNormalizer() {
+	}
+	
+	public QueryNormalizer(SchemaInfo schemaInfo) {
+		this.schemaInfo = schemaInfo;
 	}
 
 	public String normalize(String query) throws SQLTutorException {
 		SQLParser parser = new SQLParser();
 		try {
-			StatementNode statement = parser.parseStatement(query);
+			StatementNode statement = parser.parseStatement(QueryUtils.sanitize(query));
 			statement = normalize(statement);
 			return QueryUtils.nodeToString(statement);
 		} catch (StandardException e) {
@@ -74,5 +84,13 @@ public class QueryNormalizer {
 			throw new SQLTutorException(e);
 		}
 		return node;
+	}
+	
+	public SchemaInfo getSchemaInfo() {
+		return schemaInfo;
+	}
+	
+	public void setSchemaInfo(SchemaInfo schemaInfo) {
+		this.schemaInfo = schemaInfo;
 	}
 }
