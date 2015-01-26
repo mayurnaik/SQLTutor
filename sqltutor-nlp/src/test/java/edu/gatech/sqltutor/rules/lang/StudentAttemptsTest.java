@@ -41,11 +41,6 @@ public class StudentAttemptsTest extends SymbolicFragmentTestBase {
 			{"select distinct super_ssn from employee", 
 				Pattern.quote("Select the SSN of each supervisor.")},
 			
-			// 2
-			// Select the ssn of the manager of the Research department.
-			{"select mgr_ssn from department where dname = \"Research\"", 
-				Pattern.quote("Select the ssn of the manager of the Research department.")},
-			
 			// 3
 			// Select the relationship of each dependent.
 			{"select relationship from dependent", 
@@ -58,10 +53,18 @@ public class StudentAttemptsTest extends SymbolicFragmentTestBase {
 			// 5
 			{"select mgr_ssn from department where dname = 'research'", 
 				Pattern.quote("Select the ssn of each employee who manages the \"research\" department.")},
-			
+				
 			// 6
+			{"select fname, lname from employee where salary > 10000 and salary < 30000", 
+				Pattern.quote("Retrieve the first name and last name of each employee who earns greater than $10,000 and less than $30,000.")},
+				
+			// 7 
 			{"select e.fname, s.fname from employee as e, employee as s where e.salary > 20000", 
 				Pattern.quote("Select the first names of each employee _e_ and employee _e2_ where _e_'s salary is greater than $20,000.")},
+				
+			// 8
+			{"select fname, minit, lname, salary from employee where salary > 10000 and salary <= 30000",
+						Pattern.quote("Retrieve the first name and last name of each employee who earns greater than $10,000 and less than or equal to $30,000.")}
 				
 		};
 		return Arrays.asList(params);
