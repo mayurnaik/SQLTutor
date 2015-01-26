@@ -36,7 +36,7 @@ import edu.gatech.sqltutor.sql.SchemaInfo;
  *
  * @author Jake Cobb
  */
-public class QueryNormalizer {
+public class QueryNormalizer implements IQueryNormalizer {
 	
 	private SchemaInfo schemaInfo;
 

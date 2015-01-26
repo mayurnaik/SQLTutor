@@ -48,6 +48,7 @@ public class RunNormalize {
 			ResultSet rs = search.executeQuery("SELECT * FROM assignment_log")
 		) {
 			QueryNormalizer normalizer = new QueryNormalizer();
+			StringQueryNormalizer fallbackNormalizer = new StringQueryNormalizer();
 			while (rs.next()) {
 				String query = rs.getString("query");
 				Timestamp timestamp = rs.getTimestamp("timestamp");
@@ -60,8 +61,7 @@ public class RunNormalize {
 						System.err.println("WARN: Updated " + rows + " rows for timestamp: " + timestamp);
 					}
 				} catch (Throwable e) {
-					
-					System.err.println("Failed to normalize: " + query);
+					System.err.println("Fallback normalization for: " + query);
 					String message = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
 					normalizeError.setString(1, message);
 					normalizeError.setTimestamp(2, timestamp);
@@ -69,6 +69,12 @@ public class RunNormalize {
 					if (rows != 1) {
 						System.err.println("WARN: Updated " + rows + " rows for timestamp: " + timestamp);
 					}
+					
+
+					String normalized = fallbackNormalizer.normalize(query);
+					normalizeStatement.setString(1,  normalized);
+					normalizeStatement.setTimestamp(2, timestamp);
+					normalizeStatement.executeUpdate();
 				}
 			}
 		}
