@@ -50,308 +50,334 @@ import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
 
 @ManagedBean
 @ViewScoped
-public class TutorialPageBean extends AbstractDatabaseBean implements Serializable {
+public class TutorialPageBean extends AbstractDatabaseBean implements
+		Serializable {
 	private static final long serialVersionUID = 1L;
-	
-	@ManagedProperty(value="#{userBean}")
+
+	@ManagedProperty(value = "#{userBean}")
 	private UserBean userBean;
-	
-	private String selectedSchema;
+
 	private List<DatabaseTable> tables;
-	private List<String> questions;
-	private HashMap<String, String> answers = new HashMap<String, String>();
+	private List<QuestionTuple> questionTuples;
 	private int questionIndex;
 	private String query;
 	private String feedbackNLP;
 	private String resultSetFeedback;
-	private String userFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
-	private QueryResult queryDiffResult;
-	private QueryResult answerDiffResult;
-	private boolean nlpDisabled = true;
 
 	@PostConstruct
 	public void init() {
-		selectedSchema = userBean.getSelectedSchema();
 		try {
-			tables = getDatabaseManager().getTables(selectedSchema);
+			tables = getDatabaseManager().getTables(
+					userBean.getSelectedSchema());
 		} catch (SQLException e) {
-			for(Throwable t : e) {
+			for (Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
-		setQuestionsAndAnswers();
+		setupQuestionsAndAnswers();
 	}
 
 	public void processSQL() {
-		reset();
-		
-		if ( StringUtils.isEmpty(query) || questions.isEmpty() )
+		// check if we have a question
+		if (StringUtils.isEmpty(query) || questionTuples.isEmpty())
 			return;
-		
-		try {
-			// check the answer
-			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, false);
-			setResultSetDiffs();
-			
-			// generate NLP feedback
-			ERDiagram erDiagram = null;
-			ERMapping erMapping = null;
-			// FIXME: hard coded for now
-			if(userBean.getSelectedSchema().equals("company")) {
-				nlpDisabled = false;
-				Class<?> c = this.getClass();
-				ERSerializer serializer = new ERSerializer();
-				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream("/testdata/company.er.xml"));
-				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream("/testdata/company.mapping.xml"));
-			} else if(userBean.getSelectedSchema().equals("business_trip")) {
-				nlpDisabled = false;
-				Class<?> c = this.getClass();
-				ERSerializer serializer = new ERSerializer();
-				erDiagram = (ERDiagram)serializer.deserialize(c.getResourceAsStream("/testdata/business_trip.er.xml"));
-				erMapping = (ERMapping)serializer.deserialize(c.getResourceAsStream("/testdata/business_trip.mapping.xml"));
-			}
+		// reset all of the feedback fields
+		reset();
 
-			if(!nlpDisabled && getQueryIsCorrect() == false) {
-				try {
-					SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
-					queryTranslator.setQuery(query);
-					queryTranslator.setSchemaMetaData(tables);
-					queryTranslator.setERDiagram(erDiagram);
-					queryTranslator.setERMapping(erMapping); 
-					String result = queryTranslator.getTranslation();
-					result = format(result);
-					resultSetFeedback += " We determined the question that you actually answered was: ";
-					feedbackNLP = "\" " + result + " \"";
-				} catch (Exception e) {
-					resultSetFeedback += " (Sorry, we were unable to produce a sound English translation for your query.)";
-					if(e instanceof SQLException) {
-						for(Throwable t : (SQLException)e) {
-							t.printStackTrace();
-						}
-					} else {
-						e.printStackTrace();
-					}
-				}
-			}
-		} catch(SQLException e) {
-			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n" + e.getMessage();
-		}
-		
+		// calculate the answer's result set, return and let the user know if
+		// the answer is malformed
+		final String answer = questionTuples.get(questionIndex).getAnswer();
 		try {
-			String nlpFeedback = StringUtils.isEmpty(getFeedbackNLP()) ? null : getFeedbackNLP();
-			getDatabaseManager().log(BeanUtils.getSessionId(), userBean.getHashedEmail(), selectedSchema, 
-					questions.get(questionIndex), getAnswers().get(questions.get(questionIndex)), query, !isQueryMalformed(), getQueryIsCorrect(), nlpFeedback);
+			answerResult = getDatabaseManager().getQueryResult(
+					userBean.getSelectedSchema(), answer, false);
 		} catch (SQLException e) {
-			for(Throwable t : e) {
+			resultSetFeedback = "We are unable to give feedback for this question, the stored answer is malformed.";
+			return;
+		}
+
+		String nlpResult = null;
+		// let the user know if their query is restricted
+		if (isRestricted(query)) {
+			resultSetFeedback = "You do not have permission to run this query.";
+		} else {
+			// check answer
+			setResultSetFeedback(answer);
+
+			// generate nlp (if the question is incorrect and parsed
+			if (!getQueryIsCorrect()
+					&& !resultSetFeedback.contains("malformed"))
+				nlpResult = setNLPFeedback();
+		}
+
+		// log
+		try {
+			getDatabaseManager().log(BeanUtils.getSessionId(),
+					userBean.getHashedEmail(), userBean.getSelectedSchema(),
+					questionTuples.get(questionIndex).getQuestion(), answer,
+					query, !isQueryMalformed(), getQueryIsCorrect(), nlpResult);
+		} catch (SQLException e) {
+			for (Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
 		}
-	} 
-	
+	}
+
+	private boolean isRestricted(String query) {
+		return query.toLowerCase().contains("schema_information")
+				|| query.toLowerCase().contains("pg_catalog");
+	}
+
+	private String setNLPFeedback() {
+		String result = null;
+		final String schema = userBean.getSelectedSchema();
+		if (schema.equals("company") || schema.equals("business_trip")) {
+			// generate NLP feedback
+			final ERSerializer serializer = new ERSerializer();
+			final Class<?> c = this.getClass();
+
+			// FIXME: hard coded for now
+			ERDiagram erDiagram = (ERDiagram) serializer.deserialize(c
+					.getResourceAsStream("/testdata/" + schema + ".er.xml"));
+			ERMapping erMapping = (ERMapping) serializer
+					.deserialize(c.getResourceAsStream("/testdata/" + schema
+							+ ".mapping.xml"));
+
+			try {
+				final SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
+				queryTranslator.setQuery(query);
+				queryTranslator.setSchemaMetaData(tables);
+				queryTranslator.setERDiagram(erDiagram);
+				queryTranslator.setERMapping(erMapping);
+				resultSetFeedback += " We determined the question that you actually answered was: ";
+				result = queryTranslator.getTranslation();
+				feedbackNLP = "\" " + format(result) + " \"";
+			} catch (Exception e) {
+				resultSetFeedback += " (Sorry, we were unable to produce a sound English translation for your query.)";
+				if (e instanceof SQLException) {
+					for (Throwable t : (SQLException) e) {
+						t.printStackTrace();
+					}
+				} else {
+					e.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+
 	private String format(String translation) {
-		Pattern pattern = Pattern.compile("(_.*?_)");
-		Matcher matcher = pattern.matcher(translation);
-		while(matcher.find()) {
-		    String oldString = matcher.group(1);
-		    String newString = oldString.replaceFirst("_", "<i>");
-		    newString = newString.replaceFirst("_", "</i>");
-		    translation = translation.replace(oldString, newString);
+		final Pattern pattern = Pattern.compile("(_.*?_)");
+		final Matcher matcher = pattern.matcher(translation);
+		while (matcher.find()) {
+			final String oldString = matcher.group(1);
+			final String newString = oldString.replaceFirst("_", "<i>")
+					.replaceFirst("_", "</i>");
+			translation = translation.replace(oldString, newString);
 		}
 		return translation;
 	}
-	
-	private void setResultSetDiffs() {
+
+	private void setResultSetFeedback(String answer) {
+		boolean columnOrderMatters = false;
+		boolean rowOrderMatters = false;
+
+		if (answer.contains(" order by "))
+			rowOrderMatters = true;
+
 		try {
-			answerResult = getDatabaseManager().getQueryResult(selectedSchema, getAnswers().get(questions.get(questionIndex)), false);
-			
-			if (getAnswers().get(questions.get(questionIndex)).toLowerCase().contains(" order by ")) {
-				compareQueries(false, true); 
-			} else {
-				compareQueries(false, false); 
-			} 
-			
-		} catch(SQLException e) {
-			resultSetFeedback = "The stored answer was malformed." + e.getMessage();
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
-			}
+			queryResult = getDatabaseManager().getQueryResult(
+					userBean.getSelectedSchema(), query, false);
+		} catch (SQLException e) {
+			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
+					+ e.getMessage();
+			return;
 		}
-	}
-	
-	private void compareQueries(boolean columnOrderMatters, boolean rowOrderMatters) {
-		
-		if(!queryResult.getColumns().containsAll(answerResult.getColumns()) || !answerResult.getColumns().containsAll(queryResult.getColumns())) {
+
+		if (!queryResult.getColumns().containsAll(answerResult.getColumns())
+				|| !answerResult.getColumns().containsAll(
+						queryResult.getColumns())) {
 			resultSetFeedback = "Incorrect.";
 		} else {
-			if(columnOrderMatters && rowOrderMatters) {
-				if(answerResult.equals(queryResult)) {
+			if (columnOrderMatters && rowOrderMatters) {
+				if (answerResult.equals(queryResult)) {
 					resultSetFeedback = "Correct!";
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-					//FIXME perhaps more specific feedback? different row data/order, order by? conditionals? different attributes?
+					// FIXME perhaps more specific feedback? different row
+					// data/order, order by? conditionals? different attributes?
 				}
-			} else if(columnOrderMatters && !rowOrderMatters) {
-				String queryDiffAnswer = query + " EXCEPT " + getAnswers().get(questions.get(questionIndex)) + ";";
-				String answerDiffQuery = getAnswers().get(questions.get(questionIndex)) + " EXCEPT " + query + ";";
+			} else if (columnOrderMatters && !rowOrderMatters) {
+				final String queryDiffAnswer = query + " EXCEPT " + answer
+						+ ";";
+				final String answerDiffQuery = answer + " EXCEPT " + query
+						+ ";";
 				try {
 					final DatabaseManager databaseManager = getDatabaseManager();
-					queryDiffResult = databaseManager.getQueryResult(selectedSchema, queryDiffAnswer, userBean.isAdmin());
-					answerDiffResult = databaseManager.getQueryResult(selectedSchema, answerDiffQuery, userBean.isAdmin());
-					if(queryDiffResult.getData().isEmpty() && answerDiffResult.getData().isEmpty()) {
+					final QueryResult queryDiffResult = databaseManager
+							.getQueryResult(userBean.getSelectedSchema(),
+									queryDiffAnswer, false);
+					final QueryResult answerDiffResult = databaseManager
+							.getQueryResult(userBean.getSelectedSchema(),
+									answerDiffQuery, false);
+					if (queryDiffResult.getData().isEmpty()
+							&& answerDiffResult.getData().isEmpty()) {
 						resultSetFeedback = "Correct.";
 					} else {
-						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";			
+						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
-				} catch(SQLException e) {
-					if(e.getMessage().contains("columns")) {
+				} catch (SQLException e) {
+					if (e.getMessage().contains("columns")) {
 						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
-					} else if(e.getMessage().contains("type")) {
+					} else if (e.getMessage().contains("type")) {
 						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
 					} else {
-						for(Throwable t : e) {
+						for (Throwable t : e) {
 							t.printStackTrace();
 							logException(t, userBean.getHashedEmail());
 						}
 					}
 				}
-			} else if(!columnOrderMatters && rowOrderMatters) {
-				Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
-				Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
-	
-				for(int i = 0; i < queryResult.getColumns().size(); i++) {
-					List<String> columnData = new ArrayList<String>(queryResult.getData().size());
-					for(int j = 0; j < queryResult.getData().size(); j++) {
+			} else if (!columnOrderMatters && rowOrderMatters) {
+				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
+				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
+
+				for (int i = 0; i < queryResult.getColumns().size(); i++) {
+					final List<String> columnData = new ArrayList<String>(
+							queryResult.getData().size());
+					for (int j = 0; j < queryResult.getData().size(); j++) {
 						columnData.add(queryResult.getData().get(j).get(i));
 					}
 					queryTree.put(queryResult.getColumns().get(i), columnData);
 				}
-				
-				for(int i = 0; i < answerResult.getColumns().size(); i++) {
-					List<String> columnData = new ArrayList<String>(answerResult.getData().size());
-					for(int j = 0; j < answerResult.getData().size(); j++) {
+
+				for (int i = 0; i < answerResult.getColumns().size(); i++) {
+					final List<String> columnData = new ArrayList<String>(
+							answerResult.getData().size());
+					for (int j = 0; j < answerResult.getData().size(); j++) {
 						columnData.add(answerResult.getData().get(j).get(i));
 					}
-					answerTree.put(answerResult.getColumns().get(i), columnData);
+					answerTree
+							.put(answerResult.getColumns().get(i), columnData);
 				}
-				
-				if(queryTree.equals(answerTree)) {
+
+				if (queryTree.equals(answerTree)) {
 					resultSetFeedback = "Correct.";
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
 				}
 			} else {
-				Multiset<String> queryBag = HashMultiset.create();
-				Multiset<String> answerBag = HashMultiset.create();
-				
-				for(int i = 0; i < queryResult.getColumns().size(); i++) {
-					for(int j = 0; j < queryResult.getData().size(); j++) {
+				final Multiset<String> queryBag = HashMultiset.create();
+				final Multiset<String> answerBag = HashMultiset.create();
+
+				for (int i = 0; i < queryResult.getColumns().size(); i++) {
+					for (int j = 0; j < queryResult.getData().size(); j++) {
 						queryBag.add(queryResult.getData().get(j).get(i));
 					}
 				}
-				
-				for(int i = 0; i < answerResult.getColumns().size(); i++) {
-					for(int j = 0; j < answerResult.getData().size(); j++) {
+
+				for (int i = 0; i < answerResult.getColumns().size(); i++) {
+					for (int j = 0; j < answerResult.getData().size(); j++) {
 						answerBag.add(answerResult.getData().get(j).get(i));
 					}
 				}
-				
-				if(queryBag.equals(answerBag)) {
+
+				if (queryBag.equals(answerBag)) {
 					resultSetFeedback = "Correct.";
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-				} 
+				}
 			}
 		}
 	}
-	
+
 	public void submitFeedback() {
 		// FIXME We'll need to decide how we're going to store this.
-		String feedbackMessagesId = FacesContext.getCurrentInstance().getViewRoot().findComponent(":feedbackForm:feedbackMessages").getClientId();
-		FacesContext.getCurrentInstance().addMessage(feedbackMessagesId, new FacesMessage("We appreciate your submission."));
+		final String feedbackMessagesId = FacesContext.getCurrentInstance()
+				.getViewRoot().findComponent(":feedbackForm:feedbackMessages")
+				.getClientId();
+		FacesContext.getCurrentInstance().addMessage(feedbackMessagesId,
+				new FacesMessage("We appreciate your submission."));
 	}
-	
-	public void setQuestionsAndAnswers() {
-		List<QuestionTuple> questionTuples = null;
+
+	public void setupQuestionsAndAnswers() {
+		questionTuples = null;
 		final DatabaseManager databaseManager = getDatabaseManager();
 		try {
-			questionTuples = databaseManager.getQuestions(selectedSchema);
+			questionTuples = databaseManager.getQuestions(userBean
+					.getSelectedSchema());
 		} catch (SQLException e) {
-			for(Throwable t : e) {
+			for (Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			return;
 		}
-		
-		if(questionTuples.isEmpty()) {
-			questions.add("There are no questions available for this schema.");
-		} else {
-			questions = new ArrayList<String>(questionTuples.size());
-			for(QuestionTuple question : questionTuples) {
-				questions.add(question.getQuestion());
-				getAnswers().put(question.getQuestion(), question.getAnswer());
-			}
-			
+
+		if (!questionTuples.isEmpty()) {
 			HashMap<String, Boolean> options = null;
 			try {
-				options = databaseManager.getOptions(selectedSchema);
+				options = databaseManager.getOptions(userBean
+						.getSelectedSchema());
 			} catch (SQLException e) {
-				for(Throwable t : e) {
+				for (Throwable t : e) {
 					t.printStackTrace();
 					logException(t, userBean.getHashedEmail());
 				}
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+				return;
 			}
-			
-			if(!options.get("in_order_questions")) {
-				Collections.shuffle(questions, new Random(System.nanoTime()));
+
+			if (!options.get("in_order_questions")) {
+				Collections.shuffle(questionTuples,
+						new Random(System.nanoTime()));
 			}
 		}
 	}
-	
-	public void nextQuestion() {	// reset everything and move to the next question.
+
+	public void nextQuestion() {
+		// reset everything and move to the next question.
 		questionIndex++;
-		if(questionIndex >= questions.size()) {
+		if (questionIndex >= questionTuples.size()) {
 			questionIndex = 0;
 		}
 		reset();
 	}
-	
+
 	private void reset() {
 		queryResult = null;
 		answerResult = null;
-		queryDiffResult = null;
-		answerDiffResult = null;
 		feedbackNLP = "";
 		resultSetFeedback = "";
-		nlpDisabled = true;
 	}
-	
+
 	public String getQuestion() {
 		// Log that a question was retrieved
 		try {
-			getDatabaseManager().logQuestionPresentation(BeanUtils.getSessionId(), userBean.getHashedEmail(), selectedSchema, 
-					questions.get(questionIndex));
+			getDatabaseManager().logQuestionPresentation(
+					BeanUtils.getSessionId(), userBean.getHashedEmail(),
+					userBean.getSelectedSchema(),
+					questionTuples.get(questionIndex).getQuestion());
 		} catch (SQLException e) {
-			for(Throwable t : e) {
+			for (Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
-		return (questionIndex+1) + ". " + questions.get(questionIndex);
+		return (questionIndex + 1) + ". "
+				+ questionTuples.get(questionIndex).getQuestion();
 	}
 
 	public String getQuery() {
 		return query;
 	}
-	
+
 	public void setQuery(String query) {
 		this.query = query;
 	}
@@ -371,10 +397,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 	public String getFeedbackNLP() {
 		return feedbackNLP;
 	}
-	
-	public String getSelectedSchema() {
-		return selectedSchema;
-	}
 
 	public List<DatabaseTable> getTables() {
 		return tables;
@@ -384,49 +406,22 @@ public class TutorialPageBean extends AbstractDatabaseBean implements Serializab
 		return answerResult;
 	}
 
-	public QueryResult getQueryDiffResult() {
-		return queryDiffResult;
-	}
-	
-	public QueryResult getAnswerDiffResult() {
-		return answerDiffResult;
-	}
-	
 	public String getResultSetFeedback() {
 		return resultSetFeedback;
 	}
-	
+
 	public boolean getQueryIsCorrect() {
-		if(resultSetFeedback == null || !resultSetFeedback.toLowerCase().contains("incorrect")) {
+		if (resultSetFeedback == null
+				|| !resultSetFeedback.toLowerCase().contains("incorrect")) {
 			return true;
 		}
 		return false;
 	}
 
-	public void setUserFeedback(String userFeedback) {
-		this.userFeedback = userFeedback;
-	}
-
-	public String getUserFeedback() {
-		return userFeedback;
-	}
-	
-	public boolean isNlpDisabled() {
-		return nlpDisabled;
-	}
-	
 	public boolean isQueryMalformed() {
-		if(resultSetFeedback.toLowerCase().contains("malformed")) {
+		if (resultSetFeedback.toLowerCase().contains("malformed")) {
 			return true;
 		}
 		return false;
-	}
-
-	public HashMap<String, String> getAnswers() {
-		return answers;
-	}
-
-	public void setAnswers(HashMap<String, String> answers) {
-		this.answers = answers;
 	}
 }
