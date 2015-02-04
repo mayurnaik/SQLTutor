@@ -65,7 +65,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String resultSetFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
-
+	
+	public static final String WEAKLY_CORRECT_MESSAGE = "You answer is \"weakly correct\". It works for the small set of instances we have available.";
+	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
+	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
+	
 	@PostConstruct
 	public void init() {
 		try {
@@ -95,14 +99,14 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			answerResult = getDatabaseManager().getQueryResult(
 					userBean.getSelectedSchema(), answer, false);
 		} catch (SQLException e) {
-			resultSetFeedback = "We are unable to give feedback for this question, the stored answer is malformed.";
+			resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 			return;
 		}
 
 		String nlpResult = null;
 		// let the user know if their query is restricted
 		if (isRestricted(query)) {
-			resultSetFeedback = "You do not have permission to run this query.";
+			resultSetFeedback = NO_PERMISSIONS_MESSAGE;
 		} else {
 			// check answer
 			setResultSetFeedback(answer);
@@ -198,6 +202,18 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			return;
 		}
 
+		//check for "strong" correctness
+		
+		// naive check. get rid of all whitespaces and semi-colons, then lower case both, then check equality
+		// TODO: Move in the clustering classes to do a better job of this.
+		final String normalizedAnswer = answer.replaceAll("\\s","").replaceAll(";","").toLowerCase();
+		final String normalizedQuery = query.replaceAll("\\s","").replaceAll(";","").toLowerCase();
+		if(normalizedAnswer.equals(normalizedQuery)) {
+			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
+			return;
+		}
+		
+		//check for "weak" correctness
 		if (!queryResult.getColumns().containsAll(answerResult.getColumns())
 				|| !answerResult.getColumns().containsAll(
 						queryResult.getColumns())) {
@@ -205,7 +221,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		} else {
 			if (columnOrderMatters && rowOrderMatters) {
 				if (answerResult.equals(queryResult)) {
-					resultSetFeedback = "Correct!";
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					// FIXME perhaps more specific feedback? different row
@@ -226,7 +242,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 									answerDiffQuery, false);
 					if (queryDiffResult.getData().isEmpty()
 							&& answerDiffResult.getData().isEmpty()) {
-						resultSetFeedback = "Correct.";
+						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
@@ -266,7 +282,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 
 				if (queryTree.equals(answerTree)) {
-					resultSetFeedback = "Correct.";
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
 				}
@@ -287,7 +303,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 
 				if (queryBag.equals(answerBag)) {
-					resultSetFeedback = "Correct.";
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 				} else {
 					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 				}
