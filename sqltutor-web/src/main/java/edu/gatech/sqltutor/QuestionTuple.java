@@ -24,6 +24,7 @@ public class QuestionTuple implements Serializable {
 	private String question;
 	private String answer;
 	private int id;
+	private boolean attempted;
 	
 	public QuestionTuple(int order, String question, String answer, int id) {
 		this.order = order;
@@ -55,5 +56,13 @@ public class QuestionTuple implements Serializable {
 	}
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public boolean isAttempted() {
+		return attempted;
+	}
+
+	public void setAttempted(boolean attempted) {
+		this.attempted = attempted;
 	}
 }

@@ -29,7 +29,7 @@
 		</ui:insert>
 	</h:head>
 	<h:body>
-		<h:form>
+		<h:form id="mainForm">
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
@@ -51,7 +51,11 @@
 				
 				<div class="seperator"/>
 				
-				<p:panel header="Question" styleClass="panel">
+				<p:contextMenu for="questionPanel">
+					<p:menuitem value="Change Question" oncomplete="PF('change_question').show();"/>
+				</p:contextMenu>
+				
+				<p:panel id="questionPanel" header="Question" styleClass="panel">
 					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
 				</p:panel>
 				
@@ -115,5 +119,25 @@
 				</p:panel>
 			</div>		
 		</h:form>
+		<p:dialog id="changeQuestionDialog" header="Change Question" widgetVar="change_question" 
+		closeable="true" closeOnEscape="true"
+		modal="true" width="30%" resizable="false" appentTo="@(body)">
+			<h:form id="dialogForm">
+				<h:outputText value="Current question number: #{tutorialPageBean.questionNumber}"/>
+				<br/><br/>
+				<p:panel>
+					<h:panelGrid columns="2">
+						<p:outputLabel for="q" value="Please select a question number:" />
+						<p:selectOneMenu id="q" value="#{tutorialPageBean.questionNumber}" effect="fade">
+							<f:selectItems value="#{tutorialPageBean.questionTuples}" var="question" 
+								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
+								itemLabel="#{tutorialPageBean.getQuestionNumber(question)}" 
+								itemDescription="#{tutorialPageBean.getQuestionDescription(question)}"/>
+							<p:ajax update=":mainForm,dialogForm"/>
+						</p:selectOneMenu>	
+					</h:panelGrid>
+				</p:panel>
+			</h:form>
+		</p:dialog>
 	</h:body>
 </html>

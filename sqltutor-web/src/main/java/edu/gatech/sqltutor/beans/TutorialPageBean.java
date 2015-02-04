@@ -370,7 +370,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
 		}
-		return (questionIndex + 1) + ". "
+		return getQuestionNumber() + ". "
 				+ questionTuples.get(questionIndex).getQuestion();
 	}
 
@@ -423,5 +423,38 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			return true;
 		}
 		return false;
+	}
+	
+	public int getQuestionNumber(QuestionTuple question) {
+		return questionTuples.indexOf(question) + 1;
+	}
+	
+	/**
+	 * Question numbering is not 0-indexed, so we must convert it before returning it.
+	 * @return	non-0-indexed question number.
+	 */
+	public int getQuestionNumber() {
+		return questionIndex + 1;
+	}
+	
+	/**
+	 * Question numbering is not 0-indexed, so it must be converted before the index is set.
+	 * @param questionNumber	non-0-indexed question number.
+	 */
+	public void setQuestionNumber(int questionNumber) {
+		questionIndex = questionNumber - 1;
+	}
+	
+	public void setQuestionIndex(int questionIndex) {
+		this.questionIndex = questionIndex;
+	}
+	
+	public List<QuestionTuple> getQuestionTuples() {
+		return questionTuples;
+	}
+	
+	public String getQuestionDescription(QuestionTuple question) {
+		return "Question Number " + getQuestionNumber(question);
+		//return question.isAttempted() ? "Attempted." : "Not attempted.";
 	}
 }
