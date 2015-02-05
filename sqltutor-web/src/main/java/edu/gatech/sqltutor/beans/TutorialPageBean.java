@@ -65,11 +65,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String resultSetFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
-	
+
 	public static final String WEAKLY_CORRECT_MESSAGE = "You answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
-	
+
 	@PostConstruct
 	public void init() {
 		try {
@@ -92,16 +92,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		// reset all of the feedback fields
 		reset();
 
-		// calculate the answer's result set, return and let the user know if
-		// the answer is malformed
 		final String answer = questionTuples.get(questionIndex).getAnswer();
-		try {
-			answerResult = getDatabaseManager().getQueryResult(
-					userBean.getSelectedSchema(), answer, false);
-		} catch (SQLException e) {
-			resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
-			return;
-		}
 
 		String nlpResult = null;
 		// let the user know if their query is restricted
@@ -109,6 +100,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			resultSetFeedback = NO_PERMISSIONS_MESSAGE;
 		} else {
 			// check answer
+
 			setResultSetFeedback(answer);
 
 			// generate nlp (if the question is incorrect and parsed
@@ -187,12 +179,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 
 	private void setResultSetFeedback(String answer) {
-		boolean columnOrderMatters = false;
-		boolean rowOrderMatters = false;
-
-		if (answer.contains(" order by "))
-			rowOrderMatters = true;
-
+		// calculate the student's query's result set, and let them know if it
+		// was malformed.
 		try {
 			queryResult = getDatabaseManager().getQueryResult(
 					userBean.getSelectedSchema(), query, false);
@@ -201,113 +189,128 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					+ e.getMessage();
 			return;
 		}
-
-		//check for "strong" correctness
 		
-		// naive check. get rid of all whitespaces and semi-colons, then lower case both, then check equality
+		// check for "strong" correctness
+		// naive check. get rid of all whitespaces and semi-colons, then lower
+		// case both, then check equality
 		// TODO: Move in the clustering classes to do a better job of this.
-		final String normalizedAnswer = answer.replaceAll("\\s","").replaceAll(";","").toLowerCase();
-		final String normalizedQuery = query.replaceAll("\\s","").replaceAll(";","").toLowerCase();
-		if(normalizedAnswer.equals(normalizedQuery)) {
+		final String normalizedAnswer = answer.replaceAll("\\s", "")
+				.replaceAll(";", "").toLowerCase();
+		final String normalizedQuery = query.replaceAll("\\s", "")
+				.replaceAll(";", "").toLowerCase();
+		if (normalizedAnswer.equals(normalizedQuery)) {
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
-			return;
-		}
-		
-		//check for "weak" correctness
-		if (!queryResult.getColumns().containsAll(answerResult.getColumns())
-				|| !answerResult.getColumns().containsAll(
-						queryResult.getColumns())) {
-			resultSetFeedback = "Incorrect.";
 		} else {
-			if (columnOrderMatters && rowOrderMatters) {
-				if (answerResult.equals(queryResult)) {
-					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+			
+			// calculate the answer's result set, return and let the user know if
+			// the answer is malformed
+			try {
+				answerResult = getDatabaseManager().getQueryResult(
+						userBean.getSelectedSchema(), answer, false);
+			} catch (SQLException e) {
+				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
+				return;
+			}
+
+			if (!queryResult.getColumns()
+					.containsAll(answerResult.getColumns())
+					|| !answerResult.getColumns().containsAll(
+							queryResult.getColumns())) {
+				resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+			} else {
+				boolean columnOrderMatters = false;
+				boolean rowOrderMatters = false;
+		
+				if (answer.contains(" order by "))
+					rowOrderMatters = true;
+				
+				if (columnOrderMatters && rowOrderMatters) {
+					if (answerResult.equals(queryResult)) {
+						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+					} else {
+						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+						// FIXME perhaps more specific feedback? different row
+						// data/order, order by? conditionals? different attributes?
+					}
+				} else if (!columnOrderMatters && rowOrderMatters) {
+					final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
+					final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
+		
+					for (int i = 0; i < queryResult.getColumns().size(); i++) {
+						final List<String> columnData = new ArrayList<String>(queryResult.getData().size());
+						for (int j = 0; j < queryResult.getData().size(); j++) {
+							columnData.add(queryResult.getData().get(j).get(i));
+						}
+						queryTree.put(queryResult.getColumns().get(i), columnData);
+					}
+		
+					for (int i = 0; i < answerResult.getColumns().size(); i++) {
+						final List<String> columnData = new ArrayList<String>(answerResult.getData().size());
+						for (int j = 0; j < answerResult.getData().size(); j++) {
+							columnData.add(answerResult.getData().get(j).get(i));
+						}
+						answerTree.put(answerResult.getColumns().get(i), columnData);
+					}
+		
+					if (queryTree.equals(answerTree)) {
+						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+					} else {
+						resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
+					}
+				} else if (columnOrderMatters && !rowOrderMatters) {
+					final String queryDiffAnswer = query + " EXCEPT " + answer
+							+ ";";
+					final String answerDiffQuery = answer + " EXCEPT " + query
+							+ ";";
+					try {
+						final DatabaseManager databaseManager = getDatabaseManager();
+						final QueryResult queryDiffResult = databaseManager
+								.getQueryResult(userBean.getSelectedSchema(),
+										queryDiffAnswer, false);
+						final QueryResult answerDiffResult = databaseManager
+								.getQueryResult(userBean.getSelectedSchema(),
+										answerDiffQuery, false);
+						if (queryDiffResult.getData().isEmpty()
+								&& answerDiffResult.getData().isEmpty()) {
+							resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+						} else {
+							resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+						}
+					} catch (SQLException e) {
+						if (e.getMessage().contains("columns")) {
+							resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
+						} else if (e.getMessage().contains("type")) {
+							resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
+						} else {
+							for (Throwable t : e) {
+								t.printStackTrace();
+								logException(t, userBean.getHashedEmail());
+							}
+						}
+					}
 				} else {
-					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-					// FIXME perhaps more specific feedback? different row
-					// data/order, order by? conditionals? different attributes?
-				}
-			} else if (columnOrderMatters && !rowOrderMatters) {
-				final String queryDiffAnswer = query + " EXCEPT " + answer
-						+ ";";
-				final String answerDiffQuery = answer + " EXCEPT " + query
-						+ ";";
-				try {
-					final DatabaseManager databaseManager = getDatabaseManager();
-					final QueryResult queryDiffResult = databaseManager
-							.getQueryResult(userBean.getSelectedSchema(),
-									queryDiffAnswer, false);
-					final QueryResult answerDiffResult = databaseManager
-							.getQueryResult(userBean.getSelectedSchema(),
-									answerDiffQuery, false);
-					if (queryDiffResult.getData().isEmpty()
-							&& answerDiffResult.getData().isEmpty()) {
+					final Multiset<String> queryBag = HashMultiset.create();
+					final Multiset<String> answerBag = HashMultiset.create();
+		
+					for (int i = 0; i < queryResult.getColumns().size(); i++) {
+						for (int j = 0; j < queryResult.getData().size(); j++) {
+							queryBag.add(queryResult.getData().get(j).get(i));
+						}
+					}
+		
+					for (int i = 0; i < answerResult.getColumns().size(); i++) {
+						for (int j = 0; j < answerResult.getData().size(); j++) {
+							answerBag.add(answerResult.getData().get(j).get(i));
+						}
+					}
+		
+					if (queryBag.equals(answerBag)) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
-				} catch (SQLException e) {
-					if (e.getMessage().contains("columns")) {
-						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
-					} else if (e.getMessage().contains("type")) {
-						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
-					} else {
-						for (Throwable t : e) {
-							t.printStackTrace();
-							logException(t, userBean.getHashedEmail());
-						}
-					}
 				}
-			} else if (!columnOrderMatters && rowOrderMatters) {
-				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
-				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
-
-				for (int i = 0; i < queryResult.getColumns().size(); i++) {
-					final List<String> columnData = new ArrayList<String>(
-							queryResult.getData().size());
-					for (int j = 0; j < queryResult.getData().size(); j++) {
-						columnData.add(queryResult.getData().get(j).get(i));
-					}
-					queryTree.put(queryResult.getColumns().get(i), columnData);
-				}
-
-				for (int i = 0; i < answerResult.getColumns().size(); i++) {
-					final List<String> columnData = new ArrayList<String>(
-							answerResult.getData().size());
-					for (int j = 0; j < answerResult.getData().size(); j++) {
-						columnData.add(answerResult.getData().get(j).get(i));
-					}
-					answerTree
-							.put(answerResult.getColumns().get(i), columnData);
-				}
-
-				if (queryTree.equals(answerTree)) {
-					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
-				} else {
-					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
-				}
-			} else {
-				final Multiset<String> queryBag = HashMultiset.create();
-				final Multiset<String> answerBag = HashMultiset.create();
-
-				for (int i = 0; i < queryResult.getColumns().size(); i++) {
-					for (int j = 0; j < queryResult.getData().size(); j++) {
-						queryBag.add(queryResult.getData().get(j).get(i));
-					}
-				}
-
-				for (int i = 0; i < answerResult.getColumns().size(); i++) {
-					for (int j = 0; j < answerResult.getData().size(); j++) {
-						answerBag.add(answerResult.getData().get(j).get(i));
-					}
-				}
-
-				if (queryBag.equals(answerBag)) {
-					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
-				} else {
-					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-				}
-			}
+			}	
 		}
 	}
 
@@ -440,37 +443,42 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 		return false;
 	}
-	
+
 	public int getQuestionNumber(QuestionTuple question) {
 		return questionTuples.indexOf(question) + 1;
 	}
-	
+
 	/**
-	 * Question numbering is not 0-indexed, so we must convert it before returning it.
-	 * @return	non-0-indexed question number.
+	 * Question numbering is not 0-indexed, so we must convert it before
+	 * returning it.
+	 * 
+	 * @return non-0-indexed question number.
 	 */
 	public int getQuestionNumber() {
 		return questionIndex + 1;
 	}
-	
+
 	/**
-	 * Question numbering is not 0-indexed, so it must be converted before the index is set.
-	 * @param questionNumber	non-0-indexed question number.
+	 * Question numbering is not 0-indexed, so it must be converted before the
+	 * index is set.
+	 * 
+	 * @param questionNumber
+	 *            non-0-indexed question number.
 	 */
 	public void setQuestionNumber(int questionNumber) {
 		questionIndex = questionNumber - 1;
 	}
-	
+
 	public void setQuestionIndex(int questionIndex) {
 		this.questionIndex = questionIndex;
 	}
-	
+
 	public List<QuestionTuple> getQuestionTuples() {
 		return questionTuples;
 	}
-	
+
 	public String getQuestionDescription(QuestionTuple question) {
 		return "Question Number " + getQuestionNumber(question);
-		//return question.isAttempted() ? "Attempted." : "Not attempted.";
+		// return question.isAttempted() ? "Attempted." : "Not attempted.";
 	}
 }
