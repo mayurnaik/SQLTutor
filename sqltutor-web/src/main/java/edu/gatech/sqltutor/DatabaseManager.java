@@ -156,14 +156,14 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
-			statement.execute("SELECT visible_to_users, in_order_questions, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
+			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
 			
 			resultSet = statement.getResultSet();
 			resultSet.next();
 			
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST")); 
-			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2),
-					resultSet.getTimestamp(3, cal), resultSet.getTimestamp(4, cal));
+			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2), resultSet.getString(3),
+					resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal));
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(statement);
@@ -358,14 +358,15 @@ public class DatabaseManager implements Serializable {
 		
 		try {
 			connection = dataSource.getConnection();
-			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ? WHERE schema = ?;";
+			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ? WHERE schema = ?;";
 			preparedStatement = connection.prepareStatement(update);
 			preparedStatement.setBoolean(1, options.isInOrderQuestions());
 			preparedStatement.setBoolean(2, options.isVisibleToUsers());
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
 			preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
-			preparedStatement.setString(5, schemaName);
+			preparedStatement.setString(5, options.getLink());
+			preparedStatement.setString(6, schemaName);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);
@@ -1458,5 +1459,28 @@ public class DatabaseManager implements Serializable {
 		}
 
 		return bytes;
+	}
+
+	public String getUserSchema(String link) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
+		String schema = null;
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement("SELECT schema FROM schema_options WHERE link = ?");
+			preparedStatement.setString(1, link);
+			resultSet = preparedStatement.executeQuery();
+			if (resultSet.next())
+				schema = resultSet.getString(1);
+			
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		return schema;
 	}
 }

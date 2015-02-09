@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -45,19 +46,17 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	// FIXME: probably don't want to have a default schema here
 	private static final String DEFAULT_SCHEMA_NAME = "company";
 	private static final String OPEN_ACCESS_CHECK_ERROR_MESSAGE = "Your opening date/time must be before your closing date/time.";
+	
 	private List<DatabaseTable> tables;
-	
-	private String selectedSchema;
-	
 	private SchemaOptionsTuple options;
 	private boolean deleteThisSchema;
+	private boolean linkable;
 	
 	@PostConstruct
 	public void init() {
 		try {
-			selectedSchema = userBean.getSelectedSchema();
+			final String selectedSchema = userBean.getSelectedSchema();
 			tables = getDatabaseManager().getTables(selectedSchema);
-			
 			options = getDatabaseManager().getOptions(selectedSchema);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -80,6 +79,11 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 				externalContext.redirect(externalContext.getRequestContextPath() + ADMIN_PAGE_CONTEXT);
 			} else {
+				if(linkable) {
+					if(options.getLink() == null)
+						options.setLink(UUID.randomUUID().toString());
+				} else
+					options.setLink(null);
 				getDatabaseManager().setOptions(userBean.getSelectedSchema(), options);
 				BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
 			}
@@ -145,5 +149,20 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 
 	public void setOptions(SchemaOptionsTuple options) {
 		this.options = options;
+	}
+	
+	public String getVisibleUsingLinkMessage() {
+		String message = "Visible using shared link (";
+		message += options.getLink() == null ? "generated on submission" : "https://sqltutor.cc.gatech.edu/TutorialPage.jsf?l="+options.getLink();
+		return message + ").";
+	}
+
+	public boolean isLinkable() {
+		linkable = options.getLink() != null;
+		return linkable;
+	}
+
+	public void setLinkable(boolean linkable) {
+		this.linkable = linkable;
 	}
 }

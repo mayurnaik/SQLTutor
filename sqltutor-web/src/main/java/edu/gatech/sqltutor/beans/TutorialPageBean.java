@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,7 +32,9 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -65,17 +68,22 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String resultSetFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
+	private String link;
 
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
 	
-	@PostConstruct
-	public void init() {
+	public void preRenderSetup(ComponentSystemEvent event) {
 		try {
-			tables = getDatabaseManager().getTables(
-					userBean.getSelectedSchema());
+			if(link != null) {
+				final String schema = getDatabaseManager().getUserSchema(link);
+				if(schema != null) {
+					userBean.setSelectedSchema(schema);
+				}
+			}
+			tables = getDatabaseManager().getTables(userBean.getSelectedSchema());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -483,5 +491,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public String getQuestionDescription(QuestionTuple question) {
 		return "Question Number " + getQuestionNumber(question);
 		// return question.isAttempted() ? "Attempted." : "Not attempted.";
+	}
+
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
 	}
 }

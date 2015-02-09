@@ -67,10 +67,13 @@
 		    	<p:messages id="messages"/>
 		    	<p:panel header="Schema Options" styleClass="panel">
 					<p:panelGrid columns="2"> 
-					    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.options.visibleToUsers}"/>
-					    <h:outputText value="Visible to users"/> 
+					    <p:selectBooleanCheckbox value="#{schemaOptionsPageBean.options.visibleToUsers}"/>
+					    <h:outputText value="Visible to all users"/> 
 					    
-					    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.options.inOrderQuestions}"/> 
+					    <p:selectBooleanCheckbox value="#{schemaOptionsPageBean.linkable}"/>
+					    <h:outputText value="#{schemaOptionsPageBean.visibleUsingLinkMessage}"/> 
+					    
+					    <p:selectBooleanCheckbox value="#{schemaOptionsPageBean.options.inOrderQuestions}"/> 
 					    <h:outputText value="In order questions"/>
 	
         				<p:calendar value="#{schemaOptionsPageBean.options.openAccessDate}" pattern="MM/dd/yyyy HH:mm:ss" />

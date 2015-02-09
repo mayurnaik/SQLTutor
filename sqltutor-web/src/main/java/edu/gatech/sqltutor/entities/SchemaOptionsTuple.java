@@ -15,10 +15,12 @@ public class SchemaOptionsTuple implements Serializable {
 	private boolean  inOrderQuestions;
 	private Timestamp openAccess;
 	private Timestamp closeAccess;
+	private String link;
 	
-	public SchemaOptionsTuple(boolean visibleToUsers, boolean inOrderQuestions,
+	public SchemaOptionsTuple(boolean visibleToUsers, boolean inOrderQuestions, String link,
 			Timestamp openAccess, Timestamp closeAccess) {
 		super();
+		this.setLink(link);
 		this.visibleToUsers = visibleToUsers;
 		this.inOrderQuestions = inOrderQuestions;
 		this.openAccess = openAccess;
@@ -100,5 +102,13 @@ public class SchemaOptionsTuple implements Serializable {
 			}
 		} else
 			this.closeAccess = null;
+	}
+
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
 	}
 }

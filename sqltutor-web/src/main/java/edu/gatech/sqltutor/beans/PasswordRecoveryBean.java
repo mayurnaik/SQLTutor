@@ -60,9 +60,9 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 				return;
 			}
 			
-			UUID uuid = UUID.randomUUID();
+			final UUID uuid = UUID.randomUUID();
 			getDatabaseManager().addPasswordChangeRequest(getHashedEmail(), uuid);
-			String to = getEmail(); 
+			final String to = getEmail(); 
 			
 			final String message = "Someone has requested a password recovery email be sent for your account at SQL Tutor.\n\n"
 					+ "Go to this URL within 24 hours to reset your password: https://sqltutor.cc.gatech.edu/PasswordRecoveredPage.jsf?u=" + getEmail() + "&i=" + uuid.toString()
