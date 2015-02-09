@@ -69,7 +69,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
-
+	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
+	
 	@PostConstruct
 	public void init() {
 		try {
@@ -377,6 +378,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public String getQuestion() {
 		// Log that a question was retrieved
+		if(questionTuples == null || questionTuples.isEmpty())
+			return NO_QUESTIONS_MESSAGE;
 		try {
 			getDatabaseManager().logQuestionPresentation(
 					BeanUtils.getSessionId(), userBean.getHashedEmail(),
