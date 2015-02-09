@@ -93,7 +93,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 				t.printStackTrace();
 				logException(t, getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 
@@ -110,7 +110,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 				t.printStackTrace();
 				logException(t, getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	

@@ -57,7 +57,7 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(UNLINK_MESSAGES_NAME, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(UNLINK_MESSAGES_NAME, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 	
@@ -78,7 +78,7 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 					t.printStackTrace();
 					logException(t, userBean.getHashedEmail());
 				}
-				BeanUtils.addErrorMessage(UNLINK_MESSAGES_NAME, DATABASE_ERROR);
+				BeanUtils.addErrorMessage(UNLINK_MESSAGES_NAME, DATABASE_ERROR_MESSAGE);
 			}
 		}
 	}
@@ -102,7 +102,7 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(LINK_MESSAGES_NAME, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(LINK_MESSAGES_NAME, DATABASE_ERROR_MESSAGE);
 		}
 	}
 

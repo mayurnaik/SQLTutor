@@ -63,7 +63,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 
 		List<String> tableNames = new ArrayList<String>(tables.size());
@@ -79,7 +79,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -116,7 +116,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		return hasPermissions;
 	}

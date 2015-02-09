@@ -36,7 +36,7 @@
 					<p:commandButton id="databaseButton" value="Show Schema" styleClass="panelbutton"/>
 						<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50%"> 
 							<p:dataTable var="databaseTable"
-								value="#{schemaQuestionsPageBean.tables}"
+								value="#{schemaOptionsPageBean.tables}"
 								resizableColumns="true"
 								style="height:30%"
 								scrollWidth="100%"
@@ -64,15 +64,21 @@
 			<div class="middle"/>
 			
 			<div class="right2">
-		    	<p:messages />
+		    	<p:messages id="messages"/>
 		    	<p:panel header="Schema Options" styleClass="panel">
 					<p:panelGrid columns="2"> 
-					    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.visibleToUsers}"/>
+					    <p:selectBooleanCheckbox id="check1" value="#{schemaOptionsPageBean.options.visibleToUsers}"/>
 					    <h:outputText value="Visible to users"/> 
 					    
-					    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.inOrderQuestions}"/> 
+					    <p:selectBooleanCheckbox id="check2" value="#{schemaOptionsPageBean.options.inOrderQuestions}"/> 
 					    <h:outputText value="In order questions"/>
 	
+        				<p:calendar value="#{schemaOptionsPageBean.options.openAccessDate}" pattern="MM/dd/yyyy HH:mm:ss" />
+						<h:outputText value="Open Access Date"/>
+						
+						<p:calendar value="#{schemaOptionsPageBean.options.closeAccessDate}" pattern="MM/dd/yyyy HH:mm:ss" />
+						<h:outputText value="Close Access Date"/>
+						
 						<p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/> 
 					    <p:column>	
 					    	<h:outputText value="Delete this schema "/>  

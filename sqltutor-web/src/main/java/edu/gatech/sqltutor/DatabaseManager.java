@@ -32,9 +32,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,6 +52,7 @@ import javax.sql.DataSource;
 
 import com.google.common.io.BaseEncoding;
 
+import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 import edu.gatech.sqltutor.entities.UserQuery;
 import edu.gatech.sqltutor.util.SaltHasher;
 import edu.gatech.sqltutor.util.ScriptRunner;
@@ -126,7 +129,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			String query = admin ? "SELECT schema FROM schema_options;" : 
-				"SELECT schema FROM schema_options WHERE visible_to_users;";
+				"SELECT schema FROM schema_options WHERE visible_to_users AND (open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now());";
 			
 			statement = connection.createStatement();
 			statement.execute(query);
@@ -143,23 +146,24 @@ public class DatabaseManager implements Serializable {
 		return schemas;
 	}
 	
-	public HashMap<String, Boolean> getOptions(String schemaName) throws SQLException {
+	public SchemaOptionsTuple getOptions(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		HashMap<String, Boolean> options = new HashMap<String, Boolean>();
+		SchemaOptionsTuple options = null;
 		try {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
-			statement.execute("SELECT visible_to_users, in_order_questions FROM schema_options WHERE schema = '" + schemaName +"'");
+			statement.execute("SELECT visible_to_users, in_order_questions, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
 			
 			resultSet = statement.getResultSet();
 			resultSet.next();
 			
-			options.put("visible_to_users", resultSet.getBoolean(1));
-			options.put("in_order_questions", resultSet.getBoolean(2));
+			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST")); 
+			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2),
+					resultSet.getTimestamp(3, cal), resultSet.getTimestamp(4, cal));
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(statement);
@@ -348,17 +352,23 @@ public class DatabaseManager implements Serializable {
 		return questions;
 	}
 	
-	public void setOptions(String schemaName, boolean visibleToUsers, boolean inOrderQuestions) throws SQLException {
+	public void setOptions(String schemaName, SchemaOptionsTuple options) throws SQLException {
 		Connection connection = null;
-		Statement statement = null;
+		PreparedStatement preparedStatement = null;
 		
 		try {
 			connection = dataSource.getConnection();
-		
-			statement = connection.createStatement();
-			statement.execute("UPDATE schema_options SET visible_to_users = " + visibleToUsers + ", in_order_questions = " + inOrderQuestions + " WHERE schema = '" + schemaName + "';");
+			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ? WHERE schema = ?;";
+			preparedStatement = connection.prepareStatement(update);
+			preparedStatement.setBoolean(1, options.isInOrderQuestions());
+			preparedStatement.setBoolean(2, options.isVisibleToUsers());
+			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+			preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
+			preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
+			preparedStatement.setString(5, schemaName);
+			preparedStatement.executeUpdate();
 		} finally {
-			Utils.tryClose(statement);
+			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
 	}

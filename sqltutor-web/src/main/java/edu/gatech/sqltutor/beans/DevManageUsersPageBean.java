@@ -50,7 +50,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -74,7 +74,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 	
@@ -98,7 +98,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 	
@@ -127,7 +127,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -154,7 +154,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 	
@@ -183,7 +183,7 @@ public class DevManageUsersPageBean extends AbstractDatabaseBean implements Seri
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		} 
 	}
 	

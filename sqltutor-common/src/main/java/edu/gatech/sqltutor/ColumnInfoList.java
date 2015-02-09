@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,8 @@ import com.google.common.collect.ForwardingList;
 /**
  * A list of column metadata with a few extra conveniences.
  */
-public class ColumnInfoList extends ForwardingList<ColumnInfo> implements List<ColumnInfo> {
+public class ColumnInfoList extends ForwardingList<ColumnInfo> implements List<ColumnInfo>, Serializable {
+	private static final long serialVersionUID = 1L;
 	protected List<ColumnInfo> delegate;
 
 	public ColumnInfoList() {

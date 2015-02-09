@@ -37,7 +37,7 @@ public class AbstractDatabaseBean implements Serializable {
 	
 	private transient DatabaseManager databaseManager;
 	
-	protected static final String DATABASE_ERROR = "Internal database error. Please try again momentarily.";
+	protected static final String DATABASE_ERROR_MESSAGE = "Internal database error. Please try again momentarily.";
 
 	public AbstractDatabaseBean() {
 	}

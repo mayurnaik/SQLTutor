@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -43,6 +42,7 @@ import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.QuestionTuple;
+import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
@@ -80,7 +80,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		setupQuestionsAndAnswers();
 	}
@@ -334,12 +334,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			return;
 		}
 
 		if (!questionTuples.isEmpty()) {
-			HashMap<String, Boolean> options = null;
+			SchemaOptionsTuple options = null;
 			try {
 				options = databaseManager.getOptions(userBean
 						.getSelectedSchema());
@@ -348,11 +348,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					t.printStackTrace();
 					logException(t, userBean.getHashedEmail());
 				}
-				BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 				return;
 			}
 
-			if (!options.get("in_order_questions")) {
+			if (!options.isInOrderQuestions()) {
 				Collections.shuffle(questionTuples,
 						new Random(System.nanoTime()));
 			}
@@ -387,7 +387,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		return getQuestionNumber() + ". "
 				+ questionTuples.get(questionIndex).getQuestion();

@@ -75,7 +75,7 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -90,7 +90,7 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -106,7 +106,7 @@ public class PasswordRecoveryBean extends AbstractDatabaseBean implements Serial
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 

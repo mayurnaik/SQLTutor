@@ -60,7 +60,7 @@ public class SchemaSelectionBean extends AbstractDatabaseBean implements Seriali
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	

@@ -18,7 +18,6 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +28,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.SQLTutorException;
+import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 
 @ManagedBean
 @ViewScoped
@@ -43,13 +44,12 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private static final String ADMIN_PAGE_CONTEXT = "/AdminPage.jsf";
 	// FIXME: probably don't want to have a default schema here
 	private static final String DEFAULT_SCHEMA_NAME = "company";
-	
+	private static final String OPEN_ACCESS_CHECK_ERROR_MESSAGE = "Your opening date/time must be before your closing date/time.";
 	private List<DatabaseTable> tables;
 	
 	private String selectedSchema;
 	
-	private boolean visibleToUsers;
-	private boolean inOrderQuestions;
+	private SchemaOptionsTuple options;
 	private boolean deleteThisSchema;
 	
 	@PostConstruct
@@ -58,18 +58,13 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 			selectedSchema = userBean.getSelectedSchema();
 			tables = getDatabaseManager().getTables(selectedSchema);
 			
-			HashMap<String, Boolean> options = 
-					getDatabaseManager().getOptions(selectedSchema);
-			//FIXME: probably want to change from using concrete string names here
-			visibleToUsers = options.get("visible_to_users"); 
-			inOrderQuestions = options.get("in_order_questions");
-			deleteThisSchema = false;
+			options = getDatabaseManager().getOptions(selectedSchema);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	
@@ -85,15 +80,21 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 				externalContext.redirect(externalContext.getRequestContextPath() + ADMIN_PAGE_CONTEXT);
 			} else {
-				getDatabaseManager().setOptions(userBean.getSelectedSchema(), visibleToUsers, inOrderQuestions);
+				getDatabaseManager().setOptions(userBean.getSelectedSchema(), options);
 				BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
 			}
 		} catch (SQLException e) {
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
+			if(e.getMessage().contains("open_access_check")) {
+				BeanUtils.addErrorMessage(null, OPEN_ACCESS_CHECK_ERROR_MESSAGE);
+			} else {
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+		} catch (SQLTutorException e) {
+			BeanUtils.addErrorMessage(null, e.getMessage());
 		}
 	}
 	
@@ -109,25 +110,9 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR);
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		return hasPermissions;
-	}
-
-	public boolean isVisibleToUsers() {
-		return visibleToUsers;
-	}
-
-	public void setVisibleToUsers(boolean visibleToUsers) {
-		this.visibleToUsers = visibleToUsers;
-	}
-
-	public boolean isInOrderQuestions() {
-		return inOrderQuestions;
-	}
-
-	public void setInOrderQuestions(boolean inOrderQuestions) {
-		this.inOrderQuestions = inOrderQuestions;
 	}
 
 	public boolean isDeleteThisSchema() {
@@ -152,5 +137,13 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 
 	public void setTables(List<DatabaseTable> tables) {
 		this.tables = tables;
+	}
+
+	public SchemaOptionsTuple getOptions() {
+		return options;
+	}
+
+	public void setOptions(SchemaOptionsTuple options) {
+		this.options = options;
 	}
 }
