@@ -200,13 +200,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 		
 		// check for "strong" correctness
-		// naive check. get rid of all whitespaces and semi-colons, then lower
-		// case both, then check equality
+		// naive check.
 		// TODO: Move in the clustering classes to do a better job of this.
-		final String normalizedAnswer = answer.replaceAll("\\s", "")
-				.replaceAll(";", "").toLowerCase();
-		final String normalizedQuery = query.replaceAll("\\s", "")
-				.replaceAll(";", "").toLowerCase();
+		final String normalizedAnswer = normalize(answer);
+		final String normalizedQuery = normalize(query);
 		if (normalizedAnswer.equals(normalizedQuery)) {
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
 		} else {
@@ -238,8 +235,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-						// FIXME perhaps more specific feedback? different row
-						// data/order, order by? conditionals? different attributes?
 					}
 				} else if (!columnOrderMatters && rowOrderMatters) {
 					final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
@@ -267,20 +262,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
 					}
 				} else if (columnOrderMatters && !rowOrderMatters) {
-					final String queryDiffAnswer = query + " EXCEPT " + answer
-							+ ";";
-					final String answerDiffQuery = answer + " EXCEPT " + query
-							+ ";";
+					final String diff = "SELECT count(*) FROM (" + normalizedQuery + " EXCEPT " + normalizedAnswer 
+							+ " UNION ALL " + normalizedAnswer + " EXCEPT " + normalizedQuery + ") t";
 					try {
-						final DatabaseManager databaseManager = getDatabaseManager();
-						final QueryResult queryDiffResult = databaseManager
-								.getQueryResult(userBean.getSelectedSchema(),
-										queryDiffAnswer, false);
-						final QueryResult answerDiffResult = databaseManager
-								.getQueryResult(userBean.getSelectedSchema(),
-										answerDiffQuery, false);
-						if (queryDiffResult.getData().isEmpty()
-								&& answerDiffResult.getData().isEmpty()) {
+						final QueryResult diffResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), diff, false);
+						if ("0".equals(diffResult.getData().get(0).get(0))) {
 							resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						} else {
 							resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
@@ -321,6 +307,51 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 			}	
 		}
+	}
+	
+	/**
+	 * Trims the query and removes all semicolons. Lowercases all characters outside of parenthesis and apostrophes.
+	 * @param query		the query to be normalized
+	 * @return			a normalized query
+	 */
+	public String normalize(final String query) {
+		// trim leading and trailing whitespaces and remove all semicolons
+		StringBuilder sb = new StringBuilder(query.trim());
+		
+		// remove trailing semicolon
+		if(sb.charAt(sb.length()-1) == ';') {
+			sb.deleteCharAt(sb.length()-1);
+			// get rid of any trailing spaces that were before the semicolon
+			sb = new StringBuilder(sb.toString().trim());
+		}
+		
+		// remove all new lines and lower case and single space everything outside of parenthesis and apostrophes
+		boolean openParen = false;
+		boolean openApos = false;
+		boolean lastCharIsSpace = false;
+		// STILL NEEDS TO REMOVE NEW LINES -> text.replaceAll("\\r\\n|\\r|\\n", " ");
+		for(int i = 0; i < sb.length(); i++) {
+			final char c = sb.charAt(i);
+			
+			if (c != ' ')
+				lastCharIsSpace = false;
+			
+			if (c == '"' && !openApos) 
+				openParen = !openParen;
+			else if (c == '\'' && !openParen) 
+				openApos = !openApos;
+			else if (!openApos && !openParen) {
+				if (c == ' ') {
+					if (lastCharIsSpace)
+						sb.deleteCharAt(i--);
+					else
+						lastCharIsSpace = true;
+				} else
+					sb.setCharAt(i, Character.toLowerCase(c));
+			}
+		}
+		
+		return sb.toString(); 
 	}
 
 	public void submitFeedback() {
