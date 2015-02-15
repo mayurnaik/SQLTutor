@@ -74,6 +74,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
+	public static final int RESULT_ROW_LIMIT = 50;
 	
 	public void preRenderSetup(ComponentSystemEvent event) {
 		try {
@@ -187,6 +188,17 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		return translation;
 	}
 
+	public String getQueryResultHeader() {
+		return "Query Result" 
+				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getData().size() + ")" : "");
+	}
+	
+	public String getQueryResultExampleHeader() {
+		return "Your answer should resemble this example"  
+				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getData().size() + ")" : "") 
+				+ ":";	
+	}
+	
 	private void setResultSetFeedback(String answer) {
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
@@ -532,5 +544,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public void setLink(String link) {
 		this.link = link;
+	}
+	
+	public int getResultRowLimit() {
+		return RESULT_ROW_LIMIT;
 	}
 }

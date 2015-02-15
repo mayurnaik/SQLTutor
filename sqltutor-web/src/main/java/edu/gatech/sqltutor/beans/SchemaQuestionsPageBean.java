@@ -126,9 +126,10 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		try {
 			getDatabaseManager().verifyQuery(selectedSchema, getAnswer());
 		} catch(SQLException e) {
-			for(Throwable t : e) {
-				BeanUtils.addErrorMessage(null, t.getMessage());
-			}
+			String message = e.getMessage();
+			if(message.contains("getNextException"))
+				message = e.getNextException().getMessage();
+			BeanUtils.addErrorMessage(null, message);
 			return;
 		}
 		

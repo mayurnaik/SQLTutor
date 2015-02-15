@@ -69,7 +69,9 @@ public class DatabaseManager implements Serializable {
 	private DataSource userDataSource;
 
 	@Resource(name="jdbc/sqltutorUserDBRead")
-	private DataSource readUserDataSource;
+	private DataSource readUserDataSource; 
+	
+	public static final int QUERY_TIMEOUT_SECONDS = 30;
 	
 	public DatabaseManager() {
 	}
@@ -106,6 +108,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("SELECT admin FROM \"user\" WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			resultSet = preparedStatement.executeQuery();
 			
@@ -132,6 +135,7 @@ public class DatabaseManager implements Serializable {
 				"SELECT schema FROM schema_options WHERE visible_to_users AND (open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now());";
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute(query);
 			
 			resultSet = statement.getResultSet();
@@ -156,6 +160,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
 			
 			resultSet = statement.getResultSet();
@@ -180,6 +185,7 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("DROP SCHEMA " + schemaName +" CASCADE;");
 		} finally {
 			Utils.tryClose(statement);
@@ -195,6 +201,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.addBatch("DELETE FROM schema_options WHERE schema = '" + schemaName + "';");
 			statement.addBatch("DELETE FROM schema_questions WHERE schema = '" + schemaName + "';");
 			statement.executeBatch();
@@ -220,6 +227,7 @@ public class DatabaseManager implements Serializable {
 	
 			final String query = "SELECT 1 FROM schema_options WHERE schema = ? AND owner = ?;";
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, schemaName);
 			preparedStatement.setString(2, email);
 			resultSet = preparedStatement.executeQuery();
@@ -244,6 +252,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT max(\"order\") FROM schema_questions");
 		
 			resultSet = statement.getResultSet();
@@ -268,6 +277,7 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement(
 				"INSERT INTO schema_questions (schema, question, answer, \"order\") "
 				+ "VALUES (?, ?, ?, ?);");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, schemaName);
 			preparedStatement.setString(2, question);
 			preparedStatement.setString(3, answer);
@@ -289,6 +299,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT \"email\", \"admin\", \"admin_code\", \"developer\" FROM \"user\"");
 			
 			resultSet = statement.getResultSet();
@@ -313,6 +324,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			preparedStatement = connection.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
 			
@@ -337,6 +349,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT \"order\", question, answer, id FROM "
 				+ "schema_questions WHERE schema = '" + schemaName + 
 				"' ORDER BY \"order\";");
@@ -360,6 +373,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ? WHERE schema = ?;";
 			preparedStatement = connection.prepareStatement(update);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, options.isInOrderQuestions());
 			preparedStatement.setBoolean(2, options.isVisibleToUsers());
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
@@ -398,6 +412,7 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO readonly_user;");
 			statement.addBatch("GRANT USAGE ON SCHEMA " + schemaName + " TO readonly_user;");
 			statement.executeBatch();
@@ -415,6 +430,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("INSERT INTO schema_options (schema, owner) VALUES ('"+schemaName+"', '"+email+"');");
 		} finally {
 			Utils.tryClose(statement);
@@ -468,6 +484,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			for(int i = 0; i < questions.size(); i++) {
 				int id = questions.get(i).getId();
 				statement.addBatch("UPDATE schema_questions SET \"order\" = " 
@@ -488,6 +505,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			for(int i = 0; i < questions.size(); i++) {
 				int id = questions.get(i).getId();
 				statement.addBatch("DELETE FROM schema_questions WHERE id = " + id + ";");
@@ -513,6 +531,7 @@ public class DatabaseManager implements Serializable {
 			
 			final String update = "INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)";
 			preparedStatement = connection.prepareStatement(update);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, Arrays.toString(encryptedId));
 			preparedStatement.setString(3, Arrays.toString(salt));
@@ -545,6 +564,7 @@ public class DatabaseManager implements Serializable {
 					+ "\"time\" >= (now() - '1 day'::INTERVAL));";
 			
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -580,6 +600,7 @@ public class DatabaseManager implements Serializable {
 			byte[] encryptedPassword = SaltHasher.getEncryptedValue(newPassword, salt);
 			
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
 			preparedStatement.setString(2, Arrays.toString(salt));
 			preparedStatement.setString(3, email);
@@ -604,6 +625,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
 			
@@ -637,6 +659,7 @@ public class DatabaseManager implements Serializable {
 				preparedStatement = connection.prepareStatement(UPDATE);
 				preparedStatement.setLong(7, id);
 			}
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, query.getEmail());
 			preparedStatement.setString(2, query.getSchema());
 			preparedStatement.setString(3, query.getQuery());
@@ -669,6 +692,7 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
 		} finally {
 			Utils.tryClose(connection);
@@ -683,7 +707,7 @@ public class DatabaseManager implements Serializable {
 				connection = userDataSource.getConnection();
 				
 				statement = connection.createStatement();
-				
+				statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 				resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
 				
 				ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
@@ -718,45 +742,40 @@ public class DatabaseManager implements Serializable {
 		for(DatabaseTable dt : devTables)
 			tables.add(dt.getTableName());
 		
+		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
 		try {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to public");
-		} finally {
-			Utils.tryClose(connection);
-			Utils.tryClose(statement);
-		}
 		
-		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
-		for(String tableName : tables) {
-			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-			ArrayList<String> columnNames = new ArrayList<String>();
-			try {
-				connection = dataSource.getConnection();
-				
-				statement = connection.createStatement();
-				
-				resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
-				
-				ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-				int columnCount = resultSetMetaData.getColumnCount();
-				for(int i = 1; i <=  columnCount; i++) {
-					columnNames.add(resultSetMetaData.getColumnName(i));
-				}
-				while(resultSet.next()) {
-					ArrayList<String> rowData = new ArrayList<String>();
-					for (int i = 1; i <= columnCount; i++) {
-						rowData.add(resultSet.getString(i));
+			for(String tableName : tables) {
+				ArrayList<List<String>> queryData = new ArrayList<List<String>>();
+				ArrayList<String> columnNames = new ArrayList<String>();
+				try {
+					resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
+					
+					ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+					int columnCount = resultSetMetaData.getColumnCount();
+					for(int i = 1; i <=  columnCount; i++) {
+						columnNames.add(resultSetMetaData.getColumnName(i));
 					}
-					queryData.add(rowData);
+					while(resultSet.next()) {
+						ArrayList<String> rowData = new ArrayList<String>();
+						for (int i = 1; i <= columnCount; i++) {
+							rowData.add(resultSet.getString(i));
+						}
+						queryData.add(rowData);
+					}
+				} finally {
+					Utils.tryClose(resultSet);
 				}
-			} finally {
-				Utils.tryClose(resultSet);
-				Utils.tryClose(statement);
-				Utils.tryClose(connection);
+				allData.put(tableName, new QueryResult(columnNames, queryData));
 			}
-			allData.put(tableName, new QueryResult(columnNames, queryData));
+		} finally {
+			Utils.tryClose(statement);
+			Utils.tryClose(connection);
 		}
 		return allData;
 	}
@@ -769,9 +788,9 @@ public class DatabaseManager implements Serializable {
 			connection = readUserDataSource.getConnection();
 			
 			statement = connection.createStatement();
-			statement.addBatch("set search_path to '" + schemaName + "'");
-			statement.addBatch(query);
-			statement.executeBatch();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			statement.execute("set search_path to '" + schemaName + "'");
+			statement.execute(query);
 		} finally {
 			Utils.tryClose(statement);
 			Utils.tryClose(connection);
@@ -789,6 +808,7 @@ public class DatabaseManager implements Serializable {
 			connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
 			
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
 			
 			resultSet = statement.executeQuery(query);
@@ -825,6 +845,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 		
 			statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to public");
 		
 			resultSet = statement.executeQuery(query);
@@ -864,6 +885,7 @@ public class DatabaseManager implements Serializable {
 			final String query = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\", \"email_plain\") VALUES (?, ?, ?, ?)";
 			
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
 			preparedStatement.setString(2, Arrays.toString(salt));
 			preparedStatement.setString(3, hashedEmail);
@@ -887,6 +909,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\") VALUES (?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.executeUpdate();
 		} finally {
@@ -902,6 +925,7 @@ public class DatabaseManager implements Serializable {
 		try { 
 			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, adminCode);
 			preparedStatement.execute();
@@ -925,6 +949,7 @@ public class DatabaseManager implements Serializable {
 	
 			final String delete = "DELETE FROM \"user\" WHERE email = ?";
 			preparedStatement = connection.prepareStatement(delete);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.executeUpdate();
 		} finally {
@@ -941,6 +966,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
 			preparedStatement.execute();
 		} finally {
@@ -972,6 +998,7 @@ public class DatabaseManager implements Serializable {
 	
 			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, hashedEmail);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -1003,6 +1030,7 @@ public class DatabaseManager implements Serializable {
 	
 			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ? AND \"email_plain\" != NULL";
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, hashedEmail);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -1027,6 +1055,7 @@ public class DatabaseManager implements Serializable {
 	
 			final String query = "UPDATE \"user\" SET \"email_plain\" = ? WHERE \"email\" = ?";
 			preparedStatement = connection.prepareStatement(query);
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, hashedEmail);
 			preparedStatement.executeUpdate();
@@ -1046,6 +1075,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -1079,6 +1109,7 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
 					+ "\"parsed\", \"correct\", \"nlp_feedback\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email);
 			preparedStatement.setString(3, schemaName);
@@ -1104,6 +1135,7 @@ public class DatabaseManager implements Serializable {
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\") VALUES (?, ?, ?, ?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email);
 			preparedStatement.setString(3, schemaName);
@@ -1124,6 +1156,7 @@ public class DatabaseManager implements Serializable {
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
 					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email != null ? email : "not logged in");
 			preparedStatement.setString(3, exception);
@@ -1144,7 +1177,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			statement = connection.createStatement();
-			
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			resultSet = statement.executeQuery("SELECT * FROM query WHERE schema='" + schemaName + "'");
 		
 			while( resultSet.next() ) {
@@ -1178,7 +1211,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			statement = connection.createStatement();
-			
+			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			resultSet = statement.executeQuery("SELECT * FROM query");
 			
 			while( resultSet.next() ) {
@@ -1225,6 +1258,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
 			
@@ -1250,6 +1284,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 	
 			preparedStatement = connection.prepareStatement("SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
 			
@@ -1286,6 +1321,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE admin_code = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -1310,6 +1346,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, true);
 			preparedStatement.setString(2, adminCode);
 			preparedStatement.setString(3, email);
@@ -1330,6 +1367,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 	
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, true);
 			preparedStatement.setString(2, email);
 			preparedStatement.execute();
@@ -1347,6 +1385,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, false);
 			preparedStatement.setString(2, null);
 			preparedStatement.setString(3, email);
@@ -1367,6 +1406,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
 			preparedStatement.execute();
 		} finally {
@@ -1383,6 +1423,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 	
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, false);
 			preparedStatement.setString(2, email);
 			preparedStatement.execute();
@@ -1402,6 +1443,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 	
 			preparedStatement = connection.prepareStatement("SELECT developer FROM \"user\" WHERE email = ?;");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			
 			resultSet = preparedStatement.executeQuery();
@@ -1424,6 +1466,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, code);
 			preparedStatement.executeUpdate();
@@ -1441,6 +1484,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE email = ? AND linked_admin_code = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.setString(2, code);
 			preparedStatement.executeUpdate();
@@ -1471,6 +1515,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("SELECT schema FROM schema_options WHERE link = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, link);
 			resultSet = preparedStatement.executeQuery();
 			if (resultSet.next())

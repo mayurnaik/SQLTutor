@@ -81,13 +81,13 @@
 			<div class="middle"/>
 	
 			<div class="right">
-				<p:panel header="Query Result" styleClass="panel">
+				<p:panel header="#{tutorialPageBean.queryResultHeader}" styleClass="panel">
 					<p:dataTable id="resultsTable" var="row" value="#{tutorialPageBean.queryResult.data}"
 						resizableColumns="true"
 						style="height:60% !important"
 						scrollWidth="100%"
 						scrollable="true"
-						rows="20">
+						rows="#{tutorialPageBean.resultRowLimit}">
 						<p:columns value="#{tutorialPageBean.queryResult.columns}" style="white-space: normal;"
 							var="column" columnIndexVar="columnIndex">
 							<f:facet name="header">
@@ -106,13 +106,13 @@
 					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" escape="false" />
 					<br/>
 					<br/>
-					<h:outputText value="Your result should resemble this example: " 
+					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
 							value="#{tutorialPageBean.answerResult.data}" 
-							rows="20">
+							rows="#{tutorialPageBean.resultRowLimit}">
 							<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"
 								var="column" columnIndexVar="columnIndex">
 								<f:facet name="header">
