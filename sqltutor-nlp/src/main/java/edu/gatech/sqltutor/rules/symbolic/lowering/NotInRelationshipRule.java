@@ -83,17 +83,17 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 			AttributeToken attr = ext.getToken("?attr");
 			
 			// if the attribute is a key value, get which side of the relationship it belongs to
-			boolean leftParticipating = inRelToken.isLeftParticipating();
-			boolean rightParticipating = inRelToken.isRightParticipating();
+			boolean leftIsNull = inRelToken.isLeftParticipating();
+			boolean rightIsNull = inRelToken.isRightParticipating();
 			if( attr.getAttribute().isKey() ) {
 				String isNullRefId = ref.getTableEntity().getId();
 				String inRelLeftRefId = inRelToken.getLeftEntity().getId();
 				String inRelRightRefId = inRelToken.getRightEntity().getId();
 				if( isNullRefId.equals(inRelLeftRefId) ) {
-					leftParticipating = false;
+					leftIsNull = false;
 				}
 				if( isNullRefId.equals(inRelRightRefId) ) {
-					rightParticipating = false;
+					rightIsNull = false;
 				} 
 				if( !isNullRefId.equals(inRelLeftRefId) && !isNullRefId.equals(inRelRightRefId) ) {
 					// FIXME: where returning false, we could probably catch this in .dlog
@@ -126,8 +126,8 @@ public class NotInRelationshipRule extends StandardSymbolicRule implements
 					isNullToken.getParent().removeChild(isNullToken);
 					break;
 				case NodeTypes.IS_NULL_NODE:
-					inRelToken.setLeftParticipating(leftParticipating);
-					inRelToken.setRightParticipating(rightParticipating);
+					inRelToken.setLeftParticipating(leftIsNull);
+					inRelToken.setRightParticipating(rightIsNull);
 					if( debug ) _log.debug(Markers.SYMBOLIC, "Removing {}. Updated {}", isNullToken, inRelToken);
 					isNullToken.getParent().removeChild(isNullToken);
 					break;

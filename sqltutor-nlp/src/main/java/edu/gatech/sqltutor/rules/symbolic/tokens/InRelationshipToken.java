@@ -26,8 +26,10 @@ public class InRelationshipToken extends AbstractSymbolicToken implements
 		ISymbolicToken {
 	private TableEntityToken leftEntity, rightEntity;
 	private ERRelationship relationship;
-	private boolean leftParticipating;
-	private boolean rightParticipating;
+	// In the case that a "IsNull" node also contains the left or right entity, these booleans will be set and
+	// that token will be consumed.
+	private boolean leftIsNull;
+	private boolean rightIsNull;
 
 	public InRelationshipToken(InRelationshipToken toCopy) {
 		super(toCopy);
@@ -47,8 +49,8 @@ public class InRelationshipToken extends AbstractSymbolicToken implements
 		this.leftEntity = leftEntity;
 		this.rightEntity = rightEntity;
 		this.relationship = relationship;
-		this.leftParticipating = leftParticipating;
-		this.rightParticipating = rightParticipating;
+		this.leftIsNull = leftParticipating;
+		this.rightIsNull = rightParticipating;
 	}
 	
 	public InRelationshipToken(TableEntityToken leftEntity, TableEntityToken rightEntity, 
@@ -93,18 +95,18 @@ public class InRelationshipToken extends AbstractSymbolicToken implements
 	}
 
 	public boolean isLeftParticipating() {
-		return leftParticipating;
+		return leftIsNull;
 	}
 
 	public void setLeftParticipating(boolean leftParticipating) {
-		this.leftParticipating = leftParticipating;
+		this.leftIsNull = leftParticipating;
 	}
 
 	public boolean isRightParticipating() {
-		return rightParticipating;
+		return rightIsNull;
 	}
 
 	public void setRightParticipating(boolean rightParticipating) {
-		this.rightParticipating = rightParticipating;
+		this.rightIsNull = rightParticipating;
 	}
 }
