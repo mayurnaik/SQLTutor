@@ -329,7 +329,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		boolean openParen = false;
 		boolean openApos = false;
 		boolean lastCharIsSpace = false;
-		// STILL NEEDS TO REMOVE NEW LINES -> text.replaceAll("\\r\\n|\\r|\\n", " ");
 		for(int i = 0; i < sb.length(); i++) {
 			final char c = sb.charAt(i);
 			
@@ -341,8 +340,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			else if (c == '\'' && !openParen) 
 				openApos = !openApos;
 			else if (!openApos && !openParen) {
-				if (c == ' ') {
-					if (lastCharIsSpace)
+				if (c == '\n' || c == '\r') {
+					sb.deleteCharAt(i--);
+					i -= 1;
+				} else if (c == ' ') {
+					if (lastCharIsSpace) 
 						sb.deleteCharAt(i--);
 					else
 						lastCharIsSpace = true;
