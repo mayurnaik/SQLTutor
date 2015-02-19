@@ -59,7 +59,17 @@
 					<p:menuitem value="Change Question" oncomplete="PF('change_question').show();"/>
 				</p:contextMenu>
 				
-				<p:panel id="questionPanel" header="Question" styleClass="panel">
+				<p:panel id="questionPanel" styleClass="panel">
+					<f:facet name="header">
+	       		 		<h:outputText value="Question" />
+						<p:selectOneMenu id="q" value="#{tutorialPageBean.questionNumber}" effect="fade" style="float: right">
+							<f:selectItems value="#{tutorialPageBean.questionTuples}" var="question" 
+								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
+								itemLabel="#{tutorialPageBean.getQuestionNumber(question)}" 
+								itemDescription="#{tutorialPageBean.getQuestionDescription(question)}"/>
+							<p:ajax update="questionPanel"/>
+						</p:selectOneMenu>	
+	    			</f:facet>  
 					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
 				</p:panel>
 				
@@ -125,25 +135,5 @@
 				</p:panel>
 			</div>		
 		</h:form>
-		<p:dialog id="changeQuestionDialog" header="Change Question" widgetVar="change_question" 
-		closeable="true" closeOnEscape="true"
-		modal="true" width="30%" resizable="false" appentTo="@(body)">
-			<h:form id="dialogForm">
-				<h:outputText value="Current question number: #{tutorialPageBean.questionNumber}"/>
-				<br/><br/>
-				<p:panel>
-					<h:panelGrid columns="2">
-						<p:outputLabel for="q" value="Please select a question number:" />
-						<p:selectOneMenu id="q" value="#{tutorialPageBean.questionNumber}" effect="fade">
-							<f:selectItems value="#{tutorialPageBean.questionTuples}" var="question" 
-								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
-								itemLabel="#{tutorialPageBean.getQuestionNumber(question)}" 
-								itemDescription="#{tutorialPageBean.getQuestionDescription(question)}"/>
-							<p:ajax update=":mainForm,dialogForm"/>
-						</p:selectOneMenu>	
-					</h:panelGrid>
-				</p:panel>
-			</h:form>
-		</p:dialog>
 	</h:body>
 </html>

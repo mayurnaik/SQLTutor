@@ -445,8 +445,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
-		return getQuestionNumber() + ". "
-				+ questionTuples.get(questionIndex).getQuestion();
+		return questionTuples.get(questionIndex).getQuestion();
 	}
 
 	public String getQuery() {

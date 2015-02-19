@@ -1,0 +1,73 @@
+<!--
+   Copyright (c) 2014 Program Analysis Group, Georgia Tech
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:metadata>
+	    <f:viewParam name="p" value="#{userBean.previousContext}"  />
+	</f:metadata>
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:form id="loginForm2">
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
+			<p:panel id="loginPanel2">
+				<p:messages id="loginMessages2"/>
+				<h:panelGrid id="loginGrid2" columns="4">
+					<h:outputLabel for="email2" value="Email: " />
+					<p:inputText id="email2" required="true"
+						requiredMessage="Please enter your email address."
+						validatorMessage="Invalid email format."
+						value="#{userBean.email}">
+		  				<f:validateRegex
+							pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+					</p:inputText>
+					
+					<h:link value="Register" outcome="RegistrationPage" />
+					<br/>
+					
+					<h:outputLabel for="password2" value="Password: " />
+					<p:password id="password2" required="true" label="Password"
+						requiredMessage="Please input your password." value="#{userBean.password}">
+						<f:validateLength minimum="3" maximum="12" />
+					</p:password>
+					<h:link value="Forgot Password?" outcome="PasswordRecoveryPage"/>
+					<br/>
+				</h:panelGrid>
+				<p:commandButton id="alternativeButton2" 
+					value="Submit" update="loginPanel2" 
+					action="#{userBean.login}"/>
+			</p:panel>
+			<br/>
+			<!-- Temporarily disabling captcha. When re-enabled, disable 'alternativeButton'. -->
+			<ui:remove>
+			<p:captcha label="Captcha" theme="white" required="true" 
+				requiredMessage="Captcha is required." validatorMessage="Captcha text did not match." secure="true"/> 
+			<p:commandButton value="Submit" update="loginPanel2" action="#{userBean.login}" 
+				oncomplete="Recaptcha.reload()" onerror="Recaptcha.reload()" />
+			</ui:remove>
+		</h:form>
+	</h:body>
+</html>
