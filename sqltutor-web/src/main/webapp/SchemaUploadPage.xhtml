@@ -34,7 +34,7 @@
 		<p:messages id="messages" showDetail="true" autoUpdate="true"/>
 		<p:panel header="Upload Schema" styleClass="panel">
 			<p:fileUpload id="schemaFile" mode="advanced" label="Choose Schema"
-				auto="true" sizeLimit="1048576" allowTypes="/(\.|\/)(sql)$/" 
+				auto="true" sizeLimit="500000000" allowTypes="/(\.|\/)(sql)$/" 
 				fileUploadListener="#{schemaUploadPageBean.handleFileUpload}"/> 
 			
 			<p:commandButton 
