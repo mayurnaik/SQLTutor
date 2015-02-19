@@ -414,12 +414,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 
 	public void nextQuestion() {
-		// reset everything and move to the next question.
-		questionIndex++;
-		if (questionIndex >= questionTuples.size()) {
-			questionIndex = 0;
-		}
-		reset();
+		setQuestionIndex(questionIndex+1);
 	}
 
 	private void reset() {
@@ -521,11 +516,18 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	 *            non-0-indexed question number.
 	 */
 	public void setQuestionNumber(int questionNumber) {
-		questionIndex = questionNumber - 1;
+		setQuestionIndex(questionNumber - 1);
 	}
 
 	public void setQuestionIndex(int questionIndex) {
-		this.questionIndex = questionIndex;
+		if(questionIndex != this.questionIndex)	{
+			if (questionIndex >= questionTuples.size()) 
+				this.questionIndex = 0;
+			else
+				this.questionIndex = questionIndex;
+			BeanUtils.addInfoMessage(null, "Changed to question number " + getQuestionNumber() + ".");
+			reset();
+		}
 	}
 
 	public List<QuestionTuple> getQuestionTuples() {

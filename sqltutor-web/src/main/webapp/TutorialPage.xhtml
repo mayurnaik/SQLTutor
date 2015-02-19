@@ -37,6 +37,9 @@
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
+			
+			<p:growl id="growl" />
+			
 			<div class="left">	
 				<p:panel header="Schema: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
 					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
@@ -55,11 +58,11 @@
 				
 				<div class="seperator"/>
 				
-				<p:contextMenu for="questionPanel">
+				<p:contextMenu for="question">
 					<p:menuitem value="Change Question" oncomplete="PF('change_question').show();"/>
 				</p:contextMenu>
 				
-				<p:panel id="questionPanel" styleClass="panel">
+				<p:panel id="question" styleClass="panel">
 					<f:facet name="header">
 	       		 		<h:outputText value="Question" />
 						<p:selectOneMenu id="q" value="#{tutorialPageBean.questionNumber}" effect="fade" style="float: right">
@@ -67,10 +70,10 @@
 								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
 								itemLabel="#{tutorialPageBean.getQuestionNumber(question)}" 
 								itemDescription="#{tutorialPageBean.getQuestionDescription(question)}"/>
-							<p:ajax update="questionPanel"/>
+							<p:ajax update="question,result,feedback,growl"/>
 						</p:selectOneMenu>	
 	    			</f:facet>  
-					<p:outputLabel id="question" value="#{tutorialPageBean.question}" />
+					<p:outputLabel value="#{tutorialPageBean.question}" />
 				</p:panel>
 				
 				<div class="seperator"/>
@@ -81,17 +84,17 @@
 					'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
 				<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
-						update="@form" styleClass="panelbutton"/>
+						update="result,feedback,question,growl" styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"
-						update="@form" styleClass="panelbutton"/>
+						update="result,feedback,question,growl" styleClass="panelbutton"/>
 				</p:panel>
 			</div>
 	
 			<div class="middle"/>
 	
 			<div class="right">
-				<p:panel header="#{tutorialPageBean.queryResultHeader}" styleClass="panel">
+				<p:panel id="result" header="#{tutorialPageBean.queryResultHeader}" styleClass="panel">
 					<p:dataTable id="resultsTable" var="row" value="#{tutorialPageBean.queryResult.data}"
 						resizableColumns="true"
 						style="height:60% !important"
@@ -110,7 +113,7 @@
 				
 				<div class="seperator"/>
 				
-				<p:panel header="Feedback" styleClass="panel">
+				<p:panel id="feedback" header="Feedback" styleClass="panel">
 					<h:outputText id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
 					<br/> &#160;&#160;&#160;&#160;&#160;&#160;
 					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" escape="false" />
