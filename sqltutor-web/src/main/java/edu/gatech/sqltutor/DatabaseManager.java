@@ -132,7 +132,7 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 			
 			String query = admin ? "SELECT schema FROM schema_options;" : 
-				"SELECT schema FROM schema_options WHERE visible_to_users;";
+				"SELECT schema FROM schema_options WHERE visible_to_users AND (open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now());";
 			
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -396,6 +396,7 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			ScriptRunner runner = new ScriptRunner(connection, false, true);
+			runner.setLogWriter(null);
 			reader = new BufferedReader(new StringReader(schemaDump));
 			runner.runScript(reader);
 		} finally {
