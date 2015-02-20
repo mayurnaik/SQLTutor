@@ -5,9 +5,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import edu.gatech.sqltutor.SQLTutorException;
-import edu.gatech.sqltutor.beans.BeanUtils;
-
 public class SchemaOptionsTuple implements Serializable {
 	private static final long serialVersionUID = 1L;
 	

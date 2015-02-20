@@ -31,7 +31,6 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.SQLTutorException;
 import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 
 @ManagedBean

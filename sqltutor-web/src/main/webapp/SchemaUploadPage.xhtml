@@ -31,6 +31,12 @@
 		<ui:insert name="template">
 			<ui:include src="/BodyTemplate.xhtml" />
 		</ui:insert>
+		
+		<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" />
+		<p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+			<p:graphicImage name="images/loading.gif" />
+		</p:dialog>
+		
 		<p:messages id="messages" showDetail="true" autoUpdate="true"/>
 		<p:panel header="Upload Schema" styleClass="panel">
 			<p:fileUpload id="schemaFile" mode="advanced" label="Choose Schema"

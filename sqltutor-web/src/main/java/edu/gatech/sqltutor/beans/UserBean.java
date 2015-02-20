@@ -20,17 +20,16 @@ import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Map;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.servlet.http.HttpServletRequest;
-
-import org.primefaces.context.RequestContext;
 
 import edu.gatech.sqltutor.util.SaltHasher;
 
@@ -49,9 +48,9 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
 	private static final String REGISTRATION_ERROR = "The email you entered is already tied to an account.";
-	private static final String HOME_PAGE_CONTEXT = "HomePage";
-	private static final String REGISTRATION_PAGE_CONTEXT = "RegistrationPage";
-	private static final String LOGIN_PAGE_CONTEXT = "LoginPage";
+	private static final String HOME_PAGE_CONTEXT = "/HomePage.jsf";
+	private static final String REGISTRATION_PAGE_CONTEXT = "/RegistrationPage.jsf";
+	private static final String LOGIN_PAGE_CONTEXT = "/LoginPage.jsf";
 	private static final String REGISTRATION_MESSAGES_ID = ":registrationForm:registrationMessages";
 	private static final String LOGIN_MESSAGES_ID = ":loginForm:loginMessages";
 	// FIXME: probably don't want to have a default schema here
@@ -132,9 +131,18 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
         boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().contains(REGISTRATION_PAGE_CONTEXT);
         boolean onLoginPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().contains(LOGIN_PAGE_CONTEXT);
         if(!loggedIn && !onRegistrationPage && !onLoginPage) {
-        	// trim off the "/" and return just the * of "*.xhtml/jsf/etc"
-        	previousContext = FacesContext.getCurrentInstance().getViewRoot().getViewId().substring(1);
-			previousContext = previousContext.substring(0, previousContext.lastIndexOf("."));
+        	previousContext = FacesContext.getCurrentInstance().getViewRoot().getViewId();
+        	// append any parameters
+        	final Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+        	final List<String> paramsKeyset = new ArrayList<String>(params.keySet());
+        	for(int i = 0; i < paramsKeyset.size(); i++) {
+        		if (i == 0)
+        			previousContext += "?";
+        		else
+        			previousContext += "&";
+        		final String currentParam = paramsKeyset.get(i);
+        		previousContext += currentParam + "=" + params.get(currentParam);
+        	}
         	BeanUtils.addErrorMessage(null, "Please login before accessing that page.", true);
         	BeanUtils.redirect(LOGIN_PAGE_CONTEXT);
         }
@@ -278,5 +286,9 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 
 	public void setPreviousContext(String previousContext) {
 		this.previousContext = previousContext;
+	}
+	
+	public void selectDefaultSchema() {
+		selectedSchema = DEFAULT_SCHEMA_NAME;
 	}
 }

@@ -18,25 +18,27 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 
 import org.apache.commons.lang3.StringUtils;
+import org.primefaces.context.RequestContext;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -69,6 +71,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private QueryResult queryResult;
 	private QueryResult answerResult;
 	private String link;
+	private String schema;
+	private SchemaOptionsTuple schemaOptions;
 	
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
@@ -76,15 +80,69 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
 	public static final int RESULT_ROW_LIMIT = 50;
 	
-	public void preRenderSetup(ComponentSystemEvent event) {
+	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
+		if(!userBean.isLoggedIn())
+			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
+		
+		if(link != null) {
+			try {
+				schema = getDatabaseManager().getUserSchema(link);
+				if(schema == null) {
+					BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
+					BeanUtils.redirect("/HomePage.jsf");
+					return;
+				}
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+			}
+		} else
+			schema = userBean.getSelectedSchema();
+		
 		try {
-			if(link != null) {
-				final String schema = getDatabaseManager().getUserSchema(link);
-				if(schema != null) {
-					userBean.setSelectedSchema(schema);
+			schemaOptions = getDatabaseManager().getOptions(schema);
+
+			boolean accessible = true;
+			final Calendar now = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+
+			if (schemaOptions.getOpenAccess() != null) {
+				final Calendar calOpen = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+				calOpen.setTime(schemaOptions.getOpenAccess());
+				calOpen.set(Calendar.MILLISECOND, 0);
+				if(!now.after(calOpen)) {
+					SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+					BeanUtils.addErrorMessage(null, "That tutorial opens " + sdf.format(calOpen.getTime()), true);
+					accessible = false;
+				}
+			} 
+			
+			if (schemaOptions.getCloseAccess() != null) {
+				final Calendar calClose = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+				calClose.setTime(schemaOptions.getCloseAccess());
+				calClose.set(Calendar.MILLISECOND, 0);
+				if(!now.before(calClose)) {
+					SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+					BeanUtils.addErrorMessage(null, "That tutorial closed " + sdf.format(calClose.getTime()), true);
+					accessible = false;
 				}
 			}
-			tables = getDatabaseManager().getTables(userBean.getSelectedSchema());
+			
+			if(!accessible) {
+				BeanUtils.redirect("/HomePage.jsf");
+				return;
+			}
+		} catch (SQLException e) {
+			for (Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+		}
+		
+		try {
+			tables = getDatabaseManager().getTables(schema);
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -119,7 +177,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			// log
 			try {
 				getDatabaseManager().log(BeanUtils.getSessionId(),
-						userBean.getHashedEmail(), userBean.getSelectedSchema(),
+						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
 						query, !isQueryMalformed(), getQueryIsCorrect(), nlpResult);
 			} catch (SQLException e) {
@@ -142,7 +200,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	private String setNLPFeedback() {
 		String result = null;
-		final String schema = userBean.getSelectedSchema();
 		if (schema.equals("company") || schema.equals("business_trip")) {
 			// generate NLP feedback
 			final ERSerializer serializer = new ERSerializer();
@@ -206,7 +263,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		// was malformed.
 		try {
 			queryResult = getDatabaseManager().getQueryResult(
-					userBean.getSelectedSchema(), query, false);
+					schema, query, false);
 		} catch (SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 					+ e.getMessage();
@@ -226,7 +283,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			// the answer is malformed
 			try {
 				answerResult = getDatabaseManager().getQueryResult(
-						userBean.getSelectedSchema(), answer, false);
+						schema, answer, false);
 			} catch (SQLException e) {
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				return;
@@ -279,7 +336,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					final String diff = "SELECT count(*) FROM (" + normalizedQuery + " EXCEPT " + normalizedAnswer 
 							+ " UNION ALL " + normalizedAnswer + " EXCEPT " + normalizedQuery + ") t";
 					try {
-						final QueryResult diffResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), diff, false);
+						final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false);
 						if ("0".equals(diffResult.getData().get(0).get(0))) {
 							resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						} else {
@@ -433,7 +490,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		try {
 			getDatabaseManager().logQuestionPresentation(
 					BeanUtils.getSessionId(), userBean.getHashedEmail(),
-					userBean.getSelectedSchema(),
+					schema,
 					questionTuples.get(questionIndex).getQuestion());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
@@ -553,5 +610,21 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	
 	public int getResultRowLimit() {
 		return RESULT_ROW_LIMIT;
+	}
+
+	public SchemaOptionsTuple getOptions() {
+		return schemaOptions;
+	}
+
+	public void setOptions(SchemaOptionsTuple options) {
+		this.schemaOptions = options;
+	}
+
+	public String getSchema() {
+		return schema;
+	}
+
+	public void setSchema(String schema) {
+		this.schema = schema;
 	}
 }

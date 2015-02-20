@@ -75,7 +75,8 @@ public class BeanUtils extends AbstractDatabaseBean {
 	
 	public static void redirect(String contextPath) throws IOException {
 		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-		externalContext.redirect(externalContext.getRequestContextPath() + "/" + contextPath + ".jsf");
+		// TODO: Not sure how to automatically get this as ".jsf" rather than ".xhtml".
+		externalContext.redirect(externalContext.getRequestContextPath() + contextPath);
 	}
 	
 	public static void updateComponent(String component) {
