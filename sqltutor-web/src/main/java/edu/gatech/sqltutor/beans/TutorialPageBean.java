@@ -69,6 +69,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private QueryResult queryResult;
 	private QueryResult answerResult;
 	private String link;
+	private Integer queryProgress;
 
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
@@ -97,40 +98,46 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public void processSQL() {
 		// check if we have a question
-		if (StringUtils.isEmpty(query) || questionTuples.isEmpty())
-			return;
-		// reset all of the feedback fields
-		reset();
-
-		final String answer = questionTuples.get(questionIndex).getAnswer();
-
-		String nlpResult = null;
-		// let the user know if their query is restricted
-		if (isRestricted(query)) {
-			resultSetFeedback = NO_PERMISSIONS_MESSAGE;
-		} else {
-			// check answer
-
-			setResultSetFeedback(answer);
-
-			// generate nlp (if the question is incorrect and parsed
-			if (!getQueryIsCorrect()
-					&& !resultSetFeedback.contains("malformed"))
-				nlpResult = setNLPFeedback();
-		}
-
-		// log
-		try {
-			getDatabaseManager().log(BeanUtils.getSessionId(),
-					userBean.getHashedEmail(), userBean.getSelectedSchema(),
-					questionTuples.get(questionIndex).getQuestion(), answer,
-					query, !isQueryMalformed(), getQueryIsCorrect(), nlpResult);
-		} catch (SQLException e) {
-			for (Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
+		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {
+			// reset all of the feedback fields
+			reset();
+	
+			final String answer = questionTuples.get(questionIndex).getAnswer();
+	
+			String nlpResult = null;
+			// let the user know if their query is restricted
+			if (isRestricted(query)) {
+				resultSetFeedback = NO_PERMISSIONS_MESSAGE;
+			} else {
+				// check answer
+				setResultSetFeedback(answer);
+				setQueryProgress(50);
+				// generate nlp (if the question is incorrect and parsed
+				if (!getQueryIsCorrect()
+						&& !resultSetFeedback.contains("malformed"))
+					nlpResult = setNLPFeedback();
 			}
-		}
+	
+			setQueryProgress(80);
+			
+			// log
+			try {
+				getDatabaseManager().log(BeanUtils.getSessionId(),
+						userBean.getHashedEmail(), userBean.getSelectedSchema(),
+						questionTuples.get(questionIndex).getQuestion(), answer,
+						query, !isQueryMalformed(), getQueryIsCorrect(), nlpResult);
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+			}
+			
+			setQueryProgress(100);
+			BeanUtils.addInfoMessage(null, "Query completed!");
+		} else 
+			BeanUtils.addErrorMessage(null, "Cannot run queries when there are no questions.");
+		
 	}
 
 	private boolean isRestricted(String query) {
@@ -422,6 +429,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		answerResult = null;
 		feedbackNLP = "";
 		resultSetFeedback = "";
+		setQueryProgress(0);
 	}
 
 	public String getQuestion() {
@@ -549,5 +557,16 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	
 	public int getResultRowLimit() {
 		return RESULT_ROW_LIMIT;
+	}
+
+	public Integer getQueryProgress() {
+       if(queryProgress == null) {
+            queryProgress = 0;
+        } 
+        return queryProgress;
+	}
+
+	public void setQueryProgress(Integer progress) {
+		this.queryProgress = progress;
 	}
 }
