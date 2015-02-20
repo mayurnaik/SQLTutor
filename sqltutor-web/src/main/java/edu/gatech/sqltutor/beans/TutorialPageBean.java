@@ -529,11 +529,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public void setQuestionIndex(int questionIndex) {
 		if(questionIndex != this.questionIndex)	{
-			if (questionIndex >= questionTuples.size()) 
+			if (questionIndex >= questionTuples.size())  {
 				this.questionIndex = 0;
-			else
+				BeanUtils.addInfoMessage(null, "End of questions. Changed to question number " + getQuestionNumber() + ".");
+			} else {
 				this.questionIndex = questionIndex;
-			BeanUtils.addInfoMessage(null, "Changed to question number " + getQuestionNumber() + ".");
+				BeanUtils.addInfoMessage(null, "Changed to question number " + getQuestionNumber() + ".");
+			}
 			reset();
 		}
 	}

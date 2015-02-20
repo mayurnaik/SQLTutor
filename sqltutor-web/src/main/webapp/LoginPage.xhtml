@@ -33,8 +33,10 @@
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
+			
+			<p:growl id="growl" />
+			
 			<p:panel id="loginPanel2">
-				<p:messages id="loginMessages2"/>
 				<h:panelGrid id="loginGrid2" columns="4">
 					<h:outputLabel for="email2" value="Email: " />
 					<p:inputText id="email2" required="true"

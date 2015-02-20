@@ -30,8 +30,10 @@
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
+			
+			<p:growl id="growl" />
+			
 			<p:panel header="Welcome to SQL Tutor" styleClass="panel">
-				<p:messages id="homeMessages"/>
 				<h:outputText 
 					value="SQL Tutor is a research prototype for automating SQL education. Our goal is to offer powerful and robust tools for instructors, including question generation and answer analysis, and to produce a completely personalized learning experience for all students."/>
 				<p/>

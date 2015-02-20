@@ -30,6 +30,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.servlet.http.HttpServletRequest;
 
+import org.primefaces.context.RequestContext;
+
 import edu.gatech.sqltutor.util.SaltHasher;
 
 /**
@@ -47,8 +49,9 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
 	private static final String REGISTRATION_ERROR = "The email you entered is already tied to an account.";
-	private static final String HOMEPAGE_CONTEXT = "/HomePage.jsf";
-	private static final String REGISTRATION_PAGE_CONTEXT = "/RegistrationPage.jsf";
+	private static final String HOME_PAGE_CONTEXT = "HomePage";
+	private static final String REGISTRATION_PAGE_CONTEXT = "RegistrationPage";
+	private static final String LOGIN_PAGE_CONTEXT = "LoginPage";
 	private static final String REGISTRATION_MESSAGES_ID = ":registrationForm:registrationMessages";
 	private static final String LOGIN_MESSAGES_ID = ":loginForm:loginMessages";
 	// FIXME: probably don't want to have a default schema here
@@ -64,6 +67,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private List<String> linkedAdminCodes = null;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
 	private String selectedSchema;
+	private String previousContext;
 
 	/** 
 	 * When the user submits his or her email and password this method will
@@ -86,8 +90,11 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
 			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
 			selectedSchema = DEFAULT_SCHEMA_NAME;
-			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
+			if(previousContext != null) {
+				BeanUtils.redirect(previousContext);
+				previousContext = null;
+			} else
+				BeanUtils.redirect(HOME_PAGE_CONTEXT);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -122,23 +129,32 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 */
 	public void loginRedirect(ComponentSystemEvent event) throws IOException {
         final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().endsWith(REGISTRATION_PAGE_CONTEXT);
-        if(!(loggedIn ^ onRegistrationPage)) {
-        	externalContext.responseSendError(404, "");
+        boolean onRegistrationPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().contains(REGISTRATION_PAGE_CONTEXT);
+        boolean onLoginPage = ((HttpServletRequest)externalContext.getRequest()).getRequestURI().contains(LOGIN_PAGE_CONTEXT);
+        if(!loggedIn && !onRegistrationPage && !onLoginPage) {
+        	// trim off the "/" and return just the * of "*.xhtml/jsf/etc"
+        	previousContext = FacesContext.getCurrentInstance().getViewRoot().getViewId().substring(1);
+			previousContext = previousContext.substring(0, previousContext.lastIndexOf("."));
+        	BeanUtils.addErrorMessage(null, "Please login before accessing that page.", true);
+        	BeanUtils.redirect(LOGIN_PAGE_CONTEXT);
         }
 	}
 	
 	public void devRedirect(ComponentSystemEvent event) throws IOException {
-        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		if(!loggedIn)
+			loginRedirect(event);
 		if (!isDeveloper()) {
-			externalContext.responseSendError(404, "");
+			BeanUtils.addErrorMessage(null, "You must be a developer to access that page.", true);
+			BeanUtils.redirect(HOME_PAGE_CONTEXT);
 	    }
 	}
 	
 	public void adminRedirect(ComponentSystemEvent event) throws IOException {
-        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		if(!loggedIn)
+			loginRedirect(event);
 		if (!isAdmin()) {
-			externalContext.responseSendError(404, "");
+			BeanUtils.addErrorMessage(null, "You must be a developer or admin to access that page.", true);
+			BeanUtils.redirect(HOME_PAGE_CONTEXT);
 	    }
 	}
 	
@@ -163,8 +179,8 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			developer = false;
 			adminCode = null;
 			linkedAdminCodes = null;
-			final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-			externalContext.redirect(externalContext.getRequestContextPath() + HOMEPAGE_CONTEXT);
+			previousContext = null;
+			BeanUtils.redirect(HOME_PAGE_CONTEXT);
 		}
 	}
 
@@ -254,5 +270,13 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	
 	public String getHashedEmail() {
 		return hashedEmail;
+	}
+
+	public String getPreviousContext() {
+		return previousContext;
+	}
+
+	public void setPreviousContext(String previousContext) {
+		this.previousContext = previousContext;
 	}
 }

@@ -396,7 +396,6 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			ScriptRunner runner = new ScriptRunner(connection, false, true);
-			runner.setLogWriter(null);
 			reader = new BufferedReader(new StringReader(schemaDump));
 			runner.runScript(reader);
 		} finally {

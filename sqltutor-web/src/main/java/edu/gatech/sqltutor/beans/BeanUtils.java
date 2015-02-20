@@ -15,10 +15,15 @@
  */
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
+
 import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.primefaces.context.RequestContext;
 
 public class BeanUtils extends AbstractDatabaseBean {
 
@@ -37,14 +42,28 @@ public class BeanUtils extends AbstractDatabaseBean {
 		return session.getId();
 	}	
 	
-	public static void addErrorMessage(String componentName, String message) {
+	public static void addErrorMessage(String componentName, String message, boolean keepAfterRedirect) {
+		final FacesContext context = FacesContext.getCurrentInstance();
 		String componentId = getComponentId(componentName);
-		FacesContext.getCurrentInstance().addMessage(componentId, new FacesMessage(FacesMessage.SEVERITY_ERROR, message, null));
+		context.addMessage(componentId, new FacesMessage(FacesMessage.SEVERITY_ERROR, message, null));
+		if(keepAfterRedirect)
+			context.getExternalContext().getFlash().setKeepMessages(true);
+	}
+	
+	public static void addErrorMessage(String componentName, String message) {
+		addErrorMessage(componentName, message, false);
 	}
 	
 	public static void addInfoMessage(String componentName, String message) {
+		addInfoMessage(componentName, message, false);
+	}
+	
+	public static void addInfoMessage(String componentName, String message, boolean keepAfterRedirect) {
+		final FacesContext context = FacesContext.getCurrentInstance();
 		String componentId = getComponentId(componentName);
-		FacesContext.getCurrentInstance().addMessage(componentId, new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
+		context.addMessage(componentId, new FacesMessage(FacesMessage.SEVERITY_INFO, message, null));
+		if(keepAfterRedirect)
+			context.getExternalContext().getFlash().setKeepMessages(true);
 	}
 	
 	public static String getComponentId(String componentName) {
@@ -52,5 +71,15 @@ public class BeanUtils extends AbstractDatabaseBean {
 		if(componentName != null)
 			componentId = FacesContext.getCurrentInstance().getViewRoot().findComponent(componentName).getClientId();
 		return componentId;
+	}
+	
+	public static void redirect(String contextPath) throws IOException {
+		final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+		externalContext.redirect(externalContext.getRequestContextPath() + "/" + contextPath + ".jsf");
+	}
+	
+	public static void updateComponent(String component) {
+		final RequestContext context = RequestContext.getCurrentInstance();
+		context.update(component);
 	}
 }
