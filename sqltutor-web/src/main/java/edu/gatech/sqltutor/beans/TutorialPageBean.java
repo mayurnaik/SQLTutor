@@ -69,8 +69,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private QueryResult queryResult;
 	private QueryResult answerResult;
 	private String link;
-	private Integer queryProgress;
-
+	
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
@@ -111,14 +110,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			} else {
 				// check answer
 				setResultSetFeedback(answer);
-				setQueryProgress(50);
 				// generate nlp (if the question is incorrect and parsed
 				if (!getQueryIsCorrect()
 						&& !resultSetFeedback.contains("malformed"))
 					nlpResult = setNLPFeedback();
 			}
-	
-			setQueryProgress(80);
 			
 			// log
 			try {
@@ -133,7 +129,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 			}
 			
-			setQueryProgress(100);
 			BeanUtils.addInfoMessage(null, "Query completed!");
 		} else 
 			BeanUtils.addErrorMessage(null, "Cannot run queries when there are no questions.");
@@ -429,7 +424,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		answerResult = null;
 		feedbackNLP = "";
 		resultSetFeedback = "";
-		setQueryProgress(0);
 	}
 
 	public String getQuestion() {
@@ -559,16 +553,5 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	
 	public int getResultRowLimit() {
 		return RESULT_ROW_LIMIT;
-	}
-
-	public Integer getQueryProgress() {
-       if(queryProgress == null) {
-            queryProgress = 0;
-        } 
-        return queryProgress;
-	}
-
-	public void setQueryProgress(Integer progress) {
-		this.queryProgress = progress;
 	}
 }

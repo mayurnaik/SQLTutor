@@ -79,7 +79,6 @@ public class BeanUtils extends AbstractDatabaseBean {
 	}
 	
 	public static void updateComponent(String component) {
-		final RequestContext context = RequestContext.getCurrentInstance();
-		context.update(component);
+		RequestContext.getCurrentInstance().update(component);
 	}
 }

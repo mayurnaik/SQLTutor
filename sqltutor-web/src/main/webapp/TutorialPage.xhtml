@@ -39,6 +39,11 @@
 			</ui:insert>
 			
 			<p:growl id="growl" />
+	
+			<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" />
+			<p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+				<p:graphicImage name="images/loading.gif" />
+			</p:dialog>
 			
 			<div class="left">	
 				<p:panel header="Schema: &quot;#{userBean.selectedSchema}&quot;" styleClass="panel">
@@ -83,24 +88,19 @@
 						value="#{tutorialPageBean.query}" lineNumbers="true" extraKeys="{
 						'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
 					<p:commandButton id="try" value="Try Query"
-						action="#{tutorialPageBean.processSQL}" onclick="PF('try').disable();PF('next').disable();PF('q').disable();"
-						update="result,feedback,question,growl" styleClass="panelbutton"/>
+						action="#{tutorialPageBean.processSQL}" 
+						update="result,feedback,question,growl" 
+						styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"
 						update="result,feedback,question,growl" styleClass="panelbutton"/>
 				</p:panel>
 			</div>
-	
+			
 			<div class="middle"/>
 	
 			<div class="right">
 				<p:panel id="result" header="#{tutorialPageBean.queryResultHeader}" styleClass="panel">
-					<ui:remove>
-						<p:progressBar widgetVar="pb" ajax="true" value="#{tutorialPageBean.queryProgress}" labelTemplate="{value}%" global="false">
-	        				<p:ajax event="complete" oncomplete="PF('try').enable();PF('next').enable();PF('q').enable();"/>
-	    				</p:progressBar>
-	    			</ui:remove>
-				
 					<p:dataTable id="resultsTable" var="row" value="#{tutorialPageBean.queryResult.data}"
 						resizableColumns="true"
 						style="height:60% !important"
