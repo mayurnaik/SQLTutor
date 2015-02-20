@@ -39,6 +39,8 @@ import javax.faces.event.ComponentSystemEvent;
 
 import org.apache.commons.lang3.StringUtils;
 import org.primefaces.context.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -58,6 +60,7 @@ import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
 public class TutorialPageBean extends AbstractDatabaseBean implements
 		Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(TutorialPageBean.class);
 
 	@ManagedProperty(value = "#{userBean}")
 	private UserBean userBean;
@@ -88,6 +91,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			try {
 				schema = getDatabaseManager().getUserSchema(link);
 				if(schema == null) {
+					log.error("Invalid schema link used: {}", link);
 					BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
 					BeanUtils.redirect("/HomePage.jsf");
 					return;
@@ -286,6 +290,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						schema, answer, false);
 			} catch (SQLException e) {
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
+				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
+						schema, questionIndex, answer, e);
 				return;
 			}
 
@@ -440,8 +446,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		questionTuples = null;
 		final DatabaseManager databaseManager = getDatabaseManager();
 		try {
-			questionTuples = databaseManager.getQuestions(userBean
-					.getSelectedSchema());
+			questionTuples = databaseManager.getQuestions(schema);
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -454,8 +459,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		if (!questionTuples.isEmpty()) {
 			SchemaOptionsTuple options = null;
 			try {
-				options = databaseManager.getOptions(userBean
-						.getSelectedSchema());
+				options = databaseManager.getOptions(schema);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
