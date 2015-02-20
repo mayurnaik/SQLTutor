@@ -44,7 +44,8 @@ import java.sql.Statement;
             private boolean stopOnError;
             private boolean autoCommit;
      
-            private PrintWriter logWriter = new PrintWriter(System.out);
+            // only output errors by default
+            private PrintWriter logWriter;
             private PrintWriter errorLogWriter = new PrintWriter(System.err);
      
             private String delimiter = DEFAULT_DELIMITER;
