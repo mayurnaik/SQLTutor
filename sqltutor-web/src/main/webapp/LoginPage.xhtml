@@ -37,9 +37,10 @@
 			<p:growl id="growl" />
 			
 			<p:panel id="loginPanel2">
+				<p:messages id="loginMessages"/>
 				<h:panelGrid id="loginGrid2" columns="4">
 					<h:outputLabel for="email2" value="Email: " />
-					<p:inputText id="email2" required="true"
+					<p:inputText id="email2" required="true" tabindex="1"
 						requiredMessage="Please enter your email address."
 						validatorMessage="Invalid email format."
 						value="#{userBean.email}">
@@ -47,18 +48,18 @@
 							pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
 					</p:inputText>
 					
-					<h:link value="Register" outcome="RegistrationPage" />
+					<h:link value="Register" outcome="RegistrationPage" tabindex="4" />
 					<br/>
 					
 					<h:outputLabel for="password2" value="Password: " />
-					<p:password id="password2" required="true" label="Password"
+					<p:password id="password2" required="true" label="Password" tabindex="2"
 						requiredMessage="Please input your password." value="#{userBean.password}">
 						<f:validateLength minimum="3" maximum="12" />
 					</p:password>
-					<h:link value="Forgot Password?" outcome="PasswordRecoveryPage"/>
+					<h:link value="Forgot Password?" outcome="PasswordRecoveryPage" tabindex="5"/>
 					<br/>
 				</h:panelGrid>
-				<p:commandButton id="alternativeButton2" 
+				<p:commandButton id="alternativeButton2"  tabindex="3"
 					value="Submit" update="loginPanel2" 
 					action="#{userBean.login}"/>
 			</p:panel>
