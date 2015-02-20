@@ -396,6 +396,7 @@ public class DatabaseManager implements Serializable {
 			connection = userDataSource.getConnection();
 			
 			ScriptRunner runner = new ScriptRunner(connection, false, true);
+			runner.setLogWriter(null);
 			reader = new BufferedReader(new StringReader(schemaDump));
 			runner.runScript(reader);
 		} finally {
@@ -448,10 +449,10 @@ public class DatabaseManager implements Serializable {
 		runSchemaScript(schemaDump);
 		
 		// get schema name
-		Pattern p = Pattern.compile("(?<=CREATE SCHEMA\\W{1,2})(\\w+)");
+		Pattern p = Pattern.compile("CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)", Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(schemaDump);
 		m.find();
-		String schemaName = m.group(1);
+		String schemaName = m.group(2);
 		
 		grantAccessToReadonly(schemaName);
 		
