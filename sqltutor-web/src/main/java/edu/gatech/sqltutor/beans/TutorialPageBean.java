@@ -81,16 +81,17 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
+	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
 	public static final int RESULT_ROW_LIMIT = 50;
 	
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
-		if(!userBean.isLoggedIn())
+		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
 		
-		if(link != null) {
+		if (link != null) {
 			try {
 				schema = getDatabaseManager().getUserSchema(link);
-				if(schema == null) {
+				if (schema == null) {
 					log.error("Invalid schema link used: {}", link);
 					BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
 					BeanUtils.redirect("/HomePage.jsf");
@@ -103,8 +104,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
-		} else
+		} else {
 			schema = userBean.getSelectedSchema();
+		}
 		
 		try {
 			schemaOptions = getDatabaseManager().getOptions(schema);
@@ -253,12 +255,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public String getQueryResultHeader() {
 		return "Query Result" 
-				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getData().size() + ")" : "");
+				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getOriginalSize() + ")" : "");
 	}
 	
 	public String getQueryResultExampleHeader() {
 		return "Your answer should resemble this example"  
-				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getData().size() + ")" : "") 
+				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getOriginalSize() + ")" : "") 
 				+ ":";	
 	}
 	
@@ -292,6 +294,14 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
 						schema, questionIndex, answer, e);
+				return;
+			}
+			
+			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
+			if (queryResult.isTruncated()) {
+				log.warn("User query was truncated at {} out of {} rows: {}", 
+						queryResult.getData().size(), queryResult.getOriginalSize(), query);
+				resultSetFeedback = TRUNCATED_QUERY_MESSAGE;
 				return;
 			}
 

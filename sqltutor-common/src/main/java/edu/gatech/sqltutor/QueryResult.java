@@ -24,6 +24,8 @@ public class QueryResult implements Serializable {
 	
 	private List<String> columns = new ArrayList<String>();
     private List<List<String>> data = new ArrayList<List<String>>();
+    private int originalSize;
+    private boolean isTruncated;
     
     public QueryResult() {}
     
@@ -36,6 +38,8 @@ public class QueryResult implements Serializable {
     public QueryResult(List<String> columns, List<List<String>> data) {
     	this.columns = columns;
     	this.data = data;
+    	if (data != null)
+    		originalSize = data.size();
     }
 
 	public void setData(List<List<String>> data) {
@@ -53,5 +57,30 @@ public class QueryResult implements Serializable {
 
 	public List<String> getColumns() {
 		return columns;
+	}
+	
+	/**
+	 * Indicates whether this result was truncated due to query limits.
+	 * @return if the data is truncated
+	 */
+	public boolean isTruncated() {
+		return isTruncated;
+	}
+	
+	public void setTruncated(boolean isTruncated) {
+		this.isTruncated = isTruncated;
+	}
+	
+	/**
+	 * Returns the original size of this result.  This will be the same 
+	 * as the size of the data if <code>isTruncated()</code> returns <code>false</code>.
+	 * @return the original size of this result
+	 */
+	public int getOriginalSize() {
+		return originalSize;
+	}
+	
+	public void setOriginalSize(int originalSize) {
+		this.originalSize = originalSize;
 	}
 }

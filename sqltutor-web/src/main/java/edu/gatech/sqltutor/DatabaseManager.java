@@ -50,6 +50,9 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.io.BaseEncoding;
 
 import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
@@ -61,6 +64,7 @@ import edu.gatech.sqltutor.util.ScriptRunner;
 @ApplicationScoped
 public class DatabaseManager implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(DatabaseManager.class);
 	
 	@Resource(name="jdbc/sqltutorDB")
 	private DataSource dataSource;
@@ -72,6 +76,7 @@ public class DatabaseManager implements Serializable {
 	private DataSource readUserDataSource; 
 	
 	public static final int QUERY_TIMEOUT_SECONDS = 30;
+	private static final int USER_QUERY_SIZE_LIMIT = 50_000;
 	
 	public DatabaseManager() {
 	}
@@ -803,12 +808,17 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
+		int maxResults = !dev ? USER_QUERY_SIZE_LIMIT : Integer.MAX_VALUE;
+		
 		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
 		ArrayList<String> columnNames = new ArrayList<String>();
+		int rows = 0;
 		try {
 			connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
 			
-			statement = connection.createStatement();
+			connection.setAutoCommit(false);
+			statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			statement.setFetchSize(1000);
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
 			
@@ -820,19 +830,27 @@ public class DatabaseManager implements Serializable {
 				columnNames.add(resultSetMetaData.getColumnName(i));
 			}
 			
-			while(resultSet.next()) {
-				List<String> rowData = new ArrayList<String>();
-				for (int i = 1; i <= columnCount; i++) {
-					rowData.add(resultSet.getString(i));
+			while (resultSet.next()) {
+				// stop reading data at a certain point
+				if (++rows <= maxResults) {
+					List<String> rowData = new ArrayList<String>();
+					for (int i = 1; i <= columnCount; i++) {
+						rowData.add(resultSet.getString(i));
+					}
+					queryData.add(rowData);
 				}
-				queryData.add(rowData);
 			}
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		return new QueryResult(columnNames, queryData);
+		QueryResult queryResult = new QueryResult(columnNames, queryData);
+		if (rows > maxResults) {
+			queryResult.setTruncated(true);
+			queryResult.setOriginalSize(rows);
+		}
+		return queryResult;
 	}
 	
 	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
