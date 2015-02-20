@@ -18,7 +18,9 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -49,6 +51,7 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	
 	private List<DatabaseTable> tables;
 	private SchemaOptionsTuple options;
+	private SchemaOptionsTuple oldOptions;
 	private boolean deleteThisSchema;
 	private boolean linkable;
 	
@@ -58,6 +61,7 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 			final String selectedSchema = userBean.getSelectedSchema();
 			tables = getDatabaseManager().getTables(selectedSchema);
 			options = getDatabaseManager().getOptions(selectedSchema);
+			oldOptions = new SchemaOptionsTuple(options);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -84,8 +88,37 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 						options.setLink(UUID.randomUUID().toString());
 				} else
 					options.setLink(null);
-				getDatabaseManager().setOptions(userBean.getSelectedSchema(), options);
-				BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
+				
+				final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+				
+				boolean stopSubmit = false;
+				if (options.getOpenAccess() != null) {
+					if (!options.getOpenAccess().equals(oldOptions.getOpenAccess())) {
+						cal.setTime(options.getOpenAccess());
+						cal.set(Calendar.MILLISECOND, 0);
+						if (!cal.after(Calendar.getInstance(TimeZone.getTimeZone("EST")))) {
+							stopSubmit = true;
+							BeanUtils.addErrorMessage(null, "Unable to submit opening date/time: it must be some point in the future.");
+						}
+					}
+				}
+				
+				if (options.getCloseAccess() != null) {
+					if (!options.getCloseAccess().equals(oldOptions.getCloseAccess())) {
+						cal.setTime(options.getCloseAccess());
+						cal.set(Calendar.MILLISECOND, 0);
+						if (!cal.after(Calendar.getInstance(TimeZone.getTimeZone("EST")))) {
+							stopSubmit = true;
+							BeanUtils.addErrorMessage(null, "Unable to submit closing date/time: it must be some point in the future.");
+						}
+					}
+				}
+				
+				if (!stopSubmit) {
+					getDatabaseManager().setOptions(userBean.getSelectedSchema(), options);
+					oldOptions = new SchemaOptionsTuple(options);
+					BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
+				}
 			}
 		} catch (SQLException e) {
 			if(e.getMessage().contains("open_access_check")) {
@@ -97,9 +130,7 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				}
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
-		} catch (SQLTutorException e) {
-			BeanUtils.addErrorMessage(null, e.getMessage());
-		}
+		} 
 	}
 	
 	private boolean hasPermissions() {

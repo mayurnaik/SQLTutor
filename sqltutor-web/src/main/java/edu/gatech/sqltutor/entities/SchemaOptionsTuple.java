@@ -27,6 +27,15 @@ public class SchemaOptionsTuple implements Serializable {
 		this.closeAccess = closeAccess;
 	}
 
+	public SchemaOptionsTuple(SchemaOptionsTuple options) {
+		super();
+		this.visibleToUsers = options.isVisibleToUsers();
+		this.inOrderQuestions = options.isInOrderQuestions();
+		this.link = options.getLink();
+		this.openAccess = options.getOpenAccess();
+		this.closeAccess = options.getCloseAccess();
+	}
+
 	public boolean isVisibleToUsers() {
 		return visibleToUsers;
 	}
@@ -60,15 +69,12 @@ public class SchemaOptionsTuple implements Serializable {
 		this.openAccess = openAccess;
 	}
 	
-	public void setOpenAccessDate(java.util.Date openAccess) throws SQLTutorException {
+	public void setOpenAccessDate(java.util.Date openAccess) {
 		if(openAccess != null) {
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			cal.setTime(openAccess);
 			cal.set(Calendar.MILLISECOND, 0);
-			if(cal.after(Calendar.getInstance(TimeZone.getTimeZone("EST"))))
-				this.openAccess = new Timestamp(cal.getTimeInMillis());
-			else
-				BeanUtils.addErrorMessage(null, "Did not submit opening date/time: it must be some point in the future.");
+			this.openAccess = new Timestamp(cal.getTimeInMillis());
 		} else
 			this.openAccess = null;
 	}
@@ -90,16 +96,12 @@ public class SchemaOptionsTuple implements Serializable {
 		this.closeAccess = closeAccess;
 	}
 	
-	public void setCloseAccessDate(java.util.Date closeAccess) throws SQLTutorException {
+	public void setCloseAccessDate(java.util.Date closeAccess) {
 		if(closeAccess != null) {
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			cal.setTime(closeAccess);
 			cal.set(Calendar.MILLISECOND, 0);
-			if(cal.after(Calendar.getInstance(TimeZone.getTimeZone("EST"))))
-				this.closeAccess = new Timestamp(cal.getTimeInMillis());
-			else {
-				BeanUtils.addErrorMessage(null, "Did not submit closing date/time: it must be some point in the future.");
-			}
+			this.closeAccess = new Timestamp(cal.getTimeInMillis());
 		} else
 			this.closeAccess = null;
 	}
