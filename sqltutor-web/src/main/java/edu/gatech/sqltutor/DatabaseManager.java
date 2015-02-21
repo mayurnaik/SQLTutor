@@ -30,10 +30,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
@@ -132,7 +132,7 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 	
-		ArrayList<String> schemas = new ArrayList<String>();
+		List<String> schemas = new LinkedList<String>();
 		try { 
 			connection = dataSource.getConnection();
 			
@@ -299,7 +299,7 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		List<UserTuple> users = new ArrayList<UserTuple>();
+		List<UserTuple> users = new LinkedList<UserTuple>();
 		try { 
 			connection = dataSource.getConnection();
 			
@@ -349,7 +349,7 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		List<QuestionTuple> questions = new ArrayList<QuestionTuple>();
+		List<QuestionTuple> questions = new LinkedList<QuestionTuple>();
 		try {
 			connection = dataSource.getConnection();
 		
@@ -707,8 +707,8 @@ public class DatabaseManager implements Serializable {
 			
 		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
 		for(String tableName : tables) {
-			ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-			ArrayList<String> columnNames = new ArrayList<String>();
+			List<List<String>> queryData = new LinkedList<List<String>>();
+			List<String> columnNames = new LinkedList<String>();
 			try {
 				connection = userDataSource.getConnection();
 				
@@ -722,7 +722,7 @@ public class DatabaseManager implements Serializable {
 					columnNames.add(resultSetMetaData.getColumnName(i));
 				}
 				while(resultSet.next()) {
-					ArrayList<String> rowData = new ArrayList<String>();
+					List<String> rowData = new LinkedList<String>();
 					for (int i = 1; i <= columnCount; i++) {
 						rowData.add(resultSet.getString(i));
 					}
@@ -744,7 +744,7 @@ public class DatabaseManager implements Serializable {
 		ResultSet resultSet = null;
 		
 		List<DatabaseTable> devTables = getDevTables();
-		List<String> tables = new ArrayList<String>();
+		List<String> tables = new LinkedList<String>();
 		for(DatabaseTable dt : devTables)
 			tables.add(dt.getTableName());
 		
@@ -757,8 +757,8 @@ public class DatabaseManager implements Serializable {
 			statement.execute("set search_path to public");
 		
 			for(String tableName : tables) {
-				ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-				ArrayList<String> columnNames = new ArrayList<String>();
+				List<List<String>> queryData = new LinkedList<List<String>>();
+				List<String> columnNames = new LinkedList<String>();
 				try {
 					resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
 					
@@ -768,7 +768,7 @@ public class DatabaseManager implements Serializable {
 						columnNames.add(resultSetMetaData.getColumnName(i));
 					}
 					while(resultSet.next()) {
-						ArrayList<String> rowData = new ArrayList<String>();
+						List<String> rowData = new LinkedList<String>();
 						for (int i = 1; i <= columnCount; i++) {
 							rowData.add(resultSet.getString(i));
 						}
@@ -810,8 +810,8 @@ public class DatabaseManager implements Serializable {
 		
 		int maxResults = !dev ? USER_QUERY_SIZE_LIMIT : Integer.MAX_VALUE;
 		
-		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-		ArrayList<String> columnNames = new ArrayList<String>();
+		List<List<String>> queryData = new LinkedList<List<String>>();
+		List<String> columnNames = new LinkedList<String>();
 		int rows = 0;
 		try {
 			connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
@@ -833,12 +833,12 @@ public class DatabaseManager implements Serializable {
 			while (resultSet.next()) {
 				// stop reading data at a certain point
 				if (++rows <= maxResults) {
-					List<String> rowData = new ArrayList<String>();
+					List<String> rowData = new LinkedList<String>();
 					for (int i = 1; i <= columnCount; i++) {
 						rowData.add(resultSet.getString(i));
 					}
 					queryData.add(rowData);
-				}
+				} 
 			}
 		} finally {
 			Utils.tryClose(resultSet);
@@ -858,8 +858,8 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		ArrayList<List<String>> queryData = new ArrayList<List<String>>();
-		ArrayList<String> columnNames = new ArrayList<String>();
+		List<List<String>> queryData = new LinkedList<List<String>>();
+		List<String> columnNames = new LinkedList<String>();
 		try {
 			connection = dataSource.getConnection();
 		
@@ -876,7 +876,7 @@ public class DatabaseManager implements Serializable {
 			}
 			
 			while(resultSet.next()) {
-				ArrayList<String> rowData = new ArrayList<String>();
+				List<String> rowData = new LinkedList<String>();
 				for (int i = 1; i <= columnCount; i++) {
 					rowData.add(resultSet.getString(i));
 				}
@@ -1191,7 +1191,7 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		List<UserQuery> userQueries = new ArrayList<UserQuery>();
+		List<UserQuery> userQueries = new LinkedList<UserQuery>();
 		try {
 			connection = dataSource.getConnection();
 
@@ -1225,7 +1225,7 @@ public class DatabaseManager implements Serializable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		List<UserQuery> userQueries = new ArrayList<UserQuery>();
+		List<UserQuery> userQueries = new LinkedList<UserQuery>();
 		try {
 			connection = dataSource.getConnection();
 
@@ -1298,7 +1298,7 @@ public class DatabaseManager implements Serializable {
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		
-		List<String> linkedAdminCodes = new ArrayList<String>();
+		List<String> linkedAdminCodes = new LinkedList<String>();
 		try { 
 			connection = dataSource.getConnection();
 	
