@@ -127,7 +127,7 @@
 					<br/>
 					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
-					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
+					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.queryIsCorrect and !tutorialPageBean.queryIsMalformed}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
 							value="#{tutorialPageBean.answerResult.data}" 

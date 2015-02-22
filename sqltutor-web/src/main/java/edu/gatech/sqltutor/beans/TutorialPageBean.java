@@ -77,6 +77,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String link;
 	private String schema;
 	private SchemaOptionsTuple schemaOptions;
+	private boolean isQueryCorrect;
+	private boolean isQueryMalformed;
 	
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
@@ -177,8 +179,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// check answer
 				setResultSetFeedback(answer);
 				// generate nlp (if the question is incorrect and parsed)
-				if (!getQueryIsCorrect()
-						&& !resultSetFeedback.contains("malformed"))
+				if (!getQueryIsCorrect() && !getQueryIsMalformed())
 					nlpResult = setNLPFeedback();
 			}
 			
@@ -187,15 +188,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
-						query, !isQueryMalformed(), getQueryIsCorrect(), nlpResult);
+						query, !getQueryIsMalformed(), getQueryIsCorrect(), nlpResult);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
 					logException(t, userBean.getHashedEmail());
 				}
 			}
-			
-			BeanUtils.addInfoMessage(null, "Query completed!");
 		} else 
 			BeanUtils.addErrorMessage(null, "Cannot run queries when there are no questions.");
 		
@@ -272,9 +271,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 	
 	public String getQueryResultExampleHeader() {
-		StringBuilder header = formatResultHeader(answerResult, new StringBuilder("Your answer should resemble this example"));
-		header.append(':');
-		return header.toString();
+		if( answerResult == null ) {
+			return "";
+		} else {
+			StringBuilder header = formatResultHeader(answerResult, new StringBuilder("Your answer should resemble this example"));
+			header.append(':');
+			return header.toString();
+		}
 	}
 	
 	private void setResultSetFeedback(String answer) {
@@ -288,6 +291,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		} catch (SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 					+ e.getMessage();
+			isQueryCorrect = false;
+			isQueryMalformed = true;
 			return;
 		}
 		
@@ -298,6 +303,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		final String normalizedQuery = normalize(query);
 		if (normalizedAnswer.equals(normalizedQuery)) {
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
+			isQueryCorrect = true;
 		} else {
 			
 			// calculate the answer's result set, return and let the user know if
@@ -343,6 +349,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				if (columnOrderMatters && rowOrderMatters) {
 					if (answerResult.equals(queryResult)) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+						isQueryCorrect = true;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
@@ -368,6 +375,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		
 					if (queryTree.equals(answerTree)) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+						isQueryCorrect = true;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
 					}
@@ -378,6 +386,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false);
 						if ("0".equals(diffResult.getData().get(0).get(0))) {
 							resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+							isQueryCorrect = true;
 						} else {
 							resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 						}
@@ -411,6 +420,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		
 					if (queryBag.equals(answerBag)) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+						isQueryCorrect = true;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
@@ -518,6 +528,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		answerResult = null;
 		feedbackNLP = "";
 		resultSetFeedback = "";
+		isQueryCorrect = false;
+		isQueryMalformed = false;
 	}
 
 	public String getQuestion() {
@@ -576,18 +588,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 
 	public boolean getQueryIsCorrect() {
-		if (resultSetFeedback == null
-				|| !resultSetFeedback.toLowerCase().contains("incorrect")) {
-			return true;
-		}
-		return false;
+		return isQueryCorrect;
 	}
 
-	public boolean isQueryMalformed() {
-		if (resultSetFeedback.toLowerCase().contains("malformed")) {
-			return true;
-		}
-		return false;
+	public boolean getQueryIsMalformed() {
+		return isQueryMalformed;
 	}
 
 	public int getQuestionNumber(QuestionTuple question) {
