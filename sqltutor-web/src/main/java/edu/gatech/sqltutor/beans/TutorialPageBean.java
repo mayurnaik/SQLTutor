@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -82,6 +83,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
 	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
 	public static final int RESULT_ROW_LIMIT = 50;
+	public static final int TIMEOUT_SECONDS = 45;
 	
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
@@ -160,7 +162,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public void processSQL() {
 		// check if we have a question
-		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {
+		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {	
 			// reset all of the feedback fields
 			reset();
 	
@@ -173,7 +175,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			} else {
 				// check answer
 				setResultSetFeedback(answer);
-				// generate nlp (if the question is incorrect and parsed
+				// generate nlp (if the question is incorrect and parsed)
 				if (!getQueryIsCorrect()
 						&& !resultSetFeedback.contains("malformed"))
 					nlpResult = setNLPFeedback();
@@ -254,21 +256,23 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public String getQueryResultHeader() {
 		return "Query Result" 
-				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getOriginalSize() + ")" : "");
+				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getOriginalSize() + (queryResult.isTimedOut() ? ", stopped counting due to timeout" : "") + ")" : "");
 	}
 	
 	public String getQueryResultExampleHeader() {
 		return "Your answer should resemble this example"  
-				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getOriginalSize() + ")" : "") 
+				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getOriginalSize() + (answerResult.isTimedOut() ? ", stopped counting due to timeout" : "") + ")" : "") 
 				+ ":";	
 	}
 	
 	private void setResultSetFeedback(String answer) {
+		// start the timeout timer
+		final long startingTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
+		
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
 		try {
-			queryResult = getDatabaseManager().getQueryResult(
-					schema, query, false);
+			queryResult = getDatabaseManager().getQueryResult(schema, query, false, startingTimeSeconds, TIMEOUT_SECONDS);
 		} catch (SQLException e) {
 			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 					+ e.getMessage();
@@ -287,14 +291,22 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			// calculate the answer's result set, return and let the user know if
 			// the answer is malformed
 			try {
-				answerResult = getDatabaseManager().getQueryResult(
-						schema, answer, false);
+				answerResult = getDatabaseManager().getQueryResult(schema, answer, false, startingTimeSeconds, TIMEOUT_SECONDS);
 			} catch (SQLException e) {
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
 						schema, questionIndex, answer, e);
 				return;
 			}
+			
+			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
+			if (queryResult.isTimedOut()) {
+				log.warn("The query timedout.", 
+						queryResult.getData().size(), queryResult.getOriginalSize(), query);
+				resultSetFeedback = "The query took too much time.";
+				return;
+			}
+			
 			
 			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTruncated()) {

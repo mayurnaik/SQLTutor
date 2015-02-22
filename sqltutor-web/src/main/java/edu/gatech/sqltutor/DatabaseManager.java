@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.BaseEncoding;
 
+import edu.gatech.sqltutor.beans.TutorialPageBean;
 import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 import edu.gatech.sqltutor.entities.UserQuery;
 import edu.gatech.sqltutor.util.SaltHasher;
@@ -76,7 +77,6 @@ public class DatabaseManager implements Serializable {
 	private DataSource readUserDataSource; 
 	
 	public static final int QUERY_TIMEOUT_SECONDS = 30;
-	private static final int USER_QUERY_SIZE_LIMIT = 50_000;
 	
 	public DatabaseManager() {
 	}
@@ -804,14 +804,21 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	public QueryResult getQueryResult(String schemaName, String query, boolean dev) throws SQLException {
+		return getQueryResult(schemaName, query, dev, 0, 0);
+	}
+	
+	public QueryResult getQueryResult(String schemaName, String query, boolean dev, long totalStartingTimeSeconds, long totalTimeoutSeconds) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		int maxResults = !dev ? USER_QUERY_SIZE_LIMIT : Integer.MAX_VALUE;
+		final long startingTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
 		
-		List<List<String>> queryData = new LinkedList<List<String>>();
-		List<String> columnNames = new LinkedList<String>();
+		final List<List<String>> queryData = new LinkedList<List<String>>();
+		final List<String> columnNames = new LinkedList<String>();
+		final QueryResult queryResult = new QueryResult();
+		queryResult.setData(queryData);
+		queryResult.setColumns(columnNames);
 		int rows = 0;
 		try {
 			connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
@@ -831,8 +838,17 @@ public class DatabaseManager implements Serializable {
 			}
 			
 			while (resultSet.next()) {
-				// stop reading data at a certain point
-				if (++rows <= maxResults) {
+				// stop reading data at a certain amount of time
+				final long currentTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
+				boolean localTimeout = (currentTimeSeconds - startingTimeSeconds) >= QUERY_TIMEOUT_SECONDS;
+				boolean totalTimeout = totalTimeoutSeconds != 0 && (currentTimeSeconds - totalStartingTimeSeconds) >= totalTimeoutSeconds;
+				if(localTimeout || totalTimeout) {
+					queryResult.setTimedOut(true);
+					break;
+				}
+
+				// stop adding to the QueryResult after a certain number of rows
+				if (++rows <= QueryResult.QUERY_SIZE_LIMIT) {
 					List<String> rowData = new LinkedList<String>();
 					for (int i = 1; i <= columnCount; i++) {
 						rowData.add(resultSet.getString(i));
@@ -845,11 +861,10 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-		QueryResult queryResult = new QueryResult(columnNames, queryData);
-		if (rows > maxResults) {
+		if(rows > QueryResult.QUERY_SIZE_LIMIT)
 			queryResult.setTruncated(true);
-			queryResult.setOriginalSize(rows);
-		}
+
+		queryResult.setOriginalSize(rows);
 		return queryResult;
 	}
 	
@@ -1176,6 +1191,7 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
 					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email != null ? email : "not logged in");
 			preparedStatement.setString(3, exception);

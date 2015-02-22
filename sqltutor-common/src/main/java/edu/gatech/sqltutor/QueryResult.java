@@ -21,11 +21,13 @@ import java.util.List;
 
 public class QueryResult implements Serializable {
 	private static final long serialVersionUID = 1L;
+	public static final int QUERY_SIZE_LIMIT = 50_000;
 	
 	private List<String> columns = new ArrayList<String>();
     private List<List<String>> data = new ArrayList<List<String>>();
     private int originalSize;
-    private boolean isTruncated;
+    private boolean truncated;
+    private boolean timedOut;
     
     public QueryResult() {}
     
@@ -64,11 +66,11 @@ public class QueryResult implements Serializable {
 	 * @return if the data is truncated
 	 */
 	public boolean isTruncated() {
-		return isTruncated;
+		return truncated;
 	}
 	
-	public void setTruncated(boolean isTruncated) {
-		this.isTruncated = isTruncated;
+	public void setTruncated(boolean truncated) {
+		this.truncated = truncated;
 	}
 	
 	/**
@@ -82,5 +84,13 @@ public class QueryResult implements Serializable {
 	
 	public void setOriginalSize(int originalSize) {
 		this.originalSize = originalSize;
+	}
+
+	public boolean isTimedOut() {
+		return timedOut;
+	}
+
+	public void setTimedOut(boolean timedOut) {
+		this.timedOut = timedOut;
 	}
 }
