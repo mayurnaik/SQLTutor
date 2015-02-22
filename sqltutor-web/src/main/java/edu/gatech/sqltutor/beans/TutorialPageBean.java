@@ -18,12 +18,13 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
@@ -253,16 +254,27 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 		return translation;
 	}
+	
+	private StringBuilder formatResultHeader(QueryResult result, StringBuilder header) {
+		if (result != null && result.getData().size() >= RESULT_ROW_LIMIT) {
+			NumberFormat nf = NumberFormat.getIntegerInstance(Locale.US);
+			header.append(" (Showing ").append(nf.format(RESULT_ROW_LIMIT)).append(" out of ").append(nf.format(result.getOriginalSize()));
+			if (result.isTimedOut())
+				header.append("+ [timed out]");
+			header.append(")");
+		}
+		return header;
+	}
 
 	public String getQueryResultHeader() {
-		return "Query Result" 
-				+ (queryResult != null && queryResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + queryResult.getOriginalSize() + (queryResult.isTimedOut() ? ", stopped counting due to timeout" : "") + ")" : "");
+		StringBuilder header = formatResultHeader(queryResult, new StringBuilder("Query Result"));
+		return header.toString();
 	}
 	
 	public String getQueryResultExampleHeader() {
-		return "Your answer should resemble this example"  
-				+ (answerResult != null && answerResult.getData().size() >= RESULT_ROW_LIMIT ? " (Showing " + RESULT_ROW_LIMIT + " out of " + answerResult.getOriginalSize() + (answerResult.isTimedOut() ? ", stopped counting due to timeout" : "") + ")" : "") 
-				+ ":";	
+		StringBuilder header = formatResultHeader(answerResult, new StringBuilder("Your answer should resemble this example"));
+		header.append(':');
+		return header.toString();
 	}
 	
 	private void setResultSetFeedback(String answer) {
@@ -299,9 +311,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				return;
 			}
 			
-			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
+			// check if we truncated the result due to time out, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTimedOut()) {
-				log.warn("The query timedout.", 
+				log.warn("The query timed out after storing {} of {} rows read: {}", 
 						queryResult.getData().size(), queryResult.getOriginalSize(), query);
 				resultSetFeedback = "The query took too much time.";
 				return;
