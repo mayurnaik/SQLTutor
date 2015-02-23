@@ -85,6 +85,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
 	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
 	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
+	public static final String TIMEOUT_MESSAGE = "Your query took too much time.";
 	public static final int RESULT_ROW_LIMIT = 50;
 	public static final int TIMEOUT_SECONDS = 45;
 	
@@ -314,7 +315,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
 			isQueryCorrect = true;
 		} else {
-			
 			// calculate the answer's result set, return and let the user know if
 			// the answer is malformed
 			try {
@@ -327,13 +327,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			
 			// check if we truncated the result due to time out, we never consider this correct and assume the instructor answer is smaller
-			if (queryResult.isTimedOut()) {
+			if (queryResult.isTimedOut() || answerResult.isTimedOut()) {
 				log.warn("The query timed out after storing {} of {} rows read: {}", 
 						queryResult.getData().size(), queryResult.getOriginalSize(), query);
-				resultSetFeedback = "The query took too much time.";
+				resultSetFeedback = TIMEOUT_MESSAGE;
 				return;
 			}
-			
 			
 			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTruncated()) {
@@ -343,99 +342,94 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				return;
 			}
 
-			if (!queryResult.getColumns()
-					.containsAll(answerResult.getColumns())
-					|| !answerResult.getColumns().containsAll(
-							queryResult.getColumns())) {
-				resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-			} else {
-				boolean columnOrderMatters = false;
-				boolean rowOrderMatters = false;
-		
-				if (answer.contains(" order by "))
-					rowOrderMatters = true;
-				
-				if (columnOrderMatters && rowOrderMatters) {
-					if (answerResult.equals(queryResult)) {
-						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
-						isQueryCorrect = true;
-					} else {
-						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-					}
-				} else if (!columnOrderMatters && rowOrderMatters) {
-					final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
-					final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
-		
-					for (int i = 0; i < queryResult.getColumns().size(); i++) {
-						final List<String> columnData = new ArrayList<String>(queryResult.getData().size());
-						for (int j = 0; j < queryResult.getData().size(); j++) {
-							columnData.add(queryResult.getData().get(j).get(i));
-						}
-						queryTree.put(queryResult.getColumns().get(i), columnData);
-					}
-		
-					for (int i = 0; i < answerResult.getColumns().size(); i++) {
-						final List<String> columnData = new ArrayList<String>(answerResult.getData().size());
-						for (int j = 0; j < answerResult.getData().size(); j++) {
-							columnData.add(answerResult.getData().get(j).get(i));
-						}
-						answerTree.put(answerResult.getColumns().get(i), columnData);
-					}
-		
-					if (queryTree.equals(answerTree)) {
-						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
-						isQueryCorrect = true;
-					} else {
-						resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
-					}
-				} else if (columnOrderMatters && !rowOrderMatters) {
-					final String diff = "SELECT count(*) FROM (" + normalizedQuery + " EXCEPT " + normalizedAnswer 
-							+ " UNION ALL " + normalizedAnswer + " EXCEPT " + normalizedQuery + ") t";
-					try {
-						final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false);
-						if ("0".equals(diffResult.getData().get(0).get(0))) {
-							resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
-							isQueryCorrect = true;
-						} else {
-							resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
-						}
-					} catch (SQLException e) {
-						if (e.getMessage().contains("columns")) {
-							resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
-						} else if (e.getMessage().contains("type")) {
-							resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
-						} else {
-							for (Throwable t : e) {
-								t.printStackTrace();
-								logException(t, userBean.getHashedEmail());
-							}
-						}
-					}
+			boolean columnOrderMatters = false;
+			boolean rowOrderMatters = false;
+	
+			if (answer.contains(" order by "))
+				rowOrderMatters = true;
+			
+			if (columnOrderMatters && rowOrderMatters) {
+				if (answerResult.equals(queryResult)) {
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+					isQueryCorrect = true;
 				} else {
-					final Multiset<String> queryBag = HashMultiset.create();
-					final Multiset<String> answerBag = HashMultiset.create();
-		
-					for (int i = 0; i < queryResult.getColumns().size(); i++) {
-						for (int j = 0; j < queryResult.getData().size(); j++) {
-							queryBag.add(queryResult.getData().get(j).get(i));
-						}
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+				}
+			} else if (!columnOrderMatters && rowOrderMatters) {
+				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
+				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
+	
+				for (int i = 0; i < queryResult.getColumns().size(); i++) {
+					final List<String> columnData = new ArrayList<String>(queryResult.getData().size());
+					for (int j = 0; j < queryResult.getData().size(); j++) {
+						columnData.add(queryResult.getData().get(j).get(i));
 					}
-		
-					for (int i = 0; i < answerResult.getColumns().size(); i++) {
-						for (int j = 0; j < answerResult.getData().size(); j++) {
-							answerBag.add(answerResult.getData().get(j).get(i));
-						}
+					queryTree.put(queryResult.getColumns().get(i), columnData);
+				}
+	
+				for (int i = 0; i < answerResult.getColumns().size(); i++) {
+					final List<String> columnData = new ArrayList<String>(answerResult.getData().size());
+					for (int j = 0; j < answerResult.getData().size(); j++) {
+						columnData.add(answerResult.getData().get(j).get(i));
 					}
-		
-					if (queryBag.equals(answerBag)) {
+					answerTree.put(answerResult.getColumns().get(i), columnData);
+				}
+	
+				if (queryTree.equals(answerTree)) {
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+					isQueryCorrect = true;
+				} else {
+					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
+				}
+			} else if (columnOrderMatters && !rowOrderMatters) {
+				final String diff = "SELECT count(*) FROM ((" + normalizedQuery + ") EXCEPT (" + normalizedAnswer 
+						+ ") UNION ALL (" + normalizedAnswer + ") EXCEPT (" + normalizedQuery + ")) t";
+				try {
+					final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false, startingTimeSeconds, TIMEOUT_SECONDS);
+					if (diffResult.isTimedOut()) {
+						resultSetFeedback = TIMEOUT_MESSAGE;
+					} else if ("0".equals(diffResult.getData().get(0).get(0))) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						isQueryCorrect = true;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+					}
+				} catch (SQLException e) {
+					if (e.getMessage().contains("columns")) {
+						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
+					} else if (e.getMessage().contains("type")) {
+						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
+					} else {
+						for (Throwable t : e) {
+							t.printStackTrace();
+							logException(t, userBean.getHashedEmail());
+						}
 					}
 				}
-			}	
-		}
+			} else {
+				final Multiset<String> queryBag = HashMultiset.create();
+				final Multiset<String> answerBag = HashMultiset.create();
+	
+				for (int i = 0; i < queryResult.getColumns().size(); i++) {
+					for (int j = 0; j < queryResult.getData().size(); j++) {
+						queryBag.add(queryResult.getData().get(j).get(i));
+					}
+				}
+	
+				for (int i = 0; i < answerResult.getColumns().size(); i++) {
+					for (int j = 0; j < answerResult.getData().size(); j++) {
+						answerBag.add(answerResult.getData().get(j).get(i));
+					}
+				}
+	
+				if (queryBag.equals(answerBag)) {
+					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
+					isQueryCorrect = true;
+				} else {
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+				}
+			}
+		}	
 	}
 	
 	/**
