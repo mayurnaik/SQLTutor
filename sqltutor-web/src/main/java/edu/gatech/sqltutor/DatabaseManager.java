@@ -828,6 +828,8 @@ public class DatabaseManager implements Serializable {
 			statement.setFetchSize(1000);
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
+			// postgresql driver doesn't enforce setQueryTimeout, this is the postgresql-specific equivalent
+			statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
 			
 			resultSet = statement.executeQuery(query);
 			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
