@@ -289,11 +289,20 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		try {
 			queryResult = getDatabaseManager().getQueryResult(schema, query, false, startingTimeSeconds, TIMEOUT_SECONDS);
 		} catch (SQLException e) {
-			resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
-					+ e.getMessage();
-			isQueryCorrect = false;
-			isQueryMalformed = true;
-			return;
+			String sqlState = e.getSQLState();
+			switch (sqlState) {
+			case "57014": // "Processing was canceled as requested." Triggered by statement timeout.
+				resultSetFeedback = "The query took too much time and was aborted.";
+				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", schema, questionIndex, query);
+				isQueryMalformed = true; // FIXME not really malformed, hides the example answer
+				return;
+			default:
+				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
+						+ e.getMessage();
+				isQueryCorrect = false;
+				isQueryMalformed = true;
+				return;
+			}
 		}
 		
 		// check for "strong" correctness
