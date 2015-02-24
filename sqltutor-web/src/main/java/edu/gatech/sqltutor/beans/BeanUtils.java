@@ -79,7 +79,11 @@ public class BeanUtils extends AbstractDatabaseBean {
 		externalContext.redirect(externalContext.getRequestContextPath() + contextPath);
 	}
 	
-	public static void updateComponent(String component) {
-		RequestContext.getCurrentInstance().update(component);
+	/**
+	 * 
+	 * @param componentName		should include the form, e.g. "mainForm:datatable1"
+	 */
+	public static void updateComponent(String componentName) {
+		RequestContext.getCurrentInstance().update(BeanUtils.getComponentId(componentName));
 	}
 }

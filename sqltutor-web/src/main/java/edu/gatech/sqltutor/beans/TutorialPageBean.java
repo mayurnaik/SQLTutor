@@ -40,6 +40,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 
 import org.apache.commons.lang3.StringUtils;
+import org.primefaces.context.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String schema;
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
-	private boolean isQueryMalformed;
 	
 	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
@@ -93,15 +93,45 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
 		
-		if (link != null) {
-			try {
-				schema = getDatabaseManager().getUserSchema(link);
-				if (schema == null) {
-					log.error("Invalid schema link used: {}", link);
-					BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
-					BeanUtils.redirect("/HomePage.jsf");
-					return;
+		// if the page hasn't been loaded yet, load it
+		if (schema == null) {
+			if (link != null) {
+				try {
+					schema = getDatabaseManager().getUserSchema(link);
+					if (schema == null) {
+						log.error("Invalid schema link used: {}", link);
+						BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
+						BeanUtils.redirect("/HomePage.jsf");
+						return;
+					}
+				} catch (SQLException e) {
+					for (Throwable t : e) {
+						t.printStackTrace();
+						logException(t, userBean.getHashedEmail());
+					}
+					BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 				}
+			} else {
+				schema = userBean.getSelectedSchema();
+			}
+			
+			try {
+				schemaOptions = getDatabaseManager().getOptions(schema);
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+			}
+			
+			// check if the tutorial is closed before any more setup is completed
+			if(!isSchemaAccessible(schemaOptions)) {
+				BeanUtils.redirect("/HomePage.jsf");
+				return;
+			}
+			
+			try {
+				tables = getDatabaseManager().getTables(schema);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -109,59 +139,47 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				}
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
+			setupQuestionsAndAnswers();
 		} else {
-			schema = userBean.getSelectedSchema();
-		}
-		
-		try {
-			schemaOptions = getDatabaseManager().getOptions(schema);
-
-			boolean accessible = true;
-			final Calendar now = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-
-			if (schemaOptions.getOpenAccess() != null) {
-				final Calendar calOpen = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-				calOpen.setTime(schemaOptions.getOpenAccess());
-				calOpen.set(Calendar.MILLISECOND, 0);
-				if(!now.after(calOpen)) {
-					SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
-					BeanUtils.addErrorMessage(null, "That tutorial opens " + sdf.format(calOpen.getTime()), true);
-					accessible = false;
-				}
-			} 
-			
-			if (schemaOptions.getCloseAccess() != null) {
-				final Calendar calClose = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-				calClose.setTime(schemaOptions.getCloseAccess());
-				calClose.set(Calendar.MILLISECOND, 0);
-				if(!now.before(calClose)) {
-					SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
-					BeanUtils.addErrorMessage(null, "That tutorial closed " + sdf.format(calClose.getTime()), true);
-					accessible = false;
-				}
-			}
-			
-			if(!accessible) {
+			// check if the tutorial closed after the student loaded the page
+			if(!isSchemaAccessible(schemaOptions)) {
 				BeanUtils.redirect("/HomePage.jsf");
 				return;
 			}
-		} catch (SQLException e) {
-			for (Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
-			}
+		}
+	}
+	
+	public boolean isSchemaAccessible(SchemaOptionsTuple options) {
+		if (options == null) {
+			BeanUtils.addErrorMessage(null, "That tutorial is closed.", true);
+			return false;
 		}
 		
-		try {
-			tables = getDatabaseManager().getTables(schema);
-		} catch (SQLException e) {
-			for (Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
+		boolean accessible = true;
+		final Calendar now = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+
+		if (schemaOptions.getOpenAccess() != null) {
+			final Calendar calOpen = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+			calOpen.setTime(schemaOptions.getOpenAccess());
+			calOpen.set(Calendar.MILLISECOND, 0);
+			if(!now.after(calOpen)) {
+				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+				BeanUtils.addErrorMessage(null, "That tutorial opens " + sdf.format(calOpen.getTime()), true);
+				accessible = false;
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+		} 
+		
+		if (schemaOptions.getCloseAccess() != null) {
+			final Calendar calClose = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+			calClose.setTime(schemaOptions.getCloseAccess());
+			calClose.set(Calendar.MILLISECOND, 0);
+			if(!now.before(calClose)) {
+				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+				BeanUtils.addErrorMessage(null, "That tutorial closed " + sdf.format(calClose.getTime()), true);
+				accessible = false;
+			}
 		}
-		setupQuestionsAndAnswers();
+		return accessible;
 	}
 
 	public void processSQL() {
@@ -180,7 +198,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// check answer
 				setResultSetFeedback(answer);
 				// generate nlp (if the question is incorrect and parsed)
-				if (!getQueryIsCorrect() && !getQueryIsMalformed())
+				if (!getQueryIsCorrect() && !queryResult.isMalformed())
 					nlpResult = setNLPFeedback();
 			}
 			
@@ -189,7 +207,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
-						query, !getQueryIsMalformed(), getQueryIsCorrect(), nlpResult);
+						query, !queryResult.isMalformed(), getQueryIsCorrect(), nlpResult);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -198,7 +216,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 		} else 
 			BeanUtils.addErrorMessage(null, "Cannot run queries when there are no questions.");
-		
 	}
 
 	private boolean isRestricted(String query) {
@@ -295,13 +312,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			case "57014": // "Processing was canceled as requested." Triggered by statement timeout.
 				resultSetFeedback = "The query took too much time and was aborted.";
 				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", schema, questionIndex, query);
-				isQueryMalformed = true; // FIXME not really malformed, hides the example answer
+				queryResult.setTimedOut(true);
 				return;
 			default:
 				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 						+ e.getMessage();
 				isQueryCorrect = false;
-				isQueryMalformed = true;
+				queryResult.setMalformed(true);
 				return;
 			}
 		}
@@ -323,6 +340,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
 						schema, questionIndex, answer, e);
+				answerResult.setMalformed(true);
 				return;
 			}
 			
@@ -532,7 +550,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		feedbackNLP = "";
 		resultSetFeedback = "";
 		isQueryCorrect = false;
-		isQueryMalformed = false;
 	}
 
 	public String getQuestion() {
@@ -593,9 +610,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public boolean getQueryIsCorrect() {
 		return isQueryCorrect;
 	}
-
-	public boolean getQueryIsMalformed() {
-		return isQueryMalformed;
+	
+	public boolean getShowExample() {
+		return queryResult == null || queryResult.isTimedOut() || queryResult.isMalformed() ? false : true;
+		
 	}
 
 	public int getQuestionNumber(QuestionTuple question) {

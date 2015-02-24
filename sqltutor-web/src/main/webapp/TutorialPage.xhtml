@@ -89,7 +89,7 @@
 						'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
 					<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
-						update="result,feedback,question,growl" 
+						update="growl"
 						styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"
@@ -127,7 +127,7 @@
 					<br/>
 					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
-					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.queryIsCorrect and !tutorialPageBean.queryIsMalformed}"/>
+					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.queryIsCorrect and tutorialPageBean.showExample}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
 							value="#{tutorialPageBean.answerResult.data}" 
