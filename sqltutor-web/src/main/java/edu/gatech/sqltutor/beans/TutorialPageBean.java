@@ -198,7 +198,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// check answer
 				setResultSetFeedback(answer);
 				// generate nlp (if the question is incorrect and parsed)
-				if (!getQueryIsCorrect() && !queryResult.isMalformed())
+				if (!getQueryIsCorrect() && getQueryIsMalformed())
 					nlpResult = setNLPFeedback();
 			}
 			
@@ -207,7 +207,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
-						query, !queryResult.isMalformed(), getQueryIsCorrect(), nlpResult);
+						query, !getQueryIsMalformed(), getQueryIsCorrect(), nlpResult);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -312,13 +312,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			case "57014": // "Processing was canceled as requested." Triggered by statement timeout.
 				resultSetFeedback = "The query took too much time and was aborted.";
 				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", schema, questionIndex, query);
-				queryResult.setTimedOut(true);
 				return;
 			default:
 				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 						+ e.getMessage();
 				isQueryCorrect = false;
-				queryResult.setMalformed(true);
 				return;
 			}
 		}
@@ -340,7 +338,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
 						schema, questionIndex, answer, e);
-				answerResult.setMalformed(true);
 				return;
 			}
 			
@@ -365,9 +362,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	
 			if (answer.contains(" order by "))
 				rowOrderMatters = true;
-			
-			if (columnOrderMatters && rowOrderMatters) {
-				if (answerResult.equals(queryResult)) {
+
+			if (answerResult.getColumns().size() != queryResult.getColumns().size()) {
+				resultSetFeedback = "Incorrect. Your query did not have the same number of columns as the stored answer.";
+			} else if (answerResult.getData().size() != queryResult.getData().size()) {
+				resultSetFeedback = "Incorrect. Your query did not have the same number of rows as the stored answer.";
+			} else if (columnOrderMatters && rowOrderMatters) {
+				if (answerResult.getData().equals(queryResult.getData())) {
 					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					isQueryCorrect = true;
 				} else {
@@ -381,15 +382,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					final List<String> columnData = new ArrayList<String>(queryResult.getData().size());
 					for (int j = 0; j < queryResult.getData().size(); j++) {
 						columnData.add(queryResult.getData().get(j).get(i));
-					}
-					queryTree.put(queryResult.getColumns().get(i), columnData);
-				}
-	
-				for (int i = 0; i < answerResult.getColumns().size(); i++) {
-					final List<String> columnData = new ArrayList<String>(answerResult.getData().size());
-					for (int j = 0; j < answerResult.getData().size(); j++) {
 						columnData.add(answerResult.getData().get(j).get(i));
 					}
+					queryTree.put(queryResult.getColumns().get(i), columnData);
 					answerTree.put(answerResult.getColumns().get(i), columnData);
 				}
 	
@@ -428,16 +423,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				final Multiset<String> queryBag = HashMultiset.create();
 				final Multiset<String> answerBag = HashMultiset.create();
 	
-				for (int i = 0; i < queryResult.getColumns().size(); i++) {
-					for (int j = 0; j < queryResult.getData().size(); j++) {
-						queryBag.add(queryResult.getData().get(j).get(i));
-					}
-				}
-	
-				for (int i = 0; i < answerResult.getColumns().size(); i++) {
-					for (int j = 0; j < answerResult.getData().size(); j++) {
-						answerBag.add(answerResult.getData().get(j).get(i));
-					}
+				for (int i = 0; i < queryResult.getData().size(); i++) {
+					queryBag.addAll(queryResult.getData().get(i));
+					// we already checked to make sure they're the same size
+					answerBag.addAll(answerResult.getData().get(i));
 				}
 	
 				if (queryBag.equals(answerBag)) {
@@ -611,9 +600,12 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		return isQueryCorrect;
 	}
 	
+	public boolean getQueryIsMalformed() {
+		return queryResult != null ? true : false;
+	}
+	
 	public boolean getShowExample() {
-		return queryResult == null || queryResult.isTimedOut() || queryResult.isMalformed() ? false : true;
-		
+		return queryResult != null && answerResult != null && !queryResult.isTimedOut() && !answerResult.isTimedOut();
 	}
 
 	public int getQuestionNumber(QuestionTuple question) {

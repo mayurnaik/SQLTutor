@@ -28,7 +28,6 @@ public class QueryResult implements Serializable {
     private int originalSize;
     private boolean truncated;
     private boolean timedOut;
-    private boolean malformed;
     
     public QueryResult() {}
     
@@ -93,13 +92,5 @@ public class QueryResult implements Serializable {
 
 	public void setTimedOut(boolean timedOut) {
 		this.timedOut = timedOut;
-	}
-
-	public boolean isMalformed() {
-		return malformed;
-	}
-
-	public void setMalformed(boolean malformed) {
-		this.malformed = malformed;
 	}
 }
