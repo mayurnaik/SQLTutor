@@ -75,6 +75,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String resultSetFeedback;
 	private QueryResult queryResult;
 	private QueryResult answerResult;
+	/**
+	 * This is the URL link which correlates to a particular schema
+	 */
 	private String link;
 	private String schema;
 	private SchemaOptionsTuple schemaOptions;
@@ -198,7 +201,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// check answer
 				setResultSetFeedback(answer);
 				// generate nlp (if the question is incorrect and parsed)
-				if (!getQueryIsCorrect() && getQueryIsMalformed())
+				if (queryResult != null && !getQueryIsCorrect())
 					nlpResult = setNLPFeedback();
 			}
 			
@@ -207,7 +210,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
-						query, !getQueryIsMalformed(), getQueryIsCorrect(), nlpResult);
+						query, queryResult != null, getQueryIsCorrect(), nlpResult);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -363,6 +366,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			if (answer.contains(" order by "))
 				rowOrderMatters = true;
 
+			// First checks if the number of columns are equal, then the number of rows, then moves into specialized checks
+			// based on if column and/or row order matters
 			if (answerResult.getColumns().size() != queryResult.getColumns().size()) {
 				resultSetFeedback = "Incorrect. Your query did not have the same number of columns as the stored answer.";
 			} else if (answerResult.getData().size() != queryResult.getData().size()) {
@@ -375,6 +380,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 				}
 			} else if (!columnOrderMatters && rowOrderMatters) {
+				// Puts the column's data into a map, mapped to the column name. Orders by column name then checks equality.
 				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
 				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
 	
@@ -420,6 +426,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					}
 				}
 			} else {
+				// Puts all of the data into bags then compares the counts
 				final Multiset<String> queryBag = HashMultiset.create();
 				final Multiset<String> answerBag = HashMultiset.create();
 	
@@ -533,6 +540,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		setQuestionIndex(questionIndex+1);
 	}
 
+	/**
+	 * This method should reset the bean to the default state, aside from the schema information loaded in pre-render
+	 */
 	private void reset() {
 		queryResult = null;
 		answerResult = null;
@@ -598,10 +608,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public boolean getQueryIsCorrect() {
 		return isQueryCorrect;
-	}
-	
-	public boolean getQueryIsMalformed() {
-		return queryResult != null ? true : false;
 	}
 	
 	public boolean getShowExample() {
