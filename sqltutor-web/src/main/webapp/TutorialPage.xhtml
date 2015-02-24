@@ -89,7 +89,7 @@
 						'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
 					<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
-						update="growl"
+						update="growl,feedback,result"
 						styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"
