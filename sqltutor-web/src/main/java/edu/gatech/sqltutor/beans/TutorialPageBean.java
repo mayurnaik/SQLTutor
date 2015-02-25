@@ -286,12 +286,22 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 	
 	private StringBuilder formatResultHeader(QueryResult result, StringBuilder header) {
-		if (result != null && result.getData().size() >= RESULT_ROW_LIMIT) {
-			NumberFormat nf = NumberFormat.getIntegerInstance(Locale.US);
-			header.append(" (Showing ").append(nf.format(RESULT_ROW_LIMIT)).append(" out of ").append(nf.format(result.getOriginalSize()));
-			if (result.isReadLimitExceeded())
-				header.append("+ [limit reached]");
-			header.append(")");
+		if (result != null) {
+			long execTime = result.getExecutionTime();
+			if (execTime >= 0L) {
+				NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+				nf.setMinimumFractionDigits(0);
+				nf.setMaximumFractionDigits(4);
+				header.append(" [").append(nf.format((double)execTime / 1000d)).append("s]");
+			}
+			
+			if (result.getData().size() >= RESULT_ROW_LIMIT) {
+				NumberFormat nf = NumberFormat.getIntegerInstance(Locale.US);
+				header.append(" (Showing ").append(nf.format(RESULT_ROW_LIMIT)).append(" out of ").append(nf.format(result.getOriginalSize()));
+				if (result.isReadLimitExceeded())
+					header.append("+ [limit reached]");
+				header.append(")");
+			}
 		}
 		return header;
 	}
