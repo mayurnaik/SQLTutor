@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.BaseEncoding;
 
-import edu.gatech.sqltutor.beans.TutorialPageBean;
 import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 import edu.gatech.sqltutor.entities.UserQuery;
 import edu.gatech.sqltutor.util.SaltHasher;
@@ -804,15 +803,9 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	public QueryResult getQueryResult(String schemaName, String query, boolean dev) throws SQLException {
-		return getQueryResult(schemaName, query, dev, 0, 0);
-	}
-	
-	public QueryResult getQueryResult(String schemaName, String query, boolean dev, long totalStartingTimeSeconds, long totalTimeoutSeconds) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
-		final long startingTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
 		
 		final List<List<String>> queryData = new LinkedList<List<String>>();
 		final List<String> columnNames = new LinkedList<String>();
@@ -831,7 +824,10 @@ public class DatabaseManager implements Serializable {
 			// postgresql driver doesn't enforce setQueryTimeout, this is the postgresql-specific equivalent
 			statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
 			
+			long queryStart = System.currentTimeMillis();
 			resultSet = statement.executeQuery(query);
+			long queryEnd = System.currentTimeMillis();
+			queryResult.setExecutionTime(queryEnd - queryStart);
 			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 		
 			int columnCount = resultSetMetaData.getColumnCount();
@@ -839,25 +835,31 @@ public class DatabaseManager implements Serializable {
 				columnNames.add(resultSetMetaData.getColumnName(i));
 			}
 			
+			long endTime = -1L;
 			while (resultSet.next()) {
-				// stop reading data at a certain amount of time
-				final long currentTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
-				boolean localTimeout = (currentTimeSeconds - startingTimeSeconds) >= QUERY_TIMEOUT_SECONDS;
-				boolean totalTimeout = totalTimeoutSeconds != 0 && (currentTimeSeconds - totalStartingTimeSeconds) >= totalTimeoutSeconds;
-				if(localTimeout || totalTimeout) {
-					queryResult.setTimedOut(true);
+				// stop reading rows from the driver at all when the limit is reached
+				if (rows >= QueryResult.QUERY_READ_LIMIT) {
+					endTime = System.currentTimeMillis();
+					log.warn("Query exceeded max result: {}", query);
+					queryResult.setReadLimitExceeded(true);
 					break;
 				}
-
+				
+				++rows;
+				
 				// stop adding to the QueryResult after a certain number of rows
-				if (++rows <= QueryResult.QUERY_SIZE_LIMIT) {
+				if (rows <= QueryResult.QUERY_SIZE_LIMIT) {
 					List<String> rowData = new LinkedList<String>();
 					for (int i = 1; i <= columnCount; i++) {
 						rowData.add(resultSet.getString(i));
 					}
 					queryData.add(rowData);
-				} 
+				}
 			}
+			
+			if (endTime == -1L)
+				endTime = System.currentTimeMillis();
+			queryResult.setTotalTime(endTime - queryStart);
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(connection);

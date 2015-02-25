@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2014 Program Analysis Group, Georgia Tech
+ *   Copyright (c) 2015 Program Analysis Group, Georgia Tech
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -21,13 +21,24 @@ import java.util.List;
 
 public class QueryResult implements Serializable {
 	private static final long serialVersionUID = 1L;
+	/** 
+	 * The maximum results that should be stored in a <code>QueryResult</code> before setting 
+	 * the truncated flag.
+	 */
 	public static final int QUERY_SIZE_LIMIT = 50_000;
+	/**
+	 * The maximum results that should be read for the original size of a <code>QueryResult</code> 
+	 * before setting the read limit flag.
+	 */
+	public static final int QUERY_READ_LIMIT = 500_000;
 	
 	private List<String> columns = new ArrayList<String>();
     private List<List<String>> data = new ArrayList<List<String>>();
     private int originalSize;
     private boolean truncated;
-    private boolean timedOut;
+    private boolean readLimitExceeded;
+    private long executionTime = -1L;
+    private long totalTime = -1L;
     
     public QueryResult() {}
     
@@ -85,12 +96,42 @@ public class QueryResult implements Serializable {
 	public void setOriginalSize(int originalSize) {
 		this.originalSize = originalSize;
 	}
-
-	public boolean isTimedOut() {
-		return timedOut;
+	
+	/**
+	 * Returns whether the read limit was exceeded for this result.
+	 * @return
+	 */
+	public boolean isReadLimitExceeded() {
+		return readLimitExceeded;
 	}
-
-	public void setTimedOut(boolean timedOut) {
-		this.timedOut = timedOut;
+	
+	public void setReadLimitExceeded(boolean readLimitExceeded) {
+		this.readLimitExceeded = readLimitExceeded;
+	}
+	
+	/**
+	 * Returns the query execution time in milliseconds.  This is the time taken 
+	 * before results started being returned.
+	 * @return
+	 */
+	public long getExecutionTime() {
+		return executionTime;
+	}
+	
+	public void setExecutionTime(long executionTime) {
+		this.executionTime = executionTime;
+	}
+	
+	/**
+	 * Returns the total query time in milliseconds.  This is the query execution 
+	 * time plus time spent reading results.
+	 * @return
+	 */
+	public long getTotalTime() {
+		return totalTime;
+	}
+	
+	public void setTotalTime(long totalTime) {
+		this.totalTime = totalTime;
 	}
 }

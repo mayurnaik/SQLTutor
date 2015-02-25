@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2014 Program Analysis Group, Georgia Tech
+ *   Copyright (c) 2015 Program Analysis Group, Georgia Tech
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 
 import org.apache.commons.lang3.StringUtils;
-import org.primefaces.context.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +62,27 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(TutorialPageBean.class);
+	
+	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
+	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
+	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
+	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
+	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
+	public static final String TIMEOUT_MESSAGE = "Your query took too much time and was aborted.";
+	public static final int RESULT_ROW_LIMIT = 50;
+	public static final int TIMEOUT_SECONDS = 45;
+	
+	/**
+	 * Checks whether this exception is from a query timeout.
+	 * @param e the exception to check
+	 * @return if this is a timeout exception
+	 */
+	private static boolean isTimeoutException(SQLException e) {
+		String sqlState = e.getSQLState();
+		if ("57014".equals(sqlState)) // "Processing was canceled as requested." Triggered by statement timeout.
+			return true;
+		return false;
+	}
 
 	@ManagedProperty(value = "#{userBean}")
 	private UserBean userBean;
@@ -82,16 +102,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private String schema;
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
-	
-	public static final String WEAKLY_CORRECT_MESSAGE = "Your answer is \"weakly correct\". It works for the small set of instances we have available.";
-	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
-	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
-	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
-	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
-	public static final String TIMEOUT_MESSAGE = "Your query took too much time.";
-	public static final int RESULT_ROW_LIMIT = 50;
-	public static final int TIMEOUT_SECONDS = 45;
-	
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
@@ -279,8 +289,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		if (result != null && result.getData().size() >= RESULT_ROW_LIMIT) {
 			NumberFormat nf = NumberFormat.getIntegerInstance(Locale.US);
 			header.append(" (Showing ").append(nf.format(RESULT_ROW_LIMIT)).append(" out of ").append(nf.format(result.getOriginalSize()));
-			if (result.isTimedOut())
-				header.append("+ [timed out]");
+			if (result.isReadLimitExceeded())
+				header.append("+ [limit reached]");
 			header.append(")");
 		}
 		return header;
@@ -302,26 +312,19 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 	
 	private void setResultSetFeedback(String answer) {
-		// start the timeout timer
-		final long startingTimeSeconds = Calendar.getInstance().getTime().getTime()/1000;
-		
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
 		try {
-			queryResult = getDatabaseManager().getQueryResult(schema, query, false, startingTimeSeconds, TIMEOUT_SECONDS);
+			queryResult = getDatabaseManager().getQueryResult(schema, query, false);
 		} catch (SQLException e) {
-			String sqlState = e.getSQLState();
-			switch (sqlState) {
-			case "57014": // "Processing was canceled as requested." Triggered by statement timeout.
-				resultSetFeedback = "The query took too much time and was aborted.";
+			if (isTimeoutException(e)) {
+				resultSetFeedback = TIMEOUT_MESSAGE;
 				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", schema, questionIndex, query);
-				return;
-			default:
+			} else {
 				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 						+ e.getMessage();
-				isQueryCorrect = false;
-				return;
 			}
+			return;
 		}
 		
 		// check for "strong" correctness
@@ -336,19 +339,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			// calculate the answer's result set, return and let the user know if
 			// the answer is malformed
 			try {
-				answerResult = getDatabaseManager().getQueryResult(schema, answer, false, startingTimeSeconds, TIMEOUT_SECONDS);
+				answerResult = getDatabaseManager().getQueryResult(schema, answer, false);
 			} catch (SQLException e) {
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
 						schema, questionIndex, answer, e);
-				return;
-			}
-			
-			// check if we truncated the result due to time out, we never consider this correct and assume the instructor answer is smaller
-			if (queryResult.isTimedOut() || answerResult.isTimedOut()) {
-				log.warn("The query timed out after storing {} of {} rows read: {}", 
-						queryResult.getData().size(), queryResult.getOriginalSize(), query);
-				resultSetFeedback = TIMEOUT_MESSAGE;
 				return;
 			}
 			
@@ -363,7 +358,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			boolean columnOrderMatters = false;
 			boolean rowOrderMatters = false;
 	
-			if (answer.contains(" order by "))
+			if (answer.toLowerCase(Locale.US).contains(" order by "))
 				rowOrderMatters = true;
 
 			// First checks if the number of columns are equal, then the number of rows, then moves into specialized checks
@@ -404,17 +399,18 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				final String diff = "SELECT count(*) FROM ((" + normalizedQuery + ") EXCEPT (" + normalizedAnswer 
 						+ ") UNION ALL (" + normalizedAnswer + ") EXCEPT (" + normalizedQuery + ")) t";
 				try {
-					final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false, startingTimeSeconds, TIMEOUT_SECONDS);
-					if (diffResult.isTimedOut()) {
-						resultSetFeedback = TIMEOUT_MESSAGE;
-					} else if ("0".equals(diffResult.getData().get(0).get(0))) {
+					final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false);
+					if ("0".equals(diffResult.getData().get(0).get(0))) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						isQueryCorrect = true;
 					} else {
 						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
 					}
 				} catch (SQLException e) {
-					if (e.getMessage().contains("columns")) {
+					if (isTimeoutException(e)) {
+						resultSetFeedback = "We were unable to check your answer in time.";
+						log.warn("Timed out checking difference with query: {}", diff);
+					} else if (e.getMessage().contains("columns")) {
 						resultSetFeedback = "Incorrect. The number of columns in your result did not match the answer.";
 					} else if (e.getMessage().contains("type")) {
 						resultSetFeedback = "Incorrect. One or more of your result's data types did not match the answer.";
@@ -611,7 +607,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 	
 	public boolean getShowExample() {
-		return queryResult != null && answerResult != null && !queryResult.isTimedOut() && !answerResult.isTimedOut();
+		return queryResult != null && answerResult != null && !isQueryCorrect;
 	}
 
 	public int getQuestionNumber(QuestionTuple question) {
