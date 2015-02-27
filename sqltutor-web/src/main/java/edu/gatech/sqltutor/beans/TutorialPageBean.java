@@ -223,9 +223,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
 						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
-						queryResult.getTotalTime()/1000d, answerResult.getTotalTime()/1000d, queryResult.getExecutionTime()/1000d,
-						answerResult.getExecutionTime()/1000d, queryResult.isTruncated(), queryResult.isReadLimitExceeded(), 
-						queryResult.getOriginalSize());
+						queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
+						answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
+						queryResult != null ? queryResult.getExecutionTime()/1000d : 0,
+						answerResult != null ? answerResult.getExecutionTime()/1000d : 0, 
+						queryResult != null ? queryResult.isTruncated() : false, 
+						queryResult != null ? queryResult.isReadLimitExceeded() : false, 
+						queryResult != null ? queryResult.getOriginalSize() : 0);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
