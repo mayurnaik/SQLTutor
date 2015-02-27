@@ -1137,7 +1137,8 @@ public class DatabaseManager implements Serializable {
 		return isCorrect;
 	}
 	
-	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback) throws SQLException {
+	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback, 
+			double totalTimeSeconds, double queryTotalTimeSeconds, double answerTotalTimeSeconds, double queryExecutionTimeSeconds, double answerExecutionTimeSeconds, boolean truncated, boolean readLimitExceeded, int originalSize) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -1146,7 +1147,10 @@ public class DatabaseManager implements Serializable {
 			
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
-					+ "\"parsed\", \"correct\", \"nlp_feedback\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					+ "\"parsed\", \"correct\", \"nlp_feedback\", \"total_time_seconds\", "
+					+ "\"query_total_time_seconds\", \"answer_total_time_seconds\", \"query_execution_time_seconds\", "
+					+ "\"answer_execution_time_seconds\", \"truncated\", "
+					+ "\"read_limit_exceeded\", \"original_size\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email);
@@ -1157,6 +1161,14 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setBoolean(7, parsed);
 			preparedStatement.setBoolean(8, correct);
 			preparedStatement.setString(9, nlpFeedback);
+			preparedStatement.setDouble(10, totalTimeSeconds);
+			preparedStatement.setDouble(11, queryTotalTimeSeconds);
+			preparedStatement.setDouble(12, answerTotalTimeSeconds);
+			preparedStatement.setDouble(13, queryExecutionTimeSeconds);
+			preparedStatement.setDouble(14, answerExecutionTimeSeconds);
+			preparedStatement.setBoolean(15, truncated);
+			preparedStatement.setBoolean(16, readLimitExceeded);
+			preparedStatement.setInt(17, originalSize);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);

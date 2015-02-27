@@ -198,6 +198,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public void processSQL() {
 		// check if we have a question
 		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {	
+			final long startTimeMilliseconds = Calendar.getInstance().getTime().getTime();
 			// reset all of the feedback fields
 			reset();
 	
@@ -213,14 +214,18 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// generate nlp (if the question is incorrect and parsed)
 				if (queryResult != null && !getQueryIsCorrect())
 					nlpResult = setNLPFeedback();
-			}
+			} 
 			
 			// log
 			try {
+				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), schema,
 						questionTuples.get(questionIndex).getQuestion(), answer,
-						query, queryResult != null, getQueryIsCorrect(), nlpResult);
+						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
+						queryResult.getTotalTime()/1000d, answerResult.getTotalTime()/1000d, queryResult.getExecutionTime()/1000d,
+						answerResult.getExecutionTime()/1000d, queryResult.isTruncated(), queryResult.isReadLimitExceeded(), 
+						queryResult.getOriginalSize());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
