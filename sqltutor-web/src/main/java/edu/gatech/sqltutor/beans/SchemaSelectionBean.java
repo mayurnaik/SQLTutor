@@ -16,9 +16,10 @@
 package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
-import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -44,23 +45,18 @@ public class SchemaSelectionBean extends AbstractDatabaseBean implements Seriali
 	
 	@PostConstruct
 	public void refreshList() {
-		try {
-			List<String> uSchemas = getDatabaseManager().getUserSchemas(getUserBean().isAdmin());
-
+		Set<String> uSchemas = userBean.getAvailableSchemas();
+		if(uSchemas != null) {
 			SelectItemGroup itemGroup = new SelectItemGroup();
 			SelectItem[] schemaItems = new SelectItem[uSchemas.size()];
-			for(int i = 0; i < schemaItems.length; ++i) {
-				schemaItems[i] = new SelectItem(uSchemas.get(i));
+	
+			Iterator<String> uSchemasIterator = uSchemas.iterator();
+			for(int i = 0; i < schemaItems.length; i++) {
+				schemaItems[i] = new SelectItem(uSchemasIterator.next());
 			}
 			itemGroup.setSelectItems(schemaItems);
 			userSchemas.clear();
 			userSchemas.add(itemGroup);
-		} catch( SQLException e ) {
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
-			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 	}
 	

@@ -116,6 +116,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
 						BeanUtils.redirect("/HomePage.jsf");
 						return;
+					} else {
+						// if the link was valid, temporarily add it to the list of available schemas for the student
+						// and set their current schema to it, so if they refresh they will still be on the linked tutorial
+						userBean.getAvailableSchemas().add(schema);
+						userBean.setSelectedSchema(schema);
 					}
 				} catch (SQLException e) {
 					for (Throwable t : e) {

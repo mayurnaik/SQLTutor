@@ -33,9 +33,11 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -126,12 +128,12 @@ public class DatabaseManager implements Serializable {
 		return isAdmin;
 	}
 	
-	public List<String> getUserSchemas(boolean admin) throws SQLException {
+	public Set<String> getUserSchemas(boolean admin) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
 	
-		List<String> schemas = new LinkedList<String>();
+		Set<String> schemas = new HashSet<String>();
 		try { 
 			connection = dataSource.getConnection();
 			

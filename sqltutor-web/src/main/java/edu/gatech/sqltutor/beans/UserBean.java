@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
@@ -66,6 +68,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private List<String> linkedAdminCodes = null;
 	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
 	private String selectedSchema;
+	private Set<String> availableSchemas;
 	private String previousContext;
 
 	/** 
@@ -89,6 +92,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
 			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
 			selectedSchema = DEFAULT_SCHEMA_NAME;
+			availableSchemas = getDatabaseManager().getUserSchemas(isAdmin());
 			if(previousContext != null) {
 				BeanUtils.redirect(previousContext);
 				previousContext = null;
@@ -188,6 +192,8 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			adminCode = null;
 			linkedAdminCodes = null;
 			previousContext = null;
+			selectedSchema = null;
+			availableSchemas = null;
 			BeanUtils.redirect(HOME_PAGE_CONTEXT);
 		}
 	}
@@ -290,5 +296,13 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	
 	public void selectDefaultSchema() {
 		selectedSchema = DEFAULT_SCHEMA_NAME;
+	}
+
+	public Set<String> getAvailableSchemas() {
+		return availableSchemas;
+	}
+
+	public void setAvailableSchemas(Set<String> availableSchemas) {
+		this.availableSchemas = availableSchemas;
 	}
 }
