@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -139,5 +140,12 @@ public class DatabaseTable implements Serializable {
 			"DatabaseTable{catalog=%s, schema=%s, tableName=%s, type=%s, columns=%s}", 
 			catalog, schema, tableName, type, columns
 		);
+	}
+	
+	public List<String> getColumnNames() {
+		List<String> names = new ArrayList<>(getColumns().size());
+		for(ColumnInfo col : getColumns())
+			names.add(col.getName());
+		return names;
 	}
 }

@@ -29,7 +29,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
+import edu.gatech.sqltutor.tuples.SchemaOptionsTuple;
 
 @ManagedBean
 @ViewScoped

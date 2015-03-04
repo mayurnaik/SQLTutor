@@ -46,7 +46,7 @@
 			</p:dialog>
 			
 			<div class="left">	
-				<p:panel header="Schema: &quot;#{tutorialPageBean.schema}&quot;" styleClass="panel">
+				<p:panel header="Schema: &quot;#{tutorialPageBean.userBean.selectedSchema}&quot;" styleClass="panel">
 					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
 						resizableColumns="true" 
 						style="height:30% !important"
@@ -55,7 +55,7 @@
 							<p:outputLabel value="#{databaseTable.tableName}" />
 						</p:column>
 						<p:column headerText="Column Names" style="white-space: normal;">
-							<p:outputLabel value="#{tutorialPageBean.getColumnNames(databaseTable)}" />
+							<p:outputLabel value="#{databaseTable.columnNames}" />
 						</p:column>
 					</p:dataTable>
 				</p:panel>

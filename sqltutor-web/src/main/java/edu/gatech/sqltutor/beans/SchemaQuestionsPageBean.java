@@ -26,7 +26,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
 import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.QuestionTuple;
+import edu.gatech.sqltutor.tuples.QuestionTuple;
 
 @ManagedBean
 @ViewScoped

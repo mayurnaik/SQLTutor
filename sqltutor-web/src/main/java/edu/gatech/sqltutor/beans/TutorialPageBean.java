@@ -46,15 +46,16 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
-import edu.gatech.sqltutor.DatabaseManager;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
-import edu.gatech.sqltutor.QuestionTuple;
-import edu.gatech.sqltutor.entities.SchemaOptionsTuple;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
+import edu.gatech.sqltutor.tuples.QuestionTuple;
+import edu.gatech.sqltutor.tuples.SchemaOptionsTuple;
+import edu.gatech.sqltutor.util.DatabaseManager;
+import edu.gatech.sqltutor.util.QueryThread;
 
 @ManagedBean
 @ViewScoped
@@ -99,26 +100,27 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	 * This is the URL link which correlates to a particular schema
 	 */
 	private String link;
-	private String schema;
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
+	private QueryThread answerThread;
+	
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
 		
 		// if the page hasn't been loaded yet, load it
-		if (schema == null) {
+		if (tables == null) {
 			if (link != null) {
 				try {
-					schema = getDatabaseManager().getUserSchema(link);
+					final String schema = getDatabaseManager().getUserSchema(link);
 					if (schema == null) {
-						log.error("Invalid schema link used: {}", link);
-						BeanUtils.addErrorMessage(null, "Unable to find a schema with that link!", true);
+						log.error("Invalid userBean.getSelectedSchema() link used: {}", link);
+						BeanUtils.addErrorMessage(null, "Unable to find a userBean.getSelectedSchema() with that link!", true);
 						BeanUtils.redirect("/HomePage.jsf");
 						return;
 					} else {
 						// if the link was valid, temporarily add it to the list of available schemas for the student
-						// and set their current schema to it, so if they refresh they will still be on the linked tutorial
+						// and set their current userBean.getSelectedSchema() to it, so if they refresh they will still be on the linked tutorial
 						userBean.getAvailableSchemas().add(schema);
 						userBean.setSelectedSchema(schema);
 					}
@@ -129,12 +131,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					}
 					BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 				}
-			} else {
-				schema = userBean.getSelectedSchema();
-			}
+			} 
 			
 			try {
-				schemaOptions = getDatabaseManager().getOptions(schema);
+				schemaOptions = getDatabaseManager().getOptions(userBean.getSelectedSchema());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -149,7 +149,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			
 			try {
-				tables = getDatabaseManager().getTables(schema);
+				tables = getDatabaseManager().getTables(userBean.getSelectedSchema());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -205,9 +205,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {	
 			final long startTimeMilliseconds = Calendar.getInstance().getTime().getTime();
 			// reset all of the feedback fields
-			reset();
-	
-			final String answer = questionTuples.get(questionIndex).getAnswer();
+			resetResultsAndFeedback();
 	
 			String nlpResult = null;
 			// let the user know if their query is restricted
@@ -215,7 +213,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				resultSetFeedback = NO_PERMISSIONS_MESSAGE;
 			} else {
 				// check answer
-				setResultSetFeedback(answer);
+				setResultSetFeedback();
 				// generate nlp (if the question is incorrect and parsed)
 				if (queryResult != null && !getQueryIsCorrect())
 					nlpResult = setNLPFeedback();
@@ -225,8 +223,10 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			try {
 				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
 				getDatabaseManager().log(BeanUtils.getSessionId(),
-						userBean.getHashedEmail(), schema,
-						questionTuples.get(questionIndex).getQuestion(), answer,
+						userBean.getHashedEmail(), 
+						userBean.getSelectedSchema(),
+						questionTuples.get(questionIndex).getQuestion(), 
+						questionTuples.get(questionIndex).getAnswer(),
 						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
 						queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
 						answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
@@ -252,16 +252,16 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	private String setNLPFeedback() {
 		String result = null;
-		if (schema.equals("company") || schema.equals("business_trip")) {
+		if (userBean.getSelectedSchema().equals("company") || userBean.getSelectedSchema().equals("business_trip")) {
 			// generate NLP feedback
 			final ERSerializer serializer = new ERSerializer();
 			final Class<?> c = this.getClass();
 
 			// FIXME: hard coded for now
 			ERDiagram erDiagram = (ERDiagram) serializer.deserialize(c
-					.getResourceAsStream("/testdata/" + schema + ".er.xml"));
+					.getResourceAsStream("/testdata/" + userBean.getSelectedSchema() + ".er.xml"));
 			ERMapping erMapping = (ERMapping) serializer
-					.deserialize(c.getResourceAsStream("/testdata/" + schema
+					.deserialize(c.getResourceAsStream("/testdata/" + userBean.getSelectedSchema()
 							+ ".mapping.xml"));
 
 			try {
@@ -335,15 +335,15 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 	}
 	
-	private void setResultSetFeedback(String answer) {
+	private void setResultSetFeedback() {
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
 		try {
-			queryResult = getDatabaseManager().getQueryResult(schema, query, false);
+			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), query, false);
 		} catch (SQLException e) {
 			if (isTimeoutException(e)) {
 				resultSetFeedback = TIMEOUT_MESSAGE;
-				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", schema, questionIndex, query);
+				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", userBean.getSelectedSchema(), questionIndex, query);
 			} else {
 				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 						+ e.getMessage();
@@ -352,24 +352,31 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 		
 		// check for "strong" correctness
-		// naive check.
-		// TODO: Move in the clustering classes to do a better job of this.
-		final String normalizedAnswer = normalize(answer);
+		// naive check
+		// TODO: Move in the clustering classes to do a better job of this
+		final String normalizedAnswer = normalize(questionTuples.get(questionIndex).getAnswer());
 		final String normalizedQuery = normalize(query);
 		if (normalizedAnswer.equals(normalizedQuery)) {
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
 			isQueryCorrect = true;
 		} else {
-			// calculate the answer's result set, return and let the user know if
-			// the answer is malformed
+			// wait for the answerThread to finish before moving forward
 			try {
-				answerResult = getDatabaseManager().getQueryResult(schema, answer, false);
-			} catch (SQLException e) {
-				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
-				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
-						schema, questionIndex, answer, e);
+				answerThread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				log.warn("Computing the answer result-set to question at index #{} was interrupted.", questionIndex);
 				return;
 			}
+			// if the answerThread had an SQLException, let the user know and back-out.
+			if (answerThread.getException() != null) {
+				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
+				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
+						userBean.getSelectedSchema(), questionIndex, normalizedAnswer, answerThread.getException());
+				return;
+			} 
+			
+			answerResult = answerThread.getQueryResult();
 			
 			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTruncated()) {
@@ -382,7 +389,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			boolean columnOrderMatters = false;
 			boolean rowOrderMatters = false;
 	
-			if (answer.toLowerCase(Locale.US).contains(" order by "))
+			if (normalizedAnswer.toLowerCase(Locale.US).contains(" order by "))
 				rowOrderMatters = true;
 
 			// First checks if the number of columns are equal, then the number of rows, then moves into specialized checks
@@ -423,7 +430,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				final String diff = "SELECT count(*) FROM ((" + normalizedQuery + ") EXCEPT (" + normalizedAnswer 
 						+ ") UNION ALL (" + normalizedAnswer + ") EXCEPT (" + normalizedQuery + ")) t";
 				try {
-					final QueryResult diffResult = getDatabaseManager().getQueryResult(schema, diff, false);
+					final QueryResult diffResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), diff, false);
 					if ("0".equals(diffResult.getData().get(0).get(0))) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						isQueryCorrect = true;
@@ -526,7 +533,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		questionTuples = null;
 		final DatabaseManager databaseManager = getDatabaseManager();
 		try {
-			questionTuples = databaseManager.getQuestions(schema);
+			questionTuples = databaseManager.getQuestions(userBean.getSelectedSchema());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -539,7 +546,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		if (!questionTuples.isEmpty()) {
 			SchemaOptionsTuple options = null;
 			try {
-				options = databaseManager.getOptions(schema);
+				options = databaseManager.getOptions(userBean.getSelectedSchema());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -561,9 +568,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 
 	/**
-	 * This method should reset the bean to the default state, aside from the schema information loaded in pre-render
+	 * This method should reset the bean's result-sets and feedback.
 	 */
-	private void reset() {
+	private void resetResultsAndFeedback() {
 		queryResult = null;
 		answerResult = null;
 		feedbackNLP = "";
@@ -572,13 +579,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	}
 
 	public String getQuestion() {
-		// Log that a question was retrieved
 		if(questionTuples == null || questionTuples.isEmpty())
 			return NO_QUESTIONS_MESSAGE;
+		// Log that a question was retrieved
 		try {
 			getDatabaseManager().logQuestionPresentation(
 					BeanUtils.getSessionId(), userBean.getHashedEmail(),
-					schema,
+					userBean.getSelectedSchema(),
 					questionTuples.get(questionIndex).getQuestion());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
@@ -587,6 +594,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
+		// Start a thread to pre-compute the answer
+		// TODO: add a means to interrupt any current threads which are still alive.
+		// if(answerThread != null) answerThread.interrupt();
+		answerThread = new QueryThread(userBean.getSelectedSchema(), questionTuples.get(questionIndex).getAnswer(), false, getDatabaseManager());
+		answerThread.start();
 		return questionTuples.get(questionIndex).getQuestion();
 	}
 
@@ -668,7 +680,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				this.questionIndex = questionIndex;
 				BeanUtils.addInfoMessage(null, "Changed to question number " + getQuestionNumber() + ".");
 			}
-			reset();
+			resetResultsAndFeedback();
 		}
 	}
 
@@ -699,13 +711,5 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 	public void setOptions(SchemaOptionsTuple options) {
 		this.schemaOptions = options;
-	}
-
-	public String getSchema() {
-		return schema;
-	}
-
-	public void setSchema(String schema) {
-		this.schema = schema;
 	}
 }
