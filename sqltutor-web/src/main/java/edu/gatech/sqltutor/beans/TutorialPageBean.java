@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.PreDestroy;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -166,6 +167,17 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 		}
 	}
+	
+	/**
+	 * BalusC: "This method is called whenever the view scope has been destroyed.
+     *   		That can happen when the user navigates away by a POST which is
+     *   		invoked on this bean, or when the associated session has expired."
+	 */
+    @PreDestroy
+    public void destroy() {
+    	// TODO: add a means to interrupt any current threads which are still alive.
+    	// if(answerThread != null) answerThread.interrupt();
+    }
 	
 	public boolean isSchemaAccessible(SchemaOptionsTuple options) {
 		if (options == null) {
