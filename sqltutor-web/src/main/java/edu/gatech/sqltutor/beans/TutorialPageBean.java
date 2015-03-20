@@ -103,7 +103,7 @@ Serializable {
 	private String link;
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
-	private QueryThread answerThread;
+	private transient QueryThread answerThread;
 
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
