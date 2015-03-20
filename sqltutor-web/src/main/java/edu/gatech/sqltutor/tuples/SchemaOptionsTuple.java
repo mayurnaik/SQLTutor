@@ -13,15 +13,17 @@ public class SchemaOptionsTuple implements Serializable {
 	private Timestamp openAccess;
 	private Timestamp closeAccess;
 	private String link;
+	private int maxQuestionAttempts;
 	
 	public SchemaOptionsTuple(boolean visibleToUsers, boolean inOrderQuestions, String link,
-			Timestamp openAccess, Timestamp closeAccess) {
+			Timestamp openAccess, Timestamp closeAccess, int maxQuestionAttempts) {
 		super();
 		this.setLink(link);
 		this.visibleToUsers = visibleToUsers;
 		this.inOrderQuestions = inOrderQuestions;
 		this.openAccess = openAccess;
 		this.closeAccess = closeAccess;
+		this.maxQuestionAttempts = maxQuestionAttempts;
 	}
 
 	public SchemaOptionsTuple(SchemaOptionsTuple options) {
@@ -31,6 +33,7 @@ public class SchemaOptionsTuple implements Serializable {
 		this.link = options.getLink();
 		this.openAccess = options.getOpenAccess();
 		this.closeAccess = options.getCloseAccess();
+		this.maxQuestionAttempts = options.getMaxQuestionAttempts();
 	}
 
 	public boolean isVisibleToUsers() {
@@ -109,5 +112,13 @@ public class SchemaOptionsTuple implements Serializable {
 
 	public void setLink(String link) {
 		this.link = link;
+	}
+
+	public int getMaxQuestionAttempts() {
+		return maxQuestionAttempts;
+	}
+
+	public void setMaxQuestionAttempts(int maxQuestionAttempts) {
+		this.maxQuestionAttempts = maxQuestionAttempts;
 	}
 }

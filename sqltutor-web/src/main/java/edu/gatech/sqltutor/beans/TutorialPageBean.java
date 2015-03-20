@@ -68,7 +68,7 @@ Serializable {
 	public static final String WEAKLY_CORRECT_MESSAGE = "Correct.  Your answer returns the correct results for the instance data.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
-	public static final String NO_QUESTIONS_MESSAGE = "No questions are available for this schema.";
+	public static final String NO_QUESTIONS_MESSAGE = "There are no questions available for this schema.";
 	public static final String TRUNCATED_QUERY_MESSAGE = "Your query produced a result that was unreasonably large.";
 	public static final String TIMEOUT_MESSAGE = "Your query took too much time and was aborted.";
 	public static final int RESULT_ROW_LIMIT = 50;
@@ -104,6 +104,7 @@ Serializable {
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
 	private transient QueryThread answerThread;
+	private int numberOfAttempts;
 
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
@@ -159,6 +160,16 @@ Serializable {
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
 			setupQuestionsAndAnswers();
+			
+			try {
+				// This will give the "question order", which is not 0-indexed, so we must subtract 1
+				setQuestionIndex(getDatabaseManager().getMostRecentlyPresentedQuestion(userBean.getHashedEmail(), userBean.getSelectedSchema()) - 1);
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+			}
 		} else {
 			// check if the tutorial closed after the student loaded the page
 			if(!isSchemaAccessible(schemaOptions)) {
@@ -218,7 +229,12 @@ Serializable {
 			final long startTimeMilliseconds = Calendar.getInstance().getTime().getTime();
 			// reset all of the feedback fields
 			resetResultsAndFeedback();
-
+			
+			if (schemaOptions.getMaxQuestionAttempts() != 0 && getNumberOfAttempts() >= schemaOptions.getMaxQuestionAttempts()) {
+				resultSetFeedback = "You've exceeded the maximum number of attempts for this question.";
+				return;
+			}
+			
 			String nlpResult = null;
 			// let the user know if their query is restricted
 			if (isRestricted(query)) {
@@ -230,27 +246,32 @@ Serializable {
 				if (queryResult != null && !getQueryIsCorrect())
 					nlpResult = setNLPFeedback();
 			} 
-
+			
+			if (!getQueryIsCorrect() && queryResult != null)
+				numberOfAttempts++;
+				
 			// log
-			try {
-				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
-				getDatabaseManager().log(BeanUtils.getSessionId(),
-						userBean.getHashedEmail(), 
-						userBean.getSelectedSchema(),
-						questionTuples.get(questionIndex).getQuestion(), 
-						questionTuples.get(questionIndex).getAnswer(),
-						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
-						queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
-						answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
-						queryResult != null ? queryResult.getExecutionTime()/1000d : 0,
-						answerResult != null ? answerResult.getExecutionTime()/1000d : 0, 
-						queryResult != null ? queryResult.isTruncated() : false, 
-						queryResult != null ? queryResult.isReadLimitExceeded() : false, 
-						queryResult != null ? queryResult.getOriginalSize() : 0);
-			} catch (SQLException e) {
-				for (Throwable t : e) {
-					t.printStackTrace();
-					logException(t, userBean.getHashedEmail());
+			if (!questionTuples.get(questionIndex).getQuestion().equals(NO_QUESTIONS_MESSAGE)) {
+				try {
+					final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
+					getDatabaseManager().log(BeanUtils.getSessionId(),
+							userBean.getHashedEmail(), 
+							userBean.getSelectedSchema(),
+							questionTuples.get(questionIndex).getQuestion(), 
+							questionTuples.get(questionIndex).getAnswer(),
+							query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
+							queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
+							answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
+							queryResult != null ? queryResult.getExecutionTime()/1000d : 0,
+							answerResult != null ? answerResult.getExecutionTime()/1000d : 0, 
+							queryResult != null ? queryResult.isTruncated() : false, 
+							queryResult != null ? queryResult.isReadLimitExceeded() : false, 
+							queryResult != null ? queryResult.getOriginalSize() : 0);
+				} catch (SQLException e) {
+					for (Throwable t : e) {
+						t.printStackTrace();
+						logException(t, userBean.getHashedEmail());
+					}
 				}
 			}
 		} else 
@@ -691,7 +712,17 @@ Serializable {
 				this.questionIndex = questionIndex;
 				BeanUtils.addInfoMessage(null, "Changed to question number " + getQuestionNumber() + ".");
 			}
+			
 			resetResultsAndFeedback();
+			
+			try {
+				numberOfAttempts = getDatabaseManager().getNumberOfAttempts(userBean.getHashedEmail(), userBean.getSelectedSchema(), questionTuples.get(questionIndex).getQuestion(), true, false);
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+			}
 		}
 	}
 
@@ -722,5 +753,23 @@ Serializable {
 
 	public void setOptions(SchemaOptionsTuple options) {
 		this.schemaOptions = options;
+	}
+
+	public int getNumberOfAttempts() {
+		return numberOfAttempts;
+	}
+
+	public void setNumberOfAttempts(int numberOfAttempts) {
+		this.numberOfAttempts = numberOfAttempts;
+	}
+	
+	public String getQuestionHeader() {
+		StringBuilder header = new StringBuilder();
+		header.append("Question");
+		if (schemaOptions.getMaxQuestionAttempts() == 0)
+			header.append(" [no attempt cap]");
+		else
+			header.append(" [" + (numberOfAttempts > schemaOptions.getMaxQuestionAttempts() ? schemaOptions.getMaxQuestionAttempts() : numberOfAttempts) + " out of " + schemaOptions.getMaxQuestionAttempts() + " attempts used]");
+		return header.toString();
 	}
 }

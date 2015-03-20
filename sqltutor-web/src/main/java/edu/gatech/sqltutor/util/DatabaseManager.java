@@ -172,14 +172,14 @@ public class DatabaseManager implements Serializable {
 
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
+			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access, max_question_attempts FROM schema_options WHERE schema = '" + schemaName +"'");
 
 			resultSet = statement.getResultSet();
 			resultSet.next();
 
 			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2), resultSet.getString(3),
-					resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal));
+					resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal), resultSet.getInt(6));
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(statement);
@@ -382,7 +382,7 @@ public class DatabaseManager implements Serializable {
 
 		try {
 			connection = dataSource.getConnection();
-			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ? WHERE schema = ?;";
+			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ?, max_question_attempts = ? WHERE schema = ?;";
 			preparedStatement = connection.prepareStatement(update);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, options.isInOrderQuestions());
@@ -391,7 +391,8 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
 			preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
 			preparedStatement.setString(5, options.getLink());
-			preparedStatement.setString(6, schemaName);
+			preparedStatement.setInt(6, options.getMaxQuestionAttempts());
+			preparedStatement.setString(7, schemaName);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);
@@ -1594,5 +1595,60 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 		return schema;
+	}
+	
+	public int getMostRecentlyPresentedQuestion(String hashedEmail, String schema) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+
+		int mostRecentlyPresentedQuestion = 0;
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement("SELECT s.order FROM log_question_presentation p, schema_questions s WHERE p.question = s.question AND p.schema = s.schema AND p.email = ? AND p.schema = ? GROUP BY s.order ORDER BY max(timestamp) DESC LIMIT 1");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, hashedEmail);
+			preparedStatement.setString(2, schema);
+
+			resultSet = preparedStatement.executeQuery();
+			if (resultSet.next())
+				mostRecentlyPresentedQuestion = resultSet.getInt(1);
+
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		return mostRecentlyPresentedQuestion;
+	}
+	
+	public int getNumberOfAttempts(String hashedEmail, String schema, String question, boolean parsed, boolean correct) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+
+		int numberOfParsedIncorrectAttempts = 0;
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement("SELECT count(*) FROM log WHERE email = ? AND question = ? AND schema = ? AND correct = ? AND parsed = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, hashedEmail);
+			preparedStatement.setString(2, question);
+			preparedStatement.setString(3, schema);
+			preparedStatement.setBoolean(4, correct);
+			preparedStatement.setBoolean(5, parsed);
+
+			resultSet = preparedStatement.executeQuery();
+			if (resultSet.next())
+				numberOfParsedIncorrectAttempts = resultSet.getInt(1);
+
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		return numberOfParsedIncorrectAttempts;
 	}
 }

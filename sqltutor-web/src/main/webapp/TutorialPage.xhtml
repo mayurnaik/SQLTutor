@@ -68,7 +68,7 @@
 				
 				<p:panel id="question" styleClass="panel">
 					<f:facet name="header">
-	       		 		<h:outputText value="Question" />
+	       		 		<h:outputText value="#{tutorialPageBean.questionHeader}" />
 						<p:selectOneMenu id="q" value="#{tutorialPageBean.questionNumber}" effect="fade" style="float: right">
 							<f:selectItems value="#{tutorialPageBean.questionTuples}" var="question" 
 								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
@@ -88,7 +88,7 @@
 						'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
 					<p:commandButton id="try" value="Try Query"
 						action="#{tutorialPageBean.processSQL}" 
-						update="growl,feedback,result"
+						update="result,feedback,question,growl"
 						styleClass="panelbutton"/>
 					<p:commandButton id="next" value="Next Question"
 						action="#{tutorialPageBean.nextQuestion}"

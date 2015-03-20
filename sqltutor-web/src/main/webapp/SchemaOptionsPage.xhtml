@@ -75,12 +75,15 @@
 					    
 					    <p:selectBooleanCheckbox value="#{schemaOptionsPageBean.options.inOrderQuestions}"/> 
 					    <h:outputText value="In order questions"/>
+					    
+					    <p:inputText value="#{schemaOptionsPageBean.options.maxQuestionAttempts}"/> 
+					    <h:outputText value="Max number of attempts (0 is uncapped)"/>
 	
         				<p:calendar value="#{schemaOptionsPageBean.options.openAccessDate}" pattern="MM/dd/yyyy HH:mm:ss" />
-						<h:outputText value="Open Access Date"/>
+						<h:outputText value="Open access date"/>
 						
 						<p:calendar value="#{schemaOptionsPageBean.options.closeAccessDate}" pattern="MM/dd/yyyy HH:mm:ss" />
-						<h:outputText value="Close Access Date"/>
+						<h:outputText value="Close access date"/>
 						
 						<p:selectBooleanCheckbox id="check3" value="#{schemaOptionsPageBean.deleteThisSchema}"/> 
 					    <p:column>	
