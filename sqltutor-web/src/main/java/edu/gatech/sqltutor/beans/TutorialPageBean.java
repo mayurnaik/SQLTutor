@@ -61,10 +61,10 @@ import edu.gatech.sqltutor.util.QueryThread;
 @ManagedBean
 @ViewScoped
 public class TutorialPageBean extends AbstractDatabaseBean implements
-		Serializable {
+Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(TutorialPageBean.class);
-	
+
 	public static final String WEAKLY_CORRECT_MESSAGE = "Correct.  Your answer returns the correct results for the instance data.";
 	public static final String ANSWER_MALFORMED_MESSAGE = "We are unable to give feedback for this question, the stored answer is malformed.";
 	public static final String NO_PERMISSIONS_MESSAGE = "You do not have permission to run this query.";
@@ -73,7 +73,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public static final String TIMEOUT_MESSAGE = "Your query took too much time and was aborted.";
 	public static final int RESULT_ROW_LIMIT = 50;
 	public static final int TIMEOUT_SECONDS = 45;
-	
+
 	/**
 	 * Checks whether this exception is from a query timeout.
 	 * @param e the exception to check
@@ -104,11 +104,11 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	private SchemaOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
 	private QueryThread answerThread;
-	
+
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
-		
+
 		// if the page hasn't been loaded yet, load it
 		if (tables == null) {
 			if (link != null) {
@@ -133,7 +133,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 				}
 			} 
-			
+
 			try {
 				schemaOptions = getDatabaseManager().getOptions(userBean.getSelectedSchema());
 			} catch (SQLException e) {
@@ -142,13 +142,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					logException(t, userBean.getHashedEmail());
 				}
 			}
-			
+
 			// check if the tutorial is closed before any more setup is completed
 			if(!isSchemaAccessible(schemaOptions)) {
 				BeanUtils.redirect("/HomePage.jsf");
 				return;
 			}
-			
+
 			try {
 				tables = getDatabaseManager().getTables(userBean.getSelectedSchema());
 			} catch (SQLException e) {
@@ -167,24 +167,24 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 		}
 	}
-	
+
 	/**
 	 * BalusC: "This method is called whenever the view scope has been destroyed.
-     *   		That can happen when the user navigates away by a POST which is
-     *   		invoked on this bean, or when the associated session has expired."
+	 *   		That can happen when the user navigates away by a POST which is
+	 *   		invoked on this bean, or when the associated session has expired."
 	 */
-    @PreDestroy
-    public void destroy() {
-    	// TODO: add a means to interrupt any current threads which are still alive.
-    	// if(answerThread != null) answerThread.interrupt();
-    }
-	
+	@PreDestroy
+	public void destroy() {
+		if(answerThread != null) 
+			answerThread.interrupt();
+	}
+
 	public boolean isSchemaAccessible(SchemaOptionsTuple options) {
 		if (options == null) {
 			BeanUtils.addErrorMessage(null, "That tutorial is closed.", true);
 			return false;
 		}
-		
+
 		boolean accessible = true;
 		final Calendar now = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 
@@ -198,7 +198,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				accessible = false;
 			}
 		} 
-		
+
 		if (schemaOptions.getCloseAccess() != null) {
 			final Calendar calClose = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			calClose.setTime(schemaOptions.getCloseAccess());
@@ -218,7 +218,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			final long startTimeMilliseconds = Calendar.getInstance().getTime().getTime();
 			// reset all of the feedback fields
 			resetResultsAndFeedback();
-	
+
 			String nlpResult = null;
 			// let the user know if their query is restricted
 			if (isRestricted(query)) {
@@ -230,7 +230,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				if (queryResult != null && !getQueryIsCorrect())
 					nlpResult = setNLPFeedback();
 			} 
-			
+
 			// log
 			try {
 				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
@@ -310,7 +310,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		}
 		return translation;
 	}
-	
+
 	private StringBuilder formatResultHeader(QueryResult result, StringBuilder header) {
 		if (result != null) {
 			long execTime = result.getExecutionTime();
@@ -318,9 +318,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 				nf.setMinimumFractionDigits(0);
 				nf.setMaximumFractionDigits(4);
-				header.append(" [").append(nf.format((double)execTime / 1000d)).append("s]");
+				header.append(" [").append(nf.format(execTime / 1000d)).append("s]");
 			}
-			
+
 			if (result.getData().size() >= RESULT_ROW_LIMIT) {
 				NumberFormat nf = NumberFormat.getIntegerInstance(Locale.US);
 				header.append(" (Showing ").append(nf.format(RESULT_ROW_LIMIT)).append(" out of ").append(nf.format(result.getOriginalSize()));
@@ -336,7 +336,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 		StringBuilder header = formatResultHeader(queryResult, new StringBuilder("Query Result"));
 		return header.toString();
 	}
-	
+
 	public String getQueryResultExampleHeader() {
 		if( answerResult == null ) {
 			return "";
@@ -346,7 +346,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			return header.toString();
 		}
 	}
-	
+
 	private void setResultSetFeedback() {
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
@@ -362,7 +362,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 			return;
 		}
-		
+
 		// check for "strong" correctness
 		// naive check
 		// TODO: Move in the clustering classes to do a better job of this
@@ -376,7 +376,6 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			try {
 				answerThread.join();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 				log.warn("Computing the answer result-set to question at index #{} was interrupted.", questionIndex);
 				return;
 			}
@@ -387,9 +386,9 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 						userBean.getSelectedSchema(), questionIndex, normalizedAnswer, answerThread.getException());
 				return;
 			} 
-			
+
 			answerResult = answerThread.getQueryResult();
-			
+
 			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTruncated()) {
 				log.warn("User query was truncated at {} out of {} rows: {}", 
@@ -400,7 +399,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 
 			boolean columnOrderMatters = false;
 			boolean rowOrderMatters = false;
-	
+
 			if (normalizedAnswer.toLowerCase(Locale.US).contains(" order by "))
 				rowOrderMatters = true;
 
@@ -421,7 +420,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// Puts the column's data into a map, mapped to the column name. Orders by column name then checks equality.
 				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
 				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
-	
+
 				for (int i = 0; i < queryResult.getColumns().size(); i++) {
 					final List<String> columnData = new ArrayList<String>(queryResult.getData().size());
 					for (int j = 0; j < queryResult.getData().size(); j++) {
@@ -431,7 +430,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					queryTree.put(queryResult.getColumns().get(i), columnData);
 					answerTree.put(answerResult.getColumns().get(i), columnData);
 				}
-	
+
 				if (queryTree.equals(answerTree)) {
 					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					isQueryCorrect = true;
@@ -468,13 +467,13 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 				// Puts all of the data into bags then compares the counts
 				final Multiset<String> queryBag = HashMultiset.create();
 				final Multiset<String> answerBag = HashMultiset.create();
-	
+
 				for (int i = 0; i < queryResult.getData().size(); i++) {
 					queryBag.addAll(queryResult.getData().get(i));
 					// we already checked to make sure they're the same size
 					answerBag.addAll(answerResult.getData().get(i));
 				}
-	
+
 				if (queryBag.equals(answerBag)) {
 					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					isQueryCorrect = true;
@@ -484,7 +483,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			}
 		}	
 	}
-	
+
 	/**
 	 * Trims the query and removes all semicolons. Lowercases all characters outside of parenthesis and apostrophes.
 	 * @param query		the query to be normalized
@@ -493,24 +492,24 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public String normalize(final String query) {
 		// trim leading and trailing whitespaces and remove all semicolons
 		StringBuilder sb = new StringBuilder(query.trim());
-		
+
 		// remove trailing semicolon
 		if(sb.charAt(sb.length()-1) == ';') {
 			sb.deleteCharAt(sb.length()-1);
 			// get rid of any trailing spaces that were before the semicolon
 			sb = new StringBuilder(sb.toString().trim());
 		}
-		
+
 		// remove all new lines and lower case and single space everything outside of parenthesis and apostrophes
 		boolean openParen = false;
 		boolean openApos = false;
 		boolean lastCharIsSpace = false;
 		for(int i = 0; i < sb.length(); i++) {
 			final char c = sb.charAt(i);
-			
+
 			if (c != ' ')
 				lastCharIsSpace = false;
-			
+
 			if (c == '"' && !openApos) 
 				openParen = !openParen;
 			else if (c == '\'' && !openParen) 
@@ -528,7 +527,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 					sb.setCharAt(i, Character.toLowerCase(c));
 			}
 		}
-		
+
 		return sb.toString(); 
 	}
 
@@ -607,8 +606,8 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		// Start a thread to pre-compute the answer
-		// TODO: add a means to interrupt any current threads which are still alive.
-		// if(answerThread != null) answerThread.interrupt();
+		if(answerThread != null) 
+			answerThread.interrupt();
 		answerThread = new QueryThread(userBean.getSelectedSchema(), questionTuples.get(questionIndex).getAnswer(), false, getDatabaseManager());
 		answerThread.start();
 		return questionTuples.get(questionIndex).getQuestion();
@@ -653,7 +652,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public boolean getQueryIsCorrect() {
 		return isQueryCorrect;
 	}
-	
+
 	public boolean getShowExample() {
 		return queryResult != null && answerResult != null && !isQueryCorrect;
 	}
@@ -712,7 +711,7 @@ public class TutorialPageBean extends AbstractDatabaseBean implements
 	public void setLink(String link) {
 		this.link = link;
 	}
-	
+
 	public int getResultRowLimit() {
 		return RESULT_ROW_LIMIT;
 	}

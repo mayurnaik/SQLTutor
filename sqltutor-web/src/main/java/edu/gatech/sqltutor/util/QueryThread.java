@@ -15,41 +15,63 @@
  */
 package edu.gatech.sqltutor.util;
 
-import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import edu.gatech.sqltutor.QueryResult;
 
-public class QueryThread extends Thread implements Serializable {
-	private static final long serialVersionUID = 1L;
-	
+public class QueryThread extends Thread {
+
 	private String schemaName;
 	private String query;
 	private boolean dev;
 	private DatabaseManager databaseManager;
+	private Connection connection;
+	private Statement statement;
 	private SQLException exception;
 	private QueryResult queryResult;
-	
-	public QueryThread(String schemaName, String query, boolean dev, DatabaseManager databaseManager) {
+
+	public QueryThread(String schemaName, String query, boolean dev,
+			DatabaseManager databaseManager) {
 		setSchemaName(schemaName);
 		setQuery(query);
 		setDev(dev);
 		setDatabaseManager(databaseManager);
 	}
-	
+
+	@Override
 	public void run() {
 		try {
-			setQueryResult(databaseManager.getQueryResult(schemaName, query, dev));
+			connection = dev ? databaseManager.getUserDataSource()
+					.getConnection() : databaseManager.getReadUserDataSource()
+					.getConnection();
+			statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+					ResultSet.CONCUR_READ_ONLY);
+			setQueryResult(databaseManager.getQueryResult(schemaName, query,
+					connection, statement));
+		} catch (SQLException e) {
+			setException(e);
+		}
+	}
+
+	@Override
+	public void interrupt() {
+		super.interrupt();
+		try {
+			if (!statement.isClosed()) {
+				statement.cancel();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			setException(e);
-		} 
+		}
 	}
-	
+
 	public String getSchemaName() {
 		return schemaName;
 	}
-	
+
 	public void setSchemaName(String schemaName) {
 		this.schemaName = schemaName;
 	}
@@ -61,11 +83,11 @@ public class QueryThread extends Thread implements Serializable {
 	public void setQuery(String query) {
 		this.query = query;
 	}
-	
+
 	public boolean isDev() {
 		return dev;
 	}
-	
+
 	public void setDev(boolean dev) {
 		this.dev = dev;
 	}
@@ -93,5 +115,5 @@ public class QueryThread extends Thread implements Serializable {
 	public void setQueryResult(QueryResult queryResult) {
 		this.queryResult = queryResult;
 	}
-	
+
 }

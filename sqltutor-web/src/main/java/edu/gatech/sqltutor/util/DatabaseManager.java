@@ -72,21 +72,21 @@ import edu.gatech.sqltutor.util.ScriptRunner;
 public class DatabaseManager implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(DatabaseManager.class);
-	
+
 	@Resource(name="jdbc/sqltutorDB")
 	private DataSource dataSource;
-	
+
 	@Resource(name="jdbc/sqltutorUserDB")
 	private DataSource userDataSource;
 
 	@Resource(name="jdbc/sqltutorUserDBRead")
-	private DataSource readUserDataSource; 
-	
+	private DataSource readUserDataSource;
+
 	public static final int QUERY_TIMEOUT_SECONDS = 30;
-	
+
 	public DatabaseManager() {
 	}
-	
+
 	@PostConstruct
 	public void lookupDataSource() {
 		// FIXME: @Resource injection not working for some reason
@@ -99,7 +99,7 @@ public class DatabaseManager implements Serializable {
 			if( userDataSource == null ) {
 				userDataSource = (DataSource)context.lookup("java:comp/env/jdbc/sqltutorUserDB");
 			}
-			if ( readUserDataSource == null ) { 
+			if ( readUserDataSource == null ) {
 				readUserDataSource = (DataSource)context.lookup("java:comp/env/jdbc/sqltutorUserDBRead");
 			}
 		} catch( NamingException e ) {
@@ -108,7 +108,7 @@ public class DatabaseManager implements Serializable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public boolean isAdmin(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -117,13 +117,13 @@ public class DatabaseManager implements Serializable {
 		boolean isAdmin = false;
 		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("SELECT admin FROM \"user\" WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			resultSet = preparedStatement.executeQuery();
-			
-			if (resultSet.next()) 
+
+			if (resultSet.next())
 				isAdmin = resultSet.getBoolean(1);
 		} finally {
 			Utils.tryClose(resultSet);
@@ -132,52 +132,52 @@ public class DatabaseManager implements Serializable {
 		}
 		return isAdmin;
 	}
-	
+
 	public Set<String> getUserSchemas(boolean admin) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-	
+
 		Set<String> schemas = new HashSet<String>();
-		try { 
+		try {
 			connection = dataSource.getConnection();
-			
-			String query = admin ? "SELECT schema FROM schema_options;" : 
+
+			String query = admin ? "SELECT schema FROM schema_options;" :
 				"SELECT schema FROM schema_options WHERE visible_to_users AND (open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now());";
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute(query);
-			
+
 			resultSet = statement.getResultSet();
-			
-			while(resultSet.next()) 
+
+			while(resultSet.next())
 				schemas.add(resultSet.getString(1));
-		} finally {	
+		} finally {        
 			Utils.tryClose(resultSet);
 			Utils.tryClose(statement);
 			Utils.tryClose(connection);
 		}
 		return schemas;
 	}
-	
+
 	public SchemaOptionsTuple getOptions(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		SchemaOptionsTuple options = null;
 		try {
 			connection = dataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access FROM schema_options WHERE schema = '" + schemaName +"'");
-			
+
 			resultSet = statement.getResultSet();
 			resultSet.next();
-			
-			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST")); 
+
+			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2), resultSet.getString(3),
 					resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal));
 		} finally {
@@ -187,14 +187,14 @@ public class DatabaseManager implements Serializable {
 		}
 		return options;
 	}
-	
+
 	private void dropSchema(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
+
 		try {
 			connection = userDataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("DROP SCHEMA " + schemaName +" CASCADE;");
@@ -203,14 +203,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void dropSchemaOptionsAndQuestions(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.addBatch("DELETE FROM schema_options WHERE schema = '" + schemaName + "';");
@@ -221,51 +221,51 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void deleteSchema(String schemaName) throws SQLException {
 		dropSchema(schemaName);
 		dropSchemaOptionsAndQuestions(schemaName);
 	}
-	
+
 	public boolean checkSchemaPermissions(String email, String schemaName) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean schemaPermissions = false;
-		try { 
+		try {
 			connection = dataSource.getConnection();
-	
+
 			final String query = "SELECT 1 FROM schema_options WHERE schema = ? AND owner = ?;";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, schemaName);
 			preparedStatement.setString(2, email);
 			resultSet = preparedStatement.executeQuery();
-			
-			if (resultSet.next()) 
+
+			if (resultSet.next())
 				schemaPermissions = true;
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
-		}	
+		}        
 		return schemaPermissions;
 	}
-	
+
 	private int getHighestQuestionOrder() throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		int order = 1;
 		try {
 			connection = dataSource.getConnection();
-		
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT max(\"order\") FROM schema_questions");
-		
+
 			resultSet = statement.getResultSet();
 			if(resultSet.next())
 				order = resultSet.getInt(1) + 1;
@@ -276,18 +276,18 @@ public class DatabaseManager implements Serializable {
 		}
 		return order;
 	}
-	
+
 	public void addQuestion(String schemaName, String question, String answer) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		int order = getHighestQuestionOrder();
 		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement(
-				"INSERT INTO schema_questions (schema, question, answer, \"order\") "
-				+ "VALUES (?, ?, ?, ?);");
+					"INSERT INTO schema_questions (schema, question, answer, \"order\") "
+							+ "VALUES (?, ?, ?, ?);");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, schemaName);
 			preparedStatement.setString(2, question);
@@ -299,22 +299,22 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public List<UserTuple> getUserTuples() throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<UserTuple> users = new LinkedList<UserTuple>();
-		try { 
+		try {
 			connection = dataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT \"email\", \"admin\", \"admin_code\", \"developer\" FROM \"user\"");
-			
+
 			resultSet = statement.getResultSet();
-			
+
 			while(resultSet.next())
 				users.add(new UserTuple(resultSet.getString(1), resultSet.getBoolean(2), resultSet.getString(3), resultSet.getBoolean(4)));
 		} finally {
@@ -324,21 +324,21 @@ public class DatabaseManager implements Serializable {
 		}
 		return users;
 	}
-	
+
 	public UserTuple getUserTuple(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		UserTuple user = new UserTuple();
-		try { 
+		try {
 			connection = dataSource.getConnection();
-		
+
 			preparedStatement = connection.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
-			
+
 			resultSet = preparedStatement.getResultSet();
 			while(resultSet.next())
 				user = new UserTuple(email, resultSet.getBoolean(1), resultSet.getString(2), resultSet.getBoolean(3));
@@ -346,27 +346,27 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
-		}	
+		}        
 		return user;
 	}
-	
+
 	public List<QuestionTuple> getQuestions(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<QuestionTuple> questions = new LinkedList<QuestionTuple>();
 		try {
 			connection = dataSource.getConnection();
-		
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("SELECT \"order\", question, answer, id FROM "
-				+ "schema_questions WHERE schema = '" + schemaName + 
-				"' ORDER BY \"order\";");
-		
+					+ "schema_questions WHERE schema = '" + schemaName +
+					"' ORDER BY \"order\";");
+
 			resultSet = statement.getResultSet();
-			while(resultSet.next()) 
+			while(resultSet.next())
 				questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4)));
 		} finally {
 			Utils.tryClose(resultSet);
@@ -375,11 +375,11 @@ public class DatabaseManager implements Serializable {
 		}
 		return questions;
 	}
-	
+
 	public void setOptions(String schemaName, SchemaOptionsTuple options) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
 			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ? WHERE schema = ?;";
@@ -398,14 +398,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void runSchemaScript(String schemaDump) throws SQLException, IOException {
 		Connection connection = null;
 		BufferedReader reader = null;
-		
-		try { 
+
+		try {
 			connection = userDataSource.getConnection();
-			
+
 			ScriptRunner runner = new ScriptRunner(connection, false, true);
 			runner.setLogWriter(null);
 			reader = new BufferedReader(new StringReader(schemaDump));
@@ -415,14 +415,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void grantAccessToReadonly(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
+
 		try {
 			connection = userDataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO readonly_user;");
@@ -433,14 +433,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void addSchemaToOptions(String schemaName, String email) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("INSERT INTO schema_options (schema, owner) VALUES ('"+schemaName+"', '"+email+"');");
@@ -449,57 +449,65 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
-	public String addSchema(String schemaDump, String email) 
+
+	public String addSchema(String schemaDump, String email)
 			throws SQLException, IllegalArgumentException, IOException {
-		
+
 		if(schemaDump == null || schemaDump.length() == 0) {
 			throw new IllegalArgumentException("Schema file is null or empty.");
 		}
-		
+
 		runSchemaScript(schemaDump);
-		
+
 		// get schema name
 		Pattern p = Pattern.compile("CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)", Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(schemaDump);
 		m.find();
 		String schemaName = m.group(2);
-		
+
 		grantAccessToReadonly(schemaName);
-		
+
 		addSchemaToOptions(schemaName, email);
 
 		return schemaName;
 	}
-	
+
 	public DataSource getDataSource() {
 		return dataSource;
 	}
-	
+
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
-	
+
 	public DataSource getUserDataSource() {
 		return userDataSource;
 	}
-	
+
 	public void setUserDataSource(DataSource userDataSource) {
 		this.userDataSource = userDataSource;
+	}
+
+	public DataSource getReadUserDataSource() {
+		return readUserDataSource;
+	}
+
+	public void setReadUserDataSource(DataSource readUserDataSource) {
+		this.readUserDataSource = readUserDataSource;
 	}
 
 	public void reorderQuestions(List<QuestionTuple> questions) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-		
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			for(int i = 0; i < questions.size(); i++) {
 				int id = questions.get(i).getId();
-				statement.addBatch("UPDATE schema_questions SET \"order\" = " 
+				statement.addBatch("UPDATE schema_questions SET \"order\" = "
 						+ (i+1) + " WHERE id = " + id + ";");
 			}
 			statement.executeBatch();
@@ -508,7 +516,7 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void deleteQuestions(List<QuestionTuple> questions) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
@@ -528,19 +536,19 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
-	
+
+
 	public void addPasswordChangeRequest(String email, UUID uuid) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-			
+
 			// generate the user's encryption salt and password
 			byte[] salt = SaltHasher.generateSalt();
 			byte[] encryptedId = SaltHasher.getEncryptedValue(uuid.toString(), salt);
-			
+
 			final String update = "INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)";
 			preparedStatement = connection.prepareStatement(update);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -559,35 +567,35 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public boolean getPasswordChangeRequest(String email, String id) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean autheticated = false;
-		try { 
+		try {
 			connection = dataSource.getConnection();
-	
+
 			// Get the salt and id of the most recent request
 			// that belongs to the user within the last 24 hours
 			final String query = "SELECT \"salt\", \"id\" FROM \"password_change_requests\" WHERE "
 					+ "\"time\" = (SELECT MAX(\"time\") FROM \"password_change_requests\" WHERE \"email\" = ? AND "
 					+ "\"time\" >= (now() - '1 day'::INTERVAL));";
-			
+
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
-			
+
 			resultSet = preparedStatement.executeQuery();
-		
+
 			while (resultSet.next()) {
 				byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
 				byte[] encryptedId = stringByteArrayToByteArray(resultSet.getString(2));
-				
+
 				// use the password hasher to authenticate
 				autheticated = SaltHasher.authenticate(id, encryptedId, salt);
-			} 
+			}
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
@@ -603,14 +611,14 @@ public class DatabaseManager implements Serializable {
 	public void changePassword(String email, String newPassword) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
 
 			// generate the user's encryption salt and password
 			byte[] salt = SaltHasher.generateSalt();
 			byte[] encryptedPassword = SaltHasher.getEncryptedValue(newPassword, salt);
-			
+
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
@@ -631,18 +639,18 @@ public class DatabaseManager implements Serializable {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean emailExists = false;
 		try {
 			connection = dataSource.getConnection();
-		
+
 			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
-			
+
 			resultSet = preparedStatement.getResultSet();
-			if(resultSet.next()) 
+			if(resultSet.next())
 				emailExists = true;
 		} finally {
 			Utils.tryClose(resultSet);
@@ -651,22 +659,22 @@ public class DatabaseManager implements Serializable {
 		}
 		return emailExists;
 	}
-	
+
 	public void saveUserQuery(UserQuery query) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-			
+
 			Long id = query.getId();
 			if( id == null ) {
-				final String INSERT = "INSERT INTO query " + 
-					"(email, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
+				final String INSERT = "INSERT INTO query " +
+						"(email, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
 				preparedStatement = connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
 			} else {
-				final String UPDATE = 
+				final String UPDATE =
 						"UPDATE query SET email=?, schema=?, sql=?, user_description=?, source=?, created=? WHERE id=?";
 				preparedStatement = connection.prepareStatement(UPDATE);
 				preparedStatement.setLong(7, id);
@@ -678,9 +686,9 @@ public class DatabaseManager implements Serializable {
 			preparedStatement.setString(4, query.getUserDescription());
 			preparedStatement.setString(5, query.getSource());
 			preparedStatement.setDate(6, new Date(query.getTime().getTime()));
-	
+
 			preparedStatement.executeUpdate();
-			
+
 			if( id == null ) {
 				// get the generated id for inserts
 				resultSet = preparedStatement.getGeneratedKeys();
@@ -694,15 +702,15 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public HashMap<String, QueryResult> getAllData(String schemaName, List<String> tables) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = userDataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
@@ -710,18 +718,18 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 			Utils.tryClose(statement);
 		}
-			
+
 		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
 		for(String tableName : tables) {
 			List<List<String>> queryData = new LinkedList<List<String>>();
 			List<String> columnNames = new LinkedList<String>();
 			try {
 				connection = userDataSource.getConnection();
-				
+
 				statement = connection.createStatement();
 				statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 				resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
-				
+
 				ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 				int columnCount = resultSetMetaData.getColumnCount();
 				for(int i = 1; i <=  columnCount; i++) {
@@ -743,31 +751,31 @@ public class DatabaseManager implements Serializable {
 		}
 		return allData;
 	}
-	
+
 	public HashMap<String, QueryResult> getAllDevData() throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<DatabaseTable> devTables = getDevTables();
 		List<String> tables = new LinkedList<String>();
 		for(DatabaseTable dt : devTables)
 			tables.add(dt.getTableName());
-		
+
 		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
 		try {
 			connection = dataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to public");
-		
+
 			for(String tableName : tables) {
 				List<List<String>> queryData = new LinkedList<List<String>>();
 				List<String> columnNames = new LinkedList<String>();
 				try {
 					resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
-					
+
 					ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
 					int columnCount = resultSetMetaData.getColumnCount();
 					for(int i = 1; i <=  columnCount; i++) {
@@ -791,14 +799,14 @@ public class DatabaseManager implements Serializable {
 		}
 		return allData;
 	}
-	
+
 	public void verifyQuery(String schemaName, String query) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
-		
+
 		try {
 			connection = readUserDataSource.getConnection();
-			
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
@@ -808,12 +816,15 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public QueryResult getQueryResult(String schemaName, String query, boolean dev) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
+		final Connection connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
+		return getQueryResult(schemaName, query, connection, connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
+	}
+
+	public QueryResult getQueryResult(String schemaName, String query, Connection connection, Statement statement) throws SQLException {
 		ResultSet resultSet = null;
-		
+
 		final List<List<String>> queryData = new LinkedList<List<String>>();
 		final List<String> columnNames = new LinkedList<String>();
 		final QueryResult queryResult = new QueryResult();
@@ -821,27 +832,25 @@ public class DatabaseManager implements Serializable {
 		queryResult.setColumns(columnNames);
 		int rows = 0;
 		try {
-			connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
-			
 			connection.setAutoCommit(false);
-			statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
 			statement.setFetchSize(1000);
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to '" + schemaName + "'");
 			// postgresql driver doesn't enforce setQueryTimeout, this is the postgresql-specific equivalent
 			statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
-			
+
 			long queryStart = System.currentTimeMillis();
 			resultSet = statement.executeQuery(query);
 			long queryEnd = System.currentTimeMillis();
 			queryResult.setExecutionTime(queryEnd - queryStart);
 			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-		
+
 			int columnCount = resultSetMetaData.getColumnCount();
 			for(int i = 1; i <=  columnCount; i++) {
 				columnNames.add(resultSetMetaData.getColumnName(i));
 			}
-			
+
 			long endTime = -1L;
 			while (resultSet.next()) {
 				// stop reading rows from the driver at all when the limit is reached
@@ -851,9 +860,9 @@ public class DatabaseManager implements Serializable {
 					queryResult.setReadLimitExceeded(true);
 					break;
 				}
-				
+
 				++rows;
-				
+
 				// stop adding to the QueryResult after a certain number of rows
 				if (rows <= QueryResult.QUERY_SIZE_LIMIT) {
 					List<String> rowData = new LinkedList<String>();
@@ -863,7 +872,7 @@ public class DatabaseManager implements Serializable {
 					queryData.add(rowData);
 				}
 			}
-			
+
 			if (endTime == -1L)
 				endTime = System.currentTimeMillis();
 			queryResult.setTotalTime(endTime - queryStart);
@@ -878,29 +887,29 @@ public class DatabaseManager implements Serializable {
 		queryResult.setOriginalSize(rows);
 		return queryResult;
 	}
-	
+
 	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<List<String>> queryData = new LinkedList<List<String>>();
 		List<String> columnNames = new LinkedList<String>();
 		try {
 			connection = dataSource.getConnection();
-		
+
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			statement.execute("set search_path to public");
-		
+
 			resultSet = statement.executeQuery(query);
 			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-		
+
 			int columnCount = resultSetMetaData.getColumnCount();
 			for(int i = 1; i <=  columnCount; i++) {
 				columnNames.add(resultSetMetaData.getColumnName(i));
 			}
-			
+
 			while(resultSet.next()) {
 				List<String> rowData = new LinkedList<String>();
 				for (int i = 1; i <= columnCount; i++) {
@@ -915,20 +924,20 @@ public class DatabaseManager implements Serializable {
 		}
 		return new QueryResult(columnNames, queryData);
 	}
-	
+
 	private void addUser(String hashedEmail, String email, String password) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-	
+
 			// generate the user's encryption salt and password
 			byte[] salt = SaltHasher.generateSalt();
 			byte[] encryptedPassword = SaltHasher.getEncryptedValue(password, salt);
-			
+
 			final String query = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\", \"email_plain\") VALUES (?, ?, ?, ?)";
-			
+
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
@@ -945,14 +954,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void addUserToLinkedAdminCodes(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\") VALUES (?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
@@ -962,12 +971,12 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void addUserToLinkedAdminCodes(String email, String adminCode) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
 			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -979,19 +988,19 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void registerUser(String hashedEmail, String email, String password) throws SQLException {
 		addUser(hashedEmail, email, password);
 		addUserToLinkedAdminCodes(hashedEmail);
 	}
-	
+
 	private void deleteUserEmail(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-	
+
 			final String delete = "DELETE FROM \"user\" WHERE email = ?";
 			preparedStatement = connection.prepareStatement(delete);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -1002,14 +1011,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private void deleteUserAdminLinks(String adminCode) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
@@ -1019,35 +1028,35 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void deleteUser(String email, String adminCode) throws SQLException {
 		deleteUserEmail(email);
 		deleteUserAdminLinks(adminCode);
 	}
-	
+
 	/**
 	 * Returns whether the given email is registered.
-	 * 
-	 * @param hashedEmail	email to check
-	 * @return	whether the email is registered
+	 *
+	 * @param hashedEmail        email to check
+	 * @return        whether the email is registered
 	 * @throws SQLException
 	 */
 	public boolean isEmailRegistered(String hashedEmail, String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean isEmailRegistered = false;
 		try {
 			connection = dataSource.getConnection();
-	
+
 			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, hashedEmail);
-			
+
 			resultSet = preparedStatement.executeQuery();
-			
+
 			if ( resultSet.next() )
 				isEmailRegistered = true;
 		} finally {
@@ -1055,7 +1064,7 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
-		
+
 		// if the email is registered, make sure their "email_plain" isn't null in the DB
 		if( isEmailRegistered && !hasPlainTextEmail(hashedEmail) ) {
 			updatePlainTextEmail(hashedEmail, email);
@@ -1063,23 +1072,23 @@ public class DatabaseManager implements Serializable {
 
 		return isEmailRegistered;
 	}
-	
+
 	public boolean hasPlainTextEmail(String hashedEmail) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean hasPlainTextEmail = false;
 		try {
 			connection = dataSource.getConnection();
-	
+
 			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ? AND \"email_plain\" != NULL";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, hashedEmail);
-			
+
 			resultSet = preparedStatement.executeQuery();
-			
+
 			if ( resultSet.next() )
 				hasPlainTextEmail = true;
 		} finally {
@@ -1087,17 +1096,17 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
-		
+
 		return hasPlainTextEmail;
 	}
-	
+
 	public void updatePlainTextEmail(String hashedEmail, String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 
 		try {
 			connection = dataSource.getConnection();
-	
+
 			final String query = "UPDATE \"user\" SET \"email_plain\" = ? WHERE \"email\" = ?";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -1109,12 +1118,12 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public boolean isPasswordCorrect(String email, String attemptedPassword) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean isCorrect = false;
 		try {
 			connection = dataSource.getConnection();
@@ -1122,16 +1131,16 @@ public class DatabaseManager implements Serializable {
 			preparedStatement = connection.prepareStatement("SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
-			
+
 			resultSet = preparedStatement.executeQuery();
-			
-			if (resultSet.next()) {	
+
+			if (resultSet.next()) {        
 				byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
 				byte[] encryptedPassword = stringByteArrayToByteArray(resultSet.getString(2));
-				
+
 				// use the password hasher to authenticate
 				isCorrect = SaltHasher.authenticate(attemptedPassword, encryptedPassword, salt);
-			} 
+			}
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
@@ -1143,15 +1152,15 @@ public class DatabaseManager implements Serializable {
 		}
 		return isCorrect;
 	}
-	
-	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback, 
+
+	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback,
 			double totalTimeSeconds, double queryTotalTimeSeconds, double answerTotalTimeSeconds, double queryExecutionTimeSeconds, double answerExecutionTimeSeconds, boolean truncated, boolean readLimitExceeded, int originalSize) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
 					+ "\"parsed\", \"correct\", \"nlp_feedback\", \"total_time_seconds\", "
@@ -1182,14 +1191,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void logQuestionPresentation(String sessionId, String email, String schemaName, String question) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\") VALUES (?, ?, ?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -1203,18 +1212,18 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void logException(String sessionId, String email, String exception) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
 					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			
+
 			preparedStatement.setString(1, sessionId);
 			preparedStatement.setString(2, email != null ? email : "not logged in");
 			preparedStatement.setString(3, exception);
@@ -1224,12 +1233,12 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public List<UserQuery> getUserQueries(String schemaName) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<UserQuery> userQueries = new LinkedList<UserQuery>();
 		try {
 			connection = dataSource.getConnection();
@@ -1237,7 +1246,7 @@ public class DatabaseManager implements Serializable {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			resultSet = statement.executeQuery("SELECT * FROM query WHERE schema='" + schemaName + "'");
-		
+
 			while( resultSet.next() ) {
 				UserQuery query = new UserQuery();
 				query.setId(resultSet.getLong("id"));
@@ -1248,7 +1257,7 @@ public class DatabaseManager implements Serializable {
 				query.setUserDescription(resultSet.getString("user_description"));
 				query.setTime(resultSet.getDate("created"));
 				query.setSource(resultSet.getString("source"));
-				
+
 				userQueries.add(query);
 			}
 		} finally {
@@ -1258,12 +1267,12 @@ public class DatabaseManager implements Serializable {
 		}
 		return userQueries;
 	}
-	
+
 	public List<UserQuery> getUserQueries() throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
-		
+
 		List<UserQuery> userQueries = new LinkedList<UserQuery>();
 		try {
 			connection = dataSource.getConnection();
@@ -1271,7 +1280,7 @@ public class DatabaseManager implements Serializable {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			resultSet = statement.executeQuery("SELECT * FROM query");
-			
+
 			while( resultSet.next() ) {
 				UserQuery query = new UserQuery();
 				query.setId(resultSet.getLong("id"));
@@ -1282,7 +1291,7 @@ public class DatabaseManager implements Serializable {
 				query.setUserDescription(resultSet.getString("user_description"));
 				query.setTime(resultSet.getDate("created"));
 				query.setSource(resultSet.getString("source"));
-				
+
 				userQueries.add(query);
 			}
 		} finally {
@@ -1292,14 +1301,14 @@ public class DatabaseManager implements Serializable {
 		}
 		return userQueries;
 	}
-	
+
 	public List<DatabaseTable> getTables(String schemaName) throws SQLException {
 		try (Connection conn = userDataSource.getConnection()) {
 			DatabaseMetaData metadata = conn.getMetaData();
 			return QueryUtils.readTableInfo(metadata, schemaName);
 		}
 	}
-	
+
 	public List<DatabaseTable> getDevTables() throws SQLException {
 		try (Connection conn = dataSource.getConnection()) {
 			return QueryUtils.readTableInfo(conn.getMetaData(), "public");
@@ -1310,19 +1319,19 @@ public class DatabaseManager implements Serializable {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		String adminCode = null;
 		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
-			
+
 			resultSet = preparedStatement.getResultSet();
-			
-			while(resultSet.next()) 
+
+			while(resultSet.next())
 				adminCode = resultSet.getString(1);
 		} finally {
 			Utils.tryClose(resultSet);
@@ -1336,18 +1345,18 @@ public class DatabaseManager implements Serializable {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		List<String> linkedAdminCodes = new LinkedList<String>();
-		try { 
+		try {
 			connection = dataSource.getConnection();
-	
+
 			preparedStatement = connection.prepareStatement("SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
 			preparedStatement.execute();
-			
+
 			resultSet = preparedStatement.getResultSet();
-			while(resultSet.next()) 
+			while(resultSet.next())
 				linkedAdminCodes.add(resultSet.getString(1));
 		} finally {
 			Utils.tryClose(resultSet);
@@ -1356,7 +1365,7 @@ public class DatabaseManager implements Serializable {
 		}
 		return linkedAdminCodes;
 	}
-	
+
 	private String generateAdminCode() throws SQLException {
 		final Random random = new SecureRandom();
 		byte[] buffer = new byte[5];
@@ -1365,25 +1374,25 @@ public class DatabaseManager implements Serializable {
 			random.nextBytes(buffer);
 			adminCode = BaseEncoding.base64Url().omitPadding().encode(buffer);
 		} while(adminCodeExists(adminCode));
-		
+
 		return adminCode;
 	}
-	
+
 	public boolean adminCodeExists(String adminCode) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean adminCodeExists = false;
-		try { 
+		try {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE admin_code = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
-			
+
 			resultSet = preparedStatement.executeQuery();
-			
+
 			if (resultSet.next())
 				adminCodeExists = true;
 		} finally {
@@ -1393,16 +1402,16 @@ public class DatabaseManager implements Serializable {
 		}
 		return adminCodeExists;
 	}
-	
+
 	public void promoteUserToAdmin(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		String adminCode = generateAdminCode();
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, true);
@@ -1413,17 +1422,17 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
-		
+
 		addUserToLinkedAdminCodes(email, adminCode);
 	}
-	
+
 	public void promoteUserToDev(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-	
+
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, true);
@@ -1434,12 +1443,12 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void demoteUserFromAdmin(String email, String adminCode) throws SQLException {
-		Connection connection = null; 
+		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
@@ -1452,17 +1461,17 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(preparedStatement);
 			Utils.tryClose(connection);
 		}
-		
+
 		deleteUserFromLinkedAdminCodes(adminCode);
 	}
-	
+
 	private void deleteUserFromLinkedAdminCodes(String adminCode) throws SQLException {
-		Connection connection = null; 
+		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, adminCode);
@@ -1472,14 +1481,14 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	public void demoteUserFromDev(String email) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
-	
+
 			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setBoolean(1, false);
@@ -1495,17 +1504,17 @@ public class DatabaseManager implements Serializable {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		boolean isDeveloper = false;
-		try { 
+		try {
 			connection = dataSource.getConnection();
-	
+
 			preparedStatement = connection.prepareStatement("SELECT developer FROM \"user\" WHERE email = ?;");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
-			
+
 			resultSet = preparedStatement.executeQuery();
-			
+
 			if (resultSet.next())
 				isDeveloper = resultSet.getBoolean(1);
 		} finally {
@@ -1519,10 +1528,10 @@ public class DatabaseManager implements Serializable {
 	public void linkCode(String email, String code) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
-		try { 
+
+		try {
 			connection = dataSource.getConnection();
-			
+
 			preparedStatement = connection.prepareStatement("INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, email);
@@ -1537,7 +1546,7 @@ public class DatabaseManager implements Serializable {
 	public void unlinkCode(String email, String code) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
-		
+
 		try {
 			connection = dataSource.getConnection();
 
@@ -1551,13 +1560,13 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 	}
-	
+
 	private byte[] stringByteArrayToByteArray(String stringByteArray) {
 		String[] byteValues = stringByteArray.substring(1, stringByteArray.length() - 1).split(",");
 		byte[] bytes = new byte[byteValues.length];
-		
+
 		for (int i = 0; i < bytes.length; i++) {
-		   bytes[i] = Byte.valueOf(byteValues[i].trim());     
+			bytes[i] = Byte.valueOf(byteValues[i].trim());    
 		}
 
 		return bytes;
@@ -1567,7 +1576,7 @@ public class DatabaseManager implements Serializable {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		String schema = null;
 		try {
 			connection = dataSource.getConnection();
@@ -1578,7 +1587,7 @@ public class DatabaseManager implements Serializable {
 			resultSet = preparedStatement.executeQuery();
 			if (resultSet.next())
 				schema = resultSet.getString(1);
-			
+
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(preparedStatement);
