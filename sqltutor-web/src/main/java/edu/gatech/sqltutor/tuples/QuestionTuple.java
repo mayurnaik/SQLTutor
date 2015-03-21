@@ -16,6 +16,7 @@
 package edu.gatech.sqltutor.tuples;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class QuestionTuple implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -24,45 +25,57 @@ public class QuestionTuple implements Serializable {
 	private String question;
 	private String answer;
 	private int id;
-	private boolean attempted;
+	private String[] concepts;
 	
-	public QuestionTuple(int order, String question, String answer, int id) {
+	public QuestionTuple(int order, String question, String answer, int id, String[] concepts) {
 		this.order = order;
 		this.question = question;
 		this.answer = answer;
 		this.id = id;
+		this.concepts = concepts;
 	}
 	
 	public int getOrder() {
 		return order;
 	}
+	
 	public void setOrder(int order) {
 		this.order = order;
 	}
+	
 	public String getQuestion() {
 		return question;
 	}
+	
 	public void setQuestion(String question) {
 		this.question = question;
 	}
+	
 	public String getAnswer() {
 		return answer;
 	}
+	
 	public void setAnswer(String answer) {
 		this.answer = answer;
 	}
+	
 	public int getId() {
 		return id;
 	}
+	
 	public void setId(int id) {
 		this.id = id;
 	}
 
-	public boolean isAttempted() {
-		return attempted;
+	public String[] getConcepts() {
+		return concepts;
 	}
 
-	public void setAttempted(boolean attempted) {
-		this.attempted = attempted;
+	public void setConcepts(String[] concepts) {
+		this.concepts = concepts;
+	}
+	
+	public String getConceptsString() {
+		return concepts == null || concepts.length == 0 ? ""  : Arrays.toString(concepts);
 	}
 }

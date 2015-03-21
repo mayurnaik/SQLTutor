@@ -25,6 +25,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
+import org.apache.commons.lang3.StringUtils;
+
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
 
@@ -48,6 +50,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	private String question;
 	private String answer;
+	private String concepts;
 	
 	private List<QuestionTuple> questions;
 	private List<QuestionTuple> selectedQuestions;
@@ -134,7 +137,8 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		}
 		
 		try {
-			getDatabaseManager().addQuestion(selectedSchema, getQuestion(), getAnswer());
+			String[] concepts = getConcepts().length() > 0 ? getConcepts().toLowerCase().split(",") : null;
+			getDatabaseManager().addQuestion(selectedSchema, getQuestion(), getAnswer(), concepts);
 			setupQuestionList();
 			BeanUtils.addInfoMessage(null, ADD_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
@@ -209,5 +213,13 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 
 	public void setSelectedQuestions(List<QuestionTuple> selectedQuestions) {
 		this.selectedQuestions = selectedQuestions;
+	}
+
+	public String getConcepts() {
+		return concepts;
+	}
+
+	public void setConcepts(String concepts) {
+		this.concepts = concepts;
 	}
 }

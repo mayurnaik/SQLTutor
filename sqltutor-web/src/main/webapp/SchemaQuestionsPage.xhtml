@@ -69,12 +69,17 @@
 					<p:panel header="Add Questions" styleClass="panel">
 						<p:outputLabel for="question" value="In English: " />
 						<p:inputTextarea rows="5" id="question" style="resize:none;width:100% !important;"
-							value="#{schemaQuestionsPageBean.question}" autoResize="false"/>
+							value="#{schemaQuestionsPageBean.question}" autoResize="false" required="true"/>
 						
 						<p:outputLabel for="answer" value="In SQL: " />
 						<p:inputTextarea id="answer" rows="5" 
 							autoResize="false" style="resize:none;width:100% !important;" 
-							value="#{schemaQuestionsPageBean.answer}"/>
+							value="#{schemaQuestionsPageBean.answer}" required="true"/>
+							
+						<p:outputLabel for="concepts" value="Concept tags (comma-separated): " />
+						<p:inputTextarea id="concepts" rows="3" 
+							autoResize="false" style="resize:none;width:100% !important;" 
+							value="#{schemaQuestionsPageBean.concepts}"/>
 						
 						<p:commandButton
 							action="#{schemaQuestionsPageBean.addQuestion}"
@@ -93,9 +98,8 @@
 						<br/><br/>
 					    <p:dataTable var="question" value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
 					    	resizableColumns="true"
-							style="height:50% !important"
-							scrollWidth="100%"
-							scrollable="true"
+							style="height:60% !important"
+							tableStyle="table-layout: auto;"
 					    	selectionMode="multiple" selection="#{schemaQuestionsPageBean.selectedQuestions}" rowKey="#{question}">
 					        <p:ajax event="rowReorder" />
 					        <p:column headerText="English Question">
@@ -104,6 +108,10 @@
 					 
 					        <p:column headerText="SQL Answer">
 					            <h:outputText value="#{question.answer}" style="white-space: normal;"/>
+					        </p:column>
+					        
+					        <p:column headerText="Concepts">
+					            <h:outputText value="#{question.conceptsString}" style="white-space: normal;"/>
 					        </p:column>
 					    </p:dataTable>
 					    

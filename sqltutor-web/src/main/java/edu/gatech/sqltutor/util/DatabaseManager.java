@@ -22,6 +22,7 @@ import java.io.StringReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -277,7 +278,7 @@ public class DatabaseManager implements Serializable {
 		return order;
 	}
 
-	public void addQuestion(String schemaName, String question, String answer) throws SQLException {
+	public void addQuestion(String schemaName, String question, String answer, String[] concepts) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 
@@ -286,13 +287,14 @@ public class DatabaseManager implements Serializable {
 			connection = dataSource.getConnection();
 
 			preparedStatement = connection.prepareStatement(
-					"INSERT INTO schema_questions (schema, question, answer, \"order\") "
-							+ "VALUES (?, ?, ?, ?);");
+					"INSERT INTO schema_questions (schema, question, answer, \"order\", concept_tags) "
+							+ "VALUES (?, ?, ?, ?, ?);");
 			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
 			preparedStatement.setString(1, schemaName);
 			preparedStatement.setString(2, question);
 			preparedStatement.setString(3, answer);
 			preparedStatement.setInt(4, order);
+			preparedStatement.setArray(5, concepts != null ? connection.createArrayOf("text", concepts) : null);
 			preparedStatement.executeUpdate();
 		} finally {
 			Utils.tryClose(preparedStatement);
@@ -361,13 +363,13 @@ public class DatabaseManager implements Serializable {
 
 			statement = connection.createStatement();
 			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT \"order\", question, answer, id FROM "
+			statement.execute("SELECT \"order\", question, answer, id, concept_tags FROM "
 					+ "schema_questions WHERE schema = '" + schemaName +
 					"' ORDER BY \"order\";");
 
 			resultSet = statement.getResultSet();
 			while(resultSet.next())
-				questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4)));
+				questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4), resultSet.getArray(5) != null ? (String[])resultSet.getArray(5).getArray() : null));
 		} finally {
 			Utils.tryClose(resultSet);
 			Utils.tryClose(statement);
