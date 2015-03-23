@@ -67,21 +67,36 @@
 			    	<p:messages />
 			    	
 					<p:panel header="Add Questions" styleClass="panel">
-						<p:outputLabel for="question" value="In English: " />
+						<p:outputLabel for="question" value="In English (required): " />
 						<p:inputTextarea rows="5" id="question" style="resize:none;width:100% !important;"
-							value="#{schemaQuestionsPageBean.question}" autoResize="false" required="true"/>
+							value="#{schemaQuestionsPageBean.question.question}" autoResize="false" required="#{not empty param[add.clientId]}"/>
 						
-						<p:outputLabel for="answer" value="In SQL: " />
+						<p:outputLabel for="answer" value="In SQL (required): " />
 						<p:inputTextarea id="answer" rows="5" 
 							autoResize="false" style="resize:none;width:100% !important;" 
-							value="#{schemaQuestionsPageBean.answer}" required="true"/>
+							value="#{schemaQuestionsPageBean.question.answer}" required="#{not empty param[add.clientId]}"/>
 							
 						<p:outputLabel for="concepts" value="Concept tags (comma-separated): " />
 						<p:inputTextarea id="concepts" rows="3" 
 							autoResize="false" style="resize:none;width:100% !important;" 
-							value="#{schemaQuestionsPageBean.concepts}"/>
+							value="#{schemaQuestionsPageBean.question.conceptsString}"/>
+							
+						<p:outputLabel for="performance" value="Performance leniency (in seconds, double precision): " />
+						<br/>
+						<p:inputText id="performance"
+							value="#{schemaQuestionsPageBean.question.performanceLeniencySeconds}"/>
+						<br/>
+						<br/>
 						
-						<p:commandButton
+						<p:outputLabel for="row" value="Row order matters: " />
+						<p:selectBooleanCheckbox id="row" value="#{schemaQuestionsPageBean.question.rowOrderMatters}" />
+						<br/>
+							
+						<p:outputLabel for="column" value="Column order matters: " />
+						<p:selectBooleanCheckbox id="column" value="#{schemaQuestionsPageBean.question.columnOrderMatters}" />
+						<br/>
+						
+						<p:commandButton id="add"
 							action="#{schemaQuestionsPageBean.addQuestion}"
 							ajax="false"
 							value="Add" icon="ui-icon-check" styleClass="panelbutton"/>
@@ -112,6 +127,18 @@
 					        
 					        <p:column headerText="Concepts">
 					            <h:outputText value="#{question.conceptsString}" style="white-space: normal;"/>
+					        </p:column>
+					        
+					        <p:column headerText="Performance Leniency (Seconds)" style="white-space:pre-line;width:50px;">
+					            <h:outputText value="#{question.performanceLeniencySeconds}"/>
+					        </p:column>
+					        
+					        <p:column headerText="Row Order Matters" style="white-space:pre-line;width:50px;">
+					            <h:outputText value="#{question.isRowOrderMatters()}"/>
+					        </p:column>
+					        
+					        <p:column headerText="Column Order Matters" style="white-space:pre-line;width:50px;">
+					            <h:outputText value="#{question.isColumnOrderMatters()}"/>
 					        </p:column>
 					    </p:dataTable>
 					    

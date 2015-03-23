@@ -25,8 +25,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 
-import org.apache.commons.lang3.StringUtils;
-
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
 
@@ -39,18 +37,16 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	private UserBean userBean;
 	
 	private static final String PERMISSIONS_ERROR = "You do not have permissions for this schema.";
-	private static final String REORDER_CONFIRMATION_MESSAGE = "Successfully reordered the questions.";
+	private static final String REORDER_CONFIRMATION_MESSAGE = "Successfully reordered the question(s).";
 	private static final String CHOOSE_QUESTION_ERROR = "You must select questions to be deleted.";
-	private static final String DELETE_CONFIRMATION_MESSAGE = "Successfully deleted the questions.";
+	private static final String DELETE_CONFIRMATION_MESSAGE = "Successfully deleted the question(s).";
 	private static final String ADD_CONFIRMATION_MESSAGE = "Successfully added this question.";
 	
 	private List<DatabaseTable> tables;
 	
 	private String selectedSchema;
 	
-	private String question;
-	private String answer;
-	private String concepts;
+	private QuestionTuple question;
 	
 	private List<QuestionTuple> questions;
 	private List<QuestionTuple> selectedQuestions;
@@ -69,6 +65,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		
+		question = new QuestionTuple();
 		setupQuestionList();
 	}
 	
@@ -91,6 +88,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		
 		try {
 			getDatabaseManager().reorderQuestions(questions);
+			selectedQuestions = new LinkedList<QuestionTuple>();
 			BeanUtils.addInfoMessage(null, REORDER_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -111,8 +109,9 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 				return;
 			}
 			getDatabaseManager().deleteQuestions(selectedQuestions);
-			setupQuestionList();
-			BeanUtils.addErrorMessage(null, DELETE_CONFIRMATION_MESSAGE);
+			questions.removeAll(selectedQuestions);
+			reorderQuestions();
+			BeanUtils.addInfoMessage(null, DELETE_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -127,7 +126,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		
 		try {
-			getDatabaseManager().verifyQuery(selectedSchema, getAnswer());
+			getDatabaseManager().verifyQuery(selectedSchema, question.getAnswer());
 		} catch(SQLException e) {
 			String message = e.getMessage();
 			if(message.contains("getNextException"))
@@ -137,9 +136,9 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		}
 		
 		try {
-			String[] concepts = getConcepts().length() > 0 ? getConcepts().toLowerCase().split(",") : null;
-			getDatabaseManager().addQuestion(selectedSchema, getQuestion(), getAnswer(), concepts);
-			setupQuestionList();
+			questions.add(question);
+			question.setOrder(questions.size());
+			getDatabaseManager().addQuestion(selectedSchema, question);
 			BeanUtils.addInfoMessage(null, ADD_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -183,22 +182,6 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		this.userBean = userBean;
 	}
 
-	public String getQuestion() {
-		return question;
-	}
-
-	public void setQuestion(String question) {
-		this.question = question;
-	}
-
-	public String getAnswer() {
-		return answer;
-	}
-
-	public void setAnswer(String answer) {
-		this.answer = answer;
-	}
-
 	public List<QuestionTuple> getQuestions() {
 		return questions;
 	}
@@ -214,12 +197,8 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	public void setSelectedQuestions(List<QuestionTuple> selectedQuestions) {
 		this.selectedQuestions = selectedQuestions;
 	}
-
-	public String getConcepts() {
-		return concepts;
-	}
-
-	public void setConcepts(String concepts) {
-		this.concepts = concepts;
+	
+	public QuestionTuple getQuestion() {
+		return question;
 	}
 }

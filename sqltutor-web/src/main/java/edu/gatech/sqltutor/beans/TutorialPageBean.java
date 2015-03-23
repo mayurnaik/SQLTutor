@@ -251,14 +251,15 @@ Serializable {
 				numberOfAttempts++;
 				
 			// log
-			if (!questionTuples.get(questionIndex).getQuestion().equals(NO_QUESTIONS_MESSAGE)) {
+			final QuestionTuple questionTuple = questionTuples.get(questionIndex);
+			if (!questionTuple.getQuestion().equals(NO_QUESTIONS_MESSAGE)) {
 				try {
 					final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
 					getDatabaseManager().log(BeanUtils.getSessionId(),
 							userBean.getHashedEmail(), 
 							userBean.getSelectedSchema(),
-							questionTuples.get(questionIndex).getQuestion(), 
-							questionTuples.get(questionIndex).getAnswer(),
+							questionTuple.getQuestion(), 
+							questionTuple.getAnswer(),
 							query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
 							queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
 							answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
@@ -387,7 +388,8 @@ Serializable {
 		// check for "strong" correctness
 		// naive check
 		// TODO: Move in the clustering classes to do a better job of this
-		final String normalizedAnswer = normalize(questionTuples.get(questionIndex).getAnswer());
+		final QuestionTuple questionTuple = questionTuples.get(questionIndex);
+		final String normalizedAnswer = normalize(questionTuple.getAnswer());
 		final String normalizedQuery = normalize(query);
 		if (normalizedAnswer.equals(normalizedQuery)) {
 			resultSetFeedback = "Correct! Your answer matched for all possible instances!";
@@ -409,6 +411,11 @@ Serializable {
 			} 
 
 			answerResult = answerThread.getQueryResult();
+			
+			if (questionTuple.getPerformanceLeniencySeconds() != 0 && queryResult.getExecutionTime() > answerResult.getExecutionTime() + (questionTuple.getPerformanceLeniencySeconds() * 1000)) {
+				resultSetFeedback = "Incorrect. Your query's execution time was longer than the answer's plus the alotted leniency time (" + questionTuple.getPerformanceLeniencySeconds() + ").";
+				return;
+			}
 
 			// check if we truncated the result, we never consider this correct and assume the instructor answer is smaller
 			if (queryResult.isTruncated()) {
@@ -418,26 +425,20 @@ Serializable {
 				return;
 			}
 
-			boolean columnOrderMatters = false;
-			boolean rowOrderMatters = false;
-
-			if (normalizedAnswer.toLowerCase(Locale.US).contains(" order by "))
-				rowOrderMatters = true;
-
 			// First checks if the number of columns are equal, then the number of rows, then moves into specialized checks
 			// based on if column and/or row order matters
 			if (answerResult.getColumns().size() != queryResult.getColumns().size()) {
 				resultSetFeedback = "Incorrect. Your query did not have the same number of columns as the stored answer.";
 			} else if (answerResult.getData().size() != queryResult.getData().size()) {
 				resultSetFeedback = "Incorrect. Your query did not have the same number of rows as the stored answer.";
-			} else if (columnOrderMatters && rowOrderMatters) {
+			} else if (questionTuple.isColumnOrderMatters() && questionTuple.isRowOrderMatters()) {
 				if (answerResult.getData().equals(queryResult.getData())) {
 					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					isQueryCorrect = true;
 				} else {
-					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+					resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's (note: column and row order matters).";
 				}
-			} else if (!columnOrderMatters && rowOrderMatters) {
+			} else if (!questionTuple.isColumnOrderMatters() && questionTuple.isRowOrderMatters()) {
 				// Puts the column's data into a map, mapped to the column name. Orders by column name then checks equality.
 				final Map<String, List<String>> queryTree = new TreeMap<String, List<String>>();
 				final Map<String, List<String>> answerTree = new TreeMap<String, List<String>>();
@@ -456,9 +457,9 @@ Serializable {
 					resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 					isQueryCorrect = true;
 				} else {
-					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's.";
+					resultSetFeedback = "Incorrect. Your query's data or order differed from the stored answer's (note: row order matters).";
 				}
-			} else if (columnOrderMatters && !rowOrderMatters) {
+			} else if (questionTuple.isColumnOrderMatters() && !questionTuple.isRowOrderMatters()) {
 				final String diff = "SELECT count(*) FROM ((" + normalizedQuery + ") EXCEPT (" + normalizedAnswer 
 						+ ") UNION ALL (" + normalizedAnswer + ") EXCEPT (" + normalizedQuery + ")) t";
 				try {
@@ -467,7 +468,7 @@ Serializable {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						isQueryCorrect = true;
 					} else {
-						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's.";
+						resultSetFeedback = "Incorrect. Your query's data differed from the stored answer's (note: column order matters).";
 					}
 				} catch (SQLException e) {
 					if (isTimeoutException(e)) {

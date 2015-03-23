@@ -26,13 +26,21 @@ public class QuestionTuple implements Serializable {
 	private String answer;
 	private int id;
 	private String[] concepts;
+	private boolean columnOrderMatters;
+	private boolean rowOrderMatters;
+	private double performanceLeniencySeconds;
 	
-	public QuestionTuple(int order, String question, String answer, int id, String[] concepts) {
+	public QuestionTuple() {}
+	
+	public QuestionTuple(int order, String question, String answer, int id, String[] concepts, double performanceLeniencySeconds, boolean columnOrderMatters, boolean rowOrderMatters) {
 		this.order = order;
 		this.question = question;
 		this.answer = answer;
 		this.id = id;
 		this.concepts = concepts;
+		this.performanceLeniencySeconds = performanceLeniencySeconds;
+		this.columnOrderMatters = columnOrderMatters;
+		this.rowOrderMatters = rowOrderMatters;
 	}
 	
 	public int getOrder() {
@@ -77,5 +85,33 @@ public class QuestionTuple implements Serializable {
 	
 	public String getConceptsString() {
 		return concepts == null || concepts.length == 0 ? ""  : Arrays.toString(concepts);
+	}
+	
+	public void setConceptsString(String concepts) {
+		this.concepts = (concepts == null || concepts.length() == 0 ? null  : concepts.toLowerCase().split(","));
+	}
+
+	public boolean isColumnOrderMatters() {
+		return columnOrderMatters;
+	}
+
+	public void setColumnOrderMatters(boolean columnOrderMatters) {
+		this.columnOrderMatters = columnOrderMatters;
+	}
+
+	public boolean isRowOrderMatters() {
+		return rowOrderMatters;
+	}
+
+	public void setRowOrderMatters(boolean rowOrderMatters) {
+		this.rowOrderMatters = rowOrderMatters;
+	}
+
+	public double getPerformanceLeniencySeconds() {
+		return performanceLeniencySeconds;
+	}
+
+	public void setPerformanceLeniencySeconds(double performanceLeniencySeconds) {
+		this.performanceLeniencySeconds = performanceLeniencySeconds;
 	}
 }
