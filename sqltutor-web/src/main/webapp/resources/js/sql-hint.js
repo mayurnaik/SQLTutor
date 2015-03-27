@@ -22,7 +22,57 @@
   var Pos = CodeMirror.Pos;
 
   function getKeywords(editor) {
-	  return "abort accept access add all alter and any array arraylen as asc assert assign at attributes audit authorization avg base_table begin between binary_integer body boolean by case cast char char_base check close cluster clusters colauth column comment commit compress connect connected constant constraint crash create current currval cursor data_base database date dba deallocate debugoff debugon decimal declare default definition delay delete desc digits dispose distinct do drop else elseif elsif enable end entry escape exception exception_init exchange exclusive exists exit external fast fetch file for force form from function generic goto grant group having identified if immediate in increment index indexes indicator initial initrans insert interface intersect into is key level library like limited local lock log logging long loop master maxextents maxtrans member minextents minus mislabel mode modify multiset new next no noaudit nocompress nologging noparallel not nowait number_base object of off offline on online only open option or order out package parallel partition pctfree pctincrease pctused pls_integer positive positiven pragma primary prior private privileges procedure public raise range raw read rebuild record ref references refresh release rename replace resource restrict return returning returns reverse revoke rollback row rowid rowlabel rownum rows run savepoint schema segment select separate session set share snapshot some space split sql start statement storage subtype successful synonym tabauth table tables tablespace task terminate then to trigger truncate type union unique unlimited unrecoverable unusable update use using validate value values variable view views when whenever where while with work".split(" ");
+	  return (
+	  	// a
+	  	"abort accept access add all alter and any array arraylen as asc " +
+	  	"assert assign at attributes audit authorization avg " +
+	  	// b
+	  	"base_table begin between binary_integer body boolean by " +
+	  	// c
+	  	"case cast char char_base check close cluster clusters colauth column comment commit compress " +
+	  	"connect connected constant constraint crash create current currval cursor " +
+	  	// d
+	  	"data_base database date dba deallocate debugoff debugon decimal declare default " +
+	  	"definition delay delete desc digits dispose distinct do drop " +
+	  	// e
+	  	"else elseif elsif enable end entry escape exception exception_init exchange exclusive exists exit external " +
+	  	// f
+	  	"fast fetch file for force form from function " +
+	  	// g
+	  	"generic goto grant group " +
+	  	// h
+	  	"having " +
+	  	// i
+	  	"identified if immediate in increment index indexes indicator initial initrans insert interface intersect into is " +
+	  	// j
+	  	// k
+	  	"key " +
+	  	// l
+	  	"level library like limited local lock log logging long loop " +
+	  	// m
+	  	"master maxextents maxtrans member minextents minus mislabel mode modify multiset " +
+	  	// n
+	  	"new next no noaudit nocompress nologging noparallel not nowait number_base " +
+	  	// o
+	  	"object of off offline on online only open option or order out " +
+	  	// p
+	  	"package parallel partition pctfree pctincrease pctused pls_integer positive positiven " +
+	  	"pragma primary prior private privileges procedure public " +
+	  	// q
+	  	// r
+	  	"raise range raw read rebuild record ref references refresh release rename replace resource restrict " +
+	  	"return returning returns reverse revoke rollback row rowid rowlabel rownum rows run " +
+	  	// s
+	  	"savepoint schema segment select separate session set share snapshot some space split sql start " +
+	  	"statement storage subtype successful synonym " + 
+	  	// t
+	  	"tabauth table tables tablespace task terminate then to trigger truncate type " + 
+	  	// u
+	  	"union unique unlimited unrecoverable unusable update use using " +
+	  	// v
+	  	"validate value values variable view views " +
+	  	// w
+	  	"when whenever where while with work").split(" ");
   }
 
   function match(string, word) {
