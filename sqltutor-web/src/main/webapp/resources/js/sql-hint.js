@@ -48,13 +48,13 @@
 	  	// k
 	  	"key " +
 	  	// l
-	  	"level library like limited local lock log logging long loop " +
+	  	"level library like limited local lock log logging long loop limit" +
 	  	// m
 	  	"master maxextents maxtrans member minextents minus mislabel mode modify multiset " +
 	  	// n
 	  	"new next no noaudit nocompress nologging noparallel not nowait number_base " +
 	  	// o
-	  	"object of off offline on online only open option or order out " +
+	  	"object of off offline on online only open option or order out overlaps" +
 	  	// p
 	  	"package parallel partition pctfree pctincrease pctused pls_integer positive positiven " +
 	  	"pragma primary prior private privileges procedure public " +
