@@ -105,6 +105,7 @@ Serializable {
 	private boolean isQueryCorrect;
 	private transient QueryThread answerThread;
 	private int numberOfAttempts;
+	private String comment;
 
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
@@ -772,5 +773,37 @@ Serializable {
 		else
 			header.append(" [" + (numberOfAttempts > schemaOptions.getMaxQuestionAttempts() ? schemaOptions.getMaxQuestionAttempts() : numberOfAttempts) + " out of " + schemaOptions.getMaxQuestionAttempts() + " attempts used]");
 		return header.toString();
+	}
+	
+	public void submitComment() {
+		try {
+			getDatabaseManager().addComment(userBean.getSelectedSchema(), getQuestionNumber(), getComment());
+			BeanUtils.addInfoMessage(null, "Successfully left a comment on question number " + getQuestionNumber() + ".");
+		} catch (SQLException e) {
+			for (Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+		}
+	}
+	
+	public void markForReview() {
+		try {
+			getDatabaseManager().markForReview(userBean.getHashedEmail());
+			BeanUtils.addInfoMessage(null, "Successfully marked your answer for review.");
+		} catch (SQLException e) {
+			for (Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+		}
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 }

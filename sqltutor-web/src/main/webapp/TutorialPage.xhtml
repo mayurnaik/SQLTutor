@@ -74,10 +74,13 @@
 								itemValue="#{tutorialPageBean.getQuestionNumber(question)}"
 								itemLabel="#{tutorialPageBean.getQuestionNumber(question)}" 
 								itemDescription="#{tutorialPageBean.getQuestionDescription(question)}"/>
-							<p:ajax update="question,result,feedback,growl"/>
+							<p:ajax update="question,result,feedback,growl,:commentDialog"/>
 						</p:selectOneMenu>	
 	    			</f:facet>  
 					<p:outputLabel value="#{tutorialPageBean.question}" />
+					<br/>
+					<p:commandButton value="Comment" styleClass="panelbutton"
+						onclick="PF('comment_dlg').show();" />
 				</p:panel>
 				
 				<div class="seperator"/>
@@ -86,11 +89,11 @@
 					<pe:codeMirror id="codeMirror" mode="text/x-plsql" theme="eclipse"
 						value="#{tutorialPageBean.query}" lineNumbers="true" extraKeys="{
 						'Ctrl-Space': function(cm) {CodeMirror.simpleHint(cm, CodeMirror.sqlHint);}}"/>
-					<p:commandButton id="try" value="Try Query"
+					<p:commandButton id="try" value="Try Query" 
 						action="#{tutorialPageBean.processSQL}" 
 						update="result,feedback,question,growl"
 						styleClass="panelbutton"/>
-					<p:commandButton id="next" value="Next Question"
+					<p:commandButton id="next" value="Next Question" 
 						action="#{tutorialPageBean.nextQuestion}"
 						update="result,feedback,question,growl" styleClass="panelbutton"/>
 				</p:panel>
@@ -125,7 +128,7 @@
 					<br/>
 					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
-					<p:commandButton id="answerButton" value="Example Answer" rendered="#{!tutorialPageBean.queryIsCorrect and tutorialPageBean.showExample}"/>
+					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.showExample}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
 							value="#{tutorialPageBean.answerResult.data}" 
@@ -139,8 +142,30 @@
 							</p:columns>
 						</p:dataTable>
 					</p:overlayPanel>
+					<br/><br/>
+					<p:commandButton value="Mark for Review" rendered="#{tutorialPageBean.showExample}"
+						action="#{tutorialPageBean.markForReview()}"
+						update="growl" styleClass="panelbutton"/>
 				</p:panel>
 			</div>		
 		</h:form>
+		
+		<p:dialog id="commentDialog" header="Comment on Question #{tutorialPageBean.questionNumber}" widgetVar="comment_dlg" 
+			closeable="true" closeOnEscape="true"
+			modal="true" width="30%" resizable="false" appentTo="@(body)">
+			<h:form id="commentForm">
+				<h:outputText value="Use this dialog to leave a comment on this question. This schema's administrators will be able to view and reply to your comment."/>
+				<br/> <br/>
+				<h:outputText value="#{tutorialPageBean.question}" style="font-weight:bold"/>
+				<br/><br/>
+				<p:inputTextarea rows="5" id="question" style="resize:none;width:100% !important;"
+					value="#{tutorialPageBean.comment}" autoResize="false" required="#{not empty param[submitComment.clientId]}"/>
+				<p:commandButton id="submitComment" value="Submit" ajax="false"
+					action="#{tutorialPageBean.submitComment()}"
+					update="growl"
+					oncomplete="PF('comment_dlg').hide()"   
+					style="float:right;" styleClass="panelbutton" />
+			</h:form>
+		</p:dialog>
 	</h:body>
 </html>

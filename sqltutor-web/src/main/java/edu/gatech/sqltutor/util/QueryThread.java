@@ -59,12 +59,14 @@ public class QueryThread extends Thread {
 	@Override
 	public void interrupt() {
 		super.interrupt();
-		try {
-			if (!statement.isClosed()) {
-				statement.cancel();
+		if (statement != null) {
+			try {
+				if (!statement.isClosed()) {
+					statement.cancel();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
 

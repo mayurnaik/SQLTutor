@@ -24,7 +24,6 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -253,35 +252,10 @@ public class DatabaseManager implements Serializable {
 		return schemaPermissions;
 	}
 
-	private int getHighestQuestionOrder() throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		int order = 1;
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT max(\"order\") FROM schema_questions");
-
-			resultSet = statement.getResultSet();
-			if(resultSet.next())
-				order = resultSet.getInt(1) + 1;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-		return order;
-	}
-
 	public void addQuestion(String schemaName, QuestionTuple question) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 
-		int order = getHighestQuestionOrder();
 		try {
 			connection = dataSource.getConnection();
 
@@ -664,50 +638,7 @@ public class DatabaseManager implements Serializable {
 		}
 		return emailExists;
 	}
-
-	public void saveUserQuery(UserQuery query) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			Long id = query.getId();
-			if( id == null ) {
-				final String INSERT = "INSERT INTO query " +
-						"(email, schema, sql, user_description, source, created) VALUES (?, ?, ?, ?, ?, ?)";
-				preparedStatement = connection.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS);
-			} else {
-				final String UPDATE =
-						"UPDATE query SET email=?, schema=?, sql=?, user_description=?, source=?, created=? WHERE id=?";
-				preparedStatement = connection.prepareStatement(UPDATE);
-				preparedStatement.setLong(7, id);
-			}
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, query.getEmail());
-			preparedStatement.setString(2, query.getSchema());
-			preparedStatement.setString(3, query.getQuery());
-			preparedStatement.setString(4, query.getUserDescription());
-			preparedStatement.setString(5, query.getSource());
-			preparedStatement.setDate(6, new Date(query.getTime().getTime()));
-
-			preparedStatement.executeUpdate();
-
-			if( id == null ) {
-				// get the generated id for inserts
-				resultSet = preparedStatement.getGeneratedKeys();
-				if( !resultSet.next() )
-					throw new IllegalStateException("No id generated for query.");
-				query.setId(resultSet.getLong(1));
-			}
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
+	
 	public HashMap<String, QueryResult> getAllData(String schemaName, List<String> tables) throws SQLException {
 		Connection connection = null;
 		Statement statement = null;
@@ -1239,74 +1170,6 @@ public class DatabaseManager implements Serializable {
 		}
 	}
 
-	public List<UserQuery> getUserQueries(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		List<UserQuery> userQueries = new LinkedList<UserQuery>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			resultSet = statement.executeQuery("SELECT * FROM query WHERE schema='" + schemaName + "'");
-
-			while( resultSet.next() ) {
-				UserQuery query = new UserQuery();
-				query.setId(resultSet.getLong("id"));
-				// FIXME the bean?
-				query.setEmail(resultSet.getString("email"));
-				query.setSchema(resultSet.getString("schema"));
-				query.setQuery(resultSet.getString("sql"));
-				query.setUserDescription(resultSet.getString("user_description"));
-				query.setTime(resultSet.getDate("created"));
-				query.setSource(resultSet.getString("source"));
-
-				userQueries.add(query);
-			}
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-		return userQueries;
-	}
-
-	public List<UserQuery> getUserQueries() throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		List<UserQuery> userQueries = new LinkedList<UserQuery>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			resultSet = statement.executeQuery("SELECT * FROM query");
-
-			while( resultSet.next() ) {
-				UserQuery query = new UserQuery();
-				query.setId(resultSet.getLong("id"));
-				// FIXME the bean?
-				query.setEmail(resultSet.getString("email"));
-				query.setSchema(resultSet.getString("schema"));
-				query.setQuery(resultSet.getString("sql"));
-				query.setUserDescription(resultSet.getString("user_description"));
-				query.setTime(resultSet.getDate("created"));
-				query.setSource(resultSet.getString("source"));
-
-				userQueries.add(query);
-			}
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-		return userQueries;
-	}
-
 	public List<DatabaseTable> getTables(String schemaName) throws SQLException {
 		try (Connection conn = userDataSource.getConnection()) {
 			DatabaseMetaData metadata = conn.getMetaData();
@@ -1654,5 +1517,102 @@ public class DatabaseManager implements Serializable {
 			Utils.tryClose(connection);
 		}
 		return numberOfParsedIncorrectAttempts;
+	}
+	
+	public List<String> getQuestionComments(String schema, int order) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		List<String> comments = null;
+		
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement("SELECT comment FROM schema_questions_comment WHERE schema = ? AND \"order\" = ?");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, schema);
+			preparedStatement.setInt(2, order);
+
+			resultSet = preparedStatement.executeQuery();
+			comments = new LinkedList<String>();
+			if (resultSet.next())
+				comments.add(resultSet.getString(1));
+
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		
+		return comments;
+	}
+	
+	public List<UserQuery> getUserQueriesMarkedForReview(String schema) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		List<UserQuery> userQueries = null;
+		
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement("SELECT email, query, schema, question, correct_answer, \"order\" \"timestamp\", parsed, correct, read_limit_exceeded FROM log WHERE schema = ? AND marked_for_review");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, schema);
+			
+			resultSet = preparedStatement.executeQuery();
+			userQueries = new LinkedList<UserQuery>();
+			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+			if (resultSet.next()) {
+				UserQuery userQuery = new UserQuery(resultSet.getString(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4), resultSet.getString(5), resultSet.getInt(6), resultSet.getTimestamp(7, cal), resultSet.getBoolean(8), resultSet.getBoolean(9), resultSet.getBoolean(10));
+				userQueries.add(userQuery);
+			}
+
+		} finally {
+			Utils.tryClose(resultSet);
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+		
+		return userQueries;
+	}
+	
+	public void addComment(String schemaName, int order, String comment) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement(
+					"INSERT INTO schema_questions_comment (schema, \"order\", comment) VALUES (?, ?, ?);");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, schemaName);
+			preparedStatement.setInt(2, order);
+			preparedStatement.setString(3, comment);
+			preparedStatement.executeUpdate();
+		} finally {
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
+	}
+	
+	public void markForReview(String email) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+			connection = dataSource.getConnection();
+
+			preparedStatement = connection.prepareStatement(
+					"UPDATE log SET marked_for_review = true WHERE email = ? AND \"timestamp\" = (SELECT MAX(\"timestamp\") FROM log WHERE email = ?);");
+			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			preparedStatement.setString(1, email);
+			preparedStatement.setString(2, email);
+			preparedStatement.executeUpdate();
+		} finally {
+			Utils.tryClose(preparedStatement);
+			Utils.tryClose(connection);
+		}
 	}
 }

@@ -16,128 +16,116 @@
 package edu.gatech.sqltutor.tuples;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-//import javax.persistence.Entity;
-//import javax.persistence.FetchType;
-//import javax.persistence.GeneratedValue;
-//import javax.persistence.GenerationType;
-//import javax.persistence.Id;
-//import javax.persistence.OneToMany;
-//import javax.validation.constraints.NotNull;
 
-import edu.gatech.sqltutor.beans.UserBean;
-
-//@Entity
 public class UserQuery implements Serializable {
 	private static final long serialVersionUID = 1L;
-//	
-//	@Id
-//	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Long id;
-	
-//	@NotNull
-	private UserBean user;
-	
+
 	private String email;
-	
-//	@NotNull
 	private String query;
-	
-//	@NotNull
 	private String schema;
-	
+	private String question;
+	private String correctAnswer;
+	private int order;
 	private Date time;
+	private boolean parsed;
+	private boolean correct;
+	private boolean readLimitExceeded;
 	
-//	@OneToMany(mappedBy="query", fetch=FetchType.LAZY)
-	private Collection<QueryTranslation> translations = 
-		new ArrayList<QueryTranslation>();
-	
-	// FIXME want a collection of these eventually
-	private String naturalLanguage;
-	
-	private String userDescription;
-	
-	private Integer nlpRating;
-
-	private String source;
-	
-	public Long getId() {
-		return id;
-	}
-	
-	public void setId(Long id) {
-		this.id = id;
-	}
-	
-	public UserBean getUser() {
-		return user;
-	}
-	
-	public void setUser(UserBean user) {
-		this.user = user;
-	}
-
-	public String getQuery() {
-		return query;
-	}
-
-	public void setQuery(String query) {
+	public UserQuery(String email, String query, String schema,
+			String question, String correctAnswer, int order, Date time,
+			boolean parsed, boolean correct, boolean readLimitExceeded) {
+		super();
+		this.email = email;
 		this.query = query;
-	}
-
-	public String getSchema() {
-		return schema;
-	}
-
-	public void setSchema(String schema) {
 		this.schema = schema;
-	}
-
-	public Date getTime() {
-		return time;
-	}
-
-	public void setTime(Date time) {
+		this.question = question;
+		this.correctAnswer = correctAnswer;
+		this.order = order;
 		this.time = time;
-	}
-
-	public String getNaturalLanguage() {
-		return naturalLanguage;
-	}
-
-	public void setNaturalLanguage(String naturalLanguage) {
-		this.naturalLanguage = naturalLanguage;
-	}
-
-	public String getUserDescription() {
-		return userDescription;
-	}
-
-	public void setUserDescription(String userDescription) {
-		this.userDescription = userDescription;
-	}
-	
-	public Integer getRating() { return nlpRating; }
-	
-	public void setRating(Integer rating) { nlpRating = rating; }
-
-	public void setSource(String source) {
-		this.source = source;
-	}
-
-	public String getSource() {
-		return source;
+		this.parsed = parsed;
+		this.correct = correct;
+		this.readLimitExceeded = readLimitExceeded;
 	}
 
 	public String getEmail() {
 		return email;
 	}
-
+	
 	public void setEmail(String email) {
 		this.email = email;
 	}
 	
+	public String getQuery() {
+		return query;
+	}
+	
+	public void setQuery(String query) {
+		this.query = query;
+	}
+	
+	public String getSchema() {
+		return schema;
+	}
+	
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+	
+	public Date getTime() {
+		return time;
+	}
+	
+	public void setTime(Date time) {
+		this.time = time;
+	}
+
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	public String getQuestion() {
+		return question;
+	}
+
+	public void setQuestion(String question) {
+		this.question = question;
+	}
+
+	public String getCorrectAnswer() {
+		return correctAnswer;
+	}
+
+	public void setCorrectAnswer(String correctAnswer) {
+		this.correctAnswer = correctAnswer;
+	}
+
+	public boolean isParsed() {
+		return parsed;
+	}
+
+	public void setParsed(boolean parsed) {
+		this.parsed = parsed;
+	}
+
+	public boolean isCorrect() {
+		return correct;
+	}
+
+	public void setCorrect(boolean correct) {
+		this.correct = correct;
+	}
+
+	public boolean isReadLimitExceeded() {
+		return readLimitExceeded;
+	}
+
+	public void setReadLimitExceeded(boolean readLimitExceeded) {
+		this.readLimitExceeded = readLimitExceeded;
+	}
 	
 }
