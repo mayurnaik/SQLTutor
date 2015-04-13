@@ -1111,7 +1111,7 @@ public class DatabaseManager implements Serializable {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT comment FROM schema_questions_comment "
-					+ "WHERE schema = ? AND \"order\" = ? AND schema_admin_code = ?")) {
+					+ "WHERE schema = ? AND \"order\" = ? AND admin_code = ?")) {
 				preparedStatement.setString(1, schema);
 				preparedStatement.setInt(2, order);
 				preparedStatement.setString(3, schemaAdminCode);
@@ -1155,7 +1155,7 @@ public class DatabaseManager implements Serializable {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_questions_comment "
-					+ "(schema, \"order\", comment, schema_admin_code) VALUES (?, ?, ?, ?);")) {
+					+ "(schema, \"order\", comment, admin_code) VALUES (?, ?, ?, ?);")) {
 				preparedStatement.setString(1, schemaName);
 				preparedStatement.setInt(2, order);
 				preparedStatement.setString(3, comment);

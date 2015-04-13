@@ -126,6 +126,7 @@
 					<br/>
 					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" escape="false" />
 					<br/>
+					<br/>
 					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.showExample}"/>
@@ -146,7 +147,7 @@
 					</p:overlayPanel>
 					<br/><br/>
 					<p:commandButton value="Mark for Review" rendered="#{tutorialPageBean.showExample}"
-						action="#{tutorialPageBean.markForReview()}"
+						action="#{tutorialPageBean.markForReview}"
 						update="growl" styleClass="panelbutton"/>
 				</p:panel>
 			</div>		
