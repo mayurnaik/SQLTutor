@@ -44,20 +44,13 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
 	
-	private String selectedSchema;
-
 	private String query;
 	private QueryResult queryResult;
 	
 	@PostConstruct
 	public void init() {
-		selectedSchema = userBean.getSelectedSchema();
-		setupTables();
-	}
-	
-	public void setupTables() {
 		try {
-			tables = getDatabaseManager().getTables(selectedSchema);
+			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -73,7 +66,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 		}
 		
 		try {
-			setTableData(getDatabaseManager().getAllData(selectedSchema, tableNames));
+			setTableData(getDatabaseManager().getAllData(userBean.getSelectedTutorial(), tableNames));
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -88,7 +81,8 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		
 		try {
-			queryResult = getDatabaseManager().getQueryResult(selectedSchema, query, userBean.isAdmin());
+			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), query,
+					userBean.isAdmin());
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();
@@ -107,7 +101,7 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 	private boolean hasPermissions() {
 		boolean hasPermissions = false;
 		try {
-			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			hasPermissions = getDatabaseManager().checkTutorialPermissions(userBean.getSelectedTutorialName(), userBean.getAdminCode());
 
 			if(!hasPermissions) 
 				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);

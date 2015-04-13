@@ -24,13 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.faces.model.SelectItem;
+import javax.faces.model.SelectItemGroup;
 import javax.servlet.http.HttpServletRequest;
 
 import edu.gatech.sqltutor.util.SaltHasher;
@@ -55,8 +56,6 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private static final String LOGIN_PAGE_CONTEXT = "/LoginPage.jsf";
 	private static final String REGISTRATION_MESSAGES_ID = ":registrationForm:registrationMessages";
 	private static final String LOGIN_MESSAGES_ID = ":loginForm:loginMessages";
-	// FIXME: probably don't want to have a default schema here
-	private static final String DEFAULT_SCHEMA_NAME = "company";
 	
 	private String password;
 	private String email;
@@ -64,11 +63,13 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private boolean loggedIn = false;
 	private boolean admin = false;
 	private boolean developer = false;
-	private String adminCode = null;
-	private List<String> linkedAdminCodes = null;
-	/** The string value of the SelectItem chosen by the user. Formatting should follow: "{Database Type} {Schema Name}". */
-	private String selectedSchema;
-	private Set<String> availableSchemas;
+	private String adminCode;
+	// This is the list of admin codes which are linked to this user
+	private List<String> linkedAdminCodes;
+	// This is the list of tutorials linked to the admin codes
+	private List<SelectItem> linkedTutorials;
+	// This should be in the form "<Schema's Admin Code>_<Schema's Name>"
+	private String selectedTutorial;
 	private String previousContext;
 
 	/** 
@@ -80,7 +81,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	 */
 	public void login() throws IOException { 
 		try {
-			if(!getDatabaseManager().isEmailRegistered(getHashedEmail(), email) || 
+			if (!getDatabaseManager().isEmailRegistered(getHashedEmail(), email) || 
 					!getDatabaseManager().isPasswordCorrect(getHashedEmail(), password)) {
 				BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, LOGIN_ERROR);
 				return;
@@ -90,10 +91,25 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			admin = getDatabaseManager().isAdmin(getHashedEmail());
 			developer = getDatabaseManager().isDeveloper(getHashedEmail());
 			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
+			
+			// setup the linked admin codes. This is so we don't have to query these every time the user makes a choice
+			setLinkedTutorials(new ArrayList<SelectItem>());
 			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
-			selectedSchema = DEFAULT_SCHEMA_NAME;
-			availableSchemas = getDatabaseManager().getUserSchemas(isAdmin());
-			if(previousContext != null) {
+	        for (final String linkedAdminCode : linkedAdminCodes) {
+	        	// get the list of tutorials that belong to this admin code
+				final List<String> linkedTutorialNames = getDatabaseManager().getLinkedTutorials(getHashedEmail(), linkedAdminCode);
+				// put the list into an array (needs to be in this format for the setSelectItems() method
+				final SelectItem[] selectItems = new SelectItem[linkedTutorialNames.size()];
+	        	for(int i = 0; i < selectItems.length; i++) {
+	        		final String value = linkedAdminCode + "_" + linkedTutorialNames.get(i);
+	        		selectItems[i] = new SelectItem(value, linkedTutorialNames.get(i));
+	        	}
+	        	final SelectItemGroup adminCodeSelectItemGroup = new SelectItemGroup(linkedAdminCode);
+	        	adminCodeSelectItemGroup.setSelectItems(selectItems);
+	        	getLinkedTutorials().add(adminCodeSelectItemGroup);
+	        }
+	        
+			if (previousContext != null) {
 				BeanUtils.redirect(previousContext);
 				previousContext = null;
 			} else
@@ -106,17 +122,53 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR_MESSAGE);
 		} 
 	}
+	
+	public void addSelectedTutorialTemporarily() {
+		// check if the tutorial is already available
+		for (SelectItem selectItem : getLinkedTutorials()) {
+			SelectItem[] tutorialSelectItems = ((SelectItemGroup)selectItem).getSelectItems();
+			for(int i = 0; i < tutorialSelectItems.length; i++) {
+				if (tutorialSelectItems[i].getValue().equals(getSelectedTutorial())) {
+					return;
+				}
+			}
+		}
+		// since we did not find the tutorial, add the tutorial temporarily
+		final String temporary = "*TEMPORARY*";
+		SelectItemGroup temporaryAdminCodeGroup = null;
+		SelectItem[] tutorialSelectItems = null;
+		// check if the temporary list already exists
+		for(SelectItem selectItem : getLinkedTutorials()) 
+			if (selectItem.getLabel() == temporary)
+				temporaryAdminCodeGroup = (SelectItemGroup)selectItem;
+		
+		final String value = getSelectedTutorialAdminCode() + "_" + getSelectedTutorialName();
+		final SelectItem temporaryTutorial = new SelectItem(value, getSelectedTutorialName());
+		if (temporaryAdminCodeGroup == null) {
+			temporaryAdminCodeGroup = new SelectItemGroup(temporary);
+			getLinkedTutorials().add(temporaryAdminCodeGroup);
+			tutorialSelectItems = new SelectItem[1];
+			tutorialSelectItems[0] = temporaryTutorial;
+		} else {
+			final SelectItem[] oldArray = temporaryAdminCodeGroup.getSelectItems();
+			final SelectItem[] newArray = Arrays.copyOf(oldArray, oldArray.length + 1);
+			newArray[newArray.length - 1] = temporaryTutorial;
+			tutorialSelectItems = newArray;
+			
+		}
+		temporaryAdminCodeGroup.setSelectItems(tutorialSelectItems);
+	}
 
 	public void register() throws IOException {
 		try {
-			if(getDatabaseManager().isEmailRegistered(getHashedEmail(), email)) {
+			if (getDatabaseManager().isEmailRegistered(getHashedEmail(), email)) {
 				BeanUtils.addErrorMessage(REGISTRATION_MESSAGES_ID, REGISTRATION_ERROR);
 				return;
 			}
 			getDatabaseManager().registerUser(getHashedEmail(), email, password);
 			login();
-		} catch(SQLException e) {
-			for(Throwable t : e) {
+		} catch (SQLException e) {
+			for (Throwable t : e) {
 				t.printStackTrace();
 				logException(t, getHashedEmail());
 			}
@@ -192,24 +244,9 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			adminCode = null;
 			linkedAdminCodes = null;
 			previousContext = null;
-			selectedSchema = null;
-			availableSchemas = null;
+			setSelectedTutorial(null);
 			BeanUtils.redirect(HOME_PAGE_CONTEXT);
 		}
-	}
-
-	/** 
-	 * @return		The database to be used by the tutorial.
-	 */
-	public String getSelectedSchema() {
-		return selectedSchema;
-	}
-
-	/** 
-	 * @param selectedDatabase		Sets the database to be used by the tutorial.
-	 */
-	public void setSelectedSchema(String selectedSchema) {
-		this.selectedSchema = selectedSchema;
 	}
 	
 	/** 
@@ -294,15 +331,33 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		this.previousContext = previousContext;
 	}
 	
-	public void selectDefaultSchema() {
-		selectedSchema = DEFAULT_SCHEMA_NAME;
+	public String getSelectedTutorialName() {
+		final String[] split = getSelectedTutorial().split("_", 2);
+		return split.length == 2 ? split[1] : null;
+	}
+	
+	public String getSelectedTutorialAdminCode() {
+		final String[] split = getSelectedTutorial().split("_", 2);
+		return split.length == 2 ? split[0] : null;
 	}
 
-	public Set<String> getAvailableSchemas() {
-		return availableSchemas;
+	public String getSelectedTutorial() {
+		return selectedTutorial;
 	}
 
-	public void setAvailableSchemas(Set<String> availableSchemas) {
-		this.availableSchemas = availableSchemas;
+	public void setSelectedTutorial(String selectedTutorial) {
+		this.selectedTutorial = selectedTutorial;
+	}
+
+	public List<SelectItem> getLinkedTutorials() {
+		return linkedTutorials;
+	}
+	
+	public List<SelectItem> getOwnedTutorials() {
+		return linkedTutorials;
+	}
+
+	public void setLinkedTutorials(List<SelectItem> linkedTutorials) {
+		this.linkedTutorials = linkedTutorials;
 	}
 }

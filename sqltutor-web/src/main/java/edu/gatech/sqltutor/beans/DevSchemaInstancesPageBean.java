@@ -52,7 +52,7 @@ public class DevSchemaInstancesPageBean extends AbstractDatabaseBean implements 
 	
 	public void setupTables() {
 		try {
-			tables = getDatabaseManager().getDevTables();
+			tables = getDatabaseManager().getDevSchemaTables();
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();

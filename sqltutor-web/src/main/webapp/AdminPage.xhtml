@@ -31,23 +31,30 @@
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
+			
+			<p:growl id="growl"/>
+			
 			<p:panel styleClass="panel" header="Tutorial Setup Options">
-				<h:link value="Upload a new schema" outcome="SchemaUploadPage" />
-				<br/><br/>
-			
-				<p:outputLabel 
-				value="This schema will not be available for use until it 
-					is set as &quot;Visible to users&quot;. This option is found on the schema's 
-					option page (see below). The database instance used to check student
-					answers will be empty by default, therefore it will need to be populated on
+				<p:commandButton id="schemaUpload" value="Upload" icon="ui-icon-check" style="display:block;margin:10px 0" 
+    				action="SchemaUploadPage?faces-redirect=true" immediate="true" />
+				<p:outputLabel for="schemaUpload"
+				value="This option allows you to upload a database instance. The schema will not be available for use by users with your admin code until it 
+					is set as &quot;visible to users&quot;. This option is found on the schema's 
+					option page (see below). The database instance used to check user's
+					answers will be empty by default (unless the script has added entries), therefore it will need to be populated on
 					the schema's option page as well (under the &quot;Instances&quot; tab)." />
-				<br/><br/>
+				<br/><br/><br/>
 			
-				<h:link value="Modify an existing schema's options" outcome="SchemaOptionsPage" />
+				<p:commandButton id="schemaModify" value="Modify" icon="ui-icon-check" style="display:block;margin:10px 0" 
+    				action="SchemaOptionsPage?faces-redirect=true" update='growl'/>
+				<p:outputLabel for="schemaModify"
+					value="These options include instance and question/answer population. You must select a tutorial that you have admin privelages for from the list below."/>
 				<br/><br/>
 				
-				<p:outputLabel 
-					value="These options include instance and question/answer population."/>
+				<p:multiSelectListbox value="#{userBean.selectedTutorial}" effect="slide" header="Linked Admin Codes" 
+					showHeaders="true" required="true" requiredMessage="Please select a tutorial.">
+        			<f:selectItems value="#{userBean.ownedTutorials}" />
+    			</p:multiSelectListbox>
 			</p:panel>
 		</h:form>
 	</h:body>

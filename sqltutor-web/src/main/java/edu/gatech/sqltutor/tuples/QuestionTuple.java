@@ -84,7 +84,12 @@ public class QuestionTuple implements Serializable {
 	}
 	
 	public String getConceptsString() {
-		return concepts == null || concepts.length == 0 ? ""  : Arrays.toString(concepts);
+		if (concepts == null || concepts.length == 0) 
+			return null;
+		else {
+			String conceptsString = Arrays.toString(concepts);
+			return conceptsString.substring(1, conceptsString.length() - 1);
+		}
 	}
 	
 	public void setConceptsString(String concepts) {

@@ -32,7 +32,7 @@
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
 			<div class="left2">
-				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedSchema}&quot;">
+				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedTutorialName}&quot;">
 					<p:commandButton id="databaseButton" value="Show Schema" />
 					<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50% !important"> 
 							<p:dataTable var="databaseTable"

@@ -29,7 +29,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 import edu.gatech.sqltutor.DatabaseTable;
-import edu.gatech.sqltutor.tuples.SchemaOptionsTuple;
+import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 
 @ManagedBean
 @ViewScoped
@@ -47,16 +47,15 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private static final String OPEN_ACCESS_CHECK_ERROR_MESSAGE = "Your opening date/time must be before your closing date/time.";
 	
 	private List<DatabaseTable> tables;
-	private SchemaOptionsTuple options;
+	private TutorialOptionsTuple options;
 	private boolean deleteThisSchema;
 	private boolean linkable;
 	
 	@PostConstruct
 	public void init() {
 		try {
-			final String selectedSchema = userBean.getSelectedSchema();
-			tables = getDatabaseManager().getTables(selectedSchema);
-			options = getDatabaseManager().getOptions(selectedSchema);
+			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
+			options = getDatabaseManager().getOptions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -72,8 +71,8 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 		
 		try {
 			if(deleteThisSchema) {
-				getDatabaseManager().deleteSchema(userBean.getSelectedSchema());
-				userBean.setSelectedSchema(DEFAULT_SCHEMA_NAME);
+				getDatabaseManager().deleteTutorial(userBean.getSelectedTutorial(), userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
+				userBean.setSelectedTutorial(DEFAULT_SCHEMA_NAME);
 
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 				externalContext.redirect(externalContext.getRequestContextPath() + ADMIN_PAGE_CONTEXT);
@@ -84,7 +83,7 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 				} else
 					options.setLink(null);
 				
-				getDatabaseManager().setOptions(userBean.getSelectedSchema(), options);
+				getDatabaseManager().setOptions(userBean.getSelectedTutorialName(), options, userBean.getSelectedTutorialAdminCode());
 				BeanUtils.addInfoMessage(null, CONFIRMATION_MESSAGE);
 			}
 		} catch (SQLException e) {
@@ -103,7 +102,7 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private boolean hasPermissions() {
 		boolean hasPermissions = false;
 		try {
-			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			hasPermissions = getDatabaseManager().checkTutorialPermissions(userBean.getSelectedTutorialName(), userBean.getAdminCode());
 
 			if(!hasPermissions) 
 				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
@@ -141,11 +140,11 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 		this.tables = tables;
 	}
 
-	public SchemaOptionsTuple getOptions() {
+	public TutorialOptionsTuple getOptions() {
 		return options;
 	}
 
-	public void setOptions(SchemaOptionsTuple options) {
+	public void setOptions(TutorialOptionsTuple options) {
 		this.options = options;
 	}
 	

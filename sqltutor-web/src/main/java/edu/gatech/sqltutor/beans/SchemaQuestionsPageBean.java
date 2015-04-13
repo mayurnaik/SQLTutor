@@ -44,8 +44,6 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	private List<DatabaseTable> tables;
 	
-	private String selectedSchema;
-	
 	private QuestionTuple question;
 	
 	private List<QuestionTuple> questions;
@@ -54,9 +52,8 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	@PostConstruct
 	public void init() {
-		selectedSchema = userBean.getSelectedSchema();
 		try {
-			tables = getDatabaseManager().getTables(selectedSchema);
+			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -71,7 +68,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	public void setupQuestionList() {
 		try {
-			questions = getDatabaseManager().getQuestions(selectedSchema);
+			questions = getDatabaseManager().getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 			selectedQuestions = new LinkedList<QuestionTuple>();
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -126,7 +123,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		
 		try {
-			getDatabaseManager().verifyQuery(selectedSchema, question.getAnswer());
+			getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), question.getAnswer(), true);
 		} catch(SQLException e) {
 			String message = e.getMessage();
 			if(message.contains("getNextException"))
@@ -138,7 +135,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		try {
 			questions.add(question);
 			question.setOrder(questions.size());
-			getDatabaseManager().addQuestion(selectedSchema, question);
+			getDatabaseManager().addQuestion(userBean.getSelectedTutorialName(), question, userBean.getSelectedTutorialAdminCode());
 			BeanUtils.addInfoMessage(null, ADD_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -152,7 +149,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	private boolean hasPermissions() {
 		boolean hasPermissions = false;
 		try {
-			hasPermissions = getDatabaseManager().checkSchemaPermissions(userBean.getHashedEmail(), userBean.getSelectedSchema());
+			hasPermissions = getDatabaseManager().checkTutorialPermissions(userBean.getSelectedTutorialName(), userBean.getAdminCode());
 
 			if(!hasPermissions) 
 				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);

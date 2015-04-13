@@ -27,15 +27,11 @@
 			<p:menuitem value="Home" icon="ui-icon-arrow-1-e" 
 				action="HomePage.xhtml?faces-redirect=true"
 				styleClass="menubutton"/>
-			<p:menuitem value="Tutorial" 
-				action="TutorialPage.xhtml?faces-redirect=true"
+			<p:menuitem value="Tutorials" 
+				action="TutorialMenuPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.loggedIn}"
 				styleClass="menubutton"/>
-			<p:menuitem value="Schema Options" icon="ui-icon-disk" 
-				type="button" styleClass="menubutton"
-				onclick="PF('schema_dlg').show();" 
-				rendered="#{userBean.loggedIn}"/>
 			<p:menuitem value="Admin Options" 
 				action="AdminPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
@@ -57,29 +53,6 @@
 				action="#{userBean.setLoggedIn(false)}" />
 		</p:menubar>
 	</h:form>
-	<p:dialog id="schemaDialog" header="Schema options" widgetVar="schema_dlg" 
-		onshow="#{schemaSelectionBean.setSelectedSchema(userBean.selectedSchema)}" closeable="true" closeOnEscape="true"
-		modal="true" width="30%" resizable="false" appentTo="@(body)">
-		<h:form id="schemaForm">
-			<h:outputText value="Current tutorial schema: #{userBean.selectedSchema}"/>
-			<br/><br/>
-			<p:panel>
-				<h:panelGrid id="schemaGrid" columns="2">
-					<p:outputLabel for="schema" value="Please select a tutorial schema:" />
-					<p:selectOneMenu id="schema" value="#{schemaSelectionBean.selectedSchema}" effect="fade">
-						<f:selectItems value="#{schemaSelectionBean.userSchemas}" itemValue="#{schemaSelectionBean.userSchemas}"
-							itemLabel="#{schemaSelectionBean.userSchemas}" />
-					</p:selectOneMenu>	
-				</h:panelGrid>
-			</p:panel>
-			<br/><br/>
-			<p:commandButton value="Submit" ajax="false"
-				action="#{schemaSelectionBean.submit}"
-				oncomplete="window.location.replace(window.location.href);"   
-				style="float:right;">
-			</p:commandButton>
-		</h:form>
-	</p:dialog>
 	<p:dialog id="loginDialog" header="Login" widgetVar="login_dlg"  closeable="true" closeOnEscape="true"
 		modal="true" width="400" resizable="false" appendTo="@(body)">  
 		<h:form id="loginForm">

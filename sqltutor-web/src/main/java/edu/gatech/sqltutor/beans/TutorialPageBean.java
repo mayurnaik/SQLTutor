@@ -54,7 +54,7 @@ import edu.gatech.sqltutor.rules.er.ERSerializer;
 import edu.gatech.sqltutor.rules.er.mapping.ERMapping;
 import edu.gatech.sqltutor.rules.lang.SymbolicFragmentTranslator;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
-import edu.gatech.sqltutor.tuples.SchemaOptionsTuple;
+import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 import edu.gatech.sqltutor.util.DatabaseManager;
 import edu.gatech.sqltutor.util.QueryThread;
 
@@ -101,7 +101,7 @@ Serializable {
 	 * This is the URL link which correlates to a particular schema
 	 */
 	private String link;
-	private SchemaOptionsTuple schemaOptions;
+	private TutorialOptionsTuple schemaOptions;
 	private boolean isQueryCorrect;
 	private transient QueryThread answerThread;
 	private int numberOfAttempts;
@@ -111,6 +111,13 @@ Serializable {
 		if (!userBean.isLoggedIn())
 			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
 
+		if ((userBean.getSelectedTutorial() == null || userBean.getSelectedTutorial().isEmpty()) && (link == null || link.isEmpty())) {
+			BeanUtils.addErrorMessage(null, "To access the tutorial page, you must first select a tutorial.", true);
+			BeanUtils.redirect("/TutorialMenuPage.jsf");
+			return;
+		}
+			
+		
 		// if the page hasn't been loaded yet, load it
 		if (tables == null) {
 			if (link != null) {
@@ -124,8 +131,8 @@ Serializable {
 					} else {
 						// if the link was valid, temporarily add it to the list of available schemas for the student
 						// and set their current userBean.getSelectedSchema() to it, so if they refresh they will still be on the linked tutorial
-						userBean.getAvailableSchemas().add(schema);
-						userBean.setSelectedSchema(schema);
+						userBean.setSelectedTutorial(schema);
+						userBean.addSelectedTutorialTemporarily();
 					}
 				} catch (SQLException e) {
 					for (Throwable t : e) {
@@ -137,7 +144,7 @@ Serializable {
 			} 
 
 			try {
-				schemaOptions = getDatabaseManager().getOptions(userBean.getSelectedSchema());
+				schemaOptions = getDatabaseManager().getOptions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -152,7 +159,7 @@ Serializable {
 			}
 
 			try {
-				tables = getDatabaseManager().getTables(userBean.getSelectedSchema());
+				tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -164,7 +171,7 @@ Serializable {
 			
 			try {
 				// This will give the "question order", which is not 0-indexed, so we must subtract 1
-				setQuestionIndex(getDatabaseManager().getMostRecentlyPresentedQuestion(userBean.getHashedEmail(), userBean.getSelectedSchema()) - 1);
+				setQuestionIndex(getDatabaseManager().getMostRecentlyPresentedQuestion(userBean.getHashedEmail(), userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode()) - 1);
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -191,7 +198,7 @@ Serializable {
 			answerThread.interrupt();
 	}
 
-	public boolean isSchemaAccessible(SchemaOptionsTuple options) {
+	public boolean isSchemaAccessible(TutorialOptionsTuple options) {
 		if (options == null) {
 			BeanUtils.addErrorMessage(null, "That tutorial is closed.", true);
 			return false;
@@ -226,7 +233,7 @@ Serializable {
 
 	public void processSQL() {
 		// check if we have a question
-		if (!StringUtils.isEmpty(query) && !questionTuples.isEmpty()) {	
+		if (!StringUtils.isEmpty(query) && questionTuples != null && !questionTuples.isEmpty()) {	
 			final long startTimeMilliseconds = Calendar.getInstance().getTime().getTime();
 			// reset all of the feedback fields
 			resetResultsAndFeedback();
@@ -252,28 +259,28 @@ Serializable {
 				numberOfAttempts++;
 				
 			// log
+
 			final QuestionTuple questionTuple = questionTuples.get(questionIndex);
-			if (!questionTuple.getQuestion().equals(NO_QUESTIONS_MESSAGE)) {
-				try {
-					final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
-					getDatabaseManager().log(BeanUtils.getSessionId(),
-							userBean.getHashedEmail(), 
-							userBean.getSelectedSchema(),
-							questionTuple.getQuestion(), 
-							questionTuple.getAnswer(),
-							query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
-							queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
-							answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
-							queryResult != null ? queryResult.getExecutionTime()/1000d : 0,
-							answerResult != null ? answerResult.getExecutionTime()/1000d : 0, 
-							queryResult != null ? queryResult.isTruncated() : false, 
-							queryResult != null ? queryResult.isReadLimitExceeded() : false, 
-							queryResult != null ? queryResult.getOriginalSize() : 0);
-				} catch (SQLException e) {
-					for (Throwable t : e) {
-						t.printStackTrace();
-						logException(t, userBean.getHashedEmail());
-					}
+			try {
+				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
+				getDatabaseManager().log(BeanUtils.getSessionId(),
+						userBean.getHashedEmail(), 
+						userBean.getSelectedTutorialName(),
+						questionTuple.getQuestion(), 
+						questionTuple.getAnswer(),
+						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
+						queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
+						answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
+						queryResult != null ? queryResult.getExecutionTime()/1000d : 0,
+						answerResult != null ? answerResult.getExecutionTime()/1000d : 0, 
+						queryResult != null ? queryResult.isTruncated() : false, 
+						queryResult != null ? queryResult.isReadLimitExceeded() : false, 
+						queryResult != null ? queryResult.getOriginalSize() : 0,
+						userBean.getSelectedTutorialAdminCode());
+			} catch (SQLException e) {
+				for (Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
 				}
 			}
 		} else 
@@ -287,16 +294,16 @@ Serializable {
 
 	private String setNLPFeedback() {
 		String result = null;
-		if (userBean.getSelectedSchema().equals("company") || userBean.getSelectedSchema().equals("business_trip")) {
+		if (userBean.getSelectedTutorialName().equals("company") || userBean.getSelectedTutorialName().equals("business_trip")) {
 			// generate NLP feedback
 			final ERSerializer serializer = new ERSerializer();
 			final Class<?> c = this.getClass();
 
 			// FIXME: hard coded for now
 			ERDiagram erDiagram = (ERDiagram) serializer.deserialize(c
-					.getResourceAsStream("/testdata/" + userBean.getSelectedSchema() + ".er.xml"));
+					.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName() + ".er.xml"));
 			ERMapping erMapping = (ERMapping) serializer
-					.deserialize(c.getResourceAsStream("/testdata/" + userBean.getSelectedSchema()
+					.deserialize(c.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName()
 							+ ".mapping.xml"));
 
 			try {
@@ -305,16 +312,17 @@ Serializable {
 				queryTranslator.setSchemaMetaData(tables);
 				queryTranslator.setERDiagram(erDiagram);
 				queryTranslator.setERMapping(erMapping);
-				resultSetFeedback += " We determined the question that you actually answered was: ";
+				feedbackNLP = " We determined the question that you actually answered was: ";
 				result = queryTranslator.getTranslation();
-				feedbackNLP = "\" " + format(result) + " \"";
+				feedbackNLP += "\" " + format(result) + " \"";
 			} catch (Exception e) {
-				resultSetFeedback += " (Sorry, we were unable to produce a sound English translation for your query.)";
+				feedbackNLP += " (Sorry, we were unable to produce a sound English translation for your query.)";
 				if (e instanceof SQLException) {
 					for (Throwable t : (SQLException) e) {
 						t.printStackTrace();
 					}
 				} else {
+					
 					e.printStackTrace();
 				}
 			}
@@ -374,11 +382,11 @@ Serializable {
 		// calculate the student's query's result set, and let them know if it
 		// was malformed.
 		try {
-			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), query, false);
+			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), query, false);
 		} catch (SQLException e) {
 			if (isTimeoutException(e)) {
 				resultSetFeedback = TIMEOUT_MESSAGE;
-				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", userBean.getSelectedSchema(), questionIndex, query);
+				log.warn("Statement timeout reached for user query (schema={}, question={}): {}", userBean.getSelectedTutorial(), questionIndex, query);
 			} else {
 				resultSetFeedback = "Incorrect. Your query was malformed. Please try again.\n"
 						+ e.getMessage();
@@ -407,7 +415,7 @@ Serializable {
 			if (answerThread.getException() != null) {
 				resultSetFeedback = ANSWER_MALFORMED_MESSAGE;
 				log.warn("Error in stored answer for {} question #{}.\nStored query: {}\nException: {}", 
-						userBean.getSelectedSchema(), questionIndex, normalizedAnswer, answerThread.getException());
+						userBean.getSelectedTutorial(), questionIndex, normalizedAnswer, answerThread.getException());
 				return;
 			} 
 
@@ -464,7 +472,7 @@ Serializable {
 				final String diff = "SELECT count(*) FROM ((" + normalizedQuery + ") EXCEPT (" + normalizedAnswer 
 						+ ") UNION ALL (" + normalizedAnswer + ") EXCEPT (" + normalizedQuery + ")) t";
 				try {
-					final QueryResult diffResult = getDatabaseManager().getQueryResult(userBean.getSelectedSchema(), diff, false);
+					final QueryResult diffResult = getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), diff, false);
 					if ("0".equals(diffResult.getData().get(0).get(0))) {
 						resultSetFeedback = WEAKLY_CORRECT_MESSAGE;
 						isQueryCorrect = true;
@@ -567,7 +575,7 @@ Serializable {
 		questionTuples = null;
 		final DatabaseManager databaseManager = getDatabaseManager();
 		try {
-			questionTuples = databaseManager.getQuestions(userBean.getSelectedSchema());
+			questionTuples = databaseManager.getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -577,10 +585,10 @@ Serializable {
 			return;
 		}
 
-		if (!questionTuples.isEmpty()) {
-			SchemaOptionsTuple options = null;
+		if (questionTuples != null && !questionTuples.isEmpty()) {
+			TutorialOptionsTuple options = null;
 			try {
-				options = databaseManager.getOptions(userBean.getSelectedSchema());
+				options = databaseManager.getOptions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 			} catch (SQLException e) {
 				for (Throwable t : e) {
 					t.printStackTrace();
@@ -619,8 +627,9 @@ Serializable {
 		try {
 			getDatabaseManager().logQuestionPresentation(
 					BeanUtils.getSessionId(), userBean.getHashedEmail(),
-					userBean.getSelectedSchema(),
-					questionTuples.get(questionIndex).getQuestion());
+					userBean.getSelectedTutorialName(),
+					questionTuples.get(questionIndex).getQuestion(), 
+					userBean.getSelectedTutorialAdminCode());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
 				t.printStackTrace();
@@ -631,7 +640,7 @@ Serializable {
 		// Start a thread to pre-compute the answer
 		if(answerThread != null) 
 			answerThread.interrupt();
-		answerThread = new QueryThread(userBean.getSelectedSchema(), questionTuples.get(questionIndex).getAnswer(), false, getDatabaseManager());
+		answerThread = new QueryThread(userBean.getSelectedTutorial(), questionTuples.get(questionIndex).getAnswer(), false, getDatabaseManager());
 		answerThread.start();
 		return questionTuples.get(questionIndex).getQuestion();
 	}
@@ -707,7 +716,9 @@ Serializable {
 
 	public void setQuestionIndex(int questionIndex) {
 		if(questionIndex != this.questionIndex)	{
-			if (questionIndex >= questionTuples.size())  {
+			if (questionIndex < 0) {
+				this.questionIndex = 0;
+			} else if (questionIndex >= questionTuples.size())  {
 				this.questionIndex = 0;
 				BeanUtils.addInfoMessage(null, "End of questions. Changed to question number " + getQuestionNumber() + ".");
 			} else {
@@ -717,12 +728,14 @@ Serializable {
 			
 			resetResultsAndFeedback();
 			
-			try {
-				numberOfAttempts = getDatabaseManager().getNumberOfAttempts(userBean.getHashedEmail(), userBean.getSelectedSchema(), questionTuples.get(questionIndex).getQuestion(), true, false);
-			} catch (SQLException e) {
-				for (Throwable t : e) {
-					t.printStackTrace();
-					logException(t, userBean.getHashedEmail());
+			if (questionTuples != null && !questionTuples.isEmpty() && questionIndex < questionTuples.size() && questionIndex >= 0) {
+				try {
+					numberOfAttempts = getDatabaseManager().getNumberOfAttempts(userBean.getHashedEmail(), userBean.getSelectedTutorialName(), questionTuples.get(questionIndex).getQuestion(), true, false, userBean.getSelectedTutorialAdminCode());
+				} catch (SQLException e) {
+					for (Throwable t : e) {
+						t.printStackTrace();
+						logException(t, userBean.getHashedEmail());
+					}
 				}
 			}
 		}
@@ -749,11 +762,11 @@ Serializable {
 		return RESULT_ROW_LIMIT;
 	}
 
-	public SchemaOptionsTuple getOptions() {
+	public TutorialOptionsTuple getOptions() {
 		return schemaOptions;
 	}
 
-	public void setOptions(SchemaOptionsTuple options) {
+	public void setOptions(TutorialOptionsTuple options) {
 		this.schemaOptions = options;
 	}
 
@@ -777,7 +790,7 @@ Serializable {
 	
 	public void submitComment() {
 		try {
-			getDatabaseManager().addComment(userBean.getSelectedSchema(), getQuestionNumber(), getComment());
+			getDatabaseManager().addComment(userBean.getSelectedTutorialName(), getQuestionNumber(), getComment(), userBean.getSelectedTutorialAdminCode());
 			BeanUtils.addInfoMessage(null, "Successfully left a comment on question number " + getQuestionNumber() + ".");
 		} catch (SQLException e) {
 			for (Throwable t : e) {

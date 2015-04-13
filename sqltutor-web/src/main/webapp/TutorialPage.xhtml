@@ -46,7 +46,7 @@
 			</p:dialog>
 			
 			<div class="left">	
-				<p:panel header="Schema: &quot;#{tutorialPageBean.userBean.selectedSchema}&quot;" styleClass="panel">
+				<p:panel header="Schema: &quot;#{tutorialPageBean.userBean.selectedTutorialName}&quot;" styleClass="panel">
 					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
 						resizableColumns="true" 
 						style="height:30% !important"
@@ -79,7 +79,7 @@
 	    			</f:facet>  
 					<p:outputLabel value="#{tutorialPageBean.question}" />
 					<br/>
-					<p:commandButton value="Comment" styleClass="panelbutton"
+					<p:commandButton value="Comment" styleClass="panelbutton" rendered="#{not empty tutorialPageBean.questionTuples}"
 						onclick="PF('comment_dlg').show();" />
 				</p:panel>
 				
@@ -122,15 +122,17 @@
 				
 				<p:panel id="feedback" header="Feedback" styleClass="panel">
 					<h:outputText id="resultSetFeedback" value="#{tutorialPageBean.resultSetFeedback}" />
-					<br/> &#160;&#160;&#160;&#160;&#160;&#160;
-					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" escape="false" />
 					<br/>
+					<br/>
+					<h:outputText id="feedbackNLP" value="#{tutorialPageBean.feedbackNLP}" escape="false" />
 					<br/>
 					<h:outputText value="#{tutorialPageBean.queryResultExampleHeader} " 
 						rendered="#{tutorialPageBean.queryIsCorrect == false}"/>
 					<p:commandButton id="answerButton" value="Example Answer" rendered="#{tutorialPageBean.showExample}"/>
 					<p:overlayPanel id="answerPanel" for="answerButton" hideEffect="fade"> 
 						<p:dataTable id="answerTable" var="row" scrollable="true" 
+							resizableColumns="true"
+							tableStyle="table-layout: auto;"
 							value="#{tutorialPageBean.answerResult.data}" 
 							rows="#{tutorialPageBean.resultRowLimit}">
 							<p:columns value="#{tutorialPageBean.answerResult.columns}" style="white-space: normal;"

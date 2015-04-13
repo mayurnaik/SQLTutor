@@ -1,0 +1,52 @@
+<!--
+   Copyright (c) 2015 Program Analysis Group, Georgia Tech
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" /> 
+	<h:head>
+		<title>SQL Tutor</title>
+		<ui:insert name="menu">
+			<ui:include src="/Menubar.xhtml" />
+		</ui:insert>
+	</h:head>
+	<h:body>
+		<h:form id="tutorialMenuForm">
+			<ui:insert name="template">
+				<ui:include src="/BodyTemplate.xhtml" />
+			</ui:insert>
+			
+			<p:growl id="growl" />
+			
+			<p:panel header="Tutorial Menu" styleClass="panel">
+				<h:outputText 
+					value="Please select the admin code corresponding to the tutorials you'd like to view. When you've found a tutorial, just hit the ''Start'' button."/>
+				<p/>
+
+				<p:multiSelectListbox value="#{userBean.selectedTutorial}" effect="slide" header="Linked Admin Codes" 
+					showHeaders="true" required="true" requiredMessage="Please select a tutorial.">
+        			<f:selectItems value="#{userBean.linkedTutorials}" />
+    			</p:multiSelectListbox>
+
+    			<p:commandButton value="Start" icon="ui-icon-check" style="display:block;margin:10px 0" 
+    				action="TutorialPage?faces-redirect=true" update='growl'/>
+			</p:panel>
+		</h:form>
+	</h:body>
+</html>

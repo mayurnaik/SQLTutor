@@ -21,10 +21,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import edu.gatech.sqltutor.QueryResult;
+import edu.gatech.sqltutor.Utils;
 
 public class QueryThread extends Thread {
 
-	private String schemaName;
+	private String schema;
 	private String query;
 	private boolean dev;
 	private DatabaseManager databaseManager;
@@ -49,10 +50,13 @@ public class QueryThread extends Thread {
 					.getConnection();
 			statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
 					ResultSet.CONCUR_READ_ONLY);
-			setQueryResult(databaseManager.getQueryResult(schemaName, query,
+			setQueryResult(databaseManager.getQueryResult(schema, query,
 					connection, statement));
 		} catch (SQLException e) {
 			setException(e);
+		} finally {
+			Utils.tryClose(statement);
+			Utils.tryClose(connection);
 		}
 	}
 
@@ -71,11 +75,11 @@ public class QueryThread extends Thread {
 	}
 
 	public String getSchemaName() {
-		return schemaName;
+		return schema;
 	}
 
 	public void setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
+		this.schema = schemaName;
 	}
 
 	public String getQuery() {
@@ -117,5 +121,4 @@ public class QueryThread extends Thread {
 	public void setQueryResult(QueryResult queryResult) {
 		this.queryResult = queryResult;
 	}
-
 }

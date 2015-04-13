@@ -68,7 +68,7 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 			BeanUtils.addErrorMessage(UNLINK_MESSAGES_NAME, REMOVE_CODE_ERROR);
 		} else {
 			try {
-				getDatabaseManager().unlinkCode(userBean.getHashedEmail(), selectedCode);
+				getDatabaseManager().unlinkAdminCode(userBean.getHashedEmail(), selectedCode);
 				codes.remove(selectedCode);
 				final String message = "Successfully unlinked \"" + selectedCode + "\".";
 				BeanUtils.addInfoMessage(UNLINK_MESSAGES_NAME, message);
@@ -85,14 +85,14 @@ public class AdminCodesPageBean extends AbstractDatabaseBean implements Serializ
 	
 	public void linkCode() {
 		try {
-			if(code == null || code.equals("") || code.length() != 7) {
+			if (code == null || code.equals("") || code.length() != 7) {
 				BeanUtils.addErrorMessage(LINK_MESSAGES_NAME, INVALID_CODE_ERROR);
-			} else if(!getDatabaseManager().adminCodeExists(code)) {
+			} else if (!getDatabaseManager().adminCodeExists(code)) {
 				BeanUtils.addErrorMessage(LINK_MESSAGES_NAME, NONEXISTANT_CODE_ERROR);
-			} else if(codes.contains(code)) {
+			} else if (codes.contains(code)) {
 				BeanUtils.addErrorMessage(LINK_MESSAGES_NAME, ALREADY_LINKED_ERROR);
 			} else {
-					getDatabaseManager().linkCode(userBean.getHashedEmail(), code);
+					getDatabaseManager().linkAdminCode(userBean.getHashedEmail(), code);
 					codes.add(code);
 					final String message = "Successfully linked \"" + code + "\".";
 					BeanUtils.addInfoMessage(LINK_MESSAGES_NAME, message);

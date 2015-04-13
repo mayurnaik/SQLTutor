@@ -17,13 +17,13 @@ package edu.gatech.sqltutor.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -32,11 +32,9 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -59,9 +57,8 @@ import com.google.common.io.BaseEncoding;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.QueryUtils;
-import edu.gatech.sqltutor.Utils;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
-import edu.gatech.sqltutor.tuples.SchemaOptionsTuple;
+import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 import edu.gatech.sqltutor.tuples.UserQuery;
 import edu.gatech.sqltutor.tuples.UserTuple;
 import edu.gatech.sqltutor.util.ScriptRunner;
@@ -109,344 +106,231 @@ public class DatabaseManager implements Serializable {
 	}
 
 	public boolean isAdmin(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean isAdmin = false;
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("SELECT admin FROM \"user\" WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next())
-				isAdmin = resultSet.getBoolean(1);
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try(final PreparedStatement preparedStatement = connection.prepareStatement("SELECT admin FROM \"user\" WHERE email = ?;")) {
+				preparedStatement.setString(1, email);
+				
+				try(final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						isAdmin = resultSet.getBoolean(1);
+				}
+			}
+		} 
 		return isAdmin;
 	}
 
-	public Set<String> getUserSchemas(boolean admin) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
+	public TutorialOptionsTuple getOptions(String tutorialName, String tutorialAdminCode) throws SQLException {
+		TutorialOptionsTuple options = null;
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT visible_to_users, in_order_questions, "
+					+ "link, open_access, close_access, max_question_attempts, admin_code, schema FROM schema_options WHERE schema = ? "
+					+ "AND admin_code = ?")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
 
-		Set<String> schemas = new HashSet<String>();
-		try {
-			connection = dataSource.getConnection();
+				try(final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) {
+						final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+						options = new TutorialOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2), resultSet.getString(3),
+								resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal), resultSet.getInt(6), resultSet.getString(7), resultSet.getString(8));
+					}
+				}
+			}
 
-			String query = admin ? "SELECT schema FROM schema_options;" :
-				"SELECT schema FROM schema_options WHERE visible_to_users AND (open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now());";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute(query);
-
-			resultSet = statement.getResultSet();
-
-			while(resultSet.next())
-				schemas.add(resultSet.getString(1));
-		} finally {        
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-		return schemas;
-	}
-
-	public SchemaOptionsTuple getOptions(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		SchemaOptionsTuple options = null;
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT visible_to_users, in_order_questions, link, open_access, close_access, max_question_attempts FROM schema_options WHERE schema = '" + schemaName +"'");
-
-			resultSet = statement.getResultSet();
-			resultSet.next();
-
-			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-			options = new SchemaOptionsTuple(resultSet.getBoolean(1), resultSet.getBoolean(2), resultSet.getString(3),
-					resultSet.getTimestamp(4, cal), resultSet.getTimestamp(5, cal), resultSet.getInt(6));
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+		} 
 		return options;
 	}
 
-	private void dropSchema(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
+	public void deleteTutorial(String tutorial, String tutorialName, String tutorialAdminCode) throws SQLException {
+		// Drop the schema from the user data source
+		try (final Connection connection = userDataSource.getConnection()) {
 
-		try {
-			connection = userDataSource.getConnection();
+			try (final Statement statement = connection.createStatement()) {
+				statement.executeUpdate("DROP SCHEMA " + tutorialName + " CASCADE;");
+			}
+		} 
+		
+		// Delete the schema from the schema_options table and the schema_questions table
+		try (final Connection connection = dataSource.getConnection()) {
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("DROP SCHEMA " + schemaName +" CASCADE;");
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_options WHERE schema = ? AND admin_code = ?")) { 
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
+				preparedStatement.executeUpdate();
+			}
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_questions WHERE schema = ? AND admin_code = ?;")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
-	private void dropSchemaOptionsAndQuestions(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.addBatch("DELETE FROM schema_options WHERE schema = '" + schemaName + "';");
-			statement.addBatch("DELETE FROM schema_questions WHERE schema = '" + schemaName + "';");
-			statement.executeBatch();
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	public void deleteSchema(String schemaName) throws SQLException {
-		dropSchema(schemaName);
-		dropSchemaOptionsAndQuestions(schemaName);
-	}
-
-	public boolean checkSchemaPermissions(String email, String schemaName) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
+	public boolean checkTutorialPermissions(String tutorialName, String tutorialAdminCode) throws SQLException {
 		boolean schemaPermissions = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			final String query = "SELECT 1 FROM schema_options WHERE schema = ? AND owner = ?;";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, schemaName);
-			preparedStatement.setString(2, email);
-			resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next())
-				schemaPermissions = true;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}        
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT 1 FROM schema_options WHERE schema = ? AND admin_code = ?;")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
+				
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						schemaPermissions = true;
+				}
+			}
+		}       
 		return schemaPermissions;
 	}
 
-	public void addQuestion(String schemaName, QuestionTuple question) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+	public void addQuestion(String tutorialName, QuestionTuple question, String tutorialAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement(
-					"INSERT INTO schema_questions (schema, question, answer, \"order\", concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters) "
-							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, schemaName);
-			preparedStatement.setString(2, question.getQuestion());
-			preparedStatement.setString(3, question.getAnswer());
-			preparedStatement.setInt(4, question.getOrder());
-			preparedStatement.setArray(5, question.getConcepts() != null ? connection.createArrayOf("text", question.getConcepts()) : null);
-			preparedStatement.setDouble(6, question.getPerformanceLeniencySeconds());
-			preparedStatement.setBoolean(7, question.isColumnOrderMatters());
-			preparedStatement.setBoolean(8, question.isRowOrderMatters());
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement(
+					"INSERT INTO schema_questions (schema, question, answer, \"order\", concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters, admin_code) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, question.getQuestion());
+				preparedStatement.setString(3, question.getAnswer());
+				preparedStatement.setInt(4, question.getOrder());
+				preparedStatement.setArray(5, question.getConcepts() != null ? connection.createArrayOf("text", question.getConcepts()) : null);
+				preparedStatement.setDouble(6, question.getPerformanceLeniencySeconds());
+				preparedStatement.setBoolean(7, question.isColumnOrderMatters());
+				preparedStatement.setBoolean(8, question.isRowOrderMatters());
+				preparedStatement.setString(9, tutorialAdminCode);
+				preparedStatement.executeUpdate();
+			}
 		}
 	}
 
 	public List<UserTuple> getUserTuples() throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		List<UserTuple> users = new LinkedList<UserTuple>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT \"email\", \"admin\", \"admin_code\", \"developer\" FROM \"user\"");
-
-			resultSet = statement.getResultSet();
-
-			while(resultSet.next())
-				users.add(new UserTuple(resultSet.getString(1), resultSet.getBoolean(2), resultSet.getString(3), resultSet.getBoolean(4)));
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+		List<UserTuple> users = null;
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final Statement statement = connection.createStatement()) {
+				
+				try (final ResultSet resultSet = statement.executeQuery("SELECT \"email\", \"admin\", \"admin_code\", \"developer\" FROM \"user\"")) {
+					if (resultSet.isBeforeFirst())
+						users = new LinkedList<UserTuple>();
+					while (resultSet.next()) 
+						users.add(new UserTuple(resultSet.getString(1), resultSet.getBoolean(2), resultSet.getString(3), resultSet.getBoolean(4)));
+				}
+			}
+		} 
 		return users;
 	}
 
 	public UserTuple getUserTuple(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
+		UserTuple user = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		UserTuple user = new UserTuple();
-		try {
-			connection = dataSource.getConnection();
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?")) {
+				preparedStatement.setString(1, email);
 
-			preparedStatement = connection.prepareStatement("SELECT \"admin\", \"admin_code\", \"developer\" FROM \"user\" WHERE email = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.execute();
-
-			resultSet = preparedStatement.getResultSet();
-			while(resultSet.next())
-				user = new UserTuple(email, resultSet.getBoolean(1), resultSet.getString(2), resultSet.getBoolean(3));
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}        
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) 
+						user = new UserTuple(email, resultSet.getBoolean(1), resultSet.getString(2), resultSet.getBoolean(3));
+				}
+			}
+		}      
 		return user;
 	}
 
-	public List<QuestionTuple> getQuestions(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
+	public List<QuestionTuple> getQuestions(String tutorialName, String tutorialAdminCode) throws SQLException {
+		List<QuestionTuple> questions = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		List<QuestionTuple> questions = new LinkedList<QuestionTuple>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("SELECT \"order\", question, answer, id, concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters   FROM "
-					+ "schema_questions WHERE schema = '" + schemaName +
-					"' ORDER BY \"order\";");
-
-			resultSet = statement.getResultSet();
-			while(resultSet.next())
-				questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4), (resultSet.getArray(5) != null ? (String[])resultSet.getArray(5).getArray() : null), resultSet.getDouble(6), resultSet.getBoolean(7), resultSet.getBoolean(8)));
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement(
+					"SELECT \"order\", question, answer, id, concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters   "
+					+ "FROM schema_questions WHERE schema = ? AND admin_code = ? ORDER BY \"order\";")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
+			
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst())
+						questions = new LinkedList<QuestionTuple>();
+					while (resultSet.next()) {
+						questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4), (resultSet.getArray(5) != null ? (String[])resultSet.getArray(5).getArray() : null), resultSet.getDouble(6), resultSet.getBoolean(7), resultSet.getBoolean(8)));
+					}
+				}
+			}
+		} 
 		return questions;
 	}
 
-	public void setOptions(String schemaName, SchemaOptionsTuple options) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-			final String update = "UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, open_access = ?, close_access = ?, link = ?, max_question_attempts = ? WHERE schema = ?;";
-			preparedStatement = connection.prepareStatement(update);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setBoolean(1, options.isInOrderQuestions());
-			preparedStatement.setBoolean(2, options.isVisibleToUsers());
-			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-			preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
-			preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
-			preparedStatement.setString(5, options.getLink());
-			preparedStatement.setInt(6, options.getMaxQuestionAttempts());
-			preparedStatement.setString(7, schemaName);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+	public void setOptions(String tutorialName, TutorialOptionsTuple options, String tutorialAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, "
+					+ "open_access = ?, close_access = ?, link = ?, max_question_attempts = ? WHERE schema = ? AND admin_code = ?;")) {
+				preparedStatement.setBoolean(1, options.isInOrderQuestions());
+				preparedStatement.setBoolean(2, options.isVisibleToUsers());
+				final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+				preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
+				preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
+				preparedStatement.setString(5, options.getLink());
+				preparedStatement.setInt(6, options.getMaxQuestionAttempts());
+				preparedStatement.setString(7, tutorialName);
+				preparedStatement.setString(8, tutorialAdminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
-	private void runSchemaScript(String schemaDump) throws SQLException, IOException {
-		Connection connection = null;
-		BufferedReader reader = null;
-
-		try {
-			connection = userDataSource.getConnection();
-
-			ScriptRunner runner = new ScriptRunner(connection, false, true);
-			runner.setLogWriter(null);
-			reader = new BufferedReader(new StringReader(schemaDump));
-			runner.runScript(reader);
-		} finally {
-			Utils.tryClose(reader);
-			Utils.tryClose(connection);
-		}
-	}
-
-	private void grantAccessToReadonly(String schemaName) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-
-		try {
-			connection = userDataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO readonly_user;");
-			statement.addBatch("GRANT USAGE ON SCHEMA " + schemaName + " TO readonly_user;");
-			statement.executeBatch();
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	private void addSchemaToOptions(String schemaName, String email) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("INSERT INTO schema_options (schema, owner) VALUES ('"+schemaName+"', '"+email+"');");
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	public String addSchema(String schemaDump, String email)
-			throws SQLException, IllegalArgumentException, IOException {
-
-		if(schemaDump == null || schemaDump.length() == 0) {
+	/**
+	 * 
+	 * @param schemaDump	note: finds the name of the schema from this dump using the following regex: "CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)"
+	 * @param tutorialAdminCode
+	 * @return	the name of the schema
+	 * @throws SQLException
+	 * @throws IllegalArgumentException
+	 * @throws IOException
+	 */
+	public String addSchema(String schemaDump, String tutorialAdminCode) throws SQLException, IllegalArgumentException, IOException {
+		if (schemaDump == null || schemaDump.length() == 0) 
 			throw new IllegalArgumentException("Schema file is null or empty.");
+
+		// get schema name, modify, and replace as "<tutorialAdminCode>_<schemaName>"
+		String schemaName = null;
+		{
+			final Pattern p = Pattern.compile("CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)", Pattern.CASE_INSENSITIVE);
+			final Matcher m = p.matcher(schemaDump);
+			m.find();
+			schemaName = m.group(2);
+			// add tutorialAdminCode to schemaName
+			schemaDump.replaceAll(schemaName, tutorialAdminCode + "_" + schemaName);
 		}
+		
+		if (schemaName == null)
+			throw new IllegalArgumentException("Unable to find schema name. Regex used: \"CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)\"");
+		
+		try (final Connection connection = userDataSource.getConnection()) {
+			
+			try (final Reader reader = new BufferedReader(new StringReader(schemaDump))) {
+				final ScriptRunner runner = new ScriptRunner(connection, false, true);
+				runner.setLogWriter(null);
+				runner.runScript(reader);
+			}
 
-		runSchemaScript(schemaDump);
+			try (final Statement statement = connection.createStatement()) {
+				statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA \"" + schemaName + "\" TO readonly_user;");
+				statement.addBatch("GRANT USAGE ON SCHEMA \"" + schemaName + "\" TO readonly_user;");
+				statement.executeBatch();
+			}
+		} 
+		
+		try (final Connection connection = dataSource.getConnection()) {
 
-		// get schema name
-		Pattern p = Pattern.compile("CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)", Pattern.CASE_INSENSITIVE);
-		Matcher m = p.matcher(schemaDump);
-		m.find();
-		String schemaName = m.group(2);
-
-		grantAccessToReadonly(schemaName);
-
-		addSchemaToOptions(schemaName, email);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_options (schema, adminCode) VALUES (?, ?);")) {
+				preparedStatement.setString(1, schemaName);
+				preparedStatement.setString(2, tutorialAdminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 
 		return schemaName;
 	}
@@ -476,322 +360,264 @@ public class DatabaseManager implements Serializable {
 	}
 
 	public void reorderQuestions(List<QuestionTuple> questions) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			for(int i = 0; i < questions.size(); i++) {
-				int id = questions.get(i).getId();
-				statement.addBatch("UPDATE schema_questions SET \"order\" = "
-						+ (i+1) + " WHERE id = " + id + ";");
+			try (final Statement statement = connection.createStatement()) {
+				for(int i = 0; i < questions.size(); i++) {
+					final int id = questions.get(i).getId();
+					statement.addBatch("UPDATE schema_questions SET \"order\" = "
+							+ (i+1) + " WHERE id = " + id + ";");
+				}
+				statement.executeBatch();
 			}
-			statement.executeBatch();
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+		} 
 	}
 
 	public void deleteQuestions(List<QuestionTuple> questions) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			for(int i = 0; i < questions.size(); i++) {
-				int id = questions.get(i).getId();
-				statement.addBatch("DELETE FROM schema_questions WHERE id = " + id + ";");
+			try (final Statement statement = connection.createStatement()) {
+				for(int i = 0; i < questions.size(); i++) {
+					final int id = questions.get(i).getId();
+					statement.addBatch("DELETE FROM schema_questions WHERE id = " + id + ";");
+				}
+				statement.executeBatch();
 			}
-			statement.executeBatch();
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
 		}
 	}
 
 
 	public void addPasswordChangeRequest(String email, UUID uuid) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
+		try (final Connection connection = dataSource.getConnection()) {
 			// generate the user's encryption salt and password
-			byte[] salt = SaltHasher.generateSalt();
-			byte[] encryptedId = SaltHasher.getEncryptedValue(uuid.toString(), salt);
-
-			final String update = "INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)";
-			preparedStatement = connection.prepareStatement(update);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, Arrays.toString(encryptedId));
-			preparedStatement.setString(3, Arrays.toString(salt));
-			preparedStatement.executeUpdate();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try {
+				final byte[] salt = SaltHasher.generateSalt();
+				final byte[] encryptedId = SaltHasher.getEncryptedValue(uuid.toString(), salt);
+				
+				try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"password_change_requests\" (\"email\", \"id\", \"salt\") VALUES (?, ?, ?)")) {
+					preparedStatement.setString(1, email);
+					preparedStatement.setString(2, Arrays.toString(encryptedId));
+					preparedStatement.setString(3, Arrays.toString(salt));
+					preparedStatement.executeUpdate();
+				}
+			} catch (NoSuchAlgorithmException e) {
+				// TODO: 
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				// TODO: 
+				e.printStackTrace();
+			}
+		} 
 	}
 
 	public boolean getPasswordChangeRequest(String email, String id) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean autheticated = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
 			// Get the salt and id of the most recent request
 			// that belongs to the user within the last 24 hours
-			final String query = "SELECT \"salt\", \"id\" FROM \"password_change_requests\" WHERE "
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"salt\", \"id\" FROM \"password_change_requests\" WHERE "
 					+ "\"time\" = (SELECT MAX(\"time\") FROM \"password_change_requests\" WHERE \"email\" = ? AND "
-					+ "\"time\" >= (now() - '1 day'::INTERVAL));";
+					+ "\"time\" >= (now() - '1 day'::INTERVAL));")) {
+				preparedStatement.setString(1, email);
 
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-
-			resultSet = preparedStatement.executeQuery();
-
-			while (resultSet.next()) {
-				byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
-				byte[] encryptedId = stringByteArrayToByteArray(resultSet.getString(2));
-
-				// use the password hasher to authenticate
-				autheticated = SaltHasher.authenticate(id, encryptedId, salt);
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) {
+						final byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
+						final byte[] encryptedId = stringByteArrayToByteArray(resultSet.getString(2));
+						// use the password hasher to authenticate
+						try {
+							autheticated = SaltHasher.authenticate(id, encryptedId, salt);
+						} catch (NoSuchAlgorithmException e) {
+							// TODO:
+							e.printStackTrace();
+						} catch (InvalidKeySpecException e) {
+							// TODO:
+							e.printStackTrace();
+						}
+					}
+				}
 			}
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+		} 
 		return autheticated;
 	}
 
 	public void changePassword(String email, String newPassword) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			// generate the user's encryption salt and password
-			byte[] salt = SaltHasher.generateSalt();
-			byte[] encryptedPassword = SaltHasher.getEncryptedValue(newPassword, salt);
-
-			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
-			preparedStatement.setString(2, Arrays.toString(salt));
-			preparedStatement.setString(3, email);
-			preparedStatement.execute();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try {
+				// generate the user's encryption salt and password
+				final byte[] salt = SaltHasher.generateSalt();
+				final byte[] encryptedPassword = SaltHasher.getEncryptedValue(newPassword, salt);
+	
+				try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"password\" = ?, \"salt\" = ? WHERE email = ?;")) {
+					preparedStatement.setString(1, Arrays.toString(encryptedPassword));
+					preparedStatement.setString(2, Arrays.toString(salt));
+					preparedStatement.setString(3, email);
+					preparedStatement.executeUpdate();
+				}
+			} catch (NoSuchAlgorithmException e) {
+				// TODO:
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				// TODO:
+				e.printStackTrace();
+			}
 		}
 	}
 
 	public boolean emailExists(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean emailExists = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.execute();
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE email = ?;")) {
+				preparedStatement.setString(1, email);
 
-			resultSet = preparedStatement.getResultSet();
-			if(resultSet.next())
-				emailExists = true;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						emailExists = true;
+				}
+			}
 		}
 		return emailExists;
 	}
 	
 	public HashMap<String, QueryResult> getAllData(String schemaName, List<String> tables) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		try {
-			connection = userDataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("set search_path to '" + schemaName + "'");
-		} finally {
-			Utils.tryClose(connection);
-			Utils.tryClose(statement);
-		}
-
-		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
-		for(String tableName : tables) {
-			List<List<String>> queryData = new LinkedList<List<String>>();
-			List<String> columnNames = new LinkedList<String>();
-			try {
-				connection = userDataSource.getConnection();
-
-				statement = connection.createStatement();
-				statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-				resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
-
-				ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-				int columnCount = resultSetMetaData.getColumnCount();
-				for(int i = 1; i <=  columnCount; i++) {
-					columnNames.add(resultSetMetaData.getColumnName(i));
+		HashMap<String, QueryResult> allData = null;
+		try (final Connection connection = userDataSource.getConnection()) {
+			
+			try (final Statement statement = connection.createStatement()) {
+				statement.execute("SET search_path TO '" + schemaName + "'");
+	
+				if (tables != null && tables.size() > 0)
+					allData = new HashMap<String, QueryResult>();
+				for (String tableName : tables) {
+					List<String> columnNames = null;
+					List<List<String>> queryData = null;
+					
+					try (ResultSet resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";")) {
+						// get column names
+						columnNames = new LinkedList<String>();
+						final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+						final int columnCount = resultSetMetaData.getColumnCount();
+						for (int i = 1; i <=  columnCount; i++) {
+							columnNames.add(resultSetMetaData.getColumnName(i));
+						}
+						// get query data
+						if (resultSet.isBeforeFirst()) 
+							queryData = new LinkedList<List<String>>();
+						while (resultSet.next()) {
+							final List<String> rowData = new LinkedList<String>();
+							for (int i = 1; i <= columnCount; i++) {
+								rowData.add(resultSet.getString(i));
+							}
+							queryData.add(rowData);
+						}
+					} 
+					allData.put(tableName, new QueryResult(columnNames, queryData));
 				}
-				while(resultSet.next()) {
-					List<String> rowData = new LinkedList<String>();
-					for (int i = 1; i <= columnCount; i++) {
-						rowData.add(resultSet.getString(i));
-					}
-					queryData.add(rowData);
-				}
-			} finally {
-				Utils.tryClose(resultSet);
-				Utils.tryClose(statement);
-				Utils.tryClose(connection);
 			}
-			allData.put(tableName, new QueryResult(columnNames, queryData));
 		}
 		return allData;
+	}
+	
+	public List<DatabaseTable> getDevSchemaTables() throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
+			return QueryUtils.readTableInfo(connection.getMetaData(), "public");
+		}
+	}
+	
+	public List<DatabaseTable> getSchemaTables(String schema) throws SQLException {
+		try (Connection connection = userDataSource.getConnection()) {
+			return QueryUtils.readTableInfo(connection.getMetaData(), schema);
+		}
 	}
 
 	public HashMap<String, QueryResult> getAllDevData() throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		List<DatabaseTable> devTables = getDevTables();
-		List<String> tables = new LinkedList<String>();
-		for(DatabaseTable dt : devTables)
-			tables.add(dt.getTableName());
-
-		HashMap<String, QueryResult> allData = new HashMap<String, QueryResult>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("set search_path to public");
-
-			for(String tableName : tables) {
-				List<List<String>> queryData = new LinkedList<List<String>>();
-				List<String> columnNames = new LinkedList<String>();
-				try {
-					resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";");
-
-					ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-					int columnCount = resultSetMetaData.getColumnCount();
-					for(int i = 1; i <=  columnCount; i++) {
-						columnNames.add(resultSetMetaData.getColumnName(i));
-					}
-					while(resultSet.next()) {
-						List<String> rowData = new LinkedList<String>();
-						for (int i = 1; i <= columnCount; i++) {
-							rowData.add(resultSet.getString(i));
-						}
-						queryData.add(rowData);
-					}
-				} finally {
-					Utils.tryClose(resultSet);
+		HashMap<String, QueryResult> allData = null;
+		try (final Connection connection = dataSource.getConnection()) {
+			final List<DatabaseTable> devTables = QueryUtils.readTableInfo(connection.getMetaData(), "public");
+			List<String> tables = new LinkedList<String>();
+			for(DatabaseTable dt : devTables)
+				tables.add(dt.getTableName());
+			
+			try (final Statement statement = connection.createStatement()) {
+				if (tables.size() > 0) {
+					statement.execute("SET search_path TO 'public'");
+					allData = new HashMap<String, QueryResult>();
 				}
-				allData.put(tableName, new QueryResult(columnNames, queryData));
+
+				for(String tableName : tables) {
+					List<String> columnNames = null;
+					List<List<String>> queryData = null;
+						
+					try (ResultSet resultSet = statement.executeQuery("SELECT * FROM \"" + tableName + "\";")) {
+						// get column names
+						columnNames = new LinkedList<String>();
+						final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+						final int columnCount = resultSetMetaData.getColumnCount();
+						for(int i = 1; i <=  columnCount; i++) {
+							columnNames.add(resultSetMetaData.getColumnName(i));
+						}
+						// get query data
+						if (resultSet.isBeforeFirst()) 
+							queryData = new LinkedList<List<String>>();
+						while(resultSet.next()) {
+							final List<String> rowData = new LinkedList<String>();
+							for (int i = 1; i <= columnCount; i++) {
+								rowData.add(resultSet.getString(i));
+							}
+							queryData.add(rowData);
+						}
+					} 
+					allData.put(tableName, new QueryResult(columnNames, queryData));
+				}
 			}
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
-		}
+		} 
 		return allData;
 	}
-
-	public void verifyQuery(String schemaName, String query) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-
-		try {
-			connection = readUserDataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("set search_path to '" + schemaName + "'");
-			statement.execute(query);
-		} finally {
-			Utils.tryClose(statement);
-			Utils.tryClose(connection);
+	
+	public QueryResult getQueryResult(String schema, String query, boolean dev) throws SQLException {
+		QueryResult queryResult = null;
+		try (final Connection connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection()) {
+			
+				try (final Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+					queryResult = getQueryResult(schema, query, connection, statement);
+				}
 		}
+		return queryResult;
 	}
-
-	public QueryResult getQueryResult(String schemaName, String query, boolean dev) throws SQLException {
-		final Connection connection = dev ? userDataSource.getConnection() : readUserDataSource.getConnection();
-		return getQueryResult(schemaName, query, connection, connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
-	}
-
-	public QueryResult getQueryResult(String schemaName, String query, Connection connection, Statement statement) throws SQLException {
-		ResultSet resultSet = null;
-
-		final List<List<String>> queryData = new LinkedList<List<String>>();
-		final List<String> columnNames = new LinkedList<String>();
-		final QueryResult queryResult = new QueryResult();
-		queryResult.setData(queryData);
-		queryResult.setColumns(columnNames);
-		int rows = 0;
-		try {
-			connection.setAutoCommit(false);
-
-			statement.setFetchSize(1000);
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("set search_path to '" + schemaName + "'");
-			// postgresql driver doesn't enforce setQueryTimeout, this is the postgresql-specific equivalent
-			statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
-
-			long queryStart = System.currentTimeMillis();
-			resultSet = statement.executeQuery(query);
-			long queryEnd = System.currentTimeMillis();
+	
+	public QueryResult getQueryResult(String schema, String query, Connection connection, Statement statement) throws SQLException {
+		QueryResult queryResult = null;
+		
+		connection.setAutoCommit(false);
+			
+		statement.setFetchSize(1000);
+		statement.execute("SET search_path TO '" + schema + "'");
+		statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
+			
+		final long queryStart = System.currentTimeMillis();
+		try (final ResultSet resultSet = statement.executeQuery(query)) {
+			final long queryEnd = System.currentTimeMillis();
+			queryResult = new QueryResult();
 			queryResult.setExecutionTime(queryEnd - queryStart);
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-
-			int columnCount = resultSetMetaData.getColumnCount();
+			// get column names
+			List<String> columnNames = new LinkedList<String>();
+			final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+			final int columnCount = resultSetMetaData.getColumnCount();
 			for(int i = 1; i <=  columnCount; i++) {
 				columnNames.add(resultSetMetaData.getColumnName(i));
 			}
-
-			long endTime = -1L;
+			queryResult.setColumns(columnNames);
+			// get query data
+			int rows = 0;
+			List<List<String>> queryData = null;
+			if (resultSet.isBeforeFirst())
+				queryData = new LinkedList<List<String>>();
 			while (resultSet.next()) {
 				// stop reading rows from the driver at all when the limit is reached
 				if (rows >= QueryResult.QUERY_READ_LIMIT) {
-					endTime = System.currentTimeMillis();
 					log.warn("Query exceeded max result: {}", query);
 					queryResult.setReadLimitExceeded(true);
 					break;
@@ -808,166 +634,119 @@ public class DatabaseManager implements Serializable {
 					queryData.add(rowData);
 				}
 			}
-
-			if (endTime == -1L)
-				endTime = System.currentTimeMillis();
-			queryResult.setTotalTime(endTime - queryStart);
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
-			Utils.tryClose(statement);
+			queryResult.setData(queryData);
+			
+			if (rows > QueryResult.QUERY_SIZE_LIMIT)
+				queryResult.setTruncated(true);
+			
+			queryResult.setOriginalSize(rows);
+			
+			queryResult.setTotalTime(System.currentTimeMillis() - queryStart);
 		}
-		if(rows > QueryResult.QUERY_SIZE_LIMIT)
-			queryResult.setTruncated(true);
-
-		queryResult.setOriginalSize(rows);
 		return queryResult;
 	}
 
 	public QueryResult getDevQueryResult(String query, boolean dev) throws SQLException {
-		Connection connection = null;
-		Statement statement = null;
-		ResultSet resultSet = null;
-
-		List<List<String>> queryData = new LinkedList<List<String>>();
-		List<String> columnNames = new LinkedList<String>();
-		try {
-			connection = dataSource.getConnection();
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			statement.execute("set search_path to public");
-
-			resultSet = statement.executeQuery(query);
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-
-			int columnCount = resultSetMetaData.getColumnCount();
-			for(int i = 1; i <=  columnCount; i++) {
-				columnNames.add(resultSetMetaData.getColumnName(i));
-			}
-
-			while(resultSet.next()) {
-				List<String> rowData = new LinkedList<String>();
-				for (int i = 1; i <= columnCount; i++) {
-					rowData.add(resultSet.getString(i));
+		QueryResult queryResult = null;
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final Statement statement = connection.createStatement()) {
+				statement.execute("SET search_path TO 'public'");
+				statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
+				
+				try (final ResultSet resultSet = statement.executeQuery(query)) {
+					queryResult = new QueryResult();
+					// get columns
+					List<String> columnNames = new LinkedList<String>();
+					final ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+					final int columnCount = resultSetMetaData.getColumnCount();
+					for(int i = 1; i <=  columnCount; i++) {
+						columnNames.add(resultSetMetaData.getColumnName(i));
+					}
+					queryResult.setColumns(columnNames);
+					// get data
+					List<List<String>> queryData = null;
+					if (resultSet.isBeforeFirst())
+						queryData = new LinkedList<List<String>>();
+					while (resultSet.next()) {
+						final List<String> rowData = new LinkedList<String>();
+						for (int i = 1; i <= columnCount; i++) {
+							rowData.add(resultSet.getString(i));
+						}
+						queryData.add(rowData);
+					}
+					queryResult.setData(queryData);
 				}
-				queryData.add(rowData);
 			}
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(connection);
-			Utils.tryClose(statement);
-		}
-		return new QueryResult(columnNames, queryData);
-	}
-
-	private void addUser(String hashedEmail, String email, String password) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			// generate the user's encryption salt and password
-			byte[] salt = SaltHasher.generateSalt();
-			byte[] encryptedPassword = SaltHasher.getEncryptedValue(password, salt);
-
-			final String query = "INSERT INTO \"user\" (\"password\", \"salt\", \"email\", \"email_plain\") VALUES (?, ?, ?, ?)";
-
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, Arrays.toString(encryptedPassword));
-			preparedStatement.setString(2, Arrays.toString(salt));
-			preparedStatement.setString(3, hashedEmail);
-			preparedStatement.setString(4, email);
-			preparedStatement.executeUpdate();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	private void addUserToLinkedAdminCodes(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\") VALUES (?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	private void addUserToLinkedAdminCodes(String email, String adminCode) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, adminCode);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+		} 
+		return queryResult;
 	}
 
 	public void registerUser(String hashedEmail, String email, String password) throws SQLException {
-		addUser(hashedEmail, email, password);
-		addUserToLinkedAdminCodes(hashedEmail);
+		try (final Connection connection = dataSource.getConnection()) {
+			// Add user to the user table
+			try {
+				// generate the user's encryption salt and password
+				final byte[] salt = SaltHasher.generateSalt();
+				final byte[] encryptedPassword = SaltHasher.getEncryptedValue(password, salt);
+	
+				try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"user\" (\"password\", \"salt\", \"email\", \"email_plain\") "
+						+ "VALUES (?, ?, ?, ?)")) {
+					preparedStatement.setString(1, Arrays.toString(encryptedPassword));
+					preparedStatement.setString(2, Arrays.toString(salt));
+					preparedStatement.setString(3, hashedEmail);
+					preparedStatement.setString(4, email);
+					preparedStatement.executeUpdate();
+				}
+			} catch (NoSuchAlgorithmException e) {
+				// TODO: 
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				// TODO: 
+				e.printStackTrace();
+			}
+			// add user to linked_admin_codes table
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\") VALUES (?)")) {
+				preparedStatement.setString(1, hashedEmail);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
+	
+	public List<String> getLinkedTutorials(String hashedEmail, String adminCode) throws SQLException {
+		List<String> linkedTutorials = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-	private void deleteUserEmail(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			final String delete = "DELETE FROM \"user\" WHERE email = ?";
-			preparedStatement = connection.prepareStatement(delete);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	private void deleteUserAdminLinks(String adminCode) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, adminCode);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT schema FROM schema_options WHERE (visible_to_users AND "
+					+ "(open_access IS NULL OR open_access <= now()) AND (close_access IS NULL OR close_access >= now()) AND admin_code = ?) "
+					+ "OR admin_code = (SELECT admin_code FROM \"user\" WHERE email = ?);")) {
+				preparedStatement.setString(1, adminCode);
+				preparedStatement.setString(2, hashedEmail);
+				
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst())
+						linkedTutorials = new LinkedList<String>();
+					while (resultSet.next()) 
+						linkedTutorials.add(resultSet.getString(1));
+				}
+			}
+		} 
+		return linkedTutorials;
 	}
 
 	public void deleteUser(String email, String adminCode) throws SQLException {
-		deleteUserEmail(email);
-		deleteUserAdminLinks(adminCode);
+		try (final Connection connection = dataSource.getConnection()) {
+
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM \"user\" WHERE email = ?")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.executeUpdate();
+			} 
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?")) {
+				preparedStatement.setString(1, adminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
 	/**
@@ -978,460 +757,289 @@ public class DatabaseManager implements Serializable {
 	 * @throws SQLException
 	 */
 	public boolean isEmailRegistered(String hashedEmail, String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean isEmailRegistered = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE \"email\" = ?")) {
+				preparedStatement.setString(1, hashedEmail);
+	
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						isEmailRegistered = true;
+				}
+			}
 
-			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ?";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, hashedEmail);
+			boolean hasPlainTextEmail = false;
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE \"email\" = ? AND \"email_plain\" != NULL")) {
+				preparedStatement.setString(1, hashedEmail);
 
-			resultSet = preparedStatement.executeQuery();
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						hasPlainTextEmail = true;
+				}
+			}
 
-			if ( resultSet.next() )
-				isEmailRegistered = true;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-
-		// if the email is registered, make sure their "email_plain" isn't null in the DB
-		if( isEmailRegistered && !hasPlainTextEmail(hashedEmail) ) {
-			updatePlainTextEmail(hashedEmail, email);
-		}
-
+			if(isEmailRegistered && !hasPlainTextEmail) {
+				try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"email_plain\" = ? WHERE \"email\" = ?")) {
+					preparedStatement.setString(1, email);
+					preparedStatement.setString(2, hashedEmail);
+					preparedStatement.executeUpdate();
+				}
+			}
+		} 
 		return isEmailRegistered;
 	}
 
-	public boolean hasPlainTextEmail(String hashedEmail) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
-		boolean hasPlainTextEmail = false;
-		try {
-			connection = dataSource.getConnection();
-
-			final String query = "SELECT 1 FROM \"user\" WHERE \"email\" = ? AND \"email_plain\" != NULL";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, hashedEmail);
-
-			resultSet = preparedStatement.executeQuery();
-
-			if ( resultSet.next() )
-				hasPlainTextEmail = true;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-
-		return hasPlainTextEmail;
-	}
-
-	public void updatePlainTextEmail(String hashedEmail, String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			final String query = "UPDATE \"user\" SET \"email_plain\" = ? WHERE \"email\" = ?";
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, hashedEmail);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
 	public boolean isPasswordCorrect(String email, String attemptedPassword) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean isCorrect = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"salt\", \"password\" FROM \"user\" WHERE \"email\" = ?")) {
 			preparedStatement.setString(1, email);
 
-			resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next()) {        
-				byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
-				byte[] encryptedPassword = stringByteArrayToByteArray(resultSet.getString(2));
-
-				// use the password hasher to authenticate
-				isCorrect = SaltHasher.authenticate(attemptedPassword, encryptedPassword, salt);
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) {
+						byte[] salt = stringByteArrayToByteArray(resultSet.getString(1));
+						byte[] encryptedPassword = stringByteArrayToByteArray(resultSet.getString(2));
+						// use the password hasher to authenticate
+						isCorrect = SaltHasher.authenticate(attemptedPassword, encryptedPassword, salt);
+					}
+				} catch (NoSuchAlgorithmException e) {
+					// TODO: 
+					e.printStackTrace();
+				} catch (InvalidKeySpecException e) {
+					// TODO: 
+					e.printStackTrace();
+				}
 			}
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			e.printStackTrace();
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
 		}
 		return isCorrect;
 	}
 
 	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback,
-			double totalTimeSeconds, double queryTotalTimeSeconds, double answerTotalTimeSeconds, double queryExecutionTimeSeconds, double answerExecutionTimeSeconds, boolean truncated, boolean readLimitExceeded, int originalSize) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+			double totalTimeSeconds, double queryTotalTimeSeconds, double answerTotalTimeSeconds, double queryExecutionTimeSeconds, double answerExecutionTimeSeconds, boolean truncated, 
+			boolean readLimitExceeded, int originalSize, String schemaAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
 					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
 					+ "\"parsed\", \"correct\", \"nlp_feedback\", \"total_time_seconds\", "
 					+ "\"query_total_time_seconds\", \"answer_total_time_seconds\", \"query_execution_time_seconds\", "
 					+ "\"answer_execution_time_seconds\", \"truncated\", "
-					+ "\"read_limit_exceeded\", \"original_size\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, sessionId);
-			preparedStatement.setString(2, email);
-			preparedStatement.setString(3, schemaName);
-			preparedStatement.setString(4, question);
-			preparedStatement.setString(5, correctAnswer);
-			preparedStatement.setString(6, userQuery);
-			preparedStatement.setBoolean(7, parsed);
-			preparedStatement.setBoolean(8, correct);
-			preparedStatement.setString(9, nlpFeedback);
-			preparedStatement.setDouble(10, totalTimeSeconds);
-			preparedStatement.setDouble(11, queryTotalTimeSeconds);
-			preparedStatement.setDouble(12, answerTotalTimeSeconds);
-			preparedStatement.setDouble(13, queryExecutionTimeSeconds);
-			preparedStatement.setDouble(14, answerExecutionTimeSeconds);
-			preparedStatement.setBoolean(15, truncated);
-			preparedStatement.setBoolean(16, readLimitExceeded);
-			preparedStatement.setInt(17, originalSize);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+					+ "\"read_limit_exceeded\", \"original_size\", \"schema_admin_code\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+				preparedStatement.setString(1, sessionId);
+				preparedStatement.setString(2, email);
+				preparedStatement.setString(3, schemaName);
+				preparedStatement.setString(4, question);
+				preparedStatement.setString(5, correctAnswer);
+				preparedStatement.setString(6, userQuery);
+				preparedStatement.setBoolean(7, parsed);
+				preparedStatement.setBoolean(8, correct);
+				preparedStatement.setString(9, nlpFeedback);
+				preparedStatement.setDouble(10, totalTimeSeconds);
+				preparedStatement.setDouble(11, queryTotalTimeSeconds);
+				preparedStatement.setDouble(12, answerTotalTimeSeconds);
+				preparedStatement.setDouble(13, queryExecutionTimeSeconds);
+				preparedStatement.setDouble(14, answerExecutionTimeSeconds);
+				preparedStatement.setBoolean(15, truncated);
+				preparedStatement.setBoolean(16, readLimitExceeded);
+				preparedStatement.setInt(17, originalSize);
+				preparedStatement.setString(18, schemaAdminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
-	public void logQuestionPresentation(String sessionId, String email, String schemaName, String question) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+	public void logQuestionPresentation(String sessionId, String email, String schemaName, String question, String schemaAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
-					+ "\"email\", \"schema\", \"question\") VALUES (?, ?, ?, ?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, sessionId);
-			preparedStatement.setString(2, email);
-			preparedStatement.setString(3, schemaName);
-			preparedStatement.setString(4, question);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
+					+ "\"email\", \"schema\", \"question\", \"schema_admin_code\") VALUES (?, ?, ?, ?, ?)")) {
+				preparedStatement.setString(1, sessionId);
+				preparedStatement.setString(2, email);
+				preparedStatement.setString(3, schemaName);
+				preparedStatement.setString(4, question);
+				preparedStatement.setString(5, schemaAdminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
 	public void logException(String sessionId, String email, String exception) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
-					+ "\"email\", \"exception\") VALUES (?, ?, ?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-
-			preparedStatement.setString(1, sessionId);
-			preparedStatement.setString(2, email != null ? email : "not logged in");
-			preparedStatement.setString(3, exception);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-	}
-
-	public List<DatabaseTable> getTables(String schemaName) throws SQLException {
-		try (Connection conn = userDataSource.getConnection()) {
-			DatabaseMetaData metadata = conn.getMetaData();
-			return QueryUtils.readTableInfo(metadata, schemaName);
-		}
-	}
-
-	public List<DatabaseTable> getDevTables() throws SQLException {
-		try (Connection conn = dataSource.getConnection()) {
-			return QueryUtils.readTableInfo(conn.getMetaData(), "public");
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"log_exceptions\" (\"session_id\", "
+					+ "\"email\", \"exception\") VALUES (?, ?, ?)")) {
+				preparedStatement.setString(1, sessionId);
+				preparedStatement.setString(2, email != null ? email : "not logged in");
+				preparedStatement.setString(3, exception);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
 	public String getAdminCode(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		String adminCode = null;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.execute();
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"admin_code\" FROM \"user\" WHERE \"email\" = ?;")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.execute();
 
-			resultSet = preparedStatement.getResultSet();
-
-			while(resultSet.next())
-				adminCode = resultSet.getString(1);
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+				try (final ResultSet resultSet = preparedStatement.getResultSet()) {
+					if (resultSet.next())
+						adminCode = resultSet.getString(1);
+				}
+			}
+		} 
 		return adminCode;
 	}
 
 	public List<String> getLinkedAdminCodes(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
+		List<String> linkedAdminCodes = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		List<String> linkedAdminCodes = new LinkedList<String>();
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.execute();
-
-			resultSet = preparedStatement.getResultSet();
-			while(resultSet.next())
-				linkedAdminCodes.add(resultSet.getString(1));
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"linked_admin_code\" FROM \"linked_admin_codes\" WHERE \"email\" = ?;")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.execute();
+	
+				try (final ResultSet resultSet = preparedStatement.getResultSet()) {
+					if (resultSet.isBeforeFirst())
+						linkedAdminCodes = new LinkedList<String>();
+					while (resultSet.next())
+						linkedAdminCodes.add(resultSet.getString(1));
+				}
+			}
+		} 
 		return linkedAdminCodes;
 	}
-
-	private String generateAdminCode() throws SQLException {
-		final Random random = new SecureRandom();
-		byte[] buffer = new byte[5];
-		String adminCode = null;
-		do {
-			random.nextBytes(buffer);
-			adminCode = BaseEncoding.base64Url().omitPadding().encode(buffer);
-		} while(adminCodeExists(adminCode));
-
-		return adminCode;
-	}
-
+	
 	public boolean adminCodeExists(String adminCode) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean adminCodeExists = false;
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("SELECT 1 FROM \"user\" WHERE admin_code = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, adminCode);
-
-			resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next())
-				adminCodeExists = true;
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+		try (final Connection connection = dataSource.getConnection()) {
+			try (final Statement statement = connection.createStatement()) {
+				try(final ResultSet resultSet = statement.executeQuery("SELECT 1 FROM \"user\" WHERE admin_code = '" + adminCode + "';")) {
+					if (resultSet.next())
+						adminCodeExists = true;
+				} 
+			} 
 		}
 		return adminCodeExists;
 	}
-
+	
 	public void promoteUserToAdmin(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
+			String adminCode = null;
+			try (final Statement statement = connection.createStatement()) {
+				final Random random = new SecureRandom();
+				final byte[] buffer = new byte[5];
+				boolean adminCodeExists = false;
+				do {
+					random.nextBytes(buffer);
+					adminCode = BaseEncoding.base64Url().omitPadding().encode(buffer);
+					
+					try(final ResultSet resultSet = statement.executeQuery("SELECT 1 FROM \"user\" WHERE admin_code = '" + adminCode + "';")) {
+						if (resultSet.next())
+							adminCodeExists = true;
+					} 
+				} while(adminCodeExists);
+			} 
 
-		String adminCode = generateAdminCode();
-
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setBoolean(1, true);
-			preparedStatement.setString(2, adminCode);
-			preparedStatement.setString(3, email);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;")) {
+				preparedStatement.setBoolean(1, true);
+				preparedStatement.setString(2, adminCode);
+				preparedStatement.setString(3, email);
+				preparedStatement.execute();
+			}
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (email, linked_admin_code) VALUES (?, ?)")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.setString(2, adminCode);
+				preparedStatement.executeUpdate();
+			}
 		}
-
-		addUserToLinkedAdminCodes(email, adminCode);
 	}
 
 	public void promoteUserToDev(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setBoolean(1, true);
-			preparedStatement.setString(2, email);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;")) {		
+				preparedStatement.setBoolean(1, true);
+				preparedStatement.setString(2, email);
+				preparedStatement.execute();
+			}
+		} 
 	}
 
 	public void demoteUserFromAdmin(String email, String adminCode) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setBoolean(1, false);
-			preparedStatement.setString(2, null);
-			preparedStatement.setString(3, email);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-
-		deleteUserFromLinkedAdminCodes(adminCode);
-	}
-
-	private void deleteUserFromLinkedAdminCodes(String adminCode) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, adminCode);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"admin\" = ?, \"admin_code\" = ? WHERE email = ?;")) {
+				preparedStatement.setBoolean(1, false);
+				preparedStatement.setString(2, null);
+				preparedStatement.setString(3, email);
+				preparedStatement.execute();
+			}
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE linked_admin_code = ?")) {
+				preparedStatement.setString(1, adminCode);
+				preparedStatement.execute();
+			} 
+		} 
 	}
 
 	public void demoteUserFromDev(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setBoolean(1, false);
-			preparedStatement.setString(2, email);
-			preparedStatement.execute();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE \"user\" SET \"developer\" = ? WHERE email = ?;")) {
+				preparedStatement.setBoolean(1, false);
+				preparedStatement.setString(2, email);
+				preparedStatement.execute();
+			}
 		}
 	}
 
 	public boolean isDeveloper(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
 		boolean isDeveloper = false;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT developer FROM \"user\" WHERE email = ?;");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT developer FROM \"user\" WHERE email = ?;")) {
+				preparedStatement.setString(1, email);
 
-			resultSet = preparedStatement.executeQuery();
-
-			if (resultSet.next())
-				isDeveloper = resultSet.getBoolean(1);
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						isDeveloper = resultSet.getBoolean(1);
+				}
+			}
 		}
 		return isDeveloper;
 	}
 
-	public void linkCode(String email, String code) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+	public void linkAdminCode(String email, String adminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, code);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"linked_admin_codes\" (\"email\", \"linked_admin_code\") VALUES (?, ?)")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.setString(2, adminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
-	public void unlinkCode(String email, String code) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+	public void unlinkAdminCode(String email, String adminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE email = ? AND linked_admin_code = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, code);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM linked_admin_codes WHERE email = ? AND linked_admin_code = ?")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.setString(2, adminCode);
+				preparedStatement.executeUpdate();
+			}
+		} 
 	}
 
 	private byte[] stringByteArrayToByteArray(String stringByteArray) {
-		String[] byteValues = stringByteArray.substring(1, stringByteArray.length() - 1).split(",");
-		byte[] bytes = new byte[byteValues.length];
+		final String[] byteValues = stringByteArray.substring(1, stringByteArray.length() - 1).split(",");
+		final byte[] bytes = new byte[byteValues.length];
 
 		for (int i = 0; i < bytes.length; i++) {
 			bytes[i] = Byte.valueOf(byteValues[i].trim());    
@@ -1440,179 +1048,132 @@ public class DatabaseManager implements Serializable {
 		return bytes;
 	}
 
-	public String getUserSchema(String link) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
+	public String getUserSchema(String schemaLink) throws SQLException {
+		String schemaName = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		String schema = null;
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement("SELECT schema FROM schema_options WHERE link = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, link);
-			resultSet = preparedStatement.executeQuery();
-			if (resultSet.next())
-				schema = resultSet.getString(1);
-
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
-		return schema;
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT admin_code, schema FROM schema_options WHERE link = ?")) {
+				preparedStatement.setString(1, schemaLink);
+				
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						schemaName = resultSet.getString(1) + "_" + resultSet.getString(2);
+				}
+			}
+		} 
+		return schemaName;
 	}
 	
-	public int getMostRecentlyPresentedQuestion(String hashedEmail, String schema) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
+	public int getMostRecentlyPresentedQuestion(String hashedEmail, String schema, String schemaAdminCode) throws SQLException {
 		int mostRecentlyPresentedQuestion = 0;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT s.order FROM log_question_presentation p, schema_questions s WHERE p.question = s.question AND p.schema = s.schema AND p.email = ? AND p.schema = ? GROUP BY s.order ORDER BY max(timestamp) DESC LIMIT 1");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, hashedEmail);
-			preparedStatement.setString(2, schema);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT s.order FROM log_question_presentation p, "
+					+ "schema_questions s WHERE p.question = s.question AND p.schema = s.schema AND p.email = ? AND p.schema = ? AND schema_admin_code = ?"
+					+ " GROUP BY s.order ORDER BY max(timestamp) DESC LIMIT 1")) {
+				preparedStatement.setString(1, hashedEmail);
+				preparedStatement.setString(2, schema);
+				preparedStatement.setString(3, schemaAdminCode);
 
-			resultSet = preparedStatement.executeQuery();
-			if (resultSet.next())
-				mostRecentlyPresentedQuestion = resultSet.getInt(1);
-
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
-		}
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						mostRecentlyPresentedQuestion = resultSet.getInt(1);
+				}
+			}
+		} 
 		return mostRecentlyPresentedQuestion;
 	}
 	
-	public int getNumberOfAttempts(String hashedEmail, String schema, String question, boolean parsed, boolean correct) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-
+	public int getNumberOfAttempts(String hashedEmail, String schema, String question, boolean parsed, boolean correct, String schemaAdminCode) throws SQLException {
 		int numberOfParsedIncorrectAttempts = 0;
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT count(*) FROM log WHERE email = ? AND question = ? AND schema = ? AND correct = ? AND parsed = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, hashedEmail);
-			preparedStatement.setString(2, question);
-			preparedStatement.setString(3, schema);
-			preparedStatement.setBoolean(4, correct);
-			preparedStatement.setBoolean(5, parsed);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT count(*) FROM log "
+					+ "WHERE email = ? AND question = ? AND schema = ? AND correct = ? AND parsed = ? AND schema_admin_code = ?")) {
+				preparedStatement.setString(1, hashedEmail);
+				preparedStatement.setString(2, question);
+				preparedStatement.setString(3, schema);
+				preparedStatement.setBoolean(4, correct);
+				preparedStatement.setBoolean(5, parsed);
+				preparedStatement.setString(6, schemaAdminCode);
 
-			resultSet = preparedStatement.executeQuery();
-			if (resultSet.next())
-				numberOfParsedIncorrectAttempts = resultSet.getInt(1);
-
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next())
+						numberOfParsedIncorrectAttempts = resultSet.getInt(1);
+				}
+			}
 		}
 		return numberOfParsedIncorrectAttempts;
 	}
 	
-	public List<String> getQuestionComments(String schema, int order) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
+	public List<String> getQuestionComments(String schema, int order, String schemaAdminCode) throws SQLException {
 		List<String> comments = null;
-		
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT comment FROM schema_questions_comment WHERE schema = ? AND \"order\" = ?");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, schema);
-			preparedStatement.setInt(2, order);
-
-			resultSet = preparedStatement.executeQuery();
-			comments = new LinkedList<String>();
-			if (resultSet.next())
-				comments.add(resultSet.getString(1));
-
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT comment FROM schema_questions_comment "
+					+ "WHERE schema = ? AND \"order\" = ? AND schema_admin_code = ?")) {
+				preparedStatement.setString(1, schema);
+				preparedStatement.setInt(2, order);
+				preparedStatement.setString(3, schemaAdminCode);
+	
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst())
+						comments = new LinkedList<String>();
+					while (resultSet.next())
+						comments.add(resultSet.getString(1));
+				} 
+			}
 		}
-		
 		return comments;
 	}
 	
-	public List<UserQuery> getUserQueriesMarkedForReview(String schema) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
+	public List<UserQuery> getUserQueriesMarkedForReview(String schema, String schemaAdminCode) throws SQLException {
 		List<UserQuery> userQueries = null;
-		
-		try {
-			connection = dataSource.getConnection();
+		try (final Connection connection = dataSource.getConnection()) {
 
-			preparedStatement = connection.prepareStatement("SELECT email, query, schema, question, correct_answer, \"order\" \"timestamp\", parsed, correct, read_limit_exceeded FROM log WHERE schema = ? AND marked_for_review");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, schema);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT email, query, schema, question, "
+					+ "correct_answer, \"order\" \"timestamp\", parsed, correct, read_limit_exceeded FROM log WHERE schema = ? AND "
+					+ "marked_for_review AND schema_admin_code = ?")) {
+				preparedStatement.setString(1, schema);
+				preparedStatement.setString(2, schemaAdminCode);
 			
-			resultSet = preparedStatement.executeQuery();
-			userQueries = new LinkedList<UserQuery>();
-			final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
-			if (resultSet.next()) {
-				UserQuery userQuery = new UserQuery(resultSet.getString(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4), resultSet.getString(5), resultSet.getInt(6), resultSet.getTimestamp(7, cal), resultSet.getBoolean(8), resultSet.getBoolean(9), resultSet.getBoolean(10));
-				userQueries.add(userQuery);
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst())
+						userQueries = new LinkedList<UserQuery>();
+					final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+					if (resultSet.next()) {
+						final UserQuery userQuery = new UserQuery(resultSet.getString(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4), resultSet.getString(5), resultSet.getInt(6), resultSet.getTimestamp(7, cal), resultSet.getBoolean(8), resultSet.getBoolean(9), resultSet.getBoolean(10));
+						userQueries.add(userQuery);
+					}
+				}
 			}
-
-		} finally {
-			Utils.tryClose(resultSet);
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
 		}
-		
 		return userQueries;
 	}
 	
-	public void addComment(String schemaName, int order, String comment) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+	public void addComment(String schemaName, int order, String comment, String schemaAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement(
-					"INSERT INTO schema_questions_comment (schema, \"order\", comment) VALUES (?, ?, ?);");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, schemaName);
-			preparedStatement.setInt(2, order);
-			preparedStatement.setString(3, comment);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_questions_comment "
+					+ "(schema, \"order\", comment, schema_admin_code) VALUES (?, ?, ?, ?);")) {
+				preparedStatement.setString(1, schemaName);
+				preparedStatement.setInt(2, order);
+				preparedStatement.setString(3, comment);
+				preparedStatement.setString(4, schemaAdminCode);
+				preparedStatement.executeUpdate();
+			}
 		}
 	}
 	
 	public void markForReview(String email) throws SQLException {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
+		try (final Connection connection = dataSource.getConnection()) {
 
-		try {
-			connection = dataSource.getConnection();
-
-			preparedStatement = connection.prepareStatement(
-					"UPDATE log SET marked_for_review = true WHERE email = ? AND \"timestamp\" = (SELECT MAX(\"timestamp\") FROM log WHERE email = ?);");
-			preparedStatement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
-			preparedStatement.setString(1, email);
-			preparedStatement.setString(2, email);
-			preparedStatement.executeUpdate();
-		} finally {
-			Utils.tryClose(preparedStatement);
-			Utils.tryClose(connection);
+			try (final PreparedStatement preparedStatement = connection.prepareStatement(
+					"UPDATE log SET marked_for_review = true WHERE email = ? AND \"timestamp\" = (SELECT MAX(\"timestamp\") FROM log WHERE email = ?);")) {
+				preparedStatement.setString(1, email);
+				preparedStatement.setString(2, email);
+				preparedStatement.executeUpdate();
+			}
 		}
 	}
 }
