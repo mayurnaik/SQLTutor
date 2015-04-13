@@ -15,15 +15,16 @@
  */
 package edu.gatech.sqltutor.beans;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.event.ComponentSystemEvent;
 
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
@@ -50,8 +51,16 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	private List<QuestionTuple> selectedQuestions;
 	
 	
-	@PostConstruct
-	public void init() {
+	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
+		if (!userBean.isLoggedIn())
+			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
+		
+		if (userBean.getSelectedTutorial() == null || userBean.getSelectedTutorial().isEmpty()) {
+			BeanUtils.addErrorMessage(null, "To modify a tutorial, you must first select one.", true);
+			BeanUtils.redirect("/AdminPage.jsf");
+			return;
+		}
+		
 		try {
 			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 		} catch (SQLException e) {

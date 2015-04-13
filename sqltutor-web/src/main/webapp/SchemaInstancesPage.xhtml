@@ -19,13 +19,17 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
+	
 	<f:event type="preRenderView" listener="#{userBean.adminRedirect}" />
+	<f:event type="preRenderView" listener="#{schemaInstancesPageBean.preRenderSetup}" /> 
+	
 	<h:head>
 		<title>SQL Tutor</title>
 		<ui:insert name="menu">
 			<ui:include src="/Menubar.xhtml" />
 		</ui:insert>
 	</h:head>
+	
 	<h:body>
 		<h:form>
 			<ui:insert name="template">

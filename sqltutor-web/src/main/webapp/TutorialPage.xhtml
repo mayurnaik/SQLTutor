@@ -20,11 +20,14 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:pe="http://primefaces.org/ui/extensions">
-	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" /> 
+	
 	<f:metadata>
 	    <f:viewParam name="l" value="#{tutorialPageBean.link}"  />
-	    <f:event type="preRenderView" listener="#{tutorialPageBean.preRenderSetup}" /> 
 	</f:metadata>
+	
+	<f:event type="preRenderView" listener="#{userBean.loginRedirect}" /> 
+	<f:event type="preRenderView" listener="#{tutorialPageBean.preRenderSetup}" /> 
+	
 	<h:head>
 		<h:outputScript library="js" name="sql-hint.js" />
 		<title>SQL Tutor</title>

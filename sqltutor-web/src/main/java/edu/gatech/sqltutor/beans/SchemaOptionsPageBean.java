@@ -21,12 +21,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
 
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
@@ -51,8 +51,16 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private boolean deleteThisSchema;
 	private boolean linkable;
 	
-	@PostConstruct
-	public void init() {
+	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
+		if (!userBean.isLoggedIn())
+			return; //TODO: this is to avoid both preRenderEvents firing, not sure if there is a better way.
+		
+		if (userBean.getSelectedTutorial() == null || userBean.getSelectedTutorial().isEmpty()) {
+			BeanUtils.addErrorMessage(null, "To modify a tutorial, you must first select one.", true);
+			BeanUtils.redirect("/AdminPage.jsf");
+			return;
+		}
+
 		try {
 			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 			options = getDatabaseManager().getOptions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
@@ -150,11 +158,13 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	
 	public String getVisibleUsingLinkMessage() {
 		String message = "Visible using shared link (";
-		message += options.getLink() == null ? "generated on submission" : "https://sqltutor.cc.gatech.edu/TutorialPage.jsf?l="+options.getLink();
+		message += options == null || options.getLink() == null ? "generated on submission" : "https://sqltutor.cc.gatech.edu/TutorialPage.jsf?l="+options.getLink();
 		return message + ").";
 	}
 
 	public boolean isLinkable() {
+		if (options == null) 
+			return false;
 		linkable = options.getLink() != null;
 		return linkable;
 	}
