@@ -42,6 +42,11 @@
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.developer}"
 				styleClass="menubutton"/>
+			<p:menuitem value="Profile Options" 
+				action="ProfilePage.xhtml?faces-redirect=true"
+				icon="ui-icon-arrow-1-e" 
+				rendered="#{userBean.loggedIn}"
+				styleClass="menubutton"/>
 			<p:menuitem value="Login" onclick="PF('login_dlg').show();" 
 				type="button" icon="ui-icon-arrowreturnthick-1-e"
 				styleClass="menubutton"

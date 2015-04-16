@@ -31,36 +31,59 @@
 			<ui:insert name="template">
 				<ui:include src="/BodyTemplate.xhtml" />
 			</ui:insert>
+			
+			<p:growl id="growl" />
+			
+			<p:panel header="Change Password" styleClass="panel">
+				<h:panelGrid columns="2">
+					<p:outputLabel value="*Password:" for="password"/>
+					<p:password required="#{not empty param[changePassword.clientId]}" id="password"
+						value="#{profilePageBean.password}" label="Password 1" feedback="true"
+						requiredMessage="Please enter your password."
+						validatorMessage="Password length must be length greater than 2 and less than 13, and both entries must match."
+						match="again">
+						<f:validateLength minimum="3" maximum="12" />
+					</p:password>
+									
+					<p:outputLabel value="*(again)" for="again" />
+					<p:password required="#{not empty param[changePassword.clientId]}" label="Password 2" id="again"
+						value="#{profilePageBean.password}" 
+						requiredMessage="Please enter your password (again)."/>
+				</h:panelGrid>
+					
+				<p:commandButton id="changePassword" action="#{userBean.changePassword(profilePageBean.password)}" ajax="false"
+					value="Change Password" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
+			</p:panel>
+			
 			<p:panel header="Link an Admin Code" styleClass="panel">
 				<h:outputText value="Enter the admin code provided by your instructor to link it to your account. Afterward, you will be able 
 					to access their material whenever you visit the tutorial page."/>
 				<br/><br/>
-				<h:outputLabel value="Admin code: "/>
-				<p:inputText value="#{adminCodesPageBean.code}"/>
+				<h:outputText value="Admin code: "/>
+				<p:inputText value="#{profilePageBean.code}"/>
 				<br/>
 				
-				<p:commandButton value="Link Code" ajax="false" action="#{adminCodesPageBean.linkCode}" styleClass="panelbutton"/>
-				<p:messages for="panel1"/>
+				<p:commandButton value="Link Code" action="#{userBean.linkAdminCode(profilePageBean.code)}" 
+					styleClass="panelbutton" ajax="false" />
 			</p:panel>
+			
 			<p:panel header="Unlink an Admin Code" styleClass="panel">
 				<h:outputText value="Select the admin code you'd like to unlink from your account."/>
+				<br/> <br/>
 				
-			    <p:dataTable id="table" var="code" value="#{adminCodesPageBean.codes}" 
+			    <p:dataTable id="table" var="code" value="#{userBean.linkedAdminCodes}" 
 			    	resizableColumns="true" 
-					style="height:50% !important"
-					scrollWidth="100%"
-					scrollable="true"
-			    	selectionMode="single" selection="#{adminCodesPageBean.selectedCode}" rowKey="#{code}">
-			        <p:column headerText="Linked Admin Code">
+					style="height:30% !important"
+					tableStyle="table-layout: auto;"
+			    	selectionMode="single" selection="#{profilePageBean.selectedCode}" rowKey="#{code}">
+			        <p:column headerText="Linked Admin Codes">
 			            <h:outputText style="white-space: normal;" value="#{code}" />
 			        </p:column>
 			    </p:dataTable>
 				
 				<p:commandButton id="unlinkCodeButton"
-					action="#{adminCodesPageBean.unlinkCode}"
-					ajax="false"
+					action="#{userBean.removeLinkedAdminCode(profilePageBean.selectedCode)}" ajax="false"
 					value="Unlink Code" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
-				<p:messages for="panel2"/>
 			</p:panel>
 		</h:form>
 	</h:body>

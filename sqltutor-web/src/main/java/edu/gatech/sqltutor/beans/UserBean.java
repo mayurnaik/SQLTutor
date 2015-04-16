@@ -48,12 +48,15 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final byte[] SALT = "-JllYJaGhP+-0xfJ2+_-K~6YIJkF1ip8hg8qKTDis1TmCjQu*B|Mm TB-szu".getBytes();
 	
+	// messages
 	/** LOGIN_ERROR will be displayed above the user name and password input boxes whenever verification fails. */
 	private static final String LOGIN_ERROR = "The email or password you entered is incorrect.";
 	private static final String REGISTRATION_ERROR = "The email you entered is already tied to an account.";
+	// contexts
 	private static final String HOME_PAGE_CONTEXT = "/HomePage.jsf";
 	private static final String REGISTRATION_PAGE_CONTEXT = "/RegistrationPage.jsf";
 	private static final String LOGIN_PAGE_CONTEXT = "/LoginPage.jsf";
+	// IDs
 	private static final String REGISTRATION_MESSAGES_ID = ":registrationForm:registrationMessages";
 	private static final String LOGIN_MESSAGES_ID = ":loginForm:loginMessages";
 	
@@ -93,21 +96,10 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			adminCode = getDatabaseManager().getAdminCode(getHashedEmail());
 			
 			// setup the linked admin codes. This is so we don't have to query these every time the user makes a choice
-			setLinkedTutorials(new ArrayList<SelectItem>());
 			linkedAdminCodes = getDatabaseManager().getLinkedAdminCodes(getHashedEmail());
-	        for (final String linkedAdminCode : linkedAdminCodes) {
-	        	// get the list of tutorials that belong to this admin code
-				final List<String> linkedTutorialNames = getDatabaseManager().getLinkedTutorials(getHashedEmail(), linkedAdminCode);
-				// put the list into an array (needs to be in this format for the setSelectItems() method
-				final SelectItem[] selectItems = new SelectItem[linkedTutorialNames.size()];
-	        	for(int i = 0; i < selectItems.length; i++) {
-	        		final String value = linkedAdminCode + "_" + linkedTutorialNames.get(i);
-	        		selectItems[i] = new SelectItem(value, linkedTutorialNames.get(i));
-	        	}
-	        	final SelectItemGroup adminCodeSelectItemGroup = new SelectItemGroup(linkedAdminCode);
-	        	adminCodeSelectItemGroup.setSelectItems(selectItems);
-	        	getLinkedTutorials().add(adminCodeSelectItemGroup);
-	        }
+			setLinkedTutorials(new ArrayList<SelectItem>());
+	        for (String linkedAdminCode : linkedAdminCodes) 
+	        	addLinkedTutorials(linkedAdminCode);
 	        
 			if (previousContext != null) {
 				BeanUtils.redirect(previousContext);
@@ -121,6 +113,94 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			}
 			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR_MESSAGE);
 		} 
+	}
+	
+	public void changePassword(String password) {
+		try {
+			getDatabaseManager().changePassword(getHashedEmail(), password);
+			setPassword(password);
+			BeanUtils.addInfoMessage(null, "Successfully changed your password.");
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+		}
+	}
+	
+	public void addLinkedTutorials(String linkedAdminCode) {
+		try { 
+			// get the list of tutorials that belong to this admin code
+			final List<String> linkedTutorialNames = getDatabaseManager().getLinkedTutorials(getHashedEmail(), linkedAdminCode);
+			final SelectItemGroup adminCodeSelectItemGroup = new SelectItemGroup(linkedAdminCode);
+			getLinkedTutorials().add(adminCodeSelectItemGroup);
+			if (linkedTutorialNames != null) {
+				// put the list into an array (needs to be in this format for the setSelectItems() method)
+				final SelectItem[] selectItems = new SelectItem[linkedTutorialNames.size()];
+		    	for(int i = 0; i < selectItems.length; i++) {
+		    		final String value = linkedAdminCode + "_" + linkedTutorialNames.get(i);
+		    		selectItems[i] = new SelectItem(value, linkedTutorialNames.get(i));
+		    	}
+		    	adminCodeSelectItemGroup.setSelectItems(selectItems);
+			}
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(LOGIN_MESSAGES_ID, DATABASE_ERROR_MESSAGE);
+		} 
+	}
+	
+	public void linkAdminCode(String adminCode) {
+		try { 
+			if (adminCode == null || adminCode.equals("") || adminCode.length() != 7) {
+				BeanUtils.addErrorMessage(null, "You entered an invalid admin code.");
+			} else if (getLinkedAdminCodes().contains(adminCode)) {
+				BeanUtils.addErrorMessage(null, "You are already linked to this admin code.");
+			} else if (!getDatabaseManager().adminCodeExists(adminCode)) {
+				BeanUtils.addErrorMessage(null, "This admin code doesn't exist.");
+			} else {
+				getDatabaseManager().linkAdminCode(getHashedEmail(), adminCode);
+				getLinkedAdminCodes().add(adminCode);
+				addLinkedTutorials(adminCode);
+				BeanUtils.addInfoMessage(null, "Successfully linked \"" + adminCode + "\".");
+			}
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+		}
+	}
+	
+	public void removeLinkedAdminCode(String adminCode) {
+		try { 
+			if (adminCode == null || adminCode.equals("")) {
+				BeanUtils.addErrorMessage(null, "You should choose a code to remove first.");
+			} else if(adminCode.equals(getAdminCode())) {
+				BeanUtils.addErrorMessage(null, "You can not remove your own admin code.");
+			} else if(adminCode.equals("default")) {
+				BeanUtils.addErrorMessage(null, "You can not remove the \"default\" admin code.");
+			} else {
+				getDatabaseManager().unlinkAdminCode(getHashedEmail(), adminCode);
+				getLinkedAdminCodes().remove(adminCode);
+				for(SelectItem selectItem : getLinkedTutorials()) 
+					if (selectItem.getLabel().equals(adminCode)) {
+						getLinkedTutorials().remove(selectItem);
+						break;
+					}
+				BeanUtils.addInfoMessage(null, "Successfully unlinked \"" + adminCode + "\".");
+			}
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+		}
 	}
 	
 	public void addSelectedTutorialTemporarily() {
@@ -139,7 +219,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		SelectItem[] tutorialSelectItems = null;
 		// check if the temporary list already exists
 		for(SelectItem selectItem : getLinkedTutorials()) 
-			if (selectItem.getLabel() == temporary)
+			if (selectItem.getLabel().equals(temporary))
 				temporaryAdminCodeGroup = (SelectItemGroup)selectItem;
 		
 		final String value = getSelectedTutorialAdminCode() + "_" + getSelectedTutorialName();
