@@ -46,8 +46,8 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private static final String DEFAULT_SCHEMA_NAME = "company";
 	private static final String OPEN_ACCESS_CHECK_ERROR_MESSAGE = "Your opening date/time must be before your closing date/time.";
 	
-	private List<DatabaseTable> tables;
 	private TutorialOptionsTuple options;
+	
 	private boolean deleteThisSchema;
 	private boolean linkable;
 	
@@ -62,7 +62,6 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 		}
 
 		try {
-			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
 			options = getDatabaseManager().getOptions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -138,14 +137,6 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 
 	public void setUserBean(UserBean userBean) {
 		this.userBean = userBean;
-	}
-
-	public List<DatabaseTable> getTables() {
-		return tables;
-	}
-
-	public void setTables(List<DatabaseTable> tables) {
-		this.tables = tables;
 	}
 
 	public TutorialOptionsTuple getOptions() {

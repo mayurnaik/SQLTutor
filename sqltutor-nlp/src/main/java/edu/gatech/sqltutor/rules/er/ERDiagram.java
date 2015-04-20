@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor.rules.er;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +31,9 @@ import edu.gatech.sqltutor.rules.er.util.ERNodeMap;
 
 @XStreamAlias("erdiagram")
 @XStreamConverter(ERDiagramConverter.class)
-public class ERDiagram {
+public class ERDiagram implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private static class IsNodeType implements Predicate<ERNode> {
 		private final int nodeType;
 		public IsNodeType(int nodeType) { this.nodeType = nodeType; }

@@ -89,7 +89,6 @@ Serializable {
 	@ManagedProperty(value = "#{userBean}")
 	private UserBean userBean;
 
-	private List<DatabaseTable> tables;
 	private List<QuestionTuple> questionTuples;
 	private int questionIndex;
 	private String query;
@@ -106,6 +105,10 @@ Serializable {
 	private transient QueryThread answerThread;
 	private int numberOfAttempts;
 	private String comment;
+	
+	private SymbolicFragmentTranslator queryTranslator;
+	private ERDiagram erDiagram;
+	private ERMapping erMapping;
 
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
@@ -119,7 +122,7 @@ Serializable {
 			
 		
 		// if the page hasn't been loaded yet, load it
-		if (tables == null) {
+		if (schemaOptions == null) {
 			if (link != null) {
 				try {
 					final String schema = getDatabaseManager().getUserSchema(link);
@@ -157,16 +160,7 @@ Serializable {
 				BeanUtils.redirect("/HomePage.jsf");
 				return;
 			}
-
-			try {
-				tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
-			} catch (SQLException e) {
-				for (Throwable t : e) {
-					t.printStackTrace();
-					logException(t, userBean.getHashedEmail());
-				}
-				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
-			}
+			
 			setupQuestionsAndAnswers();
 			
 			try {
@@ -176,6 +170,28 @@ Serializable {
 				for (Throwable t : e) {
 					t.printStackTrace();
 					logException(t, userBean.getHashedEmail());
+				}
+			}
+			// setup the query translator 
+			// FIXME: hardcoded, need to fix this
+			if (userBean.getSelectedTutorialName().equals("company") || userBean.getSelectedTutorialName().equals("business_trip")) {
+				final ERSerializer serializer = new ERSerializer();
+				final Class<?> c = this.getClass();
+				erDiagram = (ERDiagram) serializer.deserialize(c
+						.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName() + ".er.xml"));
+				erMapping = (ERMapping) serializer
+						.deserialize(c.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName()
+								+ ".mapping.xml"));
+				queryTranslator = new SymbolicFragmentTranslator();
+				queryTranslator.setERDiagram(erDiagram);
+				queryTranslator.setERMapping(erMapping);
+				try {
+					queryTranslator.setSchemaMetaData(getDatabaseManager().getDevSchemaTables());
+				} catch (SQLException e) {
+					for (Throwable t : e) {
+						t.printStackTrace();
+						logException(t, userBean.getHashedEmail());
+					}
 				}
 			}
 		} else {
@@ -294,37 +310,14 @@ Serializable {
 
 	private String setNLPFeedback() {
 		String result = null;
-		if (userBean.getSelectedTutorialName().equals("company") || userBean.getSelectedTutorialName().equals("business_trip")) {
-			// generate NLP feedback
-			final ERSerializer serializer = new ERSerializer();
-			final Class<?> c = this.getClass();
-
-			// FIXME: hard coded for now
-			ERDiagram erDiagram = (ERDiagram) serializer.deserialize(c
-					.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName() + ".er.xml"));
-			ERMapping erMapping = (ERMapping) serializer
-					.deserialize(c.getResourceAsStream("/testdata/" + userBean.getSelectedTutorialName()
-							+ ".mapping.xml"));
-
+		if (queryTranslator != null) {
 			try {
-				final SymbolicFragmentTranslator queryTranslator = new SymbolicFragmentTranslator();
 				queryTranslator.setQuery(query);
-				queryTranslator.setSchemaMetaData(tables);
-				queryTranslator.setERDiagram(erDiagram);
-				queryTranslator.setERMapping(erMapping);
-				feedbackNLP = " We determined the question that you actually answered was: ";
 				result = queryTranslator.getTranslation();
-				feedbackNLP += "\" " + format(result) + " \"";
+				feedbackNLP = "We determined the question that you actually answered was: \" " + format(result) + " \"";
 			} catch (Exception e) {
-				feedbackNLP += " (Sorry, we were unable to produce a sound English translation for your query.)";
-				if (e instanceof SQLException) {
-					for (Throwable t : (SQLException) e) {
-						t.printStackTrace();
-					}
-				} else {
-					
-					e.printStackTrace();
-				}
+				feedbackNLP += " (Sorry, we were unable to produce sound English translation feedback for your query.)";
+				e.printStackTrace();
 			}
 		}
 		return result;
@@ -669,10 +662,6 @@ Serializable {
 		return feedbackNLP;
 	}
 
-	public List<DatabaseTable> getTables() {
-		return tables;
-	}
-
 	public QueryResult getAnswerResult() {
 		return answerResult;
 	}
@@ -790,7 +779,7 @@ Serializable {
 	
 	public void submitComment() {
 		try {
-			getDatabaseManager().addComment(userBean.getSelectedTutorialName(), getQuestionNumber(), getComment(), userBean.getSelectedTutorialAdminCode());
+			getDatabaseManager().addComment(userBean.getSelectedTutorialName(), getQuestionNumber(), getComment(), userBean.getSelectedTutorialAdminCode(), userBean.getEmail());
 			BeanUtils.addInfoMessage(null, "Successfully left a comment on question number " + getQuestionNumber() + ".");
 		} catch (SQLException e) {
 			for (Throwable t : e) {

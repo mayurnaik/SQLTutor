@@ -29,11 +29,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -57,6 +60,8 @@ import com.google.common.io.BaseEncoding;
 import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.QueryUtils;
+import edu.gatech.sqltutor.tuples.QuestionCommentTuple;
+import edu.gatech.sqltutor.tuples.QuestionHardnessTuple;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
 import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 import edu.gatech.sqltutor.tuples.UserQuery;
@@ -261,6 +266,27 @@ public class DatabaseManager implements Serializable {
 		} 
 		return questions;
 	}
+	
+	public List<QuestionCommentTuple> getComments(String tutorialName, String tutorialAdminCode) throws SQLException {
+		List<QuestionCommentTuple> comments = null;
+		try (final Connection connection = dataSource.getConnection()) {
+
+			try (final PreparedStatement preparedStatement = connection.prepareStatement(
+					"SELECT \"order\", \"comment\", \"email\", \"schema\", \"admin_code\" FROM schema_questions_comment WHERE schema = ? AND admin_code = ? ORDER BY \"order\";")) {
+				preparedStatement.setString(1, tutorialName);
+				preparedStatement.setString(2, tutorialAdminCode);
+			
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst())
+						comments = new LinkedList<QuestionCommentTuple>();
+					while (resultSet.next()) {
+						comments.add(new QuestionCommentTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4), resultSet.getString(5)));
+					}
+				}
+			}
+		} 
+		return comments;
+	}
 
 	public void setOptions(String tutorialName, TutorialOptionsTuple options, String tutorialAdminCode) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
@@ -376,16 +402,32 @@ public class DatabaseManager implements Serializable {
 	public void deleteQuestions(List<QuestionTuple> questions) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
 
-			try (final Statement statement = connection.createStatement()) {
-				for(int i = 0; i < questions.size(); i++) {
-					final int id = questions.get(i).getId();
-					statement.addBatch("DELETE FROM schema_questions WHERE id = " + id + ";");
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_questions WHERE id = ?")) {
+				for(QuestionTuple question : questions) {
+					preparedStatement.setInt(1, question.getId());
+					preparedStatement.addBatch();
 				}
-				statement.executeBatch();
+				preparedStatement.executeBatch();
 			}
 		}
 	}
 
+	public void deleteComments(List<QuestionCommentTuple> comments) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
+			
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_questions_comment WHERE schema = ? AND admin_code = ? AND comment = ? AND email = ? AND \"order\" = ?")) {
+				for(QuestionCommentTuple comment : comments) {
+					preparedStatement.setString(1, comment.getSchema());
+					preparedStatement.setString(2, comment.getAdminCode());
+					preparedStatement.setString(3, comment.getComment());
+					preparedStatement.setString(4, comment.getEmail());
+					preparedStatement.setInt(5, comment.getOrder());
+					preparedStatement.addBatch();
+				}
+				preparedStatement.executeBatch();
+			}
+		}
+	}
 
 	public void addPasswordChangeRequest(String email, UUID uuid) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
@@ -482,6 +524,10 @@ public class DatabaseManager implements Serializable {
 		return emailExists;
 	}
 	
+	public HashMap<String, QueryResult> getAllData(String schemaName) throws SQLException {
+		return getAllData(schemaName, getSchemaTableNames(schemaName));
+	}
+	
 	public HashMap<String, QueryResult> getAllData(String schemaName, List<String> tables) throws SQLException {
 		HashMap<String, QueryResult> allData = null;
 		try (final Connection connection = userDataSource.getConnection()) {
@@ -530,6 +576,16 @@ public class DatabaseManager implements Serializable {
 	public List<DatabaseTable> getSchemaTables(String schema) throws SQLException {
 		try (Connection connection = userDataSource.getConnection()) {
 			return QueryUtils.readTableInfo(connection.getMetaData(), schema);
+		}
+	}
+	
+	public List<String> getSchemaTableNames(String schema) throws SQLException {
+		try (Connection connection = userDataSource.getConnection()) {
+			final List<DatabaseTable> databaseTables = QueryUtils.readTableInfo(connection.getMetaData(), schema);
+			final List<String> tableNames = new ArrayList<String>(databaseTables.size());
+			for (DatabaseTable t : databaseTables) 
+				tableNames.add(t.getTableName());
+			return tableNames;
 		}
 	}
 
@@ -1085,7 +1141,7 @@ public class DatabaseManager implements Serializable {
 	}
 	
 	public int getNumberOfAttempts(String hashedEmail, String schema, String question, boolean parsed, boolean correct, String schemaAdminCode) throws SQLException {
-		int numberOfParsedIncorrectAttempts = 0;
+		int numberOfParsedAttempts = 0;
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT count(*) FROM log "
@@ -1099,11 +1155,82 @@ public class DatabaseManager implements Serializable {
 
 				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
 					if (resultSet.next())
-						numberOfParsedIncorrectAttempts = resultSet.getInt(1);
+						numberOfParsedAttempts = resultSet.getInt(1);
 				}
 			}
 		}
-		return numberOfParsedIncorrectAttempts;
+		return numberOfParsedAttempts;
+	}
+	
+	public Map<Integer, Boolean> getQuestionAttemptStatuses(String hashedEmail, String schema, String schemaAdminCode) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
+
+			try (final PreparedStatement preparedStatement = connection.prepareStatement(
+					"SELECT DISTINCT \"order\", correct FROM log l, \"user\" u "
+					+ "WHERE u.email = l.email AND NOT u.admin AND NOT u.developer AND schema = ? AND schema_admin_code = ? AND u.email = ?")) {
+				preparedStatement.setString(1, schema);
+				preparedStatement.setString(2, schemaAdminCode);
+				preparedStatement.setString(3, hashedEmail);
+
+				try (final ResultSet resultSet = preparedStatement.executeQuery()) {
+					Map<Integer, Boolean> attemptStatusMap = null;
+					if (resultSet.isBeforeFirst())
+						attemptStatusMap = new HashMap<Integer, Boolean>();
+					if (resultSet.next()) {
+						final Boolean currentAttemptStatus = attemptStatusMap.get(resultSet.getInt(1));
+						if (currentAttemptStatus != null && currentAttemptStatus != true && currentAttemptStatus != resultSet.getBoolean(2))
+							attemptStatusMap.put(resultSet.getInt(1), resultSet.getBoolean(2));
+					}
+					return attemptStatusMap;
+				}
+			}
+		}
+	}
+	
+	public int getNumberOfUsersAboveThreshold(String schema, String schemaAdminCode, int minimumAttemptCount) throws SQLException {
+		try (final Connection connection = dataSource.getConnection()) {
+
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(*) FROM (SELECT COUNT(*) AS indiv_counts FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? GROUP BY u.email) t WHERE t.indiv_counts > ?")) {
+				preparedStatement.setString(1, schema);
+				preparedStatement.setString(2, schemaAdminCode);
+				preparedStatement.setInt(3, minimumAttemptCount);
+	
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					resultSet.next();
+					return resultSet.getInt(1);
+				} 
+			}
+		}
+	}
+	
+	public List<QuestionHardnessTuple> getHardnessRatings(String schema, String schemaAdminCode, int maxIncorrectCount, boolean useMedian, boolean parsed) throws SQLException {
+		List<QuestionHardnessTuple> hardnessRatings = null;
+		
+		if (maxIncorrectCount <= 0)
+			return null;
+		
+		try (final Connection connection = dataSource.getConnection()) {
+
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"order\", (sum1 / avg1) as HARDNESS, sum1, avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS sum1 FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t1 GROUP BY \"order\" ) t1, ( SELECT " + (useMedian ? "MEDIAN" : "AVG") + "(totals) AS avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS totals FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t GROUP BY \"order\" ) tt ) t2 ORDER BY HARDNESS DESC")) {
+				preparedStatement.setInt(1, maxIncorrectCount);
+				preparedStatement.setInt(2, maxIncorrectCount);
+				preparedStatement.setString(3, schema);
+				preparedStatement.setString(4, schemaAdminCode);
+				preparedStatement.setInt(5, maxIncorrectCount);
+				preparedStatement.setInt(6, maxIncorrectCount);
+				preparedStatement.setString(7, schema);
+				preparedStatement.setString(8, schemaAdminCode);
+	
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.isBeforeFirst()) 
+						hardnessRatings = new LinkedList<QuestionHardnessTuple>();
+					final double roundTo = 1e3;
+					while (resultSet.next()) 
+						hardnessRatings.add(new QuestionHardnessTuple(resultSet.getInt(1), Math.floor(resultSet.getDouble(2) * roundTo) / roundTo, resultSet.getInt(3), Math.floor(resultSet.getDouble(4) * roundTo) / roundTo));
+				} 
+			}
+		}
+		return hardnessRatings;
 	}
 	
 	public List<String> getQuestionComments(String schema, int order, String schemaAdminCode) throws SQLException {
@@ -1151,15 +1278,16 @@ public class DatabaseManager implements Serializable {
 		return userQueries;
 	}
 	
-	public void addComment(String schemaName, int order, String comment, String schemaAdminCode) throws SQLException {
+	public void addComment(String schemaName, int order, String comment, String schemaAdminCode, String hashedEmail) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_questions_comment "
-					+ "(schema, \"order\", comment, admin_code) VALUES (?, ?, ?, ?);")) {
+					+ "(schema, \"order\", comment, admin_code, email) VALUES (?, ?, ?, ?, ?);")) {
 				preparedStatement.setString(1, schemaName);
 				preparedStatement.setInt(2, order);
 				preparedStatement.setString(3, comment);
 				preparedStatement.setString(4, schemaAdminCode);
+				preparedStatement.setString(5, hashedEmail);
 				preparedStatement.executeUpdate();
 			}
 		}

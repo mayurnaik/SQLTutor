@@ -19,143 +19,264 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui">
-	
-	<f:event type="preRenderView" listener="#{userBean.adminRedirect}" />
-	<f:event type="preRenderView" listener="#{schemaQuestionsPageBean.preRenderSetup}" /> 
-	
-	<h:head>
-		<title>SQL Tutor</title>
-		<ui:insert name="menu">
-			<ui:include src="/Menubar.xhtml" />
+
+<f:event type="preRenderView" listener="#{userBean.adminRedirect}" />
+<f:event type="preRenderView"
+	listener="#{schemaQuestionsPageBean.preRenderSetup}" />
+
+<h:head>
+	<title>SQL Tutor</title>
+	<ui:insert name="menu">
+		<ui:include src="/Menubar.xhtml" />
+	</ui:insert>
+</h:head>
+
+<h:body>
+	<h:form>
+		<ui:insert name="template">
+			<ui:include src="/BodyTemplate.xhtml" />
 		</ui:insert>
-	</h:head>
-	
-	<h:body>
-		<h:form>
-			<ui:insert name="template">
-				<ui:include src="/BodyTemplate.xhtml" />
-			</ui:insert>
-			<div class="left2">
-				<p:panel styleClass="panel" header="Schema: &quot;#{userBean.selectedTutorialName}&quot;">
-					<p:commandButton id="databaseButton" value="Show Schema" />
-					<p:overlayPanel id="databasePanel" for="databaseButton" hideEffect="fade" style="width:50% !important"> 
-							<p:dataTable var="databaseTable"
-								value="#{schemaQuestionsPageBean.tables}"
-								resizableColumns="true"
-								style="height:30% !important"
-								scrollWidth="100% !important"
-								scrollable="true">
-								<p:column headerText="Table Names">
-									<h:outputText value="#{databaseTable.tableName}" />
-								</p:column>
-								<p:column headerText="Column Names" style="white-space: normal;">
-									<h:outputText value="#{databaseTable.columnNames}" />
-								</p:column>
-							</p:dataTable>
-					</p:overlayPanel> 
-					<br/><br/>
+
+		<p:growl id="growl" />
+
+		<div class="left2">
+			<p:panel styleClass="panel"
+				header="Schema: &quot;#{userBean.selectedTutorialName}&quot;">
+				<p:commandButton id="databaseButton" value="Show Schema" />
+				<p:overlayPanel id="databasePanel" for="databaseButton"
+					hideEffect="fade" style="width:50% !important">
+					<p:dataTable var="databaseTable" value="#{schemaTableBean.tables}"
+						resizableColumns="true" style="height:30% !important"
+						tableStyle="table-layout: auto;">
+						<p:column headerText="Table Names">
+							<h:outputText value="#{databaseTable.tableName}" />
+						</p:column>
+						<p:column headerText="Column Names" style="white-space: normal;">
+							<h:outputText value="#{databaseTable.columnNames}" />
+						</p:column>
+					</p:dataTable>
+				</p:overlayPanel>
+				<br />
+				<br />
+
+				<h:link value="Schema Options" outcome="SchemaOptionsPage" />
+				<br />
+				<br />
+
+				<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
+				<br />
+				<br />
+
+				<h:link value="Schema Questions" outcome="SchemaQuestionsPage"
+					disabled="true" />
+			</p:panel>
+		</div>
+
+		<div class="middle" />
+
+		<div class="right2">
+			<p:panel header="Add Questions" styleClass="panel">
+				<p:outputLabel for="question" value="In English (required): " />
+				<p:inputTextarea rows="5" id="question"
+					style="resize:none;width:100% !important;"
+					value="#{schemaQuestionsPageBean.question.question}"
+					autoResize="false" required="#{not empty param[add.clientId]}" />
+
+				<p:outputLabel for="answer" value="In SQL (required): " />
+				<p:inputTextarea id="answer" rows="5" autoResize="false"
+					style="resize:none;width:100% !important;"
+					value="#{schemaQuestionsPageBean.question.answer}"
+					required="#{not empty param[add.clientId]}" />
+
+				<p:outputLabel for="concepts"
+					value="Concept tags (comma-separated): " />
+				<p:inputTextarea id="concepts" rows="3" autoResize="false"
+					style="resize:none;width:100% !important;"
+					value="#{schemaQuestionsPageBean.question.conceptsString}" />
+
+				<p:outputLabel for="performance"
+					value="Performance leniency (in seconds, double precision, leave as 0 or blank if performance doesn't matter): " />
+				<br />
+				<p:inputText id="performance"
+					value="#{schemaQuestionsPageBean.question.performanceLeniencySeconds}" />
+				<br />
+				<br />
+
+				<p:outputLabel for="row" value="Row order matters: " />
+				<p:selectBooleanCheckbox id="row"
+					value="#{schemaQuestionsPageBean.question.rowOrderMatters}" />
+				<br />
+
+				<p:outputLabel for="column" value="Column order matters: " />
+				<p:selectBooleanCheckbox id="column"
+					value="#{schemaQuestionsPageBean.question.columnOrderMatters}" />
+				<br />
+
+				<p:commandButton id="add"
+					action="#{schemaQuestionsPageBean.addQuestion}" ajax="false"
+					value="Add" icon="ui-icon-check" styleClass="panelbutton" />
+			</p:panel>
+
+			<div class="seperator" />
+
+			<p:panel styleClass="panel" header="Reorder/Delete Questions">
+				<h:outputText
+					value="To reorder, drag and drop then click the Reorder button." />
+				<br />
+				<h:outputText
+					value="To delete, select question(s) then click the Delete button " />
+				<h:outputText value="(cannot be undone)" styleClass="warning" />
+				<h:outputText value="." />
+				<br />
+				<br />
+				<p:dataTable var="question"
+					value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
+					resizableColumns="true" style="height:60% !important"
+					tableStyle="table-layout: auto;" selectionMode="multiple"
+					selection="#{schemaQuestionsPageBean.selectedQuestions}"
+					rowKey="#{question}">
+					<p:ajax event="rowReorder" />
+					<p:column headerText="Question Number" style="white-space:pre-line;width:50px;">
+						<h:outputText value="#{question.order}" />
+					</p:column>
 					
-					<h:link value="Schema Options" outcome="SchemaOptionsPage" />
-					<br/><br/>
-					
-					<h:link value="Schema Instances" outcome="SchemaInstancesPage" />
-					<br/><br/>
-					
-					<h:link value="Schema Questions" outcome="SchemaQuestionsPage" disabled="true"/>
-				</p:panel>
-			</div>
-			
-			<div class="middle"/>
-			
-			<div class="right2">
-			    	<p:messages />
-			    	
-					<p:panel header="Add Questions" styleClass="panel">
-						<p:outputLabel for="question" value="In English (required): " />
-						<p:inputTextarea rows="5" id="question" style="resize:none;width:100% !important;"
-							value="#{schemaQuestionsPageBean.question.question}" autoResize="false" required="#{not empty param[add.clientId]}"/>
-						
-						<p:outputLabel for="answer" value="In SQL (required): " />
-						<p:inputTextarea id="answer" rows="5" 
-							autoResize="false" style="resize:none;width:100% !important;" 
-							value="#{schemaQuestionsPageBean.question.answer}" required="#{not empty param[add.clientId]}"/>
-							
-						<p:outputLabel for="concepts" value="Concept tags (comma-separated): " />
-						<p:inputTextarea id="concepts" rows="3" 
-							autoResize="false" style="resize:none;width:100% !important;" 
-							value="#{schemaQuestionsPageBean.question.conceptsString}"/>
-							
-						<p:outputLabel for="performance" value="Performance leniency (in seconds, double precision, leave as 0 or blank if performance doesn't matter): " />
-						<br/>
-						<p:inputText id="performance"
-							value="#{schemaQuestionsPageBean.question.performanceLeniencySeconds}"/>
-						<br/>
-						<br/>
-						
-						<p:outputLabel for="row" value="Row order matters: " />
-						<p:selectBooleanCheckbox id="row" value="#{schemaQuestionsPageBean.question.rowOrderMatters}" />
-						<br/>
-							
-						<p:outputLabel for="column" value="Column order matters: " />
-						<p:selectBooleanCheckbox id="column" value="#{schemaQuestionsPageBean.question.columnOrderMatters}" />
-						<br/>
-						
-						<p:commandButton id="add"
-							action="#{schemaQuestionsPageBean.addQuestion}"
-							ajax="false"
-							value="Add" icon="ui-icon-check" styleClass="panelbutton"/>
-					</p:panel>
-					
-					<div class="seperator"/>
-					
-					<p:panel styleClass="panel" header="Reorder/Delete Questions">
-						<h:outputText value="To reorder, drag and drop then click the Reorder button." />
-						<br/>
-						<h:outputText value="To delete, select question(s) then click the Delete button " />
-						<h:outputText value="(cannot be undone)" styleClass="warning"/>  
-						<h:outputText value="." />  
-						<br/><br/>
-					    <p:dataTable var="question" value="#{schemaQuestionsPageBean.questions}" draggableRows="true"
-					    	resizableColumns="true"
-							style="height:60% !important"
-							tableStyle="table-layout: auto;"
-					    	selectionMode="multiple" selection="#{schemaQuestionsPageBean.selectedQuestions}" rowKey="#{question}">
-					        <p:ajax event="rowReorder" />
-					        <p:column headerText="English Question">
-					            <h:outputText style="white-space: normal;" value="#{question.question}" />
-					        </p:column>
-					 
-					        <p:column headerText="SQL Answer">
-					            <h:outputText value="#{question.answer}" style="white-space: normal;"/>
-					        </p:column>
-					        
-					        <p:column headerText="Concepts">
-					            <h:outputText value="#{question.conceptsString}" style="white-space: normal;"/>
-					        </p:column>
-					        
-					        <p:column headerText="Performance Leniency (Seconds)" style="white-space:pre-line;width:50px;">
-					            <h:outputText value="#{question.performanceLeniencySeconds}"/>
-					        </p:column>
-					        
-					        <p:column headerText="Row Order Matters" style="white-space:pre-line;width:50px;">
-					            <h:outputText value="#{question.isRowOrderMatters()}"/>
-					        </p:column>
-					        
-					        <p:column headerText="Column Order Matters" style="white-space:pre-line;width:50px;">
-					            <h:outputText value="#{question.isColumnOrderMatters()}"/>
-					        </p:column>
-					    </p:dataTable>
-					    
-						<p:commandButton id="reorderQuestionButton"
-							action="#{schemaQuestionsPageBean.reorderQuestions}"
-							ajax="false"
-							value="Reorder" icon="ui-icon-check" styleClass="panelbutton" style="margin-right:10"/>
-						<p:commandButton id="deleteQuestionButton"
-							action="#{schemaQuestionsPageBean.deleteQuestions}"
-							ajax="false" styleClass="panelbutton" 
-							value="Delete" icon="ui-icon-check"/>
-					</p:panel>
-				</div>
-		</h:form>
-	</h:body>
+					<p:column headerText="English Question">
+						<h:outputText style="white-space: normal;"
+							value="#{question.question}" />
+					</p:column>
+
+					<p:column headerText="SQL Answer">
+						<h:outputText value="#{question.answer}"
+							style="white-space: normal;" />
+					</p:column>
+
+					<p:column headerText="Concepts">
+						<h:outputText value="#{question.conceptsString}"
+							style="white-space: normal;" />
+					</p:column>
+
+					<p:column headerText="Performance Leniency (Seconds)"
+						style="white-space:pre-line;width:50px;">
+						<h:outputText value="#{question.performanceLeniencySeconds}" />
+					</p:column>
+
+					<p:column headerText="Row Order Matters"
+						style="white-space:pre-line;width:50px;">
+						<h:outputText value="#{question.rowOrderMatters}" />
+					</p:column>
+
+					<p:column headerText="Column Order Matters"
+						style="white-space:pre-line;width:50px;">
+						<h:outputText value="#{question.columnOrderMatters}" />
+					</p:column>
+				</p:dataTable>
+
+				<p:commandButton id="reorderQuestionButton"
+					action="#{schemaQuestionsPageBean.reorderQuestions}" ajax="false"
+					value="Reorder" icon="ui-icon-check" styleClass="panelbutton"
+					style="margin-right:10" />
+				<p:commandButton id="deleteQuestionButton"
+					action="#{schemaQuestionsPageBean.deleteQuestions}" ajax="false"
+					styleClass="panelbutton" value="Delete" icon="ui-icon-check" />
+			</p:panel>
+
+			<div class="seperator" />
+
+			<p:panel styleClass="panel" header="Student Comments">
+				<h:outputText
+					value="To reply, select a comment and hit the Reply button. This only replies to the first comment selected." />
+				<br />
+				<h:outputText
+					value="To delete, select comment(s) then click the Delete button " />
+				<h:outputText value="(cannot be undone)" styleClass="warning" />
+				<h:outputText value="." />
+				<br />
+				<br />
+				<p:dataTable var="comment"
+					value="#{schemaQuestionsPageBean.comments}" resizableColumns="true"
+					style="height:40% !important" tableStyle="table-layout: auto;"
+					selectionMode="multiple"
+					selection="#{schemaQuestionsPageBean.selectedComments}"
+					rowKey="#{comment}">
+
+					<p:column headerText="Question Number">
+						<h:outputText style="white-space: normal;"
+							value="#{comment.order}" />
+					</p:column>
+
+					<p:column headerText="Question Comment">
+						<h:outputText value="#{comment.comment}"
+							style="white-space: normal;" />
+					</p:column>
+				</p:dataTable>
+
+				<ui:remove>
+					<p:commandButton id="replyComments"
+						action="#{schemaQuestionsPageBean.replyToComment}" ajax="false"
+						value="Reply" icon="ui-icon-check" styleClass="panelbutton"
+						style="margin-right:10" />
+				</ui:remove>
+
+				<p:commandButton id="deleteComments"
+					action="#{schemaQuestionsPageBean.deleteComments}" ajax="false"
+					value="Delete" icon="ui-icon-check" styleClass="panelbutton"
+					style="margin-right:10" />
+			</p:panel>
+
+			<p:panel id="questionStatisticsPanel" header="Question Statistics" styleClass="panel">
+				<h:outputText
+					value="This is a list of questions ranked by hardness followed by the corresponding sets of 
+						least and most understood concepts. You can adjust the algorithm's thresholds and weights below the 
+						list and click the Recalculate button to see the new results." />
+				<br />
+
+				<p:dataTable var="tuple"
+					value="#{schemaQuestionsPageBean.hardnessTuples}"
+					resizableColumns="true" style="height:60% !important"
+					tableStyle="table-layout: auto;">
+					<p:column headerText="Question Number">
+						<h:outputText value="#{tuple.order}" />
+					</p:column>
+
+					<p:column headerText="Hardness Rating">
+						<h:outputText value="#{tuple.hardnessRating}" />
+					</p:column>
+				</p:dataTable>
+				<br />
+				
+				<h:outputText
+					value="The least understood concepts are: #{schemaQuestionsPageBean.leastUnderstoodConcepts}" />
+				<br />
+				<h:outputText
+					value="The most understood concepts are: #{schemaQuestionsPageBean.mostUnderstoodConcepts}" />
+				<br />
+				<br />
+
+				<p:panelGrid columns="2">
+					<p:outputLabel for="maxIncorrect"
+						value="Maximum incorrect count per user per question threshold: " />
+					<p:inputText id="maxIncorrect"
+						value="#{schemaQuestionsPageBean.maximumIncorrectCount}" />
+
+					<p:outputLabel for="parsed" value="Only count parsed attempts: " />
+					<p:selectBooleanCheckbox id="parsed"
+						value="#{schemaQuestionsPageBean.parsed}" />
+
+					<p:outputLabel for="useMedian" value="Use median: " />
+					<p:selectBooleanCheckbox id="useMedian"
+						value="#{schemaQuestionsPageBean.useMedian}" />
+				</p:panelGrid>
+				<p:tooltip for="useMedian"
+					value="When selected, the median will be used over the average. This may help in cases where the algorithm is skewed by an abundance of small or large number of attempts." />
+				<p:tooltip for="maxIncorrect"
+					value="This value determines the maximum number of incorrect attempts that will be counted per user per question (e.g. NUMBER_ATTEMPTS &gt; THIS_VALUE ? THIS_VALUE : NUMBER_ATTEMPTS)." />
+
+				<p:commandButton
+					action="#{schemaQuestionsPageBean.recalculateStatistics}"
+					value="Reclaculate" icon="ui-icon-check" update="growl,questionStatisticsPanel"
+					styleClass="panelbutton" style="margin-right:10" />
+			</p:panel>
+		</div>
+	</h:form>
+</h:body>
 </html>

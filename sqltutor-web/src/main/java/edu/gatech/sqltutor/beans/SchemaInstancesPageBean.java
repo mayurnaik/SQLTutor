@@ -42,7 +42,6 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 
 	private static final String PERMISSIONS_ERROR = "You do not have permissions for this schema.";
 	
-	private List<DatabaseTable> tables;
 	private HashMap<String, QueryResult> tableData;
 	
 	private String query;
@@ -57,25 +56,9 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			BeanUtils.redirect("/AdminPage.jsf");
 			return;
 		}
-		
-		try {
-			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
-		} catch (SQLException e) {
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
-			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
-		}
 
-		List<String> tableNames = new ArrayList<String>(tables.size());
-		
-		for(DatabaseTable table : tables) {
-			tableNames.add(table.getTableName());
-		}
-		
 		try {
-			setTableData(getDatabaseManager().getAllData(userBean.getSelectedTutorial(), tableNames));
+			setTableData(getDatabaseManager().getAllData(userBean.getSelectedTutorial()));
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -122,14 +105,6 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
 		return hasPermissions;
-	}
-	
-	public List<DatabaseTable> getTables() {
-		return tables;
-	}
-
-	public void setTables(List<DatabaseTable> tables) {
-		this.tables = tables;
 	}
 	
 	public UserBean getUserBean() {

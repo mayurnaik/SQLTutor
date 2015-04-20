@@ -49,8 +49,8 @@
 			</p:dialog>
 			
 			<div class="left">	
-				<p:panel header="Schema: &quot;#{tutorialPageBean.userBean.selectedTutorialName}&quot;" styleClass="panel">
-					<p:dataTable var="databaseTable" value="#{tutorialPageBean.tables}"
+				<p:panel header="Schema: &quot;#{userBean.selectedTutorialName}&quot;" styleClass="panel">
+					<p:dataTable var="databaseTable" value="#{schemaTableBean.tables}"
 						resizableColumns="true" 
 						style="height:30% !important"
 						tableStyle="table-layout: auto;">

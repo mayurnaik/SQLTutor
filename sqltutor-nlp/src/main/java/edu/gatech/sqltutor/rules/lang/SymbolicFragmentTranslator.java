@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor.rules.lang;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,8 +68,9 @@ import edu.gatech.sqltutor.rules.symbolic.UnhandledSymbolicTypeException;
 import edu.gatech.sqltutor.rules.symbolic.tokens.RootToken;
 import edu.gatech.sqltutor.rules.util.ForeignKeyReplacer;
 
-public class SymbolicFragmentTranslator 
-		extends AbstractQueryTranslator {
+public class SymbolicFragmentTranslator extends AbstractQueryTranslator implements Serializable {
+	private static final long serialVersionUID = 1L;
+			
 	private static final Logger _log = 
 		LoggerFactory.getLogger(SymbolicFragmentTranslator.class);
 	

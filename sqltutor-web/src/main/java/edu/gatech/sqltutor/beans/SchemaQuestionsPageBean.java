@@ -18,15 +18,19 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.event.ComponentSystemEvent;
 
-import edu.gatech.sqltutor.DatabaseTable;
+import edu.gatech.sqltutor.tuples.QuestionCommentTuple;
+import edu.gatech.sqltutor.tuples.QuestionHardnessTuple;
 import edu.gatech.sqltutor.tuples.QuestionTuple;
 
 @ManagedBean
@@ -43,13 +47,30 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	private static final String DELETE_CONFIRMATION_MESSAGE = "Successfully deleted the question(s).";
 	private static final String ADD_CONFIRMATION_MESSAGE = "Successfully added this question.";
 	
-	private List<DatabaseTable> tables;
+	private boolean hasPermissions;
 	
+	// add a question
 	private QuestionTuple question;
 	
+	// question list
 	private List<QuestionTuple> questions;
 	private List<QuestionTuple> selectedQuestions;
 	
+	// question comments
+	private List<QuestionCommentTuple> comments;
+	private List<QuestionCommentTuple> selectedComments;
+	private String reply;
+	
+	// question statistics
+	private List<QuestionHardnessTuple> hardnessTuples;
+	private Set<String> leastUnderstoodConcepts;
+	private Set<String> mostUnderstoodConcepts;
+	private int maximumIncorrectCount;
+	private int minimumAttemptCount;
+	private int numberOfUsersAboveThreshold;
+	private boolean useMedian;
+	private boolean parsed;
+	private int numberOfQuestionsForConcepts;
 	
 	public void preRenderSetup(ComponentSystemEvent event) throws IOException {
 		if (!userBean.isLoggedIn())
@@ -61,36 +82,128 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		}
 		
-		try {
-			tables = getDatabaseManager().getSchemaTables(userBean.getSelectedTutorial());
-		} catch (SQLException e) {
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
+		if(question == null) {
+			question = new QuestionTuple();
+			
+			try {
+				hasPermissions = getDatabaseManager().checkTutorialPermissions(userBean.getSelectedTutorialName(), userBean.getAdminCode());
+			} catch(SQLException e) {
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+			// setup the list of questions
+			try {
+				questions = getDatabaseManager().getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
+				selectedQuestions = new LinkedList<QuestionTuple>();
+			} catch (SQLException e) {
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+				BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of questions. Please try again momentarily.");
+			}
+			// setup the list of comments
+			try {
+				comments = getDatabaseManager().getComments(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
+				selectedComments = new LinkedList<QuestionCommentTuple>();
+			} catch (SQLException e) {
+				for(Throwable t : e) {
+					t.printStackTrace();
+					logException(t, userBean.getHashedEmail());
+				}
+				BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of comments. Please try again momentarily.");
+			}
+			// set default values for statistics
+			// TODO: Magic numbers, a bit arbitrary
+			minimumAttemptCount = questions.size(); // perhaps should default to users who have made an attempt on each question
+			maximumIncorrectCount = 10; // not sure here
+			numberOfQuestionsForConcepts = (int) (Math.log(questions.size())/Math.log(2)); // this works pretty well to grab the upper end despite the number of questions
+			calculateStatistics();
 		}
-		
-		question = new QuestionTuple();
-		setupQuestionList();
 	}
 	
-	public void setupQuestionList() {
+	public void recalculateStatistics() {
+		calculateStatistics();
+		BeanUtils.addInfoMessage(null, "Statistics have been recalculated.");
+	}
+	
+	public void calculateStatistics() {
+		// get the number of users who have made at least a number of attempts greater than the set threshold
+//		try {
+//			setNumberOfUsersAboveThreshold(getDatabaseManager().getNumberOfUsersAboveThreshold(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode(), minimumAttemptCount));
+//		} catch(SQLException e) {
+//			for(Throwable t : e) {
+//				t.printStackTrace();
+//				logException(t, userBean.getHashedEmail());
+//			}
+//			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+//		}
+		// use the formula to get the easiest and hardest questions:  
+		// PER QUESTION: (SUM FOR EACH STUDENT(INCORRECT ATTEMPTS) / (MEDIAN OR AVG INCORRECT ATTEMPTS PER QUESTION ACROSS ALL QUESTIONS)
 		try {
-			questions = getDatabaseManager().getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
-			selectedQuestions = new LinkedList<QuestionTuple>();
-		} catch (SQLException e) {
+			setHardnessTuples(getDatabaseManager().getHardnessRatings(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode(), maximumIncorrectCount, useMedian, parsed));
+		} catch(SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		}
+		// HARDEST CONCEPTS: { SET OF CONCEPTS IN HARDEST } - { SET OF CONCEPTS IN EASIEST }
+		// EASIEST CONCEPTS: { SET OF CONCEPTS IN EASIEST } - { SET OF CONCEPTS IN HARDEST }
+		// IF SET IS EMPTY, UNABLE TO DETERMINE
+		Set<String> hardestConcepts = new HashSet<String>();
+		for(int i = 0; i < numberOfQuestionsForConcepts; i++) {
+			hardestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
+		}
+		
+		Set<String> easiestConcepts = new HashSet<String>();
+		for(int i = hardnessTuples.size()-1; i > hardnessTuples.size() - 1 - numberOfQuestionsForConcepts; i--) {
+			easiestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
+		}
+		
+		leastUnderstoodConcepts = hardestConcepts;
+		leastUnderstoodConcepts.removeAll(easiestConcepts);
+		
+		mostUnderstoodConcepts = easiestConcepts;
+		mostUnderstoodConcepts.removeAll(hardestConcepts);
+	}
+	
+	public void deleteComments() {
+		if(!hasPermissions) {
+			BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
+			return;
+		}
+		
+		try {
+			if(selectedComments.isEmpty()) {
+				BeanUtils.addErrorMessage(null, "You must select comments to be deleted.");
+				return;
+			}
+			getDatabaseManager().deleteComments(selectedComments);
+			comments.removeAll(selectedComments);
+			BeanUtils.addInfoMessage(null, "Successfully deleted the comment(s).");
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
+		} 
+	}
+	
+	public void replyToComment() {
+		// send replies to hashed emails (need to get plain text)
 	}
 
 	public void reorderQuestions() {
-		if(!hasPermissions())
+		if(!hasPermissions) {
+			BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
 			return;
+		}
 		
 		try {
 			getDatabaseManager().reorderQuestions(questions);
@@ -106,8 +219,10 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	}
 	
 	public void deleteQuestions() {
-		if(!hasPermissions())
+		if(!hasPermissions) {
+			BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
 			return;
+		}
 		
 		try {
 			if(selectedQuestions.isEmpty()) {
@@ -128,8 +243,10 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	}
 
 	public void addQuestion() {
-		if(!hasPermissions())
+		if(!hasPermissions) {
+			BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
 			return;
+		}
 		
 		try {
 			getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), question.getAnswer(), true);
@@ -153,31 +270,6 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 		} 
-	}
-	
-	private boolean hasPermissions() {
-		boolean hasPermissions = false;
-		try {
-			hasPermissions = getDatabaseManager().checkTutorialPermissions(userBean.getSelectedTutorialName(), userBean.getAdminCode());
-
-			if(!hasPermissions) 
-				BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
-		} catch(SQLException e) {
-			for(Throwable t : e) {
-				t.printStackTrace();
-				logException(t, userBean.getHashedEmail());
-			}
-			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
-		}
-		return hasPermissions;
-	}
-
-	public List<DatabaseTable> getTables() {
-		return tables;
-	}
-
-	public void setTables(List<DatabaseTable> tables) {
-		this.tables = tables;
 	}
 	
 	public UserBean getUserBean() {
@@ -206,5 +298,93 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	public QuestionTuple getQuestion() {
 		return question;
+	}
+
+	public List<QuestionCommentTuple> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<QuestionCommentTuple> comments) {
+		this.comments = comments;
+	}
+
+	public List<QuestionCommentTuple> getSelectedComments() {
+		return selectedComments;
+	}
+
+	public void setSelectedComments(List<QuestionCommentTuple> selectedComments) {
+		this.selectedComments = selectedComments;
+	}
+
+	public String getReply() {
+		return reply;
+	}
+
+	public void setReply(String reply) {
+		this.reply = reply;
+	}
+	
+	public List<QuestionHardnessTuple> getHardnessTuples() {
+		return hardnessTuples;
+	}
+
+	public void setHardnessTuples(List<QuestionHardnessTuple> hardnessTuples) {
+		this.hardnessTuples = hardnessTuples;
+	}
+
+	public Set<String> getLeastUnderstoodConcepts() {
+		return leastUnderstoodConcepts;
+	}
+
+	public void setLeastUnderstoodConcepts(Set<String> leastUnderstoodConcepts) {
+		this.leastUnderstoodConcepts = leastUnderstoodConcepts;
+	}
+
+	public Set<String> getMostUnderstoodConcepts() {
+		return mostUnderstoodConcepts;
+	}
+
+	public void setMostUnderstoodConcepts(Set<String> mostUnderstoodConcepts) {
+		this.mostUnderstoodConcepts = mostUnderstoodConcepts;
+	}
+
+	public int getMaximumIncorrectCount() {
+		return maximumIncorrectCount;
+	}
+
+	public void setMaximumIncorrectCount(int maximumIncorrectCount) {
+		this.maximumIncorrectCount = maximumIncorrectCount;
+	}
+
+	public int getMinimumAttemptCount() {
+		return minimumAttemptCount;
+	}
+
+	public void setMinimumAttemptCount(int minimumAttemptCount) {
+		this.minimumAttemptCount = minimumAttemptCount;
+	}
+
+	public int getNumberOfUsersAboveThreshold() {
+		return numberOfUsersAboveThreshold;
+	}
+
+	public void setNumberOfUsersAboveThreshold(int numberOfUsersAboveThreshold) {
+		this.numberOfUsersAboveThreshold = numberOfUsersAboveThreshold;
+	}
+	
+	public boolean isUseMedian() {
+		return useMedian;
+	}
+
+	public void setUseMedian(boolean useMedian) {
+		this.useMedian = useMedian;
+	}
+
+	public boolean isParsed() {
+		return parsed;
+	}
+
+	public void setParsed(boolean parsed) {
+		this.parsed = parsed;
 	}
 }

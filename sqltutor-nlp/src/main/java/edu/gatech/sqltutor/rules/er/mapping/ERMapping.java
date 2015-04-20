@@ -15,6 +15,7 @@
  */
 package edu.gatech.sqltutor.rules.er.mapping;
 
+import java.io.Serializable;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -32,7 +33,9 @@ import edu.gatech.sqltutor.rules.er.converters.BiMapConverter;
 import edu.gatech.sqltutor.rules.er.mapping.ERJoinMap.ERKeyPair;
 
 @XStreamAlias("ermapping")
-public class ERMapping {
+public class ERMapping implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private static final Pattern fqNamePattern = 
 		Pattern.compile("([^\\.\\s]+)\\.([^\\.\\s]+)");
 	private static boolean isFQName(String name) {
