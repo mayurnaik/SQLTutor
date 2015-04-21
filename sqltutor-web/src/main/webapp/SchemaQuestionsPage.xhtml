@@ -112,14 +112,14 @@
 					value="#{schemaQuestionsPageBean.question.columnOrderMatters}" />
 				<br />
 
-				<p:commandButton id="add"
-					action="#{schemaQuestionsPageBean.addQuestion}" ajax="false"
+				<p:commandButton id="add" update="reorderPanel,growl"
+					action="#{schemaQuestionsPageBean.addQuestion}" 
 					value="Add" icon="ui-icon-check" styleClass="panelbutton" />
 			</p:panel>
 
 			<div class="seperator" />
 
-			<p:panel styleClass="panel" header="Reorder/Delete Questions">
+			<p:panel id="reorderPanel" styleClass="panel" header="Reorder/Delete Questions">
 				<h:outputText
 					value="To reorder, drag and drop then click the Reorder button." />
 				<br />
@@ -172,17 +172,17 @@
 				</p:dataTable>
 
 				<p:commandButton id="reorderQuestionButton"
-					action="#{schemaQuestionsPageBean.reorderQuestions}" ajax="false"
+					action="#{schemaQuestionsPageBean.reorderQuestions}" update="reorderPanel,commentsPanel,growl,questionStatisticsPanel"
 					value="Reorder" icon="ui-icon-check" styleClass="panelbutton"
 					style="margin-right:10" />
-				<p:commandButton id="deleteQuestionButton"
-					action="#{schemaQuestionsPageBean.deleteQuestions}" ajax="false"
+				<p:commandButton id="deleteQuestionButton" update="reorderPanel,commentsPanel,growl,questionStatisticsPanel"
+					action="#{schemaQuestionsPageBean.deleteQuestions}" 
 					styleClass="panelbutton" value="Delete" icon="ui-icon-check" />
 			</p:panel>
 
 			<div class="seperator" />
 
-			<p:panel styleClass="panel" header="Student Comments">
+			<p:panel id="commentsPanel" styleClass="panel" header="Student Comments">
 				<h:outputText
 					value="To reply, select a comment and hit the Reply button. This only replies to the first comment selected." />
 				<br />
@@ -218,7 +218,7 @@
 				</ui:remove>
 
 				<p:commandButton id="deleteComments"
-					action="#{schemaQuestionsPageBean.deleteComments}" ajax="false"
+					action="#{schemaQuestionsPageBean.deleteComments}" update="commentsPanel,growl"
 					value="Delete" icon="ui-icon-check" styleClass="panelbutton"
 					style="margin-right:10" />
 			</p:panel>

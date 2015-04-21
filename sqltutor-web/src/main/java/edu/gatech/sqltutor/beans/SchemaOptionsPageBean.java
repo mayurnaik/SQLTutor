@@ -18,7 +18,6 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.UUID;
 
 import javax.faces.bean.ManagedBean;
@@ -28,7 +27,6 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 
-import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 
 @ManagedBean
@@ -43,7 +41,6 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 	private static final String CONFIRMATION_MESSAGE = "Successfully submitted changes.";
 	private static final String ADMIN_PAGE_CONTEXT = "/AdminPage.jsf";
 	// FIXME: probably don't want to have a default schema here
-	private static final String DEFAULT_SCHEMA_NAME = "company";
 	private static final String OPEN_ACCESS_CHECK_ERROR_MESSAGE = "Your opening date/time must be before your closing date/time.";
 	
 	private TutorialOptionsTuple options;
@@ -79,7 +76,8 @@ public class SchemaOptionsPageBean extends AbstractDatabaseBean implements Seria
 		try {
 			if(deleteThisSchema) {
 				getDatabaseManager().deleteTutorial(userBean.getSelectedTutorial(), userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
-				userBean.setSelectedTutorial(DEFAULT_SCHEMA_NAME);
+				userBean.removeLinkedTutorial(userBean.getSelectedTutorialAdminCode(), userBean.getSelectedTutorialName());
+				userBean.setSelectedTutorial(null);
 
 				ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 				externalContext.redirect(externalContext.getRequestContextPath() + ADMIN_PAGE_CONTEXT);

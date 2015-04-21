@@ -24,25 +24,25 @@
 			<ui:include src="/BodyTemplate.xhtml" />
 		</ui:insert>
 		<p:menubar autoDisplay="false">
-			<p:menuitem value="Home" icon="ui-icon-arrow-1-e" 
+			<p:menuitem value="Home" icon="ui-icon-arrow-1-e" ajax="false"
 				action="HomePage.xhtml?faces-redirect=true"
 				styleClass="menubutton"/>
-			<p:menuitem value="Tutorials" 
+			<p:menuitem value="Tutorials" ajax="false"
 				action="TutorialMenuPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.loggedIn}"
 				styleClass="menubutton"/>
-			<p:menuitem value="Admin Options" 
+			<p:menuitem value="Admin Options" ajax="false"
 				action="AdminPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.admin}"
 				styleClass="menubutton"/>
-			<p:menuitem value="Developer Options" 
+			<p:menuitem value="Developer Options" ajax="false"
 				action="DevSchemaInstancesPage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.developer}"
 				styleClass="menubutton"/>
-			<p:menuitem value="Profile Options" 
+			<p:menuitem value="Profile Options" ajax="false"
 				action="ProfilePage.xhtml?faces-redirect=true"
 				icon="ui-icon-arrow-1-e" 
 				rendered="#{userBean.loggedIn}"
@@ -51,8 +51,8 @@
 				type="button" icon="ui-icon-arrowreturnthick-1-e"
 				styleClass="menubutton"
 				rendered="#{!userBean.loggedIn}" />
-			<p:menuitem value="Logout" type="button" 
-				icon="ui-icon-arrowreturnthick-1-w" ajax="false"
+			<p:menuitem value="Logout" type="button" ajax="false"
+				icon="ui-icon-arrowreturnthick-1-w" 
 				styleClass="menubutton"
 				rendered="#{userBean.loggedIn}" 
 				action="#{userBean.setLoggedIn(false)}" />

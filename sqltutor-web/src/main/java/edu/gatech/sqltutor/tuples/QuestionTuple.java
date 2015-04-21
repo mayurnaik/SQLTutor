@@ -24,7 +24,6 @@ public class QuestionTuple implements Serializable {
 	private int order;
 	private String question;
 	private String answer;
-	private int id;
 	private String[] concepts;
 	private boolean columnOrderMatters;
 	private boolean rowOrderMatters;
@@ -32,11 +31,10 @@ public class QuestionTuple implements Serializable {
 	
 	public QuestionTuple() {}
 	
-	public QuestionTuple(int order, String question, String answer, int id, String[] concepts, double performanceLeniencySeconds, boolean columnOrderMatters, boolean rowOrderMatters) {
+	public QuestionTuple(int order, String question, String answer, String[] concepts, double performanceLeniencySeconds, boolean columnOrderMatters, boolean rowOrderMatters) {
 		this.order = order;
 		this.question = question;
 		this.answer = answer;
-		this.id = id;
 		this.concepts = concepts;
 		this.performanceLeniencySeconds = performanceLeniencySeconds;
 		this.columnOrderMatters = columnOrderMatters;
@@ -65,14 +63,6 @@ public class QuestionTuple implements Serializable {
 	
 	public void setAnswer(String answer) {
 		this.answer = answer;
-	}
-	
-	public int getId() {
-		return id;
-	}
-	
-	public void setId(int id) {
-		this.id = id;
 	}
 
 	public String[] getConcepts() {

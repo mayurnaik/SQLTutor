@@ -29,7 +29,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -66,7 +65,6 @@ import edu.gatech.sqltutor.tuples.QuestionTuple;
 import edu.gatech.sqltutor.tuples.TutorialOptionsTuple;
 import edu.gatech.sqltutor.tuples.UserQuery;
 import edu.gatech.sqltutor.tuples.UserTuple;
-import edu.gatech.sqltutor.util.ScriptRunner;
 
 @ManagedBean(name="databaseManager", eager=true)
 @ApplicationScoped
@@ -154,7 +152,7 @@ public class DatabaseManager implements Serializable {
 		try (final Connection connection = userDataSource.getConnection()) {
 
 			try (final Statement statement = connection.createStatement()) {
-				statement.executeUpdate("DROP SCHEMA " + tutorialName + " CASCADE;");
+				statement.executeUpdate("DROP SCHEMA \"" + tutorial + "\" CASCADE;");
 			}
 		} 
 		
@@ -250,7 +248,7 @@ public class DatabaseManager implements Serializable {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement(
-					"SELECT \"order\", question, answer, id, concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters   "
+					"SELECT \"order\", question, answer, concept_tags, performance_leniency_seconds, column_order_matters, row_order_matters   "
 					+ "FROM schema_questions WHERE schema = ? AND admin_code = ? ORDER BY \"order\";")) {
 				preparedStatement.setString(1, tutorialName);
 				preparedStatement.setString(2, tutorialAdminCode);
@@ -259,7 +257,7 @@ public class DatabaseManager implements Serializable {
 					if (resultSet.isBeforeFirst())
 						questions = new LinkedList<QuestionTuple>();
 					while (resultSet.next()) {
-						questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getInt(4), (resultSet.getArray(5) != null ? (String[])resultSet.getArray(5).getArray() : null), resultSet.getDouble(6), resultSet.getBoolean(7), resultSet.getBoolean(8)));
+						questions.add(new QuestionTuple(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), (resultSet.getArray(4) != null ? (String[])resultSet.getArray(4).getArray() : null), resultSet.getDouble(5), resultSet.getBoolean(6), resultSet.getBoolean(7)));
 					}
 				}
 			}
@@ -293,8 +291,8 @@ public class DatabaseManager implements Serializable {
 			
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("UPDATE schema_options SET visible_to_users = ?, in_order_questions = ?, "
 					+ "open_access = ?, close_access = ?, link = ?, max_question_attempts = ? WHERE schema = ? AND admin_code = ?;")) {
-				preparedStatement.setBoolean(1, options.isInOrderQuestions());
-				preparedStatement.setBoolean(2, options.isVisibleToUsers());
+				preparedStatement.setBoolean(1, options.isVisibleToUsers());
+				preparedStatement.setBoolean(2, options.isInOrderQuestions());
 				final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 				preparedStatement.setTimestamp(3, options.getOpenAccess(), cal);
 				preparedStatement.setTimestamp(4, options.getCloseAccess(), cal);
@@ -322,18 +320,18 @@ public class DatabaseManager implements Serializable {
 
 		// get schema name, modify, and replace as "<tutorialAdminCode>_<schemaName>"
 		String schemaName = null;
+		String modifiedSchemaName = null;
 		{
-			final Pattern p = Pattern.compile("CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)", Pattern.CASE_INSENSITIVE);
+			final Pattern p = Pattern.compile("(CREATE SCHEMA )([a-zA-Z0-9_]*)", Pattern.CASE_INSENSITIVE);
 			final Matcher m = p.matcher(schemaDump);
 			m.find();
 			schemaName = m.group(2);
+			modifiedSchemaName = "\"" + tutorialAdminCode + "_" + schemaName + "\"";
 			// add tutorialAdminCode to schemaName
-			schemaDump.replaceAll(schemaName, tutorialAdminCode + "_" + schemaName);
+			schemaDump = schemaDump.replaceAll(schemaName, modifiedSchemaName);
+			
 		}
-		
-		if (schemaName == null)
-			throw new IllegalArgumentException("Unable to find schema name. Regex used: \"CREATE SCHEMA\\s+(IF\\s+NOT\\s+EXISTS\\s+)(\\w+)\"");
-		
+	
 		try (final Connection connection = userDataSource.getConnection()) {
 			
 			try (final Reader reader = new BufferedReader(new StringReader(schemaDump))) {
@@ -341,24 +339,24 @@ public class DatabaseManager implements Serializable {
 				runner.setLogWriter(null);
 				runner.runScript(reader);
 			}
-
+			
 			try (final Statement statement = connection.createStatement()) {
-				statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA \"" + schemaName + "\" TO readonly_user;");
-				statement.addBatch("GRANT USAGE ON SCHEMA \"" + schemaName + "\" TO readonly_user;");
+				statement.addBatch("GRANT SELECT ON ALL TABLES IN SCHEMA " + modifiedSchemaName + " TO readonly_user;");
+				statement.addBatch("GRANT USAGE ON SCHEMA " + modifiedSchemaName + " TO readonly_user;");
 				statement.executeBatch();
 			}
 		} 
 		
 		try (final Connection connection = dataSource.getConnection()) {
 
-			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_options (schema, adminCode) VALUES (?, ?);")) {
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO schema_options (schema, admin_code) VALUES (?, ?);")) {
 				preparedStatement.setString(1, schemaName);
 				preparedStatement.setString(2, tutorialAdminCode);
 				preparedStatement.executeUpdate();
 			}
 		} 
-
-		return schemaName;
+		
+		return tutorialAdminCode + "_" + schemaName;
 	}
 
 	public DataSource getDataSource() {
@@ -390,21 +388,24 @@ public class DatabaseManager implements Serializable {
 
 			try (final Statement statement = connection.createStatement()) {
 				for(int i = 0; i < questions.size(); i++) {
-					final int id = questions.get(i).getId();
 					statement.addBatch("UPDATE schema_questions SET \"order\" = "
-							+ (i+1) + " WHERE id = " + id + ";");
+							+ (-(i+1)) + " WHERE \"order\" = " + questions.get(i).getOrder() + ";");
+					questions.get(i).setOrder(i+1);
 				}
+				statement.addBatch("UPDATE schema_questions SET \"order\" = (\"order\" * -1) WHERE \"order\" < 0;");
 				statement.executeBatch();
 			}
 		} 
 	}
 
-	public void deleteQuestions(List<QuestionTuple> questions) throws SQLException {
+	public void deleteQuestions(String schema, String schemaAdminCode, List<QuestionTuple> questions) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
 
-			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_questions WHERE id = ?")) {
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM schema_questions WHERE schema = ? AND admin_code = ? AND \"order\" = ?")) {
 				for(QuestionTuple question : questions) {
-					preparedStatement.setInt(1, question.getId());
+					preparedStatement.setString(1, schema);
+					preparedStatement.setString(2, schemaAdminCode);
+					preparedStatement.setInt(3, question.getOrder());
 					preparedStatement.addBatch();
 				}
 				preparedStatement.executeBatch();
@@ -652,6 +653,9 @@ public class DatabaseManager implements Serializable {
 		statement.setFetchSize(1000);
 		statement.execute("SET search_path TO '" + schema + "'");
 		statement.execute("SET statement_timeout TO " + (QUERY_TIMEOUT_SECONDS * 1000));
+		
+		System.out.println("SET search_path TO '" + schema + "'");
+		System.out.println(query);
 			
 		final long queryStart = System.currentTimeMillis();
 		try (final ResultSet resultSet = statement.executeQuery(query)) {
@@ -762,11 +766,11 @@ public class DatabaseManager implements Serializable {
 				e.printStackTrace();
 			}
 			// add user to linked_admin_codes table
-			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\") VALUES (?)")) {
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO linked_admin_codes (\"email\", linked_admin_code) VALUES (?, 'default')")) {
 				preparedStatement.setString(1, hashedEmail);
 				preparedStatement.executeUpdate();
 			}
-		} 
+		}
 	}
 	
 	public List<String> getLinkedTutorials(String hashedEmail, String adminCode) throws SQLException {
@@ -872,21 +876,21 @@ public class DatabaseManager implements Serializable {
 		return isCorrect;
 	}
 
-	public void log(String sessionId, String email, String schemaName, String question, String correctAnswer, String userQuery, boolean parsed, boolean correct, String nlpFeedback,
+	public void log(String sessionId, String email, String schemaName, int order, String correctAnswer, String userQuery, String question, boolean parsed, boolean correct, String nlpFeedback,
 			double totalTimeSeconds, double queryTotalTimeSeconds, double answerTotalTimeSeconds, double queryExecutionTimeSeconds, double answerExecutionTimeSeconds, boolean truncated, 
 			boolean readLimitExceeded, int originalSize, String schemaAdminCode) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"log\" (\"session_id\", "
-					+ "\"email\", \"schema\", \"question\", \"correct_answer\", \"query\", "
+					+ "\"email\", \"schema\", \"order\", \"correct_answer\", \"query\", "
 					+ "\"parsed\", \"correct\", \"nlp_feedback\", \"total_time_seconds\", "
 					+ "\"query_total_time_seconds\", \"answer_total_time_seconds\", \"query_execution_time_seconds\", "
 					+ "\"answer_execution_time_seconds\", \"truncated\", "
-					+ "\"read_limit_exceeded\", \"original_size\", \"schema_admin_code\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+					+ "\"read_limit_exceeded\", \"original_size\", \"schema_admin_code\", \"question\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 				preparedStatement.setString(1, sessionId);
 				preparedStatement.setString(2, email);
 				preparedStatement.setString(3, schemaName);
-				preparedStatement.setString(4, question);
+				preparedStatement.setInt(4, order);
 				preparedStatement.setString(5, correctAnswer);
 				preparedStatement.setString(6, userQuery);
 				preparedStatement.setBoolean(7, parsed);
@@ -901,20 +905,21 @@ public class DatabaseManager implements Serializable {
 				preparedStatement.setBoolean(16, readLimitExceeded);
 				preparedStatement.setInt(17, originalSize);
 				preparedStatement.setString(18, schemaAdminCode);
+				preparedStatement.setString(19, question);
 				preparedStatement.executeUpdate();
 			}
 		} 
 	}
 
-	public void logQuestionPresentation(String sessionId, String email, String schemaName, String question, String schemaAdminCode) throws SQLException {
+	public void logQuestionPresentation(String sessionId, String email, String schemaName, int order, String schemaAdminCode) throws SQLException {
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO \"log_question_presentation\" (\"session_id\", "
-					+ "\"email\", \"schema\", \"question\", \"schema_admin_code\") VALUES (?, ?, ?, ?, ?)")) {
+					+ "\"email\", \"schema\", \"order\", \"schema_admin_code\") VALUES (?, ?, ?, ?, ?)")) {
 				preparedStatement.setString(1, sessionId);
 				preparedStatement.setString(2, email);
 				preparedStatement.setString(3, schemaName);
-				preparedStatement.setString(4, question);
+				preparedStatement.setInt(4, order);
 				preparedStatement.setString(5, schemaAdminCode);
 				preparedStatement.executeUpdate();
 			}
@@ -1124,9 +1129,9 @@ public class DatabaseManager implements Serializable {
 		int mostRecentlyPresentedQuestion = 0;
 		try (final Connection connection = dataSource.getConnection()) {
 
-			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT s.order FROM log_question_presentation p, "
-					+ "schema_questions s WHERE p.question = s.question AND p.schema = s.schema AND p.email = ? AND p.schema = ? AND schema_admin_code = ?"
-					+ " GROUP BY s.order ORDER BY max(timestamp) DESC LIMIT 1")) {
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT s.\"order\" FROM log_question_presentation p, "
+					+ "schema_questions s WHERE p.\"order\" = s.\"order\" AND p.schema = s.schema AND p.email = ? AND p.schema = ? AND schema_admin_code = ?"
+					+ " GROUP BY s.\"order\" ORDER BY max(timestamp) DESC LIMIT 1")) {
 				preparedStatement.setString(1, hashedEmail);
 				preparedStatement.setString(2, schema);
 				preparedStatement.setString(3, schemaAdminCode);
@@ -1140,14 +1145,14 @@ public class DatabaseManager implements Serializable {
 		return mostRecentlyPresentedQuestion;
 	}
 	
-	public int getNumberOfAttempts(String hashedEmail, String schema, String question, boolean parsed, boolean correct, String schemaAdminCode) throws SQLException {
+	public int getNumberOfAttempts(String hashedEmail, String schema, int order, boolean parsed, boolean correct, String schemaAdminCode) throws SQLException {
 		int numberOfParsedAttempts = 0;
 		try (final Connection connection = dataSource.getConnection()) {
 
 			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT count(*) FROM log "
-					+ "WHERE email = ? AND question = ? AND schema = ? AND correct = ? AND parsed = ? AND schema_admin_code = ?")) {
+					+ "WHERE email = ? AND \"order\" = ? AND schema = ? AND correct = ? AND parsed = ? AND schema_admin_code = ?")) {
 				preparedStatement.setString(1, hashedEmail);
-				preparedStatement.setString(2, question);
+				preparedStatement.setInt(2, order);
 				preparedStatement.setString(3, schema);
 				preparedStatement.setBoolean(4, correct);
 				preparedStatement.setBoolean(5, parsed);
@@ -1211,15 +1216,19 @@ public class DatabaseManager implements Serializable {
 		
 		try (final Connection connection = dataSource.getConnection()) {
 
-			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"order\", (sum1 / avg1) as HARDNESS, sum1, avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS sum1 FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t1 GROUP BY \"order\" ) t1, ( SELECT " + (useMedian ? "MEDIAN" : "AVG") + "(totals) AS avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS totals FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t GROUP BY \"order\" ) tt ) t2 ORDER BY HARDNESS DESC")) {
+			try (final PreparedStatement preparedStatement = connection.prepareStatement("SELECT \"order\", (sum1 / avg1) as HARDNESS, sum1, avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS sum1 FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct AND \"order\" IN ( SELECT \"order\" FROM schema_questions WHERE schema = ? AND admin_code = ? ) " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t1 GROUP BY \"order\" ) t1, ( SELECT " + (useMedian ? "MEDIAN" : "AVG") + "(totals) AS avg1 FROM ( SELECT \"order\", SUM(incorrect_count) AS totals FROM ( SELECT \"order\", CASE WHEN COUNT(*) > ? THEN ? ELSE COUNT(*) END AS incorrect_count FROM log l, \"user\" u WHERE l.email = u.email AND NOT admin AND NOT developer AND schema = ? AND schema_admin_code = ? AND NOT correct AND \"order\" IN ( SELECT \"order\" FROM schema_questions WHERE schema = ? AND admin_code = ? ) " + (parsed ? "AND parsed" : "") + " GROUP BY \"order\", u.email ) t GROUP BY \"order\" ) tt ) t2 ORDER BY HARDNESS DESC")) {
 				preparedStatement.setInt(1, maxIncorrectCount);
 				preparedStatement.setInt(2, maxIncorrectCount);
 				preparedStatement.setString(3, schema);
 				preparedStatement.setString(4, schemaAdminCode);
-				preparedStatement.setInt(5, maxIncorrectCount);
-				preparedStatement.setInt(6, maxIncorrectCount);
-				preparedStatement.setString(7, schema);
-				preparedStatement.setString(8, schemaAdminCode);
+				preparedStatement.setString(5, schema);
+				preparedStatement.setString(6, schemaAdminCode);
+				preparedStatement.setInt(7, maxIncorrectCount);
+				preparedStatement.setInt(8, maxIncorrectCount);
+				preparedStatement.setString(9, schema);
+				preparedStatement.setString(10, schemaAdminCode);
+				preparedStatement.setString(11, schema);
+				preparedStatement.setString(12, schemaAdminCode);
 	
 				try (ResultSet resultSet = preparedStatement.executeQuery()) {
 					if (resultSet.isBeforeFirst()) 

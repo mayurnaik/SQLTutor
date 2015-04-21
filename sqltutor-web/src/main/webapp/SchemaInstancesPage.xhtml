@@ -67,9 +67,9 @@
 			<div class="middle"/>
 			
 			<div class="right2">
-		    	<p:messages />
+		    	<p:messages id="messages"/>
 		    	
-		 		<p:panel classStyle="panel" header="Instance Data View" >
+		 		<p:panel id="instancePanel" classStyle="panel" header="Instance Data View" >
 				    <p:tabView value="#{schemaTableBean.tables}" var="table"
 				    	dynamic="true">
 				        <p:tab title="#{table.tableName}" >
@@ -99,7 +99,7 @@
 					
 					<p:commandButton id="try" value="Submit"
 						action="#{schemaInstancesPageBean.processSQL}"
-						ajax="false"
+						update="messages,instancePanel" 
 						styleClass="panelbutton"/>
 					<br/><br/>
 					

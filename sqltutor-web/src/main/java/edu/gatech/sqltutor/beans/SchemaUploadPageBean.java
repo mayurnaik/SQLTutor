@@ -45,19 +45,21 @@ public class SchemaUploadPageBean extends AbstractDatabaseBean implements Serial
 	public void addSchema() throws IOException {
 		try {
 			String schemaName = getDatabaseManager().addSchema(schemaDump, userBean.getAdminCode());
+			System.out.println(schemaName);
 			userBean.setSelectedTutorial(schemaName);
+			userBean.addSelectedCreatedTutorial();
 	        final ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 			externalContext.redirect(externalContext.getRequestContextPath() + SCHEMA_OPTIONS_PAGE_CONTEXT);
 		} catch ( IllegalArgumentException e) {
 			final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-				"Argument error.", e.getMessage());
+					e.getMessage(), null);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		} catch ( SQLException e ) {
 			for(Throwable t : e) {
 				t.printStackTrace();
 				logException(t, userBean.getHashedEmail());
 				final FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Database error.", t.getMessage());
+						t.getMessage(), null);
 				FacesContext.getCurrentInstance().addMessage(null, msg);
 			}
 		} 

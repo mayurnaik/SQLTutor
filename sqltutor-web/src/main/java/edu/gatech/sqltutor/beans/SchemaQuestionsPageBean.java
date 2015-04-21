@@ -63,8 +63,8 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	
 	// question statistics
 	private List<QuestionHardnessTuple> hardnessTuples;
-	private Set<String> leastUnderstoodConcepts;
-	private Set<String> mostUnderstoodConcepts;
+	private HashSet<String> leastUnderstoodConcepts;
+	private HashSet<String> mostUnderstoodConcepts;
 	private int maximumIncorrectCount;
 	private int minimumAttemptCount;
 	private int numberOfUsersAboveThreshold;
@@ -94,34 +94,45 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 				}
 				BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
 			}
-			// setup the list of questions
-			try {
-				questions = getDatabaseManager().getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
-				selectedQuestions = new LinkedList<QuestionTuple>();
-			} catch (SQLException e) {
-				for(Throwable t : e) {
-					t.printStackTrace();
-					logException(t, userBean.getHashedEmail());
-				}
-				BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of questions. Please try again momentarily.");
-			}
-			// setup the list of comments
-			try {
-				comments = getDatabaseManager().getComments(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
-				selectedComments = new LinkedList<QuestionCommentTuple>();
-			} catch (SQLException e) {
-				for(Throwable t : e) {
-					t.printStackTrace();
-					logException(t, userBean.getHashedEmail());
-				}
-				BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of comments. Please try again momentarily.");
-			}
+
+			setupQuestionList();
+			
+			setupComments();
+			
 			// set default values for statistics
 			// TODO: Magic numbers, a bit arbitrary
-			minimumAttemptCount = questions.size(); // perhaps should default to users who have made an attempt on each question
+			minimumAttemptCount = questions != null ? questions.size() : 0; // perhaps should default to users who have made an attempt on each question
 			maximumIncorrectCount = 10; // not sure here
-			numberOfQuestionsForConcepts = (int) (Math.log(questions.size())/Math.log(2)); // this works pretty well to grab the upper end despite the number of questions
+			numberOfQuestionsForConcepts = questions != null ? (int) (Math.log(questions.size())/Math.log(2)) : 0; // this works pretty well to grab the upper end despite the number of questions
 			calculateStatistics();
+		}
+	}
+	
+	public void setupQuestionList() {
+		// setup the list of questions
+		try {
+			questions = getDatabaseManager().getQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
+			selectedQuestions = new LinkedList<QuestionTuple>();
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of questions. Please try again momentarily.");
+		}
+	}
+	
+	public void setupComments() {
+		// setup the list of comments
+		try {
+			comments = getDatabaseManager().getComments(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode());
+			selectedComments = new LinkedList<QuestionCommentTuple>();
+		} catch (SQLException e) {
+			for(Throwable t : e) {
+				t.printStackTrace();
+				logException(t, userBean.getHashedEmail());
+			}
+			BeanUtils.addErrorMessage(null, "There was an internal database error trying to retrieve the list of comments. Please try again momentarily.");
 		}
 	}
 	
@@ -155,14 +166,19 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		// HARDEST CONCEPTS: { SET OF CONCEPTS IN HARDEST } - { SET OF CONCEPTS IN EASIEST }
 		// EASIEST CONCEPTS: { SET OF CONCEPTS IN EASIEST } - { SET OF CONCEPTS IN HARDEST }
 		// IF SET IS EMPTY, UNABLE TO DETERMINE
-		Set<String> hardestConcepts = new HashSet<String>();
-		for(int i = 0; i < numberOfQuestionsForConcepts; i++) {
-			hardestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
-		}
+		HashSet<String> hardestConcepts = new HashSet<String>();
+		HashSet<String> easiestConcepts = new HashSet<String>();
 		
-		Set<String> easiestConcepts = new HashSet<String>();
-		for(int i = hardnessTuples.size()-1; i > hardnessTuples.size() - 1 - numberOfQuestionsForConcepts; i--) {
-			easiestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
+		if (hardnessTuples != null && hardnessTuples.size() > 0) {
+			for(int i = 0; i < numberOfQuestionsForConcepts; i++) {
+				if (questions.get(hardnessTuples.get(i).getOrder() - 1).getConcepts() != null)
+					hardestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
+			}
+			
+			for(int i = hardnessTuples.size() - 1; i > hardnessTuples.size() - 1 - numberOfQuestionsForConcepts; i--) {
+				if (questions.get(hardnessTuples.get(i).getOrder() - 1).getConcepts() != null)
+					easiestConcepts.addAll(Arrays.asList(questions.get(hardnessTuples.get(i).getOrder()).getConcepts()));
+			}
 		}
 		
 		leastUnderstoodConcepts = hardestConcepts;
@@ -200,6 +216,11 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 	}
 
 	public void reorderQuestions() {
+		orderQuestions();
+		BeanUtils.addInfoMessage(null, REORDER_CONFIRMATION_MESSAGE);
+	}
+	
+	public void orderQuestions() {
 		if(!hasPermissions) {
 			BeanUtils.addErrorMessage(null, PERMISSIONS_ERROR);
 			return;
@@ -207,8 +228,9 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		
 		try {
 			getDatabaseManager().reorderQuestions(questions);
+			calculateStatistics();
+			setupComments();
 			selectedQuestions = new LinkedList<QuestionTuple>();
-			BeanUtils.addInfoMessage(null, REORDER_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
 				t.printStackTrace();
@@ -229,9 +251,9 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 				BeanUtils.addErrorMessage(null, CHOOSE_QUESTION_ERROR);
 				return;
 			}
-			getDatabaseManager().deleteQuestions(selectedQuestions);
+			getDatabaseManager().deleteQuestions(userBean.getSelectedTutorialName(), userBean.getSelectedTutorialAdminCode(), selectedQuestions);
 			questions.removeAll(selectedQuestions);
-			reorderQuestions();
+			orderQuestions();
 			BeanUtils.addInfoMessage(null, DELETE_CONFIRMATION_MESSAGE);
 		} catch (SQLException e) {
 			for(Throwable t : e) {
@@ -248,6 +270,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		}
 		
+		// test whether the answer throws exceptions
 		try {
 			getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), question.getAnswer(), true);
 		} catch(SQLException e) {
@@ -259,6 +282,8 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		}
 		
 		try {
+			if (questions == null)
+				questions = new LinkedList<QuestionTuple>();
 			questions.add(question);
 			question.setOrder(questions.size());
 			getDatabaseManager().addQuestion(userBean.getSelectedTutorialName(), question, userBean.getSelectedTutorialAdminCode());
@@ -269,7 +294,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 				logException(t, userBean.getHashedEmail());
 			}
 			BeanUtils.addErrorMessage(null, DATABASE_ERROR_MESSAGE);
-		} 
+		}
 	}
 	
 	public UserBean getUserBean() {
@@ -336,7 +361,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		return leastUnderstoodConcepts;
 	}
 
-	public void setLeastUnderstoodConcepts(Set<String> leastUnderstoodConcepts) {
+	public void setLeastUnderstoodConcepts(HashSet<String> leastUnderstoodConcepts) {
 		this.leastUnderstoodConcepts = leastUnderstoodConcepts;
 	}
 
@@ -344,7 +369,7 @@ public class SchemaQuestionsPageBean extends AbstractDatabaseBean implements Ser
 		return mostUnderstoodConcepts;
 	}
 
-	public void setMostUnderstoodConcepts(Set<String> mostUnderstoodConcepts) {
+	public void setMostUnderstoodConcepts(HashSet<String> mostUnderstoodConcepts) {
 		this.mostUnderstoodConcepts = mostUnderstoodConcepts;
 	}
 

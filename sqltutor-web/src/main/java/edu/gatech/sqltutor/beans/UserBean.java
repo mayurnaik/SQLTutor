@@ -22,6 +22,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -203,6 +204,45 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 		}
 	}
 	
+	public void addSelectedCreatedTutorial() {
+		SelectItemGroup selfAdminCodeGroup = null;
+
+		for (SelectItem selectItem : getLinkedTutorials()) 
+			if (selectItem.getLabel().equals(getAdminCode()))
+				selfAdminCodeGroup = (SelectItemGroup)selectItem;
+		
+		final SelectItem newTutorial = new SelectItem(getSelectedTutorial(), getSelectedTutorialName());
+		final SelectItem[] oldArray = selfAdminCodeGroup.getSelectItems();
+		final SelectItem[] newArray = Arrays.copyOf(oldArray, oldArray.length + 1);
+		newArray[newArray.length - 1] = newTutorial;
+		
+		selfAdminCodeGroup.setSelectItems(newArray);
+	}
+	
+	public void removeLinkedTutorial(String tutorialAdminCode, String tutorialName) {
+		SelectItemGroup adminCodeGroup = null;
+
+		for (SelectItem selectItem : getLinkedTutorials()) 
+			if (selectItem.getLabel().equals(tutorialAdminCode))
+				adminCodeGroup = (SelectItemGroup)selectItem;
+		
+		final SelectItem[] oldArray = adminCodeGroup.getSelectItems();
+		for (int i = 0; i < oldArray.length; i++) {
+			if (oldArray[i].getLabel().equals(tutorialName))
+				oldArray[i] = null;
+		}
+		
+		final SelectItem[] newArray = new SelectItem[oldArray.length - 1];
+		for (int i = 0, j = 0; i < oldArray.length && j < newArray.length; i++) {
+			if (oldArray[i] != null) {
+				newArray[j] = oldArray[i];
+				j++;
+			}
+		}
+
+		adminCodeGroup.setSelectItems(newArray);
+	}
+	
 	public void addSelectedTutorialTemporarily() {
 		// check if the tutorial is already available
 		for (SelectItem selectItem : getLinkedTutorials()) {
@@ -222,8 +262,7 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 			if (selectItem.getLabel().equals(temporary))
 				temporaryAdminCodeGroup = (SelectItemGroup)selectItem;
 		
-		final String value = getSelectedTutorialAdminCode() + "_" + getSelectedTutorialName();
-		final SelectItem temporaryTutorial = new SelectItem(value, getSelectedTutorialName());
+		final SelectItem temporaryTutorial = new SelectItem(getSelectedTutorial(), getSelectedTutorialName());
 		if (temporaryAdminCodeGroup == null) {
 			temporaryAdminCodeGroup = new SelectItemGroup(temporary);
 			getLinkedTutorials().add(temporaryAdminCodeGroup);
@@ -434,7 +473,11 @@ public class UserBean extends AbstractDatabaseBean implements Serializable {
 	}
 	
 	public List<SelectItem> getOwnedTutorials() {
-		return linkedTutorials;
+		List<SelectItem> ownedTutorials = new LinkedList<SelectItem>();
+		for (SelectItem s : linkedTutorials) 
+			if(s.getLabel().equals(getAdminCode()))
+				ownedTutorials.add(s);
+		return ownedTutorials;
 	}
 
 	public void setLinkedTutorials(List<SelectItem> linkedTutorials) {

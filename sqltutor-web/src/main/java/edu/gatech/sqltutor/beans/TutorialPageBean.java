@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
-import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 import edu.gatech.sqltutor.rules.er.ERDiagram;
 import edu.gatech.sqltutor.rules.er.ERSerializer;
@@ -275,15 +274,14 @@ Serializable {
 				numberOfAttempts++;
 				
 			// log
-
-			final QuestionTuple questionTuple = questionTuples.get(questionIndex);
 			try {
 				final double totalTimeTakenSeconds = (Calendar.getInstance().getTime().getTime() - startTimeMilliseconds)/1000d; 
 				getDatabaseManager().log(BeanUtils.getSessionId(),
 						userBean.getHashedEmail(), 
 						userBean.getSelectedTutorialName(),
-						questionTuple.getQuestion(), 
-						questionTuple.getAnswer(),
+						questionTuples.get(questionIndex).getOrder(), 
+						questionTuples.get(questionIndex).getQuestion(),
+						questionTuples.get(questionIndex).getAnswer(),
 						query, queryResult != null, getQueryIsCorrect(), nlpResult, totalTimeTakenSeconds, 
 						queryResult != null  ? queryResult.getTotalTime()/1000d : 0, 
 						answerResult != null ? answerResult.getTotalTime()/1000d : 0, 
@@ -551,7 +549,6 @@ Serializable {
 					sb.setCharAt(i, Character.toLowerCase(c));
 			}
 		}
-
 		return sb.toString(); 
 	}
 
@@ -621,7 +618,7 @@ Serializable {
 			getDatabaseManager().logQuestionPresentation(
 					BeanUtils.getSessionId(), userBean.getHashedEmail(),
 					userBean.getSelectedTutorialName(),
-					questionTuples.get(questionIndex).getQuestion(), 
+					questionTuples.get(questionIndex).getOrder(), 
 					userBean.getSelectedTutorialAdminCode());
 		} catch (SQLException e) {
 			for (Throwable t : e) {
@@ -719,7 +716,7 @@ Serializable {
 			
 			if (questionTuples != null && !questionTuples.isEmpty() && questionIndex < questionTuples.size() && questionIndex >= 0) {
 				try {
-					numberOfAttempts = getDatabaseManager().getNumberOfAttempts(userBean.getHashedEmail(), userBean.getSelectedTutorialName(), questionTuples.get(questionIndex).getQuestion(), true, false, userBean.getSelectedTutorialAdminCode());
+					numberOfAttempts = getDatabaseManager().getNumberOfAttempts(userBean.getHashedEmail(), userBean.getSelectedTutorialName(), questionTuples.get(questionIndex).getOrder(), true, false, userBean.getSelectedTutorialAdminCode());
 				} catch (SQLException e) {
 					for (Throwable t : e) {
 						t.printStackTrace();
@@ -779,7 +776,7 @@ Serializable {
 	
 	public void submitComment() {
 		try {
-			getDatabaseManager().addComment(userBean.getSelectedTutorialName(), getQuestionNumber(), getComment(), userBean.getSelectedTutorialAdminCode(), userBean.getEmail());
+			getDatabaseManager().addComment(userBean.getSelectedTutorialName(), getQuestionNumber(), getComment(), userBean.getSelectedTutorialAdminCode(), userBean.getHashedEmail());
 			BeanUtils.addInfoMessage(null, "Successfully left a comment on question number " + getQuestionNumber() + ".");
 		} catch (SQLException e) {
 			for (Throwable t : e) {

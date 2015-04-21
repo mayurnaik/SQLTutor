@@ -18,10 +18,7 @@ package edu.gatech.sqltutor.beans;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -29,7 +26,6 @@ import javax.faces.event.ComponentSystemEvent;
 
 import org.primefaces.context.RequestContext;
 
-import edu.gatech.sqltutor.DatabaseTable;
 import edu.gatech.sqltutor.QueryResult;
 
 @ManagedBean
@@ -73,20 +69,16 @@ public class SchemaInstancesPageBean extends AbstractDatabaseBean implements Ser
 			return;
 		
 		try {
-			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), query,
-					userBean.isAdmin());
+			queryResult = getDatabaseManager().getQueryResult(userBean.getSelectedTutorial(), query, true);
 		} catch(SQLException e) {
 			queryResult = null;
 			String message = e.getMessage();
 			
 			if(message.equals("No results were returned by the query.")) {
-				RequestContext requestContext = RequestContext.getCurrentInstance();  
-				requestContext.execute("window.location.replace(window.location.href);");
 				BeanUtils.addInfoMessage(null, message);
-				return;
+			} else {
+				BeanUtils.addErrorMessage(null, message);
 			}
-			
-			BeanUtils.addErrorMessage(null, message);
 		}
 	} 
 
